@@ -52,16 +52,16 @@ function StatCard({
   onClick?: () => void;
 }) {
   return (
-    <div className="rounded-xl bg-white border border-gray-200 hover:shadow-lg transition-all duration-200 p-6 flex flex-col justify-between">
+    <div className="rounded-xl bg-white border border-gray-200 hover:shadow-lg transition-all duration-200 p-6 flex flex-col justify-between max-w-xs w-full mx-auto">
       <div>
-        <div className="text-gray-600 text-base font-medium">{title}</div>
-        <div className={`text-3xl font-semibold mt-2 ${color}`}>
+        <div className="text-gray-600 text-lg font-bold text-center">{title}</div>
+        <div className={`text-3xl font-semibold mt-2 ${color} text-center`}>
           {value.toLocaleString()}
         </div>
       </div>
       <button
         onClick={onClick}
-        className="mt-4 bg-[#1368d6] text-white px-4 py-2 rounded-md text-sm hover:bg-green-600 transition-all duration-200"
+        className="mt-4 bg-[#1368d6] text-white px-3 py-2 rounded-md text-sm hover:bg-green-600 transition-all duration-200 w-fit self-center"
       >
         View More
       </button>
