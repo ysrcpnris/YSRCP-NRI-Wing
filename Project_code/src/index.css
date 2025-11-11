@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Social Media Section Styles */
+.social-wrap {
+  padding: 56px 20px;
+  background: linear-gradient(180deg, #fff, #f9fafb);
+}
+
+.social-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.social-header h2 {
+  font-size: 28px;
+  letter-spacing: 0.3px;
+  margin: 0 0 6px;
+  color: #1f2937;
+}
+
+.social-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.social-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 640px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-head {
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #111827;
+  background: #f9fafb;
+  border-bottom: 1px solid #eef2f7;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.twitter {
+  background: #1da1f2;
+}
+
+.dot.facebook {
+  background: #1877f2;
+}
+
+.card-body {
+  flex: 1;
+  padding: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.twitter-timeline-container {
+  height: 560px !important;
+  overflow: hidden !important;
+}
+
+.twitter-timeline-container iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  min-width: unset !important;
+}
+
+/* Facebook responsiveness */
+.fb-page,
+.fb-page span,
+.fb-page iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Responsive grid */
+@media (max-width: 1200px) {
+  .social-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .social-grid {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    min-height: 520px;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 1s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+/* global styles, optional */
+html, body, #root { height: 100%; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 8px; }
