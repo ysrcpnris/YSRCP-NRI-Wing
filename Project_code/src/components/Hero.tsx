@@ -53,13 +53,11 @@ export default function Hero({ onJoinNow }: HeroProps) {
         id="hero"
         className="relative flex items-center justify-center overflow-hidden bg-white mt-[80px] h-auto"
       >
-        {/* The WhatsApp Image */}
+        {/* NRI WING Banner */}
         <div className="w-full max-h-[80vh] overflow-hidden">
-          <img
-            src="/WhatsApp Image 2025-10-10 at 10.38.26_ecd90870.jpg"
-            alt="Andhra Pradesh NRI Event"
+          <img src="/Banner.jpg" alt="NRI Wing Banner"
             className="w-full h-full object-contain"
-          />
+            />
         </div>
       </section>
 

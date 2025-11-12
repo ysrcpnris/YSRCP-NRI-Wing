@@ -60,6 +60,12 @@ export default function Header({ onSignIn, onSignUp }: HeaderProps) {
               <p className="text-xs text-gray-600">Global Unity, Local Impact</p>
             </div>
           </div>
+          
+          {/* Live Button */}
+          <button className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md font-semibold animate-pulse">
+            <span className="w-3 h-3 bg-red-500 rounded-full animate-ping"></span>LIVE
+          </button>
+
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
@@ -119,7 +125,7 @@ export default function Header({ onSignIn, onSignUp }: HeaderProps) {
               )}
             </div>
 
-            <button onClick={() => navigate('/suggestions')} className="text-gray-700 hover:text-blue-600 transition">Suggestions</button>
+            <button onClick={() => scrollToSection('contact')} className="text-gray-700 hover:text-blue-600 transition">Suggestions</button>
             <button onClick={onSignIn} className="text-blue-600 hover:text-blue-700 font-medium transition">Sign In</button>
             <button
               onClick={onSignUp}
@@ -127,6 +133,7 @@ export default function Header({ onSignIn, onSignUp }: HeaderProps) {
             >
               Register
             </button>
+            <button onClick={() => scrollToSection('socialmedia')} className="text-gray-700 hover:text-blue-600 transition">Social Media</button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -145,7 +152,7 @@ export default function Header({ onSignIn, onSignUp }: HeaderProps) {
             <button onClick={() => navigate('/welfare')} className="block w-full text-left py-2 pl-4">Welfare</button>
             <button onClick={() => navigate('/reforms')} className="block w-full text-left py-2 pl-4">Reforms</button>
             <button onClick={() => scrollToSection('student-assistance')} className="block w-full text-left py-2">Services</button>
-            <button onClick={() => navigate('/suggestions')} className="block w-full text-left py-2">Suggestions</button>
+            <button onClick={() => scrollToSection('suggestions')} className="block w-full text-left py-2">Suggestions</button>
             <button onClick={onSignIn} className="text-blue-600 block w-full text-left font-medium py-2">Sign In</button>
             <button onClick={onSignUp} className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-2 rounded-full">
               Register

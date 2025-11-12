@@ -14,13 +14,13 @@ export default function About() {
         <div className="grid md:grid-cols-2 gap-12 mb-16">
           <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-2xl border border-blue-200">
             <h3 className="text-2xl font-bold text-blue-900 mb-6">About YSRCP</h3>
-            <p className="text-blue-800 mb-4">
+            <p className="text-blue-800 mb-4 text-justify">
               The Yuvajana Sramika Rythu Congress Party (YSRCP) is a major political party in Andhra Pradesh, India, founded by the late Chief Minister Dr. Y.S. Rajasekhara Reddy in 2009.
             </p>
-            <p className="text-blue-800 mb-4">
+            <p className="text-blue-800 mb-4 text-justify">
               Under the leadership of Y.S. Jagan Mohan Reddy, YSRCP has been committed to welfare schemes, rural development, and inclusive growth for all sections of society.
             </p>
-            <p className="text-blue-800">
+            <p className="text-blue-800 text-justify">
               The party believes in empowering the youth, farmers, and working class through transparent governance and people-centric policies.
             </p>
           </div>
@@ -38,11 +38,11 @@ export default function About() {
           </div> */}
                     <div className="bg-gradient-to-br from-purple-50 to-pink-100 p-8 rounded-2xl border border-purple-200">
             <h3 className="text-2xl font-bold text-purple-900 mb-6">Our Vision</h3>
-            <p className="text-purple-800 mb-6">
+            <p className="text-purple-800 mb-6 text-justify">
               To create a unified platform where NRIs can actively participate in Andhra Pradesh's progress, share their expertise, and support community development initiatives.
             </p>
             <h3 className="text-2xl font-bold text-purple-900 mb-6">Our Mission</h3>
-            <p className="text-purple-800 mb-6">
+            <p className="text-purple-800 mb-6 text-justify">
               Bridge the gap between NRIs and their homeland by providing comprehensive support services, fostering community engagement, and facilitating meaningful contributions to Andhra's growth.
             </p>
             {/* <h3 className="text-2xl font-bold text-purple-900 mb-6">Our Values</h3>
@@ -131,19 +131,19 @@ export default function About() {
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           <div className="bg-white p-6 rounded-xl shadow-lg text-center">
             <h4 className="text-xl font-bold text-gray-900 mb-4">Leadership Message</h4>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-justify">
               "Our NRIs are the backbone of Andhra's progress. Through this platform, we unite our global family to build a prosperous future together." - Y.S. Jagan Mohan Reddy
             </p>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-lg text-center">
             <h4 className="text-xl font-bold text-gray-900 mb-4">Organizational Structure</h4>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-justify">
               Led by dedicated coordinators across countries and states, our wing operates through specialized departments including Media, Technology, Medical, and Youth wings.
             </p>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-lg text-center">
             <h4 className="text-xl font-bold text-gray-900 mb-4">Global Impact</h4>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-justify">
               From organizing medical camps to supporting education initiatives, our NRI community has made significant contributions to Andhra Pradesh's development.
             </p>
           </div>
