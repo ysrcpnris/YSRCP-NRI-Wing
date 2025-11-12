@@ -7,7 +7,7 @@ import StudentAssistance from './dashboard/StudentAssistance';
 import JobAssistance from './dashboard/JobAssistance';
 import Events from './dashboard/Events';
 import Grievances from './dashboard/Grievances';
-import NRIDirectory from './dashboard/NRIDirectory';
+
 
 type Tab = 'home' | 'profile' | 'student' | 'jobs' | 'events' | 'grievances' | 'directory';
 
@@ -27,7 +27,7 @@ export default function Dashboard() {
     { id: 'jobs' as Tab, icon: <Briefcase className="w-5 h-5" />, label: 'Job Portal' },
     { id: 'events' as Tab, icon: <Calendar className="w-5 h-5" />, label: 'Events' },
     { id: 'grievances' as Tab, icon: <MessageSquare className="w-5 h-5" />, label: 'Grievances' },
-    { id: 'directory' as Tab, icon: <UsersIcon className="w-5 h-5" />, label: 'NRI Directory' }
+   
   ];
 
   return (
@@ -101,7 +101,7 @@ export default function Dashboard() {
               {activeTab === 'jobs' && <JobAssistance />}
               {activeTab === 'events' && <Events />}
               {activeTab === 'grievances' && <Grievances />}
-              {activeTab === 'directory' && <NRIDirectory />}
+             
             </div>
           </div>
         </div>
