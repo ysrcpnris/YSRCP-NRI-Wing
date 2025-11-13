@@ -200,5 +200,26 @@ function App() {
     </AuthProvider>
   );
 }
+{/*
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LiveStream from "./pages/LiveStream";
+import LiveButton from "./components/LiveButton";
 
+function App() {
+  return (
+    <BrowserRouter>
+      {/* Example Nav or Dashboard *}
+      <div className="p-4">
+        <LiveButton />
+      </div>
+
+      <Routes>
+        <Route path="/live" element={<LiveStream />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+
+*/}
 export default App;  

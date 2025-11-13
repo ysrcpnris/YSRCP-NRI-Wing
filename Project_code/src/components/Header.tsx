@@ -62,9 +62,30 @@ export default function Header({ onSignIn, onSignUp }: HeaderProps) {
           </div>
           
           {/* Live Button */}
-          <button className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md font-semibold animate-pulse">
+          {/*<button className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md font-semibold animate-pulse">
             <span className="w-3 h-3 bg-red-500 rounded-full animate-ping"></span>LIVE
           </button>
+          <button className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-green-500 text-white px-4 py-1 rounded-full font-semibold shadow-[0_0_10px_rgba(34,197,94,0.6)]">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400"></span>
+              </span>Live
+          </button>*/}
+
+          <button className="relative flex items-center gap-2 bg-gradient-to-r from-blue-500 to-green-500 text-white px-4 py-1 rounded-full font-bold shadow-[0_0_12px_rgba(56,189,248,0.6)] hover:shadow-[0_0_20px_rgba(74,222,128,0.8)] transition duration-300">
+            {/* Blinking Star Dot */}
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-300 shadow-[0_0_6px_rgba(250,204,21,0.8)]"></span>
+              </span>
+              {/* Text */}
+              <span className="tracking-widest uppercase font-extrabold drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]">
+                LIVE </span>
+          </button>
+
+          
+
+
 
 
           {/* Desktop Menu */}
