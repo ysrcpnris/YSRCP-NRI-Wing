@@ -18,7 +18,7 @@ export default function LiveStreamPage() {
     const dummyData: Stream[] = [
       {
         id: "1",
-        title: "CM Y.S. Jagan Mohan Reddy — Live Press Meet",
+        title: "Y.S. Jagan Mohan Reddy — Live Press Meet",
         link: "https://example.com/live1",
         date: new Date().toISOString().split("T")[0],
       },
