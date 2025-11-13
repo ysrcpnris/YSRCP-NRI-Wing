@@ -72,24 +72,23 @@ export default function Header({ onSignIn, onSignUp }: HeaderProps) {
               </span>Live
           </button>*/}
 
-          <button className="relative flex items-center gap-2 bg-gradient-to-r from-blue-500 to-green-500 text-white px-4 py-1 rounded-full font-bold shadow-[0_0_12px_rgba(56,189,248,0.6)] hover:shadow-[0_0_20px_rgba(74,222,128,0.8)] transition duration-300">
-            {/* Blinking Star Dot */}
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-300 shadow-[0_0_6px_rgba(250,204,21,0.8)]"></span>
-              </span>
-              {/* Text */}
-              <span className="tracking-widest uppercase font-extrabold drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]">
-                LIVE </span>
-          </button>
-
-          
-
-
+          <button
+  onClick={() => navigate('/live')}
+  className="relative flex items-center gap-2 bg-gradient-to-r from-blue-500 to-green-500 text-white px-4 py-1 rounded-full font-bold shadow-[0_0_12px_rgba(56,189,248,0.6)] hover:shadow-[0_0_20px_rgba(74,222,128,0.8)] transition duration-300"
+>
+  <span className="relative flex h-3 w-3">
+    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-300 shadow-[0_0_6px_rgba(250,204,21,0.8)]"></span>
+  </span>
+  <span className="tracking-widest uppercase font-extrabold drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]">
+    LIVE
+  </span>
+</button>
 
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
+            
             <button onClick={() => scrollToSection('hero')} className="text-gray-700 hover:text-blue-600 transition">Home</button>
             <button onClick={() => scrollToSection('about')} className="text-gray-700 hover:text-blue-600 transition">About</button>
             <button onClick={() => scrollToSection('student-assistance')} className="text-gray-700 hover:text-blue-600 transition">Services</button>
@@ -146,7 +145,7 @@ export default function Header({ onSignIn, onSignUp }: HeaderProps) {
               )}
             </div>
 
-            <button onClick={() => scrollToSection('contact')} className="text-gray-700 hover:text-blue-600 transition">Suggestions</button>
+            <button onClick={() => scrollToSection('suggestions')} className="text-gray-700 hover:text-blue-600 transition">Suggestions</button>
             <button onClick={onSignIn} className="text-blue-600 hover:text-blue-700 font-medium transition">Sign In</button>
             <button
               onClick={onSignUp}

@@ -1,13 +1,13 @@
 import Header from "../components/Header";
-import Footer from "../components/Footer";
+// import Footer from "../components/Footer";
 import { useState } from "react";
 
-type SuggestionsProps = {
+type ContactProps = {
   setAuthMode: (mode: 'signin' | 'signup') => void;
   setShowAuthModal: (value: boolean) => void;
 };
 
-export default function Suggestions({ setAuthMode, setShowAuthModal }: SuggestionsProps) {
+export default function Contact({ setAuthMode, setShowAuthModal }: ContactProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -59,7 +59,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
         }}
       />
 
-      <section className="pt-24 p-10 text-center">
+      <section id="suggestions" className="pt-24 p-10 text-center">
         <h1 className="text-3xl font-bold text-blue-700 mb-4">Suggestions & Feedback</h1>
         <p className="text-gray-700 max-w-2xl mx-auto mb-8">
           Your feedback is valuable to us. Share your suggestions, ideas, or concerns about our initiatives and services.
@@ -202,6 +202,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
           )}
         </div>
       </section>   
+      {/* <Footer /> */}
     </>
   );
 }

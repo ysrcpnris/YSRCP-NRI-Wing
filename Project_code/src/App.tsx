@@ -36,7 +36,8 @@ import NriConnect from './pages/NriConnect';
 import Gorumudda from './pages/Gorumudda';
 import Cheyutha from './pages/Cheyutha';
 import Yuvanestham from './pages/Yuvanestham';
-import Suggestions from './pages/Suggestions';
+import LiveStreamPage from './pages/LiveStream';
+// import Suggestions from './pages/Suggestions';
 
 
 type MainLandingPageProps = {
@@ -79,7 +80,10 @@ function MainLandingPage({
       <Initiatives />
       <Events />
       <News />
-      <Contact />
+      <Contact
+  setAuthMode={setAuthMode}
+  setShowAuthModal={setShowAuthModal}
+/>
       <ImpactMap />
       <Testimonials />
       <SocialMedia />
@@ -132,6 +136,7 @@ function AppContent() {
   return (
     <>
       <Routes>
+
         {/* 🏠 Landing Page */}
         <Route
           path="/"
@@ -144,6 +149,7 @@ function AppContent() {
             />
           }
         />
+<Route path="/live" element={<LiveStreamPage />} />
 
         {/* 🧭 Subpages — headers/footers already included inside each */}
         <Route path="/health" element={ <Health setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal}/> } />
@@ -163,7 +169,13 @@ function AppContent() {
 
         {/* (Optional) Jagan-Mark page */}
         <Route path="/jagan-mark" element={<JaganMark />} />
-        <Route path="/suggestions" element={<Suggestions setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+
+        {/* <Route path="/suggestions" element={<Suggestions setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} /> */}
+        <Route
+  path="/contact"
+  element={<Contact setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />}
+/>
+
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
