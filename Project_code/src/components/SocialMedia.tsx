@@ -39,7 +39,7 @@ const SocialMedia: React.FC = () => {
       </div>
 
       {/* Row 2 - YS Jagan Mohan Reddy */}
-      <h3 className="social-subtitle">Hon’ble CM Y.S. Jagan Mohan Reddy</h3>
+      <h3 className="social-subtitle">Hon’ble Y.S. Jagan Mohan Reddy</h3>
       <div className="social-container">
         <div className="social-card twitter">
           <h3>Twitter</h3>
