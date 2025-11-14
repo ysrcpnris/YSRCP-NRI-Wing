@@ -17,6 +17,8 @@ import {
   Users,
   FolderKanban,
   Newspaper,
+  Menu,
+  X,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -105,10 +107,13 @@ function group(rows: Row[], key: "continent" | "country" | "state"): Bucket[] {
 }
 
 /* ---------- Sidebar ---------- */
-function Sidebar({ onLogout, current, setCurrentPage }: { onLogout: () => void; current: string; setCurrentPage: (p: string) => void }) {
-  const Item = ({ icon: Icon, label, page }: any) => (
+function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLogout: () => void; current: string; setCurrentPage: (p: string) => void; isOpen: boolean; onToggle: () => void }) {
+  const Item = ({ icon: Icon, label, page }: { icon: React.ComponentType<any>; label: string; page: string }) => (
     <div
-      onClick={() => setCurrentPage(page)}
+      onClick={() => {
+        setCurrentPage(page);
+        if (window.innerWidth < 768) onToggle(); // Close on mobile after selection
+      }}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
         current === page
           ? "bg-[#1368d6] text-white shadow-md"
@@ -120,37 +125,53 @@ function Sidebar({ onLogout, current, setCurrentPage }: { onLogout: () => void; 
     </div>
   );
   return (
-    <aside className="w-64 p-4 bg-gradient-to-b from-white to-blue-50 border-r border-blue-100 flex flex-col justify-between h-screen">
-      <div>
-        <div className="flex items-center gap-3 mb-6">
-  <img
-    src={ysrLogo}
-    alt="YSRCP Logo"
-    className="w-10 h-10 rounded-full border-2 border-green-600 shadow-sm"
-  />
-  <div>
-    <div className="font-semibold text-[#1368d6]">YSRCP Admin</div>
-    <div className="text-xs text-green-600">NRI Wing</div>
-  </div>
-</div>
-        <nav className="space-y-2">
-          <Item icon={Home} label="Dashboard" page="dashboard" />
-          <Item icon={CalendarDays} label="Visited" page="visited" />
-          <Item icon={Newspaper} label="Assistance" page="assistance" />
-          <Item icon={Users} label="Suggestions" page="suggestions" />
-        </nav>
-      </div>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={onToggle}
+        />
+      )}
+      <aside className={`fixed md:relative top-0 left-0 w-64 p-4 bg-gradient-to-b from-white to-blue-50 border-r border-blue-100 flex flex-col justify-between h-screen z-50 transform transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      }`}>
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <img
+                src={ysrLogo}
+                alt="YSRCP Logo"
+                className="w-10 h-10 rounded-full border-2 border-green-600 shadow-sm"
+              />
+              <div>
+                <div className="font-semibold text-[#1368d6]">YSRCP Admin</div>
+                <div className="text-xs text-green-600">NRI Wing</div>
+              </div>
+            </div>
+            <button onClick={onToggle} className="md:hidden text-gray-700">
+              <X size={20} />
+            </button>
+          </div>
+          <nav className="space-y-2">
+            <Item icon={Home} label="Dashboard" page="dashboard" />
+            <Item icon={CalendarDays} label="Visited" page="visited" />
+            <Item icon={Newspaper} label="Assistance" page="assistance" />
+            <Item icon={Users} label="Suggestions" page="suggestions" />
+          </nav>
+        </div>
 
-      <div className="mt-6">
-        <button
-          onClick={onLogout}
-          className="w-full inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white px-4 py-2 rounded-lg shadow-md hover:opacity-95 transition-all duration-150"
-        >
-          <LogOut size={16} />
-          <span className="font-medium">Logout</span>
-        </button>
-      </div>
-    </aside>
+        <div className="mt-6">
+          <button
+            onClick={onLogout}
+            className="w-full inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white px-4 py-2 rounded-lg shadow-md hover:opacity-95 transition-all duration-150"
+          >
+            <LogOut size={16} />
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
 
@@ -332,6 +353,7 @@ export default function AdminDashboard() {
   );
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -406,9 +428,18 @@ export default function AdminDashboard() {
       onLogout={handleLogout}
       current={currentPage}
       setCurrentPage={setCurrentPage}
+      isOpen={sidebarOpen}
+      onToggle={() => setSidebarOpen(!sidebarOpen)}
     />
 
       <main className="flex-1 p-8 overflow-y-auto">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden fixed top-4 left-4 z-50 bg-[#1368d6] text-white p-2 rounded-lg shadow-md"
+        >
+          <Menu size={20} />
+        </button>
         {currentPage === "dashboard" && (
     <>
         <h1 className="text-3xl font-bold text-[#1368d6] mb-2">
