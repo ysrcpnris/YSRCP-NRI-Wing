@@ -1,76 +1,119 @@
 import React from "react";
-import "./social.css";
+import "./social.css"; // Use your existing social.css
+
+// Video card data
+const videoCards = [
+{
+title: "Review on Education Reforms & School Infrastructure",
+views: "22K",
+timeAgo: "2d ago",
+url: "[https://youtube.com/watch?v=VIDEO_ID1](https://youtube.com/watch?v=VIDEO_ID1)",
+},
+{
+title: "Analysis on YS Jagan Hyderabad Tour & Future Plans",
+views: "12K",
+timeAgo: "2h ago",
+url: "[https://youtube.com/watch?v=VIDEO_ID2](https://youtube.com/watch?v=VIDEO_ID2)",
+},
+{
+title: "Inauguration of 5 New Medical Colleges Across AP",
+views: "41K",
+timeAgo: "5d ago",
+url: "[https://youtube.com/watch?v=VIDEO_ID3](https://youtube.com/watch?v=VIDEO_ID3)",
+},
+{
+title: "Press Briefing on Annual Welfare Calendar Release",
+views: "18K",
+timeAgo: "6d ago",
+url: "[https://youtube.com/watch?v=VIDEO_ID4](https://youtube.com/watch?v=VIDEO_ID4)",
+},
+];
+
+// Social media links
+const socialLinks = {
+jaganAnna: {
+facebook: "#",
+twitter: "#",
+linkedin: "#",
+instagram: "#",
+whatsapp: "#",
+telegram: "#",
+},
+ysrcpParty: {
+facebook: "#",
+twitter: "#",
+instagram: "#",
+whatsapp: "#",
+telegram: "#",
+},
+nriCommunity: {
+facebook: "#",
+twitter: "#",
+instagram: "#",
+whatsapp: "#",
+telegram: "#",
+},
+};
 
 const SocialMedia: React.FC = () => {
-  return (
-    <section id="socialmedia" className="social-section">
-      <h2 className="social-title">SOCIAL MEDIA</h2>
+return ( <div className="social-container">
+{/* Video Section */} <section className="videos-section"> <h2>JAGAN ANNA ON AIR</h2> <div className="video-grid">
+{videoCards.map((video, index) => ( <div key={index} className="video-card"> <div className="video-placeholder"> <a href={video.url} target="_blank" rel="noopener noreferrer">
+Watch video on YouTube </a> </div> <h3>{video.title}</h3> <p>
+{video.views} • {video.timeAgo} </p> <button>WATCH NOW →</button> </div>
+))} </div> </section>
 
-      {/* Row 1 - YSR Congress Party */}
-      <h3 className="social-subtitle">YSR Congress Party Official</h3>
-      <div className="social-container">
-        <div className="social-card twitter">
-          <h3>Twitter</h3>
-          <div className="social-embed small">
-            <span className="streaming-text">🔄 Fetching Latest Tweets...</span>
-          </div>
-        </div>
 
-        <div className="social-card instagram">
-          <h3>Instagram</h3>
-          <div className="social-embed small">
-            <span className="streaming-text">📸 Loading Instagram Feed...</span>
-          </div>
-        </div>
+  {/* Digital Channels Section */}
+  <section className="digital-section">
+    <h2>DIGITAL CHANNELS</h2>
 
-        <div className="social-card facebook">
-          <h3>Facebook</h3>
-          <div className="social-embed small">
-            <span className="streaming-text">🌐 Connecting to Facebook Page...</span>
-          </div>
-        </div>
-
-        <div className="social-card youtube">
-          <h3>YouTube</h3>
-          <div className="social-embed small">
-            <span className="streaming-text">▶️ Streaming Recent Videos...</span>
-          </div>
-        </div>
+    {/* JAGAN ANNA */}
+    <div className="social-card jagan">
+      <p>JAGAN ANNA</p>
+      <div className="icons">
+        <a href={socialLinks.jaganAnna.facebook}>FB</a>
+        <a href={socialLinks.jaganAnna.twitter}>TW</a>
+        <a href={socialLinks.jaganAnna.linkedin}>IN</a>
+        <a href={socialLinks.jaganAnna.instagram}>IG</a>
+        <a href={socialLinks.jaganAnna.whatsapp}>WA</a>
+        <a href={socialLinks.jaganAnna.telegram}>TG</a>
       </div>
+    </div>
 
-      {/* Row 2 - YS Jagan Mohan Reddy */}
-      <h3 className="social-subtitle">Hon’ble Y.S. Jagan Mohan Reddy</h3>
-      <div className="social-container">
-        <div className="social-card twitter">
-          <h3>Twitter</h3>
-          <div className="social-embed small">
-            <span className="streaming-text">🔁 Refreshing CM’s Tweets...</span>
-          </div>
-        </div>
-
-        <div className="social-card instagram">
-          <h3>Instagram</h3>
-          <div className="social-embed small">
-            <span className="streaming-text">📲 Loading Instagram Stories...</span>
-          </div>
-        </div>
-
-        <div className="social-card facebook">
-          <h3>Facebook</h3>
-          <div className="social-embed small">
-            <span className="streaming-text">📡 Fetching CM’s Page Updates...</span>
-          </div>
-        </div>
-
-        <div className="social-card youtube">
-          <h3>YouTube</h3>
-          <div className="social-embed small">
-            <span className="streaming-text">🎥 Streaming Recent Speeches...</span>
-          </div>
-        </div>
+    {/* YSRCP PARTY */}
+    <div className="social-card ysrcp">
+      <p>YSRCP PARTY</p>
+      <div className="icons">
+        <a href={socialLinks.ysrcpParty.facebook}>FB</a>
+        <a href={socialLinks.ysrcpParty.twitter}>TW</a>
+        <a href={socialLinks.ysrcpParty.instagram}>IG</a>
+        <a href={socialLinks.ysrcpParty.whatsapp}>WA</a>
+        <a href={socialLinks.ysrcpParty.telegram}>TG</a>
       </div>
-    </section>
-  );
+    </div>
+
+    {/* NRI COMMUNITY */}
+    <div className="social-card nri">
+      <p>NRI COMMUNITY</p>
+      <div className="icons">
+        <a href={socialLinks.nriCommunity.facebook}>FB</a>
+        <a href={socialLinks.nriCommunity.twitter}>TW</a>
+        <a href={socialLinks.nriCommunity.instagram}>IG</a>
+        <a href={socialLinks.nriCommunity.whatsapp}>WA</a>
+        <a href={socialLinks.nriCommunity.telegram}>TG</a>
+      </div>
+    </div>
+  </section>
+
+  {/* Action Buttons */}
+  <section className="action-buttons">
+    
+  </section>
+</div>
+
+
+);
 };
 
 export default SocialMedia;
