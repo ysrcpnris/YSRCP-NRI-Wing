@@ -12,6 +12,7 @@ import News from './components/News';
 import Contact from './components/Contact';
 import ImpactMap from './components/ImpactMap';
 import Testimonials from './components/Testimonials';
+import Glimpse from './components/Glimpse';
 import Footer from './components/Footer';
 import Dashboard from './components/Dashboard';
 import AuthModal from './components/AuthModal';
@@ -79,6 +80,7 @@ function MainLandingPage({
       <ImpactMap />
       <Testimonials />
       <SocialMedia />
+      <Glimpse />
       <Footer />
 
       {showAuthModal && (
