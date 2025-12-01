@@ -1,163 +1,148 @@
+/* MAIN CONTAINER */
 .social-container {
-display: flex;
-gap: 2rem;
-padding: 2rem;
-font-family: 'Arial', sans-serif;
-background-color: #f5f5f5;
+  display: flex;
+  gap: 2rem;
+  padding: 1.5rem;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  flex-wrap: wrap;
 }
 
-/* Video Section */
+/* --------------------------- */
+/* VIDEO SECTION */
+/* --------------------------- */
 .videos-section {
-flex: 2;
+  flex: 2;
+  min-width: 100%;
 }
 
 .videos-section h2 {
-font-size: 1.6rem;
-font-weight: bold;
-margin-bottom: 1rem;
-color: #fff;
-background-color: #0b4d8c;
-display: inline-block;
-padding: 0.5rem 1rem;
-border-radius: 8px;
+  background-color: #0b4d8c;
+  color: #fff;
+  font-size: 1.4rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 1rem;
 }
 
+/* GRID — responsive */
 .video-grid {
-display: grid;
-grid-template-columns: repeat(2, 1fr);
-gap: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .video-card {
-background: #1e2a47;
-border-radius: 10px;
-overflow: hidden;
-color: #fff;
-display: flex;
-flex-direction: column;
-justify-content: space-between;
-min-height: 200px;
-position: relative;
+  background: #1e2a47;
+  border-radius: 10px;
+  color: #fff;
+  overflow: hidden;
+  padding-bottom: 1rem;
 }
 
-.video-card .video-placeholder {
-background-color: #000;
-height: 120px;
-display: flex;
-align-items: center;
-justify-content: center;
+.video-placeholder {
+  background: #000;
+  height: 140px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.video-placeholder a {
+  color: #ffca28;
+  font-weight: bold;
 }
 
 .video-card h3 {
-font-size: 1rem;
-margin: 0.5rem 0 0.25rem 0;
-padding: 0 0.5rem;
+  font-size: 1rem;
+  margin: 0.7rem;
 }
 
 .video-card p {
-font-size: 0.8rem;
-color: #ccc;
-padding: 0 0.5rem;
-margin: 0 0 0.5rem 0;
+  margin: 0 0.7rem 0.7rem;
+  color: #ccc;
 }
 
 .video-card button {
-background-color: #ffca28;
-color: #000;
-border: none;
-padding: 0.5rem 0.75rem;
-font-weight: bold;
-margin: 0.5rem;
-border-radius: 6px;
-cursor: pointer;
-align-self: flex-start;
+  margin-left: 0.7rem;
+  background: #ffca28;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.video-card button:hover {
-background-color: #e6b800;
-}
-
-/* Digital Channels Section */
+/* --------------------------- */
+/* DIGITAL CHANNELS */
+/* --------------------------- */
 .digital-section {
-flex: 1;
+  flex: 1;
+  min-width: 100%;
 }
 
 .digital-section h2 {
-font-size: 1.4rem;
-font-weight: bold;
-margin-bottom: 1rem;
-color: #0b4d8c;
+  color: #0b4d8c;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  font-weight: bold;
 }
 
 .social-card {
-background: #fff;
-border-radius: 12px;
-margin-bottom: 1rem;
-padding: 1rem;
-box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .social-card p {
-font-weight: bold;
-margin-bottom: 0.5rem;
+  font-weight: bold;
+  margin-bottom: 0.6rem;
 }
 
-.social-card .icons {
-display: flex;
-gap: 0.5rem;
+.icons {
+  display: flex;
+  gap: 0.5rem;
 }
 
-.social-card .icons a {
-display: flex;
-align-items: center;
-justify-content: center;
-width: 32px;
-height: 32px;
-border-radius: 50%;
-font-size: 0.9rem;
-text-decoration: none;
-color: #fff;
+/* social icons */
+.icons a {
+  width: 36px;
+  height: 36px;
+  background: #555;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.social-card.jagan .icons a:nth-child(1) { background: #3b5998; } /* FB */
-.social-card.jagan .icons a:nth-child(2) { background: #1da1f2; } /* TW */
-.social-card.jagan .icons a:nth-child(3) { background: #0077b5; } /* IN */
-.social-card.jagan .icons a:nth-child(4) { background: #e1306c; } /* IG */
-.social-card.jagan .icons a:nth-child(5) { background: #25d366; } /* WA */
-.social-card.jagan .icons a:nth-child(6) { background: #0088cc; } /* TG */
+/* jagan colors */
+.social-card.jagan .icons a:nth-child(1){ background:#3b5998;}
+.social-card.jagan .icons a:nth-child(2){ background:#1da1f2;}
+.social-card.jagan .icons a:nth-child(3){ background:#0077b5;}
+.social-card.jagan .icons a:nth-child(4){ background:#e1306c;}
+.social-card.jagan .icons a:nth-child(5){ background:#25d366;}
+.social-card.jagan .icons a:nth-child(6){ background:#0088cc;}
 
-.social-card.ysrcp .icons a:nth-child(1) { background: #3b5998; }
-.social-card.ysrcp .icons a:nth-child(2) { background: #1da1f2; }
-.social-card.ysrcp .icons a:nth-child(3) { background: #e1306c; }
-.social-card.ysrcp .icons a:nth-child(4) { background: #25d366; }
-.social-card.ysrcp .icons a:nth-child(5) { background: #0088cc; }
+/* ysrcp */
+.social-card.ysrcp .icons a:nth-child(1){ background:#3b5998;}
+.social-card.ysrcp .icons a:nth-child(2){ background:#1da1f2;}
+.social-card.ysrcp .icons a:nth-child(3){ background:#e1306c;}
+.social-card.ysrcp .icons a:nth-child(4){ background:#25d366;}
+.social-card.ysrcp .icons a:nth-child(5){ background:#0088cc;}
 
-.social-card.nri .icons a:nth-child(1) { background: #3b5998; }
-.social-card.nri .icons a:nth-child(2) { background: #1da1f2; }
-.social-card.nri .icons a:nth-child(3) { background: #e1306c; }
-.social-card.nri .icons a:nth-child(4) { background: #25d366; }
-.social-card.nri .icons a:nth-child(5) { background: #0088cc; }
-
-/* Action Buttons */
-.action-buttons {
-display: flex;
-gap: 1rem;
-margin-top: 2rem;
-}
-
-.action-buttons button {
-flex: 1;
-padding: 0.75rem 1rem;
-font-weight: bold;
-border: none;
-border-radius: 10px;
-cursor: pointer;
-font-size: 0.9rem;
-color: #fff;
-}
-
-.action-buttons .contribute { background-color: #0b4d8c; }
-.action-buttons .app-team { background-color: #28a745; }
-
-.action-buttons .contribute:hover { background-color: #083a66; }
-.action-buttons .app-team:hover { background-color: #218838; }
+/* nri */
+.social-card.nri .icons a:nth-child(1){ background:#3b5998;}
+.social-card.nri .icons a:nth-child(2){ background:#1da1f2;}
+.social-card.nri .icons a:nth-child(3){ background:#e1306c;}
+.social-card.nri .icons a:nth-child(4){ background:#25d366;}
+.social-card.nri .icons a:nth-child(5){ background:#0088cc;}

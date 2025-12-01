@@ -2,7 +2,7 @@ import { useState } from "react";
 import { GraduationCap, Gavel, UsersRound, Briefcase, X } from "lucide-react";
 
 export default function Initiatives() {
-  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [selectedService, setSelectedService] = useState<any | null>(null);
 
   const services = [
     {
@@ -52,27 +52,27 @@ export default function Initiatives() {
   ];
 
   return (
-    <section className="py-20 bg-white relative">
-      <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-10">
-        
+    <section className="py-14 md:py-20 bg-white relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-10">
+
         {/* LEFT SECTION */}
-        <div className="pr-6">
-          <h4 className="text-blue-600 font-semibold tracking-wide uppercase">
+        <div>
+          <h4 className="text-blue-600 font-semibold tracking-wide uppercase text-sm md:text-base">
             Our Vision
           </h4>
 
-          <h2 className="text-4xl md:text-5xl font-extrabold leading-snug mt-3">
+          <h2 className="text-3xl md:text-5xl font-extrabold leading-snug mt-3">
             <span className="text-blue-700">Why Join</span>{" "}
             <span className="text-green-600">The Mission?</span>
           </h2>
 
-          <p className="text-gray-600 mt-4 text-lg leading-relaxed">
-            Your connection to the homeland is vital. We provide the platform to 
+          <p className="text-gray-600 mt-4 text-base md:text-lg leading-relaxed">
+            Your connection to the homeland is vital. We provide the platform to
             connect, contribute, and grow together.
           </p>
 
           {/* Features */}
-          <div className="mt-10 space-y-5">
+          <div className="mt-8 space-y-4 md:space-y-5">
             <div className="p-4 rounded-xl border border-gray-200 shadow-sm">
               <p className="font-semibold text-gray-800">
                 Direct Connect with Party Leadership
@@ -103,22 +103,27 @@ export default function Initiatives() {
         </div>
 
         {/* RIGHT SECTION */}
-        <div className="bg-[#FFF6EE] rounded-2xl p-10 relative overflow-hidden">
-          <h2 className="text-3xl font-extrabold text-[#5B3E2B]">Our Services</h2>
+        <div className="bg-[#FFF6EE] rounded-2xl p-6 sm:p-10 relative overflow-hidden">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-[#5B3E2B]">
+            Our Services
+          </h2>
           <p className="text-gray-600 text-sm mt-1">
             Comprehensive support ecosystem for NRIs
           </p>
 
           {/* SERVICE CARDS */}
-          <div className="grid grid-cols-2 gap-5 mt-10">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-5 mt-8">
             {services.map((s, index) => (
               <div
                 key={index}
                 onClick={() => setSelectedService(s)}
-                className="bg-white p-5 rounded-xl shadow border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-1 transition"
+                className="bg-white p-4 md:p-5 rounded-xl shadow border border-gray-100 cursor-pointer
+                           hover:shadow-md hover:-translate-y-1 transition"
               >
                 {s.icon}
-                <h3 className="font-bold text-gray-800 mt-3">{s.title}</h3>
+                <h3 className="font-bold text-gray-800 mt-3 text-sm md:text-base">
+                  {s.title}
+                </h3>
                 <p className="text-xs text-gray-500 mt-1">{s.short}</p>
               </div>
             ))}
@@ -126,11 +131,11 @@ export default function Initiatives() {
         </div>
       </div>
 
-      {/* ===================== MODAL POPUP ===================== */}
+      {/* ================= MODAL POPUP ================= */}
       {selectedService && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm transition">
-          <div className="bg-white w-96 p-7 rounded-2xl shadow-2xl relative animate-fadeIn">
-            
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <div className="bg-white w-[90%] sm:w-96 p-6 rounded-2xl shadow-2xl relative">
+
             {/* Close Button */}
             <button
               className="absolute top-3 right-3 text-gray-600 hover:text-black"
@@ -141,7 +146,7 @@ export default function Initiatives() {
 
             <div className="flex justify-center mb-4">{selectedService.icon}</div>
 
-            <h2 className="text-2xl font-bold text-center text-gray-900">
+            <h2 className="text-xl md:text-2xl font-bold text-center text-gray-900">
               {selectedService.title}
             </h2>
 

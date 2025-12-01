@@ -38,6 +38,7 @@ export default function Hero({ onJoinNow }: HeroProps) {
 
   const [current, setCurrent] = useState(0);
 
+  // Auto-slide every 4.5 sec
   useEffect(() => {
     const id = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
@@ -46,49 +47,49 @@ export default function Hero({ onJoinNow }: HeroProps) {
   }, []);
 
   return (
-    <section className="w-full mt-[72px] bg-white">
+    <section id="hero" className="w-full mt-[72px] bg-white">
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 h-[85vh] lg:h-[90vh]">
+      {/* Grid → Stacks on Mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[80vh] lg:min-h-[90vh]">
 
-        {/* LEFT — QUOTE BOX WITH BANNER */}
-        <div className="flex items-center justify-center p-8 bg-gradient-to-br from-blue-900 via-blue-700 to-blue-600 text-white">
+        {/* LEFT SECTION — QUOTE BOX + BANNER */}
+        <div className="flex items-center justify-center px-5 py-10 md:p-10 bg-gradient-to-br from-blue-900 via-blue-700 to-blue-600 text-white">
 
-          <div className="max-w-xl w-full backdrop-blur-xl bg-white/10 p-8 rounded-3xl shadow-2xl border border-white/20">
+          <div className="w-full max-w-xl backdrop-blur-xl bg-white/10 p-6 md:p-8 rounded-3xl shadow-2xl border border-white/20">
 
-            {/* 🔵 Banner Image at Top */}
+            {/* Banner Image */}
             <img
-              src="/Banner.jpg"      // <<— YOUR BANNER IMAGE
+              src="/Banner.jpg"
               alt="NRI Wing Banner"
-              className="w-full mb-6 rounded-xl shadow-lg object-cover"
+              className="w-full mb-5 md:mb-6 rounded-xl shadow-lg object-cover max-h-48 md:max-h-64"
             />
 
-            <h1 className="text-3xl md:text-4xl font-extrabold mb-6 leading-tight drop-shadow-lg">
+            <h1 className="text-2xl md:text-4xl font-extrabold mb-4 md:mb-6 leading-tight drop-shadow-lg">
               Inspiring the Global Telugu Community
             </h1>
 
-            <p className="text-lg md:text-xl italic mb-4">
+            <p className="text-base md:text-xl italic mb-3 md:mb-4">
               {slides[current].quote}
             </p>
 
-            <p className="text-sm font-semibold">
-              {slides[current].cite}
-            </p>
+            <p className="text-sm font-semibold">{slides[current].cite}</p>
 
-            <p className="text-xs opacity-80 mt-1">
-              {slides[current].sub}
-            </p>
+            <p className="text-xs opacity-80 mt-1">{slides[current].sub}</p>
 
+            {/* Join Now Button */}
             <button
               onClick={onJoinNow}
-              className="mt-6 px-7 py-3 rounded-xl bg-white text-blue-900 font-bold shadow-xl hover:bg-gray-200 active:scale-95 transition"
+              className="mt-6 w-full md:w-auto px-7 py-3 rounded-xl bg-white text-blue-900 font-bold shadow-xl hover:bg-gray-200 active:scale-95 transition"
             >
               Join Now
             </button>
+
           </div>
         </div>
 
-        {/* RIGHT — SLIDES */}
-        <div className="relative h-full overflow-hidden bg-black">
+        {/* RIGHT SECTION — SLIDESHOW */}
+        <div className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-full overflow-hidden bg-black">
+
           {slides.map((s, index) => (
             <div
               key={index}
@@ -106,11 +107,11 @@ export default function Hero({ onJoinNow }: HeroProps) {
             </div>
           ))}
 
-          {/* Gradient Overlay */}
+          {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
 
-          {/* Slide Dots */}
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex space-x-3">
+          {/* Dots */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-3">
             {slides.map((_, idx) => (
               <button
                 key={idx}
@@ -123,6 +124,7 @@ export default function Hero({ onJoinNow }: HeroProps) {
               />
             ))}
           </div>
+
         </div>
 
       </div>
