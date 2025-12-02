@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
@@ -45,6 +45,8 @@ function MainLandingPage({
   setShowAuthModal,
   showAuthModal,
   authMode,
+  onShowDashboard,
+  user,
 }) {
   return (
     <div className="min-h-screen bg-white">
@@ -97,9 +99,19 @@ function MainLandingPage({
 }
 
 function AppContent() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('signin');
+  const [showDashboard, setShowDashboard] = useState(false);
+
+  // Auto-show dashboard after successful login
+  useEffect(() => {
+    if (user && profile && !showDashboard && !showAuthModal) {
+      // show dashboard after a brief delay to ensure auth modal closes
+      const timer = setTimeout(() => setShowDashboard(true), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [user, profile, showDashboard, showAuthModal]);
 
   if (loading) {
     return (
@@ -112,7 +124,30 @@ function AppContent() {
     );
   }
 
-  if (user && profile) return <Dashboard />;
+  if (user && profile) {
+    return showDashboard ? (
+      <Dashboard
+        onClose={() => setShowDashboard(false)}
+        onLogout={async () => {
+          try {
+            await signOut();
+            setShowDashboard(false);
+          } catch (error) {
+            console.error('Logout error:', error);
+          }
+        }}
+      />
+    ) : (
+      <MainLandingPage
+        setAuthMode={setAuthMode}
+        setShowAuthModal={setShowAuthModal}
+        showAuthModal={showAuthModal}
+        authMode={authMode}
+        onShowDashboard={() => setShowDashboard(true)}
+        user={user}
+      />
+    );
+  }
 
   return (
     <>

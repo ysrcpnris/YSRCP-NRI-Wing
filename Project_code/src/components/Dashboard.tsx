@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, User, Users, Calendar, MessageSquare, Bell, MapPin, ChevronDown, ChevronUp, LogOut, Briefcase, GraduationCap, Scale, Check, ArrowRight, Share2, Award, Send, CheckCircle, Info, AlertCircle, Globe, Settings, Facebook, Linkedin, Instagram, Twitter } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardProps {
   onClose: () => void;
@@ -12,7 +14,13 @@ type SectionKey = 'profile' | 'referrals' | 'connect' | 'services' | 'events' | 
 const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>('profile'); 
   const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [toast, setToast] = useState<{msg: string, type: 'success' | 'info'} | null>(null);
+    const [toast, setToast] = useState<{msg: string, type: 'success' | 'info'} | null>(null);
+    const { user, refreshProfile, profile } = useAuth();
+
+    // Photo upload state
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (toast) {
@@ -28,6 +36,72 @@ const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
   const toggleSection = (section: SectionKey) => {
     setExpandedSection(prev => (prev === section ? null : section));
   };
+
+    // Photo handlers
+    const handleSelectPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        setPhotoFile(file);
+        const url = URL.createObjectURL(file);
+        setPhotoPreview(url);
+    };
+
+    const handleUploadPhoto = async () => {
+        if (!photoFile || !user) {
+            showToast('No file selected or user not available', 'info');
+            return;
+        }
+
+        setUploading(true);
+        try {
+            const fileExt = photoFile.name.split('.').pop();
+            const filePath = `profile-photos/${user.id}_${Date.now()}.${fileExt}`;
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('profile-photos')
+                .upload(filePath, photoFile, { upsert: true });
+
+            if (uploadError) {
+                console.error('Storage upload error', uploadError);
+                throw uploadError;
+            }
+
+            const { data: urlData, error: publicUrlError } = await supabase.storage.from('profile-photos').getPublicUrl(filePath);
+            if (publicUrlError) {
+                console.error('Get public url error', publicUrlError);
+                throw publicUrlError;
+            }
+            const publicUrl = urlData?.publicUrl;
+
+            const { data: updated, error: updateError } = await supabase
+                .from('profiles')
+                .update({ profile_photo: publicUrl })
+                .eq('id', user.id)
+                .select()
+                .maybeSingle();
+
+            if (updateError) {
+                console.error('Profile update error', updateError);
+                throw updateError;
+            }
+
+            // refresh profile in context
+            await refreshProfile();
+            showToast('Profile photo updated', 'success');
+            // clear selection
+            setPhotoFile(null);
+            if (photoPreview) {
+                URL.revokeObjectURL(photoPreview);
+            }
+            setPhotoPreview(null);
+        } catch (err: any) {
+            console.error('Upload error', err);
+            const msg = err?.message || (err?.error_description ?? 'Upload failed');
+            showToast(msg, 'info');
+        } finally {
+            setUploading(false);
+        }
+    };
 
   // --- ENRICHED SUMMARY RENDERERS (Visible when Collapsed) ---
 
@@ -135,6 +209,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column: Progress & Stats */}
             <div className="lg:col-span-1 space-y-6">
+                {/* Profile Photo Block */}
+                <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm text-center">
+                    <div className="w-28 h-28 mx-auto rounded-full overflow-hidden bg-gray-100 mb-3">
+                        {photoPreview ? (
+                            <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
+                        ) : profile?.profile_photo ? (
+                            <img src={profile.profile_photo} alt="avatar" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">No Photo</div>
+                        )}
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                        <label className="px-3 py-1 bg-gray-100 border border-gray-200 rounded-lg cursor-pointer text-xs font-bold">
+                            Select
+                            <input type="file" accept="image/*" className="hidden" onChange={handleSelectPhoto} />
+                        </label>
+                        <button onClick={() => { setPhotoFile(null); if (photoPreview) { URL.revokeObjectURL(photoPreview); } setPhotoPreview(null); }} className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs">Cancel</button>
+                    </div>
+                    <div className="mt-3">
+                        <button disabled={!photoFile || uploading} onClick={handleUploadPhoto} className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold disabled:opacity-60">{uploading ? 'Uploading...' : 'Upload Photo'}</button>
+                    </div>
+                </div>
                 <div className="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
                     <div className="text-center relative z-10">
