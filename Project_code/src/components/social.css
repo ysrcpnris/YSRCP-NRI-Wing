@@ -146,3 +146,15 @@
 .social-card.nri .icons a:nth-child(3){ background:#e1306c;}
 .social-card.nri .icons a:nth-child(4){ background:#25d366;}
 .social-card.nri .icons a:nth-child(5){ background:#0088cc;}
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  gap: 1rem;
+  animation-name: marquee;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
