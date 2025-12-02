@@ -1,111 +1,578 @@
-import { useState } from 'react';
-import { LogOut, Home, User, GraduationCap, Briefcase, Calendar, MessageSquare, Users as UsersIcon, Menu, X } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import DashboardHome from './dashboard/DashboardHome';
-import ProfileSection from './dashboard/ProfileSection';
-import StudentAssistance from './dashboard/StudentAssistance';
-import JobAssistance from './dashboard/JobAssistance';
-import Events from './dashboard/Events';
-import Grievances from './dashboard/Grievances';
 
+import React, { useState, useEffect } from 'react';
+import { X, User, Users, Calendar, MessageSquare, Bell, MapPin, ChevronDown, ChevronUp, LogOut, Briefcase, GraduationCap, Scale, Check, ArrowRight, Share2, Award, Send, CheckCircle, Info, AlertCircle, Globe, Settings, Facebook, Linkedin, Instagram, Twitter } from 'lucide-react';
 
-type Tab = 'home' | 'profile' | 'student' | 'jobs' | 'events' | 'grievances' | 'directory';
+interface DashboardProps {
+  onClose: () => void;
+  onLogout: () => void;
+}
 
-export default function Dashboard() {
-  const { signOut, profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>('home');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+type SectionKey = 'profile' | 'referrals' | 'connect' | 'services' | 'events' | 'notifications';
 
-  const handleSignOut = async () => {
-    await signOut();
+const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
+  const [expandedSection, setExpandedSection] = useState<SectionKey | null>('profile'); 
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [toast, setToast] = useState<{msg: string, type: 'success' | 'info'} | null>(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const showToast = (msg: string, type: 'success' | 'info' = 'success') => {
+    setToast({ msg, type });
   };
 
-  const menuItems = [
-    { id: 'home' as Tab, icon: <Home className="w-5 h-5" />, label: 'Dashboard' },
-    { id: 'profile' as Tab, icon: <User className="w-5 h-5" />, label: 'Profile' },
-    { id: 'student' as Tab, icon: <GraduationCap className="w-5 h-5" />, label: 'Student Assistance' },
-    { id: 'jobs' as Tab, icon: <Briefcase className="w-5 h-5" />, label: 'Job Portal' },
-    { id: 'events' as Tab, icon: <Calendar className="w-5 h-5" />, label: 'Events' },
-    { id: 'grievances' as Tab, icon: <MessageSquare className="w-5 h-5" />, label: 'Grievances' },
-   
-  ];
+  const toggleSection = (section: SectionKey) => {
+    setExpandedSection(prev => (prev === section ? null : section));
+  };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-blue-600 to-green-500 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="md:hidden"
-              >
-                {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">Y</span>
-              </div>
-              <div>
-                <h1 className="text-lg font-bold">YSRCP NRI Wing</h1>
-                <p className="text-xs text-blue-100">Member Dashboard</p>
-              </div>
+  // --- ENRICHED SUMMARY RENDERERS (Visible when Collapsed) ---
+
+  const renderProfileSummary = () => (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full mt-1 opacity-90">
+        <div className="flex-1 min-w-[200px]">
+            <div className="flex justify-between text-xs font-bold text-gray-500 mb-1.5">
+                <span>Profile Completion</span>
+                <span className="text-indigo-600">75%</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="hidden sm:block text-right">
-                <p className="font-semibold">{profile?.full_name}</p>
-                <p className="text-xs text-blue-100">{profile?.status}</p>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Sign Out</span>
-              </button>
+            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div className="h-full bg-indigo-600 w-3/4 rounded-full shadow-sm"></div>
             </div>
-          </div>
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-4 gap-6">
-          <div className={`lg:col-span-1 ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white rounded-xl shadow-md p-4 sticky top-4">
-              <nav className="space-y-2">
-                {menuItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition ${
-                      activeTab === item.id
-                        ? 'bg-gradient-to-r from-blue-600 to-green-500 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {item.icon}
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                ))}
-              </nav>
+        <div className="flex items-center gap-4 text-xs font-medium text-gray-500 sm:border-l sm:border-gray-200 sm:pl-4">
+            <div className="flex items-center gap-1.5">
+                <CheckCircle size={14} className="text-green-500" />
+                <span>Verified</span>
             </div>
-          </div>
-
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-md p-6">
-              {activeTab === 'home' && <DashboardHome />}
-              {activeTab === 'profile' && <ProfileSection />}
-              {activeTab === 'student' && <StudentAssistance />}
-              {activeTab === 'jobs' && <JobAssistance />}
-              {activeTab === 'events' && <Events />}
-              {activeTab === 'grievances' && <Grievances />}
-             
+            <div className="flex items-center gap-1.5">
+                <AlertCircle size={14} className="text-amber-500" />
+                <span>Socials Pending</span>
             </div>
-          </div>
         </div>
-      </div>
     </div>
   );
-}
+
+  const renderReferralsSummary = () => (
+    <div className="flex flex-wrap items-center gap-6 w-full mt-1 opacity-90">
+        <div className="flex items-center gap-2">
+            <span className="text-2xl font-black text-emerald-600 leading-none">24</span>
+            <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Active</span>
+            </div>
+        </div>
+        <div className="w-px bg-gray-200 h-6 hidden sm:block"></div>
+        <div className="flex items-center gap-2">
+            <span className="text-2xl font-black text-blue-600 leading-none">108</span>
+            <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Passive</span>
+            </div>
+        </div>
+        <div className="flex-1 text-right hidden md:block">
+            <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded">+4 this week</span>
+        </div>
+    </div>
+  );
+
+  const renderConnectSummary = () => (
+    <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
+        <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+                {[1,2,3,4].map(i => (
+                    <div key={i} className="w-7 h-7 rounded-full border-2 border-white bg-gray-100 overflow-hidden">
+                        <img src={`https://picsum.photos/seed/l${i}/100`} alt="Leader" className="w-full h-full object-cover" />
+                    </div>
+                ))}
+            </div>
+            <span className="text-xs font-bold text-gray-600">Global Convener & 3 Others</span>
+        </div>
+    </div>
+  );
+
+  const renderServicesSummary = () => (
+    <div className="flex flex-wrap items-center gap-4 w-full mt-1 opacity-90">
+        <div className="flex gap-2">
+            <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-[10px] font-bold uppercase border border-blue-100">Student</span>
+            <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded text-[10px] font-bold uppercase border border-purple-100">Legal</span>
+            <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded text-[10px] font-bold uppercase border border-amber-100">Career</span>
+        </div>
+    </div>
+  );
+
+  const renderEventsSummary = () => (
+    <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
+        <div className="flex items-center gap-3">
+            <div className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-center min-w-[36px]">
+                <span className="block text-[9px] font-black uppercase">Mar</span>
+                <span className="block text-xs font-black leading-none">15</span>
+            </div>
+            <div>
+                <span className="block text-xs font-bold text-gray-800">Global NRI Summit</span>
+            </div>
+        </div>
+        <div className="text-[10px] font-bold text-white bg-pink-500 px-2 py-0.5 rounded-full">
+            Upcoming
+        </div>
+    </div>
+  );
+
+  const renderNotificationsSummary = () => (
+    <div className="w-full mt-1 flex items-center justify-between opacity-90">
+        <div className="flex items-center gap-2">
+            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">3</span>
+            <span className="text-xs text-gray-500 font-medium">Unread updates</span>
+        </div>
+    </div>
+  );
+
+
+  // --- EXPANDED CONTENT RENDERERS ---
+
+  const renderProfileContent = () => (
+    <div className="pt-4 animate-fade-in">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column: Progress & Stats */}
+            <div className="lg:col-span-1 space-y-6">
+                <div className="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+                    <div className="text-center relative z-10">
+                        <div className="w-20 h-20 mx-auto mb-3 relative">
+                            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <path className="text-indigo-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
+                                <path className="text-white" strokeDasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-sm font-black">75%</span>
+                            </div>
+                        </div>
+                        <h3 className="text-base font-bold">Gold Member</h3>
+                        <p className="text-indigo-200 text-xs mb-3">Complete profile to unlock Platinum</p>
+                    </div>
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Missing Info</h4>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded hover:border-indigo-300 cursor-pointer transition-all">
+                            <span className="text-xs font-bold text-gray-600">Link Socials</span>
+                            <ArrowRight size={12} className="text-indigo-500"/>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded hover:border-indigo-300 cursor-pointer transition-all">
+                            <span className="text-xs font-bold text-gray-600">Add Profession</span>
+                            <ArrowRight size={12} className="text-indigo-500"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Column: Form */}
+            <div className="lg:col-span-2 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Full Name</label>
+                        <input type="text" defaultValue="Krishna Reddy" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Email</label>
+                        <input type="email" defaultValue="krishna.r@example.com" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    </div>
+                </div>
+
+                <div className="p-5 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                    <h4 className="text-xs font-black text-indigo-900 mb-3 flex items-center gap-2"><MapPin size={14}/> INDIAN ADDRESS</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <select className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 outline-none"><option>Andhra Pradesh</option></select>
+                        <select className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 outline-none"><option>Kadapa</option></select>
+                        <select className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 outline-none"><option>Pulivendula</option></select>
+                    </div>
+                </div>
+
+                <div className="p-5 bg-white rounded-xl border border-gray-200">
+                    <h4 className="text-xs font-black text-gray-500 mb-3 uppercase tracking-wider">Professional & Social</h4>
+                    
+                    {/* Profession - Free Text */}
+                    <div className="mb-4">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Profession / Designation</label>
+                        <input type="text" placeholder="e.g. Senior Software Architect" className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    </div>
+
+                    {/* Social Media Inputs */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="relative">
+                            <Facebook className="absolute left-3 top-3 text-blue-600" size={16} />
+                            <input type="text" placeholder="Facebook Profile URL" className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                        </div>
+                        <div className="relative">
+                            <Twitter className="absolute left-3 top-3 text-black" size={16} />
+                            <input type="text" placeholder="X (Twitter) Handle" className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                        </div>
+                        <div className="relative">
+                            <Linkedin className="absolute left-3 top-3 text-blue-700" size={16} />
+                            <input type="text" placeholder="LinkedIn Profile URL" className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                        </div>
+                        <div className="relative">
+                            <Instagram className="absolute left-3 top-3 text-pink-600" size={16} />
+                            <input type="text" placeholder="Instagram Handle" className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">I want to contribute via:</h4>
+                    <div className="flex flex-wrap gap-2">
+                        {['Podcast', 'Tech Team', 'ORM', 'Content', 'Ground Force'].map((opt) => (
+                            <label key={opt} className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all bg-white group">
+                                <input type="checkbox" className="w-3.5 h-3.5 text-indigo-600 rounded focus:ring-indigo-500" />
+                                <span className="text-xs font-bold text-gray-600 group-hover:text-indigo-700">{opt}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                    <button onClick={() => showToast("Profile Saved Successfully!")} className="px-6 py-2.5 bg-gray-900 text-white font-bold rounded-lg shadow-lg hover:bg-black transition-all flex items-center gap-2 text-xs uppercase tracking-wider">
+                        <Check size={14} /> Save Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+  );
+
+  const renderReferralsContent = () => (
+    <div className="pt-4 animate-fade-in space-y-6">
+        {/* Top Row */}
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
+            <div>
+                <h4 className="font-black text-xl mb-1">Refer & Earn</h4>
+                <p className="text-emerald-100 text-xs max-w-md">Share your unique link. Top referrers get exclusive meeting invites with party leadership.</p>
+            </div>
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20">
+                <code className="text-xs font-mono text-white px-2">ysrcp.com/join/KRISHNA85</code>
+                <button onClick={() => showToast("Referral Link Copied!")} className="bg-white text-emerald-600 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-emerald-50 transition-colors">Copy</button>
+            </div>
+        </div>
+
+        {/* Tables - SCROLLABLE for large lists */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Active Referrals */}
+            <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm flex flex-col max-h-[400px]">
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center shrink-0">
+                    <h4 className="font-bold text-xs text-gray-700 uppercase tracking-wider">Active Referrals</h4>
+                    <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">50 Members</span>
+                </div>
+                <div className="overflow-y-auto custom-scrollbar">
+                    <table className="w-full text-xs text-left">
+                        <thead className="bg-white text-gray-400 border-b border-gray-100 sticky top-0 z-10">
+                            <tr><th className="px-4 py-2 font-bold bg-gray-50/90">Name</th><th className="px-4 py-2 font-bold bg-gray-50/90">Location</th><th className="px-4 py-2 font-bold bg-gray-50/90">Date</th></tr>
+                        </thead>
+                        <tbody>
+                            {Array.from({length: 20}).map((_, i) => (
+                                <tr key={i} className="hover:bg-gray-50 border-b border-gray-50 last:border-0">
+                                    <td className="px-4 py-2.5 font-bold text-gray-700">Member Name {i+1}</td>
+                                    <td className="px-4 py-2.5 text-gray-500">Dallas, USA</td>
+                                    <td className="px-4 py-2.5 text-gray-400">Jan 12, 2025</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Passive Referrals */}
+            <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm flex flex-col max-h-[400px]">
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center shrink-0">
+                    <h4 className="font-bold text-xs text-gray-700 uppercase tracking-wider">Passive Tree</h4>
+                    <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">100+ Members</span>
+                </div>
+                <div className="overflow-y-auto custom-scrollbar">
+                    <table className="w-full text-xs text-left">
+                        <thead className="bg-white text-gray-400 border-b border-gray-100 sticky top-0 z-10">
+                            <tr><th className="px-4 py-2 font-bold bg-gray-50/90">Name</th><th className="px-4 py-2 font-bold bg-gray-50/90">Location</th><th className="px-4 py-2 font-bold bg-gray-50/90">Date</th></tr>
+                        </thead>
+                        <tbody>
+                            {Array.from({length: 20}).map((_, i) => (
+                                <tr key={i} className="hover:bg-gray-50 border-b border-gray-50 last:border-0">
+                                    <td className="px-4 py-2.5 font-bold text-gray-700">Passive Member {i+1}</td>
+                                    <td className="px-4 py-2.5 text-gray-500">London, UK</td>
+                                    <td className="px-4 py-2.5 text-gray-400">Jan 15, 2025</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+  );
+
+  const renderConnectContent = () => (
+    <div className="pt-4 animate-fade-in">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+                { role: 'Global Convener', name: 'Aluru Sambasiva Reddy', img: 'https://picsum.photos/seed/l1/200', color: 'text-purple-600', border: 'border-purple-200' },
+                { role: 'Regional President', name: 'Y.V. Subba Reddy', img: 'https://picsum.photos/seed/l2/200', color: 'text-blue-600', border: 'border-blue-200' },
+                { role: 'District President', name: 'K. Suresh Babu', img: 'https://picsum.photos/seed/l3/200', color: 'text-emerald-600', border: 'border-emerald-200' },
+                { role: 'MLA In-Charge', name: 'Avinash Reddy', img: 'https://picsum.photos/seed/l4/200', color: 'text-orange-600', border: 'border-orange-200' },
+            ].map((leader, idx) => (
+                <div key={idx} className={`bg-white border ${leader.border} rounded-xl p-4 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-all group`}>
+                    <div className="w-16 h-16 rounded-full p-0.5 bg-white border border-gray-200 mb-3 relative">
+                        <img src={leader.img} alt={leader.name} className="w-full h-full rounded-full object-cover" />
+                    </div>
+                    <span className={`text-[9px] font-black uppercase tracking-widest mb-1 ${leader.color}`}>{leader.role}</span>
+                    <h4 className="text-sm font-bold text-gray-900 mb-4">{leader.name}</h4>
+                    
+                    <button onClick={() => showToast(`Opening WhatsApp with ${leader.name}...`)} className="w-full py-2 rounded-lg bg-[#25D366] hover:bg-[#20b85a] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+                        <MessageSquare size={14} fill="white" /> WhatsApp
+                    </button>
+                </div>
+            ))}
+        </div>
+    </div>
+  );
+
+  const renderServicesContent = () => (
+    <div className="pt-4 animate-fade-in">
+        {!selectedService ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                    { id: 'student', title: 'Student Support', icon: <GraduationCap size={28} />, color: 'text-blue-600', bg: 'bg-blue-50' },
+                    { id: 'legal', title: 'Legal Advisor', icon: <Scale size={28} />, color: 'text-purple-600', bg: 'bg-purple-50' },
+                    { id: 'career', title: 'Career Coach', icon: <Briefcase size={28} />, color: 'text-amber-600', bg: 'bg-amber-50' },
+                    { id: 'local', title: 'Local Connector', icon: <Users size={28} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                ].map(s => (
+                    <div key={s.id} onClick={() => setSelectedService(s.id)} className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group flex flex-col items-center text-center">
+                        <div className={`w-12 h-12 ${s.bg} ${s.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                            {s.icon}
+                        </div>
+                        <h3 className="font-bold text-sm text-gray-800 mb-2">{s.title}</h3>
+                        <span className="text-[10px] font-bold text-gray-400 group-hover:text-blue-600 uppercase tracking-wide flex items-center gap-1">
+                            Request Info <ArrowRight size={10} />
+                        </span>
+                    </div>
+                ))}
+            </div>
+        ) : (
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 relative animate-fade-in">
+                <button onClick={() => setSelectedService(null)} className="text-xs font-bold text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4">
+                    <ArrowRight size={12} className="rotate-180"/> Back to Services
+                </button>
+                
+                <h3 className="font-black text-lg text-gray-900 mb-4">Request Form</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input type="text" className="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs font-medium outline-none focus:border-blue-500 transition-all" placeholder="Applicant Name" />
+                    <input type="text" className="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs font-medium outline-none focus:border-blue-500 transition-all" placeholder="Current Location" />
+                </div>
+                <textarea className="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs font-medium outline-none focus:border-blue-500 transition-all resize-none h-24 mb-4" placeholder="Describe your requirement..."></textarea>
+                <button onClick={() => {showToast('Application Submitted!'); setSelectedService(null)}} className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                    <Send size={14} /> Submit Request
+                </button>
+            </div>
+        )}
+    </div>
+  );
+
+  const renderEventsContent = () => (
+    <div className="pt-4 animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {[1,2,3,4].map(i => (
+            <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 hover:shadow-md transition-all cursor-pointer group">
+                <div className="bg-gray-900 text-white w-16 h-16 rounded-lg flex flex-col items-center justify-center shrink-0 group-hover:bg-pink-600 transition-colors">
+                    <span className="text-[9px] font-black uppercase">Mar</span>
+                    <span className="text-2xl font-black leading-none">15</span>
+                </div>
+                <div className="flex-1">
+                    <h4 className="font-bold text-sm text-gray-900 leading-tight mb-1">Global NRI Summit 2025</h4>
+                    <p className="text-[10px] font-bold text-gray-500 flex items-center gap-1">
+                        <MapPin size={10} /> Visakhapatnam
+                    </p>
+                </div>
+                <button onClick={(e) => {e.stopPropagation(); showToast("RSVP Confirmed!")}} className="px-4 py-1.5 border-2 border-gray-100 text-gray-600 font-bold text-[10px] rounded hover:bg-gray-50 transition-colors uppercase tracking-wide">
+                    RSVP
+                </button>
+            </div>
+        ))}
+    </div>
+  );
+
+  const renderNotificationsContent = () => (
+    <div className="pt-4 animate-fade-in">
+        <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+            {[1,2,3].map(i => (
+                <div key={i} className="p-4 flex gap-3 hover:bg-gray-50 transition-colors group cursor-pointer">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${i === 1 ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                        {i === 1 ? <AlertCircle size={16} /> : <Bell size={16} />}
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                            <h4 className="text-xs font-bold text-gray-900">Event Reminder: District Meet</h4>
+                            <span className="text-[9px] font-medium text-gray-400">2h ago</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Scheduled for tomorrow at 10 AM.</p>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+  );
+
+  // Reusable Accordion Item
+  const AccordionItem = ({ id, title, icon, content, summary, color }: { id: SectionKey, title: string, icon: React.ReactNode, content: React.ReactNode, summary: React.ReactNode, color: string }) => {
+    const isOpen = expandedSection === id;
+    
+    return (
+      <div 
+        className={`
+            transition-all duration-300 ease-out mb-3 rounded-xl border overflow-hidden group
+            ${isOpen ? 'bg-white border-gray-300 shadow-xl ring-1 ring-black/5 z-10' : 'bg-white border-gray-200 shadow-sm hover:border-gray-300'}
+        `}
+      >
+        {/* Header Bar */}
+        <button 
+          onClick={() => toggleSection(id)}
+          className={`w-full flex items-center justify-between p-4 outline-none transition-colors relative overflow-hidden`}
+        >
+          {/* Background highlighting on hover/active */}
+          <div className={`absolute inset-0 transition-opacity duration-300 ${isOpen ? 'bg-gray-50/80' : 'bg-white group-hover:bg-gray-50'}`}></div>
+
+          <div className="flex items-center gap-4 flex-1 min-w-0 relative z-10">
+            {/* Icon Box */}
+            <div className={`
+                w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 shrink-0
+                ${isOpen ? color + ' text-white shadow-md' : 'bg-gray-100 text-gray-500 group-hover:bg-white group-hover:shadow-sm'}
+            `}>
+              {icon}
+            </div>
+            
+            {/* Title & Summary Container */}
+            <div className="flex flex-col items-start flex-1 min-w-0">
+                <span className={`text-sm font-black tracking-tight transition-colors ${isOpen ? 'text-gray-900 text-base' : 'text-gray-700'}`}>
+                    {title}
+                </span>
+                
+                {/* Summary (Fade out when open, Fade in when closed) */}
+                <div className={`transition-all duration-300 origin-top w-full ${isOpen ? 'h-0 opacity-0 scale-y-0 hidden' : 'h-auto opacity-100 scale-y-100 block'}`}>
+                    {summary}
+                </div>
+            </div>
+          </div>
+          
+          {/* Chevron */}
+          <div className={`
+            w-6 h-6 rounded-full flex items-center justify-center ml-3 transition-all duration-300 shrink-0 relative z-10
+            ${isOpen ? 'bg-gray-200 text-gray-800 rotate-180' : 'text-gray-400'}
+          `}>
+             <ChevronDown size={16} />
+          </div>
+        </button>
+        
+        {/* Expanded Content Body */}
+        <div className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+           <div className="px-4 pb-6 sm:px-6 border-t border-gray-100 bg-white relative z-10">
+              {content}
+           </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex flex-col animate-fade-in font-sans bg-gray-100/95 backdrop-blur-sm">
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-fade-in-up ${toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-blue-600 text-white'}`}>
+            {toast.type === 'success' ? <CheckCircle size={16} /> : <Info size={16} />}
+            <span className="text-xs font-bold uppercase tracking-wide">{toast.msg}</span>
+        </div>
+      )}
+      
+      {/* Header */}
+      <div className="px-6 py-4 flex justify-between items-center shrink-0 bg-white border-b border-gray-200 shadow-sm relative z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-ysrcp-blue rounded-lg flex items-center justify-center text-white font-black text-xs shadow-md">YSRC</div>
+          <div>
+            <h1 className="font-black text-lg text-gray-900 tracking-tight leading-none">My Portal</h1>
+            <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider mt-0.5">● Online</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+           <button onClick={onLogout} className="hidden sm:flex text-gray-500 hover:text-red-600 text-[10px] font-black uppercase items-center gap-1.5 bg-gray-50 hover:bg-red-50 px-3 py-2 rounded border border-gray-200 hover:border-red-100 transition-all">
+             <LogOut size={12} /> Logout
+           </button>
+           <button onClick={onClose} className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-full transition-all border border-gray-200">
+             <X size={18} />
+           </button>
+        </div>
+      </div>
+
+      {/* Main Content List */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative z-10">
+         {/* INCREASED WIDTH to max-w-7xl for much wider cards */}
+         <div className="max-w-7xl mx-auto pb-20">
+            
+            <AccordionItem 
+                id="profile" 
+                title="Complete Profile" 
+                summary={renderProfileSummary()}
+                icon={<User size={20}/>} 
+                content={renderProfileContent()} 
+                color="bg-indigo-600"
+            />
+            
+            <AccordionItem 
+                id="referrals" 
+                title="My Network" 
+                summary={renderReferralsSummary()}
+                icon={<Users size={20}/>} 
+                content={renderReferralsContent()} 
+                color="bg-emerald-600"
+            />
+            
+            <AccordionItem 
+                id="connect" 
+                title="Leadership Connect" 
+                summary={renderConnectSummary()}
+                icon={<MessageSquare size={20}/>} 
+                content={renderConnectContent()} 
+                color="bg-blue-600"
+            />
+            
+            <AccordionItem 
+                id="services" 
+                title="Services Hub" 
+                summary={renderServicesSummary()}
+                icon={<Briefcase size={20}/>} 
+                content={renderServicesContent()} 
+                color="bg-amber-500"
+            />
+            
+            <AccordionItem 
+                id="events" 
+                title="Events & Summits" 
+                summary={renderEventsSummary()}
+                icon={<Calendar size={20}/>} 
+                content={renderEventsContent()} 
+                color="bg-pink-600"
+            />
+            
+            <AccordionItem 
+                id="notifications" 
+                title="Notifications" 
+                summary={renderNotificationsSummary()}
+                icon={<Bell size={20}/>} 
+                content={renderNotificationsContent()} 
+                color="bg-red-500"
+            />
+
+         </div>
+      </div>
+
+    </div>
+  );
+};
+
+export default Dashboard;
