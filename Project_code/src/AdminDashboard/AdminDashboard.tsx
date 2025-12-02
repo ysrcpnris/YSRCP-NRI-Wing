@@ -2,9 +2,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { Settings } from "lucide-react";
+import { Globe } from "lucide-react";
 import Visited from "./Visited";
 import Assistance from "./Assistance";
 import Suggestions from "./Suggestions";
+import ServiceInbox from "./ServiceInbox";
+import MasterData from "./MasterData";
+import ContentControl from "./ContentControl";
 import ysrLogo from "../components/nrilogo.png";
 
 
@@ -158,6 +163,10 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={CalendarDays} label="Visited" page="visited" />
             <Item icon={Newspaper} label="Assistance" page="assistance" />
             <Item icon={Users} label="Suggestions" page="suggestions" />
+            <Item icon={FolderKanban} label="Service Inbox" page="serviceInbox" />
+            <Item icon={Settings} label="Master Data" page="masterData" />
+            <Item icon={Globe} label="Content Control" page="contentControl" />
+
           </nav>
         </div>
 
@@ -599,6 +608,10 @@ export default function AdminDashboard() {
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
       {currentPage === "suggestions" && <Suggestions />}
+      {currentPage === "serviceInbox" && <ServiceInbox />}
+      {currentPage === "masterData" && <MasterData />}
+      {currentPage === "contentControl" && <ContentControl />}
+
       </main>
     </div>
   );
