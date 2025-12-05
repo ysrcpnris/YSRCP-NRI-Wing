@@ -29,7 +29,7 @@ export default function DevelopmentShowcase() {
 
   useEffect(() => {
     const refs = [scrollRef1.current, scrollRef2.current];
-    const step = 2;
+    const step = 4; // ✅ Increased speed
 
     const id = setInterval(() => {
       refs.forEach((el) => {
@@ -55,17 +55,16 @@ export default function DevelopmentShowcase() {
           target="_blank"
           rel="noopener noreferrer"
           key={i}
-          className="min-w-[250px] md:min-w-[300px] h-[220px] rounded-xl overflow-hidden relative shadow-lg flex-shrink-0 transition-transform hover:scale-105"
+          className="min-w-[260px] h-[260px] rounded-xl overflow-hidden relative shadow-lg flex-shrink-0 transition-transform hover:scale-105 bg-white"
         >
           <img
             src={item.image}
             alt={item.title}
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-contain bg-gray-100"
           />
 
-          {/* ◼ Bottom overlay for title */}
-          <div className="absolute bottom-0 left-0 w-full bg-black/50 px-2 py-2 text-center">
-            <span className="text-white text-lg md:text-xl font-bold drop-shadow-md tracking-wide">
+          <div className="absolute bottom-0 left-0 w-full bg-black/60 px-2 py-2 text-center">
+            <span className="text-white text-lg md:text-xl font-bold tracking-wide">
               {item.title}
             </span>
           </div>
