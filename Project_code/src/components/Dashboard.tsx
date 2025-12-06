@@ -1165,20 +1165,45 @@ const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onLogout}
-            className="hidden sm:flex text-gray-500 hover:text-red-600 text-[10px] font-black uppercase items-center gap-1.5 bg-gray-50 hover:bg-red-50 px-3 py-2 rounded border border-gray-200 hover:border-red-100 transition-all"
-          >
-            <LogOut size={12} /> Logout
-          </button>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center text-gray-500 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-full transition-all border border-gray-200"
-          >
-            <X size={18} />
-          </button>
-        </div>
+       <div className="flex items-center gap-2">
+  {/* Logout - MOBILE */}
+  <button
+    onClick={onLogout}
+    title="Logout"
+    className="flex sm:hidden w-9 h-9 items-center justify-center
+               text-red-600 bg-white border border-red-200 rounded-full
+               hover:bg-red-50 hover:border-red-300 hover:text-red-700
+               transition-all shadow-sm"
+  >
+    <LogOut size={16} />
+  </button>
+
+  {/*  Logout - DESKTOP  */}
+  <button
+    onClick={onLogout}
+    className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wide
+               text-red-600 bg-white border border-red-200 rounded-lg
+               hover:bg-red-50 hover:border-red-300 hover:text-red-700
+               transition-all shadow-sm"
+  >
+    <LogOut size={14} />
+    Logout
+  </button>
+
+  {/* Close Button - Neutral */}
+  <button
+    onClick={onClose}
+    className="w-9 h-9 flex items-center justify-center
+               text-gray-500 bg-white border border-gray-200 rounded-full
+               hover:bg-gray-100 hover:text-gray-900
+               transition-all shadow-sm"
+  >
+    <X size={18} />
+  </button>
+</div>
+
+  
+
       </div>
 
       {/* Main Content List */}
