@@ -59,7 +59,7 @@ export default function Contact({ setAuthMode, setShowAuthModal }: ContactProps)
         }}
       />
 
-      <section id="suggestions" className="pt-24 p-10 text-center">
+      {/* <section id="suggestions" className="pt-24 p-10 text-center">
         <h1 className="text-3xl font-bold text-blue-700 mb-4">Suggestions & Feedback</h1>
         <p className="text-gray-700 max-w-2xl mx-auto mb-8">
           Your feedback is valuable to us. Share your suggestions, ideas, or concerns about our initiatives and services.
@@ -201,7 +201,7 @@ export default function Contact({ setAuthMode, setShowAuthModal }: ContactProps)
             </form>
           )}
         </div>
-      </section>   
+      </section>    */}
       {/* <Footer /> */}
     </>
   );

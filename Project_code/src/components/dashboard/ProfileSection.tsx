@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Save, User } from 'lucide-react';
+// components/ProfileSection.tsx
+import { useState, useEffect } from 'react';
+import { Save, User, Clipboard, Link as LinkIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -21,6 +22,109 @@ export default function ProfileSection() {
     current_state: profile?.current_state || '',
     current_city: profile?.current_city || ''
   });
+
+  // --- REFERRAL STATE ---
+  const [referralCode, setReferralCode] = useState<string | null>(
+    profile?.referral_code ?? null
+  );
+  const [referralCount, setReferralCount] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [refLoading, setRefLoading] = useState(false);
+
+  useEffect(() => {
+    // keep form defaults in sync with profile when it becomes available
+    setFormData((prev) => ({
+      ...prev,
+      full_name: profile?.full_name ?? prev.full_name,
+      phone: profile?.phone ?? prev.phone,
+      occupation: profile?.occupation ?? prev.occupation,
+      native_district: profile?.native_district ?? prev.native_district,
+      native_constituency: profile?.native_constituency ?? prev.native_constituency,
+      native_mandal: profile?.native_mandal ?? prev.native_mandal,
+      native_village: profile?.native_village ?? prev.native_village,
+      current_country: profile?.current_country ?? prev.current_country,
+      current_state: profile?.current_state ?? prev.current_state,
+      current_city: profile?.current_city ?? prev.current_city
+    }));
+  }, [profile]);
+
+  useEffect(() => {
+    // If referral_code not present on profile object, try fetching it once
+    async function loadReferralInfo() {
+      if (!profile?.id) return;
+      // if profile already has code (set via AuthContext), use it
+      if (profile.referral_code) {
+        setReferralCode(profile.referral_code);
+      } else {
+        setRefLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('referral_code')
+            .eq('id', profile.id)
+            .single();
+
+          if (!error && data?.referral_code) {
+            setReferralCode(data.referral_code);
+          }
+        } catch (e) {
+          // ignore - referral code is optional
+          console.error('Failed to fetch referral_code fallback', e);
+        } finally {
+          setRefLoading(false);
+        }
+      }
+
+      // fetch referral count (how many users this profile referred)
+      try {
+        const { count, error } = await supabase
+          .from('referrals')
+          .select('id', { head: true, count: 'exact' })
+          .eq('referrer_id', profile.id);
+
+        if (!error) {
+          setReferralCount(Number(count ?? 0));
+        }
+      } catch (e) {
+        console.warn('Failed to load referral count', e);
+      }
+    }
+
+    loadReferralInfo();
+  }, [profile]);
+
+  const handleCopyReferral = async () => {
+    if (!referralCode) return;
+    const link = `${window.location.origin}/signup?ref=${encodeURIComponent(referralCode)}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      // fallback: prompt
+      // eslint-disable-next-line no-alert
+      alert('Copy this link: ' + link);
+    }
+  };
+
+  const handleShareReferral = async () => {
+    if (!referralCode) return;
+    const link = `${window.location.origin}/signup?ref=${encodeURIComponent(referralCode)}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join NRI Wing',
+          text: 'Sign up using my referral link',
+          url: link
+        });
+      } catch (e) {
+        console.warn('Share failed', e);
+      }
+    } else {
+      // fallback to copy
+      handleCopyReferral();
+    }
+  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +152,12 @@ export default function ProfileSection() {
     }
   };
 
+  // referral link computed only when referralCode exists
+  const referralLink =
+    typeof window !== 'undefined' && referralCode
+      ? `${window.location.origin}/signup?ref=${encodeURIComponent(referralCode)}`
+      : '';
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -66,7 +176,11 @@ export default function ProfileSection() {
       </div>
 
       {message && (
-        <div className={`p-4 rounded-lg ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+        <div
+          className={`p-4 rounded-lg ${
+            message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+          }`}
+        >
           {message}
         </div>
       )}
@@ -79,13 +193,72 @@ export default function ProfileSection() {
           <div>
             <h3 className="text-2xl font-bold text-gray-900">{profile?.full_name}</h3>
             <p className="text-gray-600">{profile?.email}</p>
-            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${
-              profile?.status === 'verified' ? 'bg-green-200 text-green-800' :
-              profile?.status === 'pending' ? 'bg-yellow-200 text-yellow-800' :
-              'bg-red-200 text-red-800'
-            }`}>
+            <span
+              className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${
+                profile?.status === 'verified'
+                  ? 'bg-green-200 text-green-800'
+                  : profile?.status === 'pending'
+                  ? 'bg-yellow-200 text-yellow-800'
+                  : 'bg-red-200 text-red-800'
+              }`}
+            >
               {profile?.status}
             </span>
+          </div>
+        </div>
+
+        {/* Referral Card (shows only when referralCode available OR when ref fetch is loading) */}
+        <div className="mt-4">
+          <div className="bg-white p-4 rounded-lg border">
+            <h4 className="text-sm text-gray-500">Your referral</h4>
+
+            {refLoading ? (
+              <div className="text-sm text-gray-500 mt-2">Loading referral info…</div>
+            ) : referralCode ? (
+              <div className="mt-2 space-y-3">
+                <div className="text-xs text-gray-500">Referral code</div>
+                <div className="flex items-center justify-between">
+                  <div className="font-medium break-all">{referralCode}</div>
+                  <div className="text-sm text-gray-500">Referrals: {referralCount ?? 0}</div>
+                </div>
+
+                <div>
+                  <div className="text-xs text-gray-500">Referral link</div>
+                  <div className="mt-1 flex gap-2 items-center">
+                    <input
+                      readOnly
+                      value={referralLink}
+                      className="flex-1 px-3 py-2 border rounded bg-gray-50 text-sm"
+                      onFocus={(e) => e.currentTarget.select()}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopyReferral}
+                      className="px-3 py-2 bg-indigo-600 text-white rounded"
+                      aria-label="Copy referral link"
+                    >
+                      {copied ? 'Copied' : <Clipboard className="w-4 h-4" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleShareReferral}
+                      className="px-3 py-2 border rounded"
+                      aria-label="Share referral link"
+                    >
+                      <LinkIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-xs text-gray-500">
+                  Share this link — when someone signs up using it, they will be credited to you.
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2 text-sm text-gray-500">
+                No referral code yet. It will be generated automatically on signup.
+              </div>
+            )}
           </div>
         </div>
       </div>

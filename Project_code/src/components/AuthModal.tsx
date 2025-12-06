@@ -632,10 +632,13 @@ export default function AuthModal({
 
         // signup success: keep modal open, show toast, clear sensitive fields
         if (isMounted.current) setLoading(false);
-        toast.success("Registration successful! Please check your email for verification.", {
-          position: "top-right",
-          autoClose: 5000,
-        });
+        toast.success(
+          "Registration successful! Please check your email for verification.",
+          {
+            position: "top-right",
+            autoClose: 5000,
+          }
+        );
         setFormData((f) => ({ ...f, password: "" }));
         setConfirmPassword("");
         return;
@@ -700,7 +703,8 @@ export default function AuthModal({
         onMouseDown={() => onClose()}
       >
         <div
-          className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
+          className="bg-white rounded-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto relative shadow-2xl"
+          style={{ border: "5px solid #1e88e5" }} // Blue thick border
           onMouseDown={(e) => e.stopPropagation()}
         >
           <button
@@ -711,9 +715,16 @@ export default function AuthModal({
           </button>
 
           <div className="p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h2
+              className={`text-3xl font-bold mb-2 ${
+                mode === "signup"
+                  ? "text-white bg-gradient-to-r from-blue-600 to-green-500 p-3 rounded-lg shadow"
+                  : "text-gray-900"
+              }`}
+            >
               {mode === "signin" ? "Welcome Back" : "Join YSRCP NRI Wing"}
             </h2>
+
             <p className="text-gray-600 mb-6">
               {mode === "signin"
                 ? "Sign in to access your dashboard"
@@ -789,9 +800,10 @@ export default function AuthModal({
                   <>
                     {/* Personal Information */}
                     <div className="border-b pb-4 mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      <h3 className="text-lg font-semibold text-white mb-3 p-2 rounded bg-blue-600">
                         Personal Information
                       </h3>
+
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -807,7 +819,7 @@ export default function AuthModal({
                                 first_name: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:ring-2 focus:ring-green-500 focus:border-blue-600"
                           />
                         </div>
                         <div>

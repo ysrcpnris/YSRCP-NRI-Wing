@@ -4,128 +4,65 @@ type HeroProps = {
   onJoinNow: () => void;
 };
 
-export default function Hero({ onJoinNow }: HeroProps) {
+const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
   const slides = [
-    {
-      img: "/ECOd9I9UYAAkV4h.jpg",
-      quote:
-        "Our NRI community is not just living abroad, they are ambassadors of Andhra Pradesh's culture and values.",
-      cite: "— Y.S. Jagan Mohan Reddy",
-      sub: "Global Telugu Conference",
-    },
-    {
-      img: "/ECOe4WuUIAAFYiH.jpg",
-      quote:
-        "Together we can create an ecosystem that supports Andhra's growth — across education, innovation, and investment.",
-      cite: "— NRI Wing",
-      sub: "Advantage Andhra",
-    },
-    {
-      img: "/ECVhnUTVUAAin44.jpg",
-      quote:
-        "When NRIs collaborate with local communities, progress becomes sustainable and inclusive.",
-      cite: "— Community Leader",
-      sub: "International Meet",
-    },
-    {
-      img: "/GcUMiSybkAMyZCL.jpg",
-      quote:
-        "Our collective experience abroad can be a catalyst to modernize and uplift our home state.",
-      cite: "— Global Delegate",
-      sub: "Summit 2025",
-    },
+    { img: "/ECOd9I9UYAAkV4h.jpg" },
+    { img: "/ECOe4WuUIAAFYiH.jpg" },
+    { img: "/ECVhnUTVUAAin44.jpg" },
+    { img: "/GcUMiSybkAMyZCL.jpg" },
   ];
 
   const [current, setCurrent] = useState(0);
-  const length = slides.length;
 
   useEffect(() => {
     const id = setInterval(() => {
-      setCurrent((c) => (c + 1) % length);
-    }, 4000);
+      setCurrent((prev) => (prev + 1) % slides.length);
+    }, 4500);
     return () => clearInterval(id);
-  }, [length]);
+  }, []);
 
   return (
-    <>
-      {/* HERO SECTION — WhatsApp image fully visible, just below header */}
-      <section
-        id="hero"
-        className="relative flex items-center justify-center overflow-hidden bg-white mt-[80px] h-auto"
-      >
-        {/* NRI WING Banner */}
-        <div className="w-full max-h-[80vh] overflow-hidden">
-          <img src="/Banner.jpg" alt="NRI Wing Banner"
-            className="w-full h-full object-contain"
-            />
-        </div>
-      </section>
+    <section className="relative w-full h-[70vh] sm:h-[85vh] lg:h-screen mt-[72px] flex items-end justify-center text-center text-white pb-20 px-4 overflow-hidden">
 
-      {/* SLIDER SECTION — directly below hero, no gap */}
-      <section className="relative h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
-        {/* Slide Images */}
-        <div className="absolute inset-0">
-          {slides.map((s, idx) => (
-            <div
-              key={s.img}
-              className={`absolute inset-0 transition-opacity duration-700 ${
-                idx === current ? "opacity-100" : "opacity-0"
-              }`}
-              aria-hidden={idx === current ? "false" : "true"}
-            >
-              <img
-                src={s.img}
-                alt={`Slide ${idx + 1}`}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-          ))}
-        </div>
+      {/* Background Slider */}
+      <div className="absolute inset-0 bg-fixed bg-center bg-cover bg-no-repeat transition-all duration-[1200ms]">
+        {slides.map((s, index) => (
+          <img
+            key={index}
+            src={s.img}
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-[1200ms] ${
+              current === index ? "opacity-100 scale-100" : "opacity-0 scale-110"
+            }`}
+          />
+        ))}
 
-        {/* Transparent overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-20 pointer-events-none"></div>
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/45"></div>
+      </div>
 
-        {/* Quote box on the right */}
-        <div className="absolute inset-0 flex items-center justify-end pointer-events-auto">
-          <div className="max-w-md mr-6 md:mr-12">
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 border border-white/30">
-              <blockquote className="text-right">
-                <p
-                  className="text-lg md:text-xl text-white font-medium leading-relaxed mb-4 italic drop-shadow-lg"
-                  aria-live="polite"
-                >
-                  {slides[current].quote}
-                </p>
-                <footer className="text-white/90">
-                  <cite className="text-base font-semibold not-italic drop-shadow-lg">
-                    {slides[current].cite}
-                  </cite>
-                  <p className="text-sm mt-1 text-white/80 drop-shadow-lg">
-                    {slides[current].sub}
-                  </p>
-                </footer>
-              </blockquote>
-            </div>
-          </div>
-        </div>
+      {/* Text Content */}
+      <div className="relative z-10 max-w-[95%] pb-10 animate-fade-in-up mt-14 sm:mt-10">
+        <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black leading-tight text-white drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]">
+          Connecting NRIs with the Vision of a Progressive Andhra Pradesh
+        </h1>
 
-        {/* Dots / manual slide control */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
-          {slides.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrent(idx)}
-              aria-label={`Go to slide ${idx + 1}`}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                idx === current
-                  ? "bg-white scale-125"
-                  : "bg-white/50 hover:bg-white/75"
-              }`}
-            />
-          ))}
-        </div>
-      </section>
-    </>
+        <div className="h-1 w-24 bg-ysrcp-green mx-auto mt-5 rounded-full"></div>
+      </div>
+
+      {/* Indicators */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+        {slides.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrent(idx)}
+            className={`w-3 h-3 rounded-full transition-all ${
+              idx === current ? "bg-white scale-150 shadow" : "bg-white/40 hover:bg-white/80"
+            }`}
+          />
+        ))}
+      </div>
+    </section>
   );
-}
+};
+
+export default Hero;
