@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
@@ -79,7 +80,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
     null
   );
   const { user, refreshProfile, profile } = useAuth();
-
+  
   // Photo upload state
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
