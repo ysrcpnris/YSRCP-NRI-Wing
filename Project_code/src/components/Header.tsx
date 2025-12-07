@@ -71,8 +71,8 @@ return (
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-6 font-medium">
           <button onClick={() => scrollToSection("hero")} className="hover:text-blue-600">Home</button>
-          <button onClick={() => scrollToSection("about")} className="hover:text-blue-600">About</button>
-          <button onClick={() => scrollToSection("student-assistance")} className="hover:text-blue-600">Services</button>
+          <button onClick={() => scrollToSection("journey")} className="hover:text-blue-600">About</button>
+          <button onClick={() => scrollToSection('services')} className="hover:text-blue-600">Services</button>
 
           {/* Jagan-Mark Dropdown */}
           <div className="relative jagan-dropdown">
@@ -120,7 +120,7 @@ return (
             )}
           </div>
 
-          <button onClick={() => scrollToSection("suggestions")} className="hover:text-blue-600">Suggestions</button>
+          <button onClick={() => scrollToSection('glimpse')} className="hover:text-blue-600">Gallery</button>
 
           {/* Login/Register */}
           <button
@@ -147,15 +147,15 @@ return (
       {mobileMenuOpen && (
         <div className="md:hidden py-4 space-y-3 border-t">
           <button onClick={() => scrollToSection("hero")} className="block w-full text-left py-2">Home</button>
-          <button onClick={() => scrollToSection("about")} className="block w-full text-left py-2">About</button>
+          <button onClick={() => { scrollToSection("journey"); }} className="block w-full text-left py-2">About</button>
 
           <p className="font-semibold text-gray-800 px-2 pt-2">Jagan-Mark</p>
           <button onClick={() => navigate('/development')} className="block w-full text-left py-2 pl-4">Development</button>
           <button onClick={() => navigate('/welfare')} className="block w-full text-left py-2 pl-4">Welfare</button>
           <button onClick={() => navigate('/reforms')} className="block w-full text-left py-2 pl-4">Reforms</button>
 
-          <button onClick={() => scrollToSection("student-assistance")} className="block w-full text-left py-2">Services</button>
-          <button onClick={() => scrollToSection("suggestions")} className="block w-full text-left py-2">Suggestions</button>
+          <button onClick={() => { scrollToSection('services'); }} className="block w-full text-left py-2">Services</button>
+          <button onClick={() => { scrollToSection('glimpse'); }} className="block w-full text-left py-2">Gallery</button>
 
           <button
             onClick={() => { setAuthMode("signin"); setShowAuth(true); setMobileMenuOpen(false); }}

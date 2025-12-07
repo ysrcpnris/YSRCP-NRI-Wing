@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -180,7 +180,15 @@ function AppContent() {
         <Route path="/welfare/yuvanestham" element={<Yuvanestham setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
 
         <Route path="/jagan-mark" element={<JaganMark />} />
+
         <Route path="/contact" element={<Contact setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+
+        {/* Redirect old suggestions path to new Glimpse (Gallery) */}
+        <Route path="/suggestions" element={<Navigate to="/glimpse" replace />} />
+        <Route path="/glimpse" element={<Glimpse />} />
+
+        {/* Services page mapping to Initiatives */}
+        <Route path="/services" element={<Initiatives />} />
 
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

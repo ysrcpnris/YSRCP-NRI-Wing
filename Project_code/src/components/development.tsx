@@ -28,19 +28,29 @@ export default function DevelopmentShowcase() {
   const scrollRef2 = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const refs = [scrollRef1.current, scrollRef2.current];
-    const step = 4; // ✅ Increased speed
+    const speed = 1.2; // ✅ slightly faster smooth speed
+    let animationFrameId: number;
 
-    const id = setInterval(() => {
+    const scroll = () => {
+      const refs = [scrollRef1.current, scrollRef2.current];
+
       refs.forEach((el) => {
         if (!el) return;
-        let x = el.scrollLeft + step;
-        if (x >= el.scrollWidth / 2) x = 0;
-        el.scrollTo({ left: x, behavior: "smooth" });
-      });
-    }, 15);
 
-    return () => clearInterval(id);
+        el.scrollLeft += speed;
+
+        // seamless loop
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          el.scrollLeft = 0;
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(scroll);
+    };
+
+    animationFrameId = requestAnimationFrame(scroll);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, []);
 
   const half = Math.ceil(SCHEMES.length / 2);
@@ -48,7 +58,10 @@ export default function DevelopmentShowcase() {
   const secondRow = SCHEMES.slice(half);
 
   const renderRow = (items: Scheme[], ref: any) => (
-    <div ref={ref} className="flex gap-4 overflow-x-hidden px-4 md:px-10 mb-6">
+    <div
+      ref={ref}
+      className="flex gap-4 overflow-hidden px-4 md:px-10 mb-6"
+    >
       {items.concat(items).map((item, i) => (
         <a
           href={item.url}
@@ -60,7 +73,7 @@ export default function DevelopmentShowcase() {
           <img
             src={item.image}
             alt={item.title}
-            className="w-full h-full object-contain bg-gray-100"
+            className="w-full h-full object-contain bg-gray-100 select-none pointer-events-none"
           />
 
           <div className="absolute bottom-0 left-0 w-full bg-black/60 px-2 py-2 text-center">
