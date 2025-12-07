@@ -62,7 +62,7 @@ export default function AuthModal({
     linkedin_id: "",
 
     // Referral
-    referred_by: "",
+    referred_by: "Allu Samba Siva Reddy",
   });
 
   // Sample data for dropdowns
