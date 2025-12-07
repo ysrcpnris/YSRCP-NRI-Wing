@@ -36,23 +36,23 @@ export default function DevelopmentShowcase() {
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto scroll-smooth px-4 md:px-10 pb-4"
         style={{
-          scrollbarWidth: "none", // Firefox
-          msOverflowStyle: "none" // IE/Edge
+          scrollbarWidth: "none",
+          msOverflowStyle: "none"
         }}
       >
-        {/* Hide scrollbar for Chrome/Safari */}
+        {/* Hide scrollbar in WebKit browsers */}
         <style>{`
-          div::-webkit-scrollbar {
+          #development-slider::-webkit-scrollbar {
             display: none;
           }
         `}</style>
 
         {SCHEMES.map((item, i) => (
           <a
+            key={i}
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            key={i}
             className="min-w-[260px] h-[260px] rounded-xl overflow-hidden relative shadow-lg flex-shrink-0 transition-transform hover:scale-105 bg-white"
           >
             <img
