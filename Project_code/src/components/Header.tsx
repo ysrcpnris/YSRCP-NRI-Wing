@@ -75,9 +75,9 @@ return (
           <button onClick={() => scrollToSection('services')} className="hover:text-blue-600">Services</button>
 
           {/* Jagan-Mark Dropdown */}
-          <div className="relative jagan-dropdown">
+          <div className="relative jagan-dropdown" onMouseEnter={() => setOpenJaganMenu(true)} onMouseLeave={() => setOpenJaganMenu(false)}>
             <button
-              onClick={() => setOpenJaganMenu(!openJaganMenu)}
+              onClick={() => scrollToSection('development')}
               className="font-semibold hover:text-blue-600 flex items-center gap-1"
             >
               Jagan-Mark ▾
@@ -150,7 +150,7 @@ return (
           <button onClick={() => { scrollToSection("journey"); }} className="block w-full text-left py-2">About</button>
 
           <p className="font-semibold text-gray-800 px-2 pt-2">Jagan-Mark</p>
-          <button onClick={() => navigate('/development')} className="block w-full text-left py-2 pl-4">Development</button>
+          <button onClick={() => { scrollToSection('development'); }} className="block w-full text-left py-2 pl-4">Development</button>
           <button onClick={() => navigate('/welfare')} className="block w-full text-left py-2 pl-4">Welfare</button>
           <button onClick={() => navigate('/reforms')} className="block w-full text-left py-2 pl-4">Reforms</button>
 

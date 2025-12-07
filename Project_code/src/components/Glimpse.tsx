@@ -23,36 +23,12 @@ export default function GlimpseGallery() {
           </p>
         </div>
 
-        {/* Auto-scroll two-row gallery */}
+        {/* Single auto-scroll row */}
         <div className="overflow-hidden">
-          {/* Row 1 */}
           <div className="flex animate-scroll gap-3 sm:gap-4">
             {images.concat(images).map((img, index) => (
               <div
                 key={index}
-                className="flex-shrink-0 w-60 h-72 sm:w-72 sm:h-80 md:w-80 md:h-96 overflow-hidden rounded-xl relative group bg-white shadow-md"
-              >
-                <img
-                  src={img.src}
-                  alt={`Glimpse ${index + 1}`}
-                  className="w-full h-full object-contain object-center bg-blue-100 transition-transform duration-300 group-hover:scale-105"
-                />
-
-                <span className="absolute bottom-2 left-2 flex items-center gap-1 bg-blue-600 text-white text-xs px-2 py-1 rounded opacity-80 cursor-pointer">
-                  <Download size={14} />
-                  <a href={img.highRes} download className="hover:underline">
-                    Download
-                  </a>
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Row 2 */}
-          <div className="flex animate-scroll-reverse gap-3 sm:gap-4 mt-3 sm:mt-4">
-            {images.concat(images).map((img, index) => (
-              <div
-                key={index + images.length}
                 className="flex-shrink-0 w-60 h-72 sm:w-72 sm:h-80 md:w-80 md:h-96 overflow-hidden rounded-xl relative group bg-white shadow-md"
               >
                 <img
@@ -80,15 +56,9 @@ export default function GlimpseGallery() {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
           }
-          @keyframes scroll-reverse {
-            0% { transform: translateX(-50%); }
-            100% { transform: translateX(0); }
-          }
+
           .animate-scroll {
             animation: scroll 40s linear infinite;
-          }
-          .animate-scroll-reverse {
-            animation: scroll-reverse 50s linear infinite;
           }
         `}
       </style>

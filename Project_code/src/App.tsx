@@ -180,6 +180,7 @@ function AppContent() {
         <Route path="/welfare/yuvanestham" element={<Yuvanestham setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
 
         <Route path="/jagan-mark" element={<JaganMark />} />
+        <Route path="/development" element={<Development />} />
 
         <Route path="/contact" element={<Contact setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
 
