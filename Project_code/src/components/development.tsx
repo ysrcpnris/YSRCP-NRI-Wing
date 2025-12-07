@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 
 type Scheme = {
   title: string;
@@ -26,6 +26,29 @@ export const SCHEMES: Scheme[] = [
 export default function DevelopmentShowcase() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const speed = 0.8; // ✅ smooth speed
+    let animationFrame: number;
+
+    const autoScroll = () => {
+      const el = scrollRef.current;
+      if (el) {
+        el.scrollLeft += speed;
+
+        // loop back to start
+        if (el.scrollLeft >= el.scrollWidth - el.clientWidth) {
+          el.scrollLeft = 0;
+        }
+      }
+
+      animationFrame = requestAnimationFrame(autoScroll);
+    };
+
+    animationFrame = requestAnimationFrame(autoScroll);
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, []);
+
   return (
     <div id="development" className="w-full py-10">
       <h2 className="text-center text-3xl md:text-4xl font-bold mb-8 text-[#0A3E8C]">
@@ -34,20 +57,21 @@ export default function DevelopmentShowcase() {
 
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scroll-smooth px-4 md:px-10 pb-4"
+        id="development-slider"
+        className="flex gap-4 overflow-x-hidden px-4 md:px-10 pb-4"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none"
         }}
       >
-        {/* Hide scrollbar in WebKit browsers */}
+        {/* Hide scrollbar */}
         <style>{`
           #development-slider::-webkit-scrollbar {
             display: none;
           }
         `}</style>
 
-        {SCHEMES.map((item, i) => (
+        {SCHEMES.concat(SCHEMES).map((item, i) => (
           <a
             key={i}
             href={item.url}
