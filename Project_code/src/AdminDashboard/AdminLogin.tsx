@@ -13,22 +13,27 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    
-    // Bypass Supabase auth and use hardcoded credentials
-    const trimmedEmail = email.trim().toLowerCase();
-    if (trimmedEmail === adminUser.email.toLowerCase() && password === adminUser.password) {
-      // Store admin session in localStorage
-      localStorage.setItem('adminLoggedIn', 'true');
-      localStorage.setItem('adminLoginTime', new Date().toISOString());
-      // success -> navigate to dashboard
-      navigate('/admin/dashboard');
-      return;
-    }
-    setError('Invalid credentials');
-  };
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+  setIsLoading(true);
+
+  const trimmedEmail = email.trim().toLowerCase();
+
+  if (
+    trimmedEmail === adminUser.email.toLowerCase() &&
+    password === adminUser.password
+  ) {
+    localStorage.setItem('is_admin', 'true');
+    localStorage.setItem('adminLoginTime', new Date().toISOString());
+    navigate('/admin/dashboard');
+    return;
+  }
+
+  setError('Invalid credentials');
+  setIsLoading(false);
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
