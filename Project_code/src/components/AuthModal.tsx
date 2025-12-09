@@ -3,6 +3,8 @@ import { X, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
 type AuthModalProps = {
   mode: "signin" | "signup";
@@ -16,6 +18,8 @@ export default function AuthModal({
   onSwitchMode,
 }: AuthModalProps) {
   const { signIn, signUp } = useAuth();
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const isMounted = useRef(true);
@@ -548,141 +552,171 @@ export default function AuthModal({
     ],
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    // 🧩 Client-side validation for signup password
-    if (mode === "signup") {
-      if (!formData.password || formData.password.length < 6) {
-        setError("Password must be at least 6 characters long");
-        return;
-      }
-      if (formData.password !== confirmPassword) {
-        setError("Passwords do not match");
-        return;
-      }
-    }
-
-    setLoading(true);
-
-    // helper: promise timeout wrapper
-    const withTimeout = <T,>(p: Promise<T>, ms = 15000): Promise<T> =>
-      new Promise<T>((resolve, reject) => {
-        const id = setTimeout(() => reject(new Error("Request timed out")), ms);
-        p.then((res) => {
-          clearTimeout(id);
-          resolve(res);
-        }).catch((err) => {
-          clearTimeout(id);
-          reject(err);
-        });
+  // ✅ helper: promise timeout wrapper
+  const withTimeout = <T,>(p: Promise<T>, ms = 15000): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      const id = setTimeout(() => reject(new Error("Request timed out")), ms);
+      p.then((res) => {
+        clearTimeout(id);
+        resolve(res);
+      }).catch((err) => {
+        clearTimeout(id);
+        reject(err);
       });
+    });
 
-    try {
-      // local admin shortcut
-      if (
-        mode === "signin" &&
-        formData.email === "nriwing@gmail.com" &&
-        formData.password === "nriwing"
-      ) {
-        // ensure loading is cleared before navigating
-        if (isMounted.current) setLoading(false);
-        onClose(); // close modal
-        localStorage.setItem("is_admin", "true");
-        window.location.href = "/admin/dashboard"; // navigate directly
-        return;
-      }
-
-      if (mode === "signin") {
-        await withTimeout(signIn(formData.email, formData.password), 15000);
-        // sign-in success: close modal and let app auth flow handle navigation
-        if (isMounted.current) setLoading(false);
-        onClose();
-        return;
-      } else {
-        await withTimeout(
-          signUp(formData.email, formData.password, {
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            mobile_number: formData.mobile_number,
-            whatsapp_number: formData.whatsapp_number,
-            country_of_residence: formData.country_of_residence,
-            state_abroad: formData.state_abroad,
-            indian_state: formData.indian_state,
-            district: formData.district,
-            mandal: formData.mandal,
-            village: formData.village,
-            gender: formData.gender,
-            dob: formData.dob,
-            profession: formData.profession,
-            organization: formData.organization,
-            role_designation: formData.role_designation,
-            contribution: formData.contribution,
-            participate_campaign: formData.participate_campaign,
-            suggestions: formData.suggestions,
-            instagram_id: formData.instagram_id,
-            facebook_id: formData.facebook_id,
-            twitter_id: formData.twitter_id,
-            linkedin_id: formData.linkedin_id,
-            referred_by: formData.referred_by,
-          }),
-          20000
-        );
-
-        // signup success: keep modal open, show toast, clear sensitive fields
-        if (isMounted.current) setLoading(false);
-        toast.success(
-          "Registration successful! Please check your email for verification.",
-          {
-            position: "top-right",
-            autoClose: 5000,
-          }
-        );
-        setFormData((f) => ({ ...f, password: "" }));
-        setConfirmPassword("");
-        return;
-      }
-    } catch (err: unknown) {
-      // helper to extract a safe message from unknown errors without using `any`
-      const getErrorMessage = (e: unknown): string => {
-        if (e instanceof Error) return e.message;
-        if (typeof e === "string") return e;
-        if (typeof e === "object" && e !== null) {
-          const maybe = e as Record<string, unknown>;
-          if (typeof maybe.message === "string") return maybe.message;
-        }
-        return "An error occurred";
-      };
-
-      const msg = getErrorMessage(err);
-
-      // detect common rate-limit / verification email errors and show friendly message
-      if (/rate|too many|exceed|429/i.test(msg)) {
-        toast.error(
-          "Verification email rate limit exceeded. Please wait a few minutes (or up to an hour) before trying again, or use a different email address.",
-          { position: "top-right", autoClose: 7000 }
-        );
-      } else {
-        toast.error(msg, { position: "top-right", autoClose: 5000 });
-      }
-
-      setError(msg);
-    } finally {
+  try {
+    // ✅ ADMIN LOGIN SHORTCUT
+    if (
+      mode === "signin" &&
+      formData.email === "nriwing@gmail.com" &&
+      formData.password === "nriwing"
+    ) {
       if (isMounted.current) setLoading(false);
+      onClose();
+      localStorage.setItem("is_admin", "true");
+      window.location.href = "/admin/dashboard";
+      return;
     }
-  };
 
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
+    // ✅ ✅ ✅ NORMAL USER LOGIN WITH DASHBOARD REDIRECT
+    if (mode === "signin") {
+      // 1️⃣ Login
+      await withTimeout(signIn(formData.email, formData.password), 15000);
+
+      // 2️⃣ Get user
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
+
+      if (userError || !userData?.user) {
+        throw new Error("User not found after login");
+      }
+
+      const userId = userData.user.id;
+
+      // 3️⃣ Get profession
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("profession")
+        .eq("id", userId)
+        .single();
+
+      if (profileError) {
+        throw new Error("Failed to fetch profession");
+      }
+
+      // 4️⃣ Close modal
+      onClose();
+
+      // 5️⃣ Redirect by profession
+      if (profile?.profession === "Job") {
+        navigate("/dashboard/job");
+      } else if (profile?.profession === "Business") {
+        navigate("/dashboard/business");
+      } else if (profile?.profession === "Student") {
+        navigate("/dashboard/student");
+      } else {
+        navigate("/");
+      }
+
+      return;
+    }
+
+    // ✅ ✅ ✅ SIGNUP FLOW (UNCHANGED)
+    await withTimeout(
+      signUp(formData.email, formData.password, {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        mobile_number: formData.mobile_number,
+        whatsapp_number: formData.whatsapp_number,
+        country_of_residence: formData.country_of_residence,
+        state_abroad: formData.state_abroad,
+        indian_state: formData.indian_state,
+        district: formData.district,
+        mandal: formData.mandal,
+        village: formData.village,
+        gender: formData.gender,
+        dob: formData.dob,
+        profession: formData.profession,
+        organization: formData.organization,
+        role_designation: formData.role_designation,
+        contribution: formData.contribution,
+        participate_campaign: formData.participate_campaign,
+        suggestions: formData.suggestions,
+        instagram_id: formData.instagram_id,
+        facebook_id: formData.facebook_id,
+        twitter_id: formData.twitter_id,
+        linkedin_id: formData.linkedin_id,
+        referred_by: formData.referred_by,
+      }),
+      20000
+    );
+
+    toast.success(
+      "Registration successful! Please check your email for verification.",
+      {
+        position: "top-right",
+        autoClose: 5000,
+      }
+    );
+
+    setFormData((f) => ({ ...f, password: "" }));
+    setConfirmPassword("");
+  } catch (err: unknown) {
+    const getErrorMessage = (e: unknown): string => {
+      if (e instanceof Error) return e.message;
+      if (typeof e === "string") return e;
+      if (typeof e === "object" && e !== null) {
+        const maybe = e as Record<string, unknown>;
+        if (typeof maybe.message === "string") return maybe.message;
+      }
+      return "An error occurred";
     };
-  }, []);
 
-  const handleForgotPassword = async () => {
-    // Implement forgot password logic
-    setError("Forgot password functionality not implemented yet");
-  };
+    const msg = getErrorMessage(err);
+    toast.error(msg, { position: "top-right", autoClose: 5000 });
+    setError(msg);
+  } finally {
+    if (isMounted.current) setLoading(false);
+  }
+};
+// ⭐ ADD THIS FUNCTION (Forgot Password Handler)
+const handleForgotPassword = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
+
+  try {
+    if (!formData.email) {
+      setError("Please enter your email.");
+      return;
+    }
+
+    if (resetMethod === "email") {
+      // Reset link method
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        formData.email
+      );
+
+      if (error) throw error;
+
+      toast.success("Password reset link sent to your email");
+    } else {
+      // OTP method (not implemented yet)
+      toast.info("OTP reset method will be added soon");
+    }
+  } catch (err: any) {
+    setError(err.message || "Failed to send reset instructions");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <>

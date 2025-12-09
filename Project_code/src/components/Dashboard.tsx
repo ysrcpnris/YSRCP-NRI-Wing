@@ -30,6 +30,7 @@ import { useAuth } from '../contexts/AuthContext';
 interface DashboardProps {
   onClose: () => void;
   onLogout: () => void;
+  role?: "Job" | "Business" | "Student";
 }
 
 type SectionKey =
@@ -73,7 +74,8 @@ type NotificationItem = {
   is_read: boolean;
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout, role }) => {
+
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>('profile');
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(
@@ -149,30 +151,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
     try {
       const fileExt = photoFile.name.split('.').pop();
       const filePath = `profile-photos/${user.id}_${Date.now()}.${fileExt}`;
+     const { error: uploadError } = await supabase.storage
+  .from('profile-photos')
+  .upload(filePath, photoFile, { upsert: true });
 
-      const { error: uploadError } = await supabase.storage
-        .from('profile-photos')
-        .upload(filePath, photoFile, { upsert: true });
+if (uploadError) {
+  console.error('Storage upload error', uploadError);
+  throw uploadError;
+}
 
-      if (uploadError) {
-        console.error('Storage upload error', uploadError);
-        throw uploadError;
-      }
+// ✔ Correct Supabase v2 syntax
+const { data: publicUrlData } = supabase.storage
+  .from('profile-photos')
+  .getPublicUrl(filePath);
 
-      const { data: urlData, error: publicUrlError } = await supabase.storage
-        .from('profile-photos')
-        .getPublicUrl(filePath);
+const publicUrl = publicUrlData.publicUrl;
 
-      if (publicUrlError) {
-        console.error('Get public url error', publicUrlError);
-        throw publicUrlError;
-      }
-      const publicUrl = urlData?.publicUrl;
+// Save public URL in DB
+const { error: updateError } = await supabase
+  .from('profiles')
+  .update({ profile_photo: publicUrl })
+  .eq('id', user.id);
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ profile_photo: publicUrl })
-        .eq('id', user.id);
 
       if (updateError) {
         console.error('Profile update error', updateError);
@@ -601,11 +601,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
                 Profession / Designation
               </label>
               <input
-                type="text"
-                defaultValue={profile?.profession || profile?.designation || ''}
-                placeholder="e.g. Senior Software Architect"
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-              />
+             type="text"
+             defaultValue={profile?.profession || profile?.role_designation || ""}
+            placeholder="e.g. Senior Software Architect"
+            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            />
+
             </div>
 
             {/* Social Media Inputs */}
@@ -942,11 +943,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
               defaultValue={fullName}
             />
             <input
-              type="text"
-              className="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs font-medium outline-none focus:border-blue-500 transition-all"
-              placeholder="Current Location"
-              defaultValue={profile?.city || profile?.country_of_residence || ''}
-            />
+            type="text"
+           className="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs font-medium outline-none focus:border-blue-500 transition-all"
+           placeholder="Current Location"
+          defaultValue={profile?.city_abroad || profile?.country_of_residence || ""}
+/>
+
           </div>
           <textarea
             className="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs font-medium outline-none focus:border-blue-500 transition-all resize-none h-24 mb-4"
@@ -1157,9 +1159,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout }) => {
             YSRC
           </div>
           <div>
-            <h1 className="font-black text-lg text-gray-900 tracking-tight leading-none">
-              My Portal
-            </h1>
+           <h1 className="font-black text-lg text-gray-900 tracking-tight leading-none">
+  {role ? `${role} Dashboard` : "My Portal"}
+</h1>
+
             <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider mt-0.5">
               ● {loadingDashboard ? 'Syncing…' : 'Online'}
             </p>
