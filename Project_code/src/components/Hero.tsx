@@ -22,7 +22,7 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
   }, []);
 
   return (
-    <section className="relative w-full h-[70vh] sm:h-[85vh] lg:h-screen mt-[72px] flex items-end justify-center text-center text-white pb-20 px-4 overflow-hidden">
+    <section id="hero" className="relative w-full h-[70vh] sm:h-[85vh] lg:h-screen mt-[72px] flex items-end justify-center text-center text-white pb-20 px-4 overflow-hidden">
 
       {/* Background Slider */}
       <div className="absolute inset-0 bg-fixed bg-center bg-cover bg-no-repeat transition-all duration-[1200ms]">

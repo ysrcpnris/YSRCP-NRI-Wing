@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Routes, Route } from 'react-router-dom';
-
 import Header from './components/Header';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -251,6 +250,7 @@ function AppContent() {
           }
         />
         <Route path="/jagan-mark" element={<JaganMark />} />
+        <Route path="/contact" element={<Contact setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
 
         {/* ADMIN */}
         <Route path="/admin/login" element={<AdminLogin />} />

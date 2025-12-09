@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef, useEffect } from "react";
 
 type Scheme = {
   title: string;
@@ -24,63 +24,75 @@ export const SCHEMES: Scheme[] = [
 ];
 
 export default function DevelopmentShowcase() {
-  const scrollRef1 = useRef<HTMLDivElement>(null);
-  const scrollRef2 = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const refs = [scrollRef1.current, scrollRef2.current];
-    const step = 4; // ✅ Increased speed
+    const speed = 0.8; // ✅ smooth speed
+    let animationFrame: number;
 
-    const id = setInterval(() => {
-      refs.forEach((el) => {
-        if (!el) return;
-        let x = el.scrollLeft + step;
-        if (x >= el.scrollWidth / 2) x = 0;
-        el.scrollTo({ left: x, behavior: "smooth" });
-      });
-    }, 15);
+    const autoScroll = () => {
+      const el = scrollRef.current;
+      if (el) {
+        el.scrollLeft += speed;
 
-    return () => clearInterval(id);
+        // loop back to start
+        if (el.scrollLeft >= el.scrollWidth - el.clientWidth) {
+          el.scrollLeft = 0;
+        }
+      }
+
+      animationFrame = requestAnimationFrame(autoScroll);
+    };
+
+    animationFrame = requestAnimationFrame(autoScroll);
+
+    return () => cancelAnimationFrame(animationFrame);
   }, []);
 
-  const half = Math.ceil(SCHEMES.length / 2);
-  const firstRow = SCHEMES.slice(0, half);
-  const secondRow = SCHEMES.slice(half);
-
-  const renderRow = (items: Scheme[], ref: any) => (
-    <div ref={ref} className="flex gap-4 overflow-x-hidden px-4 md:px-10 mb-6">
-      {items.concat(items).map((item, i) => (
-        <a
-          href={item.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          key={i}
-          className="min-w-[260px] h-[260px] rounded-xl overflow-hidden relative shadow-lg flex-shrink-0 transition-transform hover:scale-105 bg-white"
-        >
-          <img
-            src={item.image}
-            alt={item.title}
-            className="w-full h-full object-contain bg-gray-100"
-          />
-
-          <div className="absolute bottom-0 left-0 w-full bg-black/60 px-2 py-2 text-center">
-            <span className="text-white text-lg md:text-xl font-bold tracking-wide">
-              {item.title}
-            </span>
-          </div>
-        </a>
-      ))}
-    </div>
-  );
-
   return (
-    <div className="w-full py-10">
+    <div id="development" className="w-full py-10">
       <h2 className="text-center text-3xl md:text-4xl font-bold mb-8 text-[#0A3E8C]">
         JAGAN MARK DEVELOPMENT
       </h2>
 
-      {renderRow(firstRow, scrollRef1)}
-      {renderRow(secondRow, scrollRef2)}
+      <div
+        ref={scrollRef}
+        id="development-slider"
+        className="flex gap-4 overflow-x-hidden px-4 md:px-10 pb-4"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none"
+        }}
+      >
+        {/* Hide scrollbar */}
+        <style>{`
+          #development-slider::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+
+        {SCHEMES.concat(SCHEMES).map((item, i) => (
+          <a
+            key={i}
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="min-w-[260px] h-[260px] rounded-xl overflow-hidden relative shadow-lg flex-shrink-0 transition-transform hover:scale-105 bg-white"
+          >
+            <img
+              src={item.image}
+              alt={item.title}
+              className="w-full h-full object-contain bg-gray-100 select-none pointer-events-none"
+            />
+
+            <div className="absolute bottom-0 left-0 w-full bg-black/60 px-2 py-2 text-center">
+              <span className="text-white text-lg md:text-xl font-bold tracking-wide">
+                {item.title}
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
