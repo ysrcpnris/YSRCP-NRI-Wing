@@ -34,7 +34,9 @@ export default function Initiatives() {
       long: `
         • Resume building & portfolio improvement  
         • Job opportunities through NRI network  
-        • Skill development guidance  
+        • Skill development guidance  Why Join The Mission?
+
+Your connection to the homeland is vital. We provide the platform to 
         • Interview preparation support  
       `,
     },
@@ -153,13 +155,14 @@ export default function Initiatives() {
             <p className="text-gray-700 mt-4 whitespace-pre-line text-sm leading-relaxed">
               {selectedService.long}
             </p>
+<button
+  onClick={() => setSelectedService(null)}
+  className="mt-6 w-full bg-blue-700 text-white py-2 rounded-xl font-semibold shadow-md hover:bg-blue-800 transition"
+>
+  ⏳ Coming Soon
+</button>
 
-            <button
-              onClick={() => setSelectedService(null)}
-              className="mt-6 w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition"
-            >
-              Close
-            </button>
+
 
           </div>
         </div>

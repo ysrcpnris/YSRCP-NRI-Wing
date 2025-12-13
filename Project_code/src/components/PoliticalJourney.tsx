@@ -99,7 +99,6 @@ export default function PoliticalJourney() {
         Our Political Journey: The Path to People's Trust
       </h2>
 
-     
       {/* MAIN CARD */}
       <div
         className="
@@ -111,11 +110,15 @@ export default function PoliticalJourney() {
       >
         {/* LEFT IMAGE FRAME */}
         <div className="w-full md:w-1/2 flex justify-center">
-          <div className="bg-white border-4 border-[#00C853] rounded-xl shadow-xl p-1 sm:p-2">
+          <div className="bg-white border-4 border-[#00C853] rounded-xl shadow-xl p-2">
             <img
               src={selected.image}
               alt={selected.title}
-              className="w-full max-h-[250px] sm:max-h-[300px] md:max-h-[350px] rounded-lg object-cover shadow-lg"
+              className="
+                w-full 
+                h-[350px] sm:h-[420px] md:h-[500px]
+                rounded-lg object-cover shadow-lg
+              "
             />
           </div>
         </div>
@@ -151,9 +154,11 @@ export default function PoliticalJourney() {
                 px-3 sm:px-5 md:px-7 py-1.5 sm:py-2 md:py-2.5
                 rounded-lg font-semibold text-xs sm:text-sm md:text-base
                 transition-all duration-200
-                ${active
-                  ? "bg-[#00C853] text-white shadow-lg scale-105"
-                  : "border border-white text-white hover:bg-white hover:text-[#063A7A]"}
+                ${
+                  active
+                    ? "bg-[#00C853] text-white shadow-lg scale-105"
+                    : "border border-white text-white hover:bg-white hover:text-[#063A7A]"
+                }
               `}
               style={{ fontFamily: "Times New Roman, serif" }}
             >

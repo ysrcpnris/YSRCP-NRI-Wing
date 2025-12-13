@@ -39,6 +39,7 @@ import Gorumudda from './pages/Gorumudda';
 import Cheyutha from './pages/Cheyutha';
 import Yuvanestham from './pages/Yuvanestham';
 import LiveStreamPage from './pages/LiveStream';
+import RegisterPage from './pages/RegisterPage';
 
 function MainLandingPage({
   setAuthMode,
@@ -170,7 +171,8 @@ function AppContent() {
         <Route path="/agriculture" element={<Agriculture setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
         <Route path="/women" element={<Women setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
         <Route path="/students" element={<StudentYouth setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
-
+          
+        <Route path="/welfare/amma-vodi" element={<RegisterPage setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
         <Route path="/welfare/amma-vodi" element={<AmmaVodi setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
         <Route path="/welfare/vidya-deevena" element={<VidyaDeevena setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
         <Route path="/welfare/vasathi-deevena" element={<VasathiDeevena setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
@@ -190,6 +192,8 @@ function AppContent() {
 
         {/* Services page mapping to Initiatives */}
         <Route path="/services" element={<Initiatives />} />
+
+        <Route path="/register" element={<RegisterPage />} />
 
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

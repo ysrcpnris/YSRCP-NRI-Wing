@@ -76,15 +76,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
 
     if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          email,
-          ...profileData,
-        });
+      const sanitizedProfile: Record<string, unknown> = Object.fromEntries(
+        Object.entries(profileData || {}).filter(([, v]) => {
+          if (v === undefined || v === null) return false;
+          if (typeof v === 'string') return v.trim() !== '';
+          return true;
+        })
+      );
 
-      if (profileError) throw profileError;
+      // Attempt to insert profile. If the DB schema lacks a column (e.g. `referred_by`),
+      // detect that from the error message, remove the offending key and retry once.
+      const basePayload = { id: data.user.id, email, ...sanitizedProfile };
+
+      let { error: profileError } = await supabase.from('profiles').insert(basePayload);
+
+      if (profileError) {
+        const msg = String(profileError?.message || profileError?.details || '');
+        // Look for Postgres 'column "xxx" does not exist' or similar messages
+        const colMatch = msg.match(/column\s+"?([a-zA-Z0-9_]+)"?\s+does not exist/i) ||
+          msg.match(/Could not find the '([a-zA-Z0-9_]+)' column/i);
+
+        if (colMatch && colMatch[1]) {
+          const missingCol = colMatch[1];
+          const retryPayload = { ...basePayload } as Record<string, unknown>;
+          if (retryPayload.hasOwnProperty(missingCol)) {
+            delete retryPayload[missingCol];
+          }
+
+          const { error: retryError } = await supabase.from('profiles').insert(retryPayload);
+          if (retryError) throw retryError;
+        } else {
+          throw profileError;
+        }
+      }
     }
   };
 
