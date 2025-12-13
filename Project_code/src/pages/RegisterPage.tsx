@@ -41,7 +41,7 @@ export default function RegisterPage() {
     facebook_id: '',
     twitter_id: '',
     linkedin_id: '',
-    referred_by: '',
+    // referred_by: '',
   });
 
   const professions = ['Job', 'Business', 'Student'];
@@ -529,7 +529,7 @@ export default function RegisterPage() {
                 </div>
               </div> */}
 
-              {/* Referral */}
+              {/* Referral
               <div className="border-b pb-4">
                 <h3 className="text-base sm:text-lg font-semibold text-white mb-3 p-2 rounded bg-blue-600">
                   Referral
@@ -544,10 +544,10 @@ export default function RegisterPage() {
                     value={formData.referred_by}
                     onChange={(e) => setFormData({ ...formData, referred_by: e.target.value })}
                     placeholder="Enter the name of the person who referred you (optional)"
-                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    // className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                </div>
-              </div>
+                </div> */}
+              {/* </div> */}
 
              
               <button
