@@ -590,6 +590,7 @@ export default function AuthModal({
         // sign-in success: close modal and let app auth flow handle navigation
         if (isMounted.current) setLoading(false);
         onClose();
+          navigate("/dashboard");
         return;
       } else {
         const profilePayload: Record<string, unknown> = {

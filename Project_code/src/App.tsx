@@ -176,6 +176,14 @@ function AppContent() {
           }
         />
 
+{/* MAIN DASHBOARD ENTRY */}
+<Route
+  path="/dashboard"
+  element={<Navigate to="/dashboard/job" replace />}
+/>
+
+
+
         {/* ✅ PROFESSION DASHBOARDS */}
         <Route path="/dashboard/job" element={<JobDashboard />} />
         <Route path="/dashboard/business" element={<BusinessDashboard />} />

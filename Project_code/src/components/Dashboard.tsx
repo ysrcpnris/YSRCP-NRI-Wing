@@ -27,11 +27,6 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
-interface DashboardProps {
-  onClose: () => void;
-  onLogout: () => void;
-  role?: "Job" | "Business" | "Student";
-}
 
 type SectionKey =
   | 'profile'
@@ -74,14 +69,22 @@ type NotificationItem = {
   is_read: boolean;
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ onClose, onLogout, role }) => {
+const Dashboard: React.FC = () => {
+
 
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>('profile');
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(
     null
   );
-  const { user, refreshProfile, profile } = useAuth();
+  const { user, refreshProfile, profile,signOut } = useAuth();
+  if (!user) {
+  return (
+    <div className="flex h-screen items-center justify-center text-lg">
+      Loading dashboard...
+    </div>
+  );
+}
   
   // Photo upload state
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -1159,9 +1162,12 @@ const { error: updateError } = await supabase
             YSRC
           </div>
           <div>
-           <h1 className="font-black text-lg text-gray-900 tracking-tight leading-none">
-  {role ? `${role} Dashboard` : "My Portal"}
+      <h1 className="font-black text-lg text-gray-900 tracking-tight leading-none">
+  {profile?.profession
+    ? `${profile.profession} Dashboard`
+    : "My Portal"}
 </h1>
+
 
             <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider mt-0.5">
               ● {loadingDashboard ? 'Syncing…' : 'Online'}
@@ -1169,40 +1175,38 @@ const { error: updateError } = await supabase
           </div>
         </div>
        <div className="flex items-center gap-2">
-  {/* Logout - MOBILE */}
-  <button
-    onClick={onLogout}
-    title="Logout"
-    className="flex sm:hidden w-9 h-9 items-center justify-center
-               text-red-600 bg-white border border-red-200 rounded-full
-               hover:bg-red-50 hover:border-red-300 hover:text-red-700
-               transition-all shadow-sm"
-  >
-    <LogOut size={16} />
-  </button>
+ {/* Logout - MOBILE */}
+<button
+  onClick={async () => {
+    await signOut();
+    window.location.href = "/";
+  }}
+  title="Logout"
+  className="flex sm:hidden w-9 h-9 items-center justify-center
+             text-red-600 bg-white border border-red-200 rounded-full
+             hover:bg-red-50 hover:border-red-300 hover:text-red-700
+             transition-all shadow-sm"
+>
+  <LogOut size={16} />
+</button>
 
-  {/*  Logout - DESKTOP  */}
-  <button
-    onClick={onLogout}
-    className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wide
-               text-red-600 bg-white border border-red-200 rounded-lg
-               hover:bg-red-50 hover:border-red-300 hover:text-red-700
-               transition-all shadow-sm"
-  >
-    <LogOut size={14} />
-    Logout
-  </button>
+{/* Logout - DESKTOP */}
+<button
+  onClick={async () => {
+    await signOut();
+    window.location.href = "/";
+  }}
+  className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wide
+             text-red-600 bg-white border border-red-200 rounded-lg
+             hover:bg-red-50 hover:border-red-300 hover:text-red-700
+             transition-all shadow-sm"
+>
+  <LogOut size={14} />
+  Logout
+</button>
 
-  {/* Close Button - Neutral */}
-  <button
-    onClick={onClose}
-    className="w-9 h-9 flex items-center justify-center
-               text-gray-500 bg-white border border-gray-200 rounded-full
-               hover:bg-gray-100 hover:text-gray-900
-               transition-all shadow-sm"
-  >
-    <X size={18} />
-  </button>
+
+ 
 </div>
 
   
