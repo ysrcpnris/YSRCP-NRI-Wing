@@ -73,35 +73,56 @@ Your connection to the homeland is vital. We provide the platform to
             connect, contribute, and grow together.
           </p>
 
-          {/* Features */}
-          <div className="mt-8 space-y-4 md:space-y-5">
-            <div className="p-4 rounded-xl border border-gray-200 shadow-sm">
-              <p className="font-semibold text-gray-800">
-                Direct Connect with Party Leadership
-              </p>
-              <p className="text-gray-500 text-sm">
-                Engage directly with key decision-makers.
-              </p>
-            </div>
+        {/* FEATURES – SINGLE CARD */}
+<div className="mt-8">
+  <div className="p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-md bg-white">
+    <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">
+      Why Join the Movement?
+    </h3>
 
-            <div className="p-4 rounded-xl border border-gray-200 shadow-sm">
-              <p className="font-semibold text-gray-800">
-                Exclusive Updates & Inside Information
-              </p>
-              <p className="text-gray-500 text-sm">
-                Receive timely insights not available elsewhere.
-              </p>
-            </div>
+    <div className="space-y-4">
+      {/* Feature 1 */}
+      <div className="flex gap-3">
+        <div className="w-2 h-2 mt-2 rounded-full bg-green-600" />
+        <div>
+          <p className="font-semibold text-gray-800">
+            Direct Connect with Party Leadership
+          </p>
+          <p className="text-gray-500 text-sm">
+            Engage directly with key decision-makers.
+          </p>
+        </div>
+      </div>
 
-            <div className="p-4 rounded-xl border border-gray-200 shadow-sm">
-              <p className="font-semibold text-gray-800">
-                Play a Constructive Role in Comeback
-              </p>
-              <p className="text-gray-500 text-sm">
-                Contribute actively to the mission’s success.
-              </p>
-            </div>
-          </div>
+      {/* Feature 2 */}
+      <div className="flex gap-3">
+        <div className="w-2 h-2 mt-2 rounded-full bg-green-600" />
+        <div>
+          <p className="font-semibold text-gray-800">
+            Exclusive Updates & Inside Information
+          </p>
+          <p className="text-gray-500 text-sm">
+            Receive timely insights not available elsewhere.
+          </p>
+        </div>
+      </div>
+
+      {/* Feature 3 */}
+      <div className="flex gap-3">
+        <div className="w-2 h-2 mt-2 rounded-full bg-green-600" />
+        <div>
+          <p className="font-semibold text-gray-800">
+            Play a Constructive Role in Comeback
+          </p>
+          <p className="text-gray-500 text-sm">
+            Contribute actively to the mission’s success.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
         </div>
 
         {/* RIGHT SECTION */}
