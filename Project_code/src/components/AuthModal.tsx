@@ -570,15 +570,6 @@ export default function AuthModal({
       });
     });
 
-<<<<<<< HEAD
-  try {
-    // ✅ ADMIN LOGIN SHORTCUT
-    if (
-      mode === "signin" &&
-      formData.email === "nriwing@gmail.com" &&
-      formData.password === "nriwing"
-    ) {
-=======
     try {
       // local admin shortcut
       if (
@@ -672,146 +663,39 @@ export default function AuthModal({
 
       setError(msg);
     } finally {
->>>>>>> landing-page
       if (isMounted.current) setLoading(false);
-      onClose();
-      localStorage.setItem("is_admin", "true");
-      window.location.href = "/admin/dashboard";
-      return;
     }
+  };
 
-    // ✅ ✅ ✅ NORMAL USER LOGIN WITH DASHBOARD REDIRECT
-    if (mode === "signin") {
-      // 1️⃣ Login
-      await withTimeout(signIn(formData.email, formData.password), 15000);
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-      // 2️⃣ Get user
-      const { data: userData, error: userError } =
-        await supabase.auth.getUser();
-
-      if (userError || !userData?.user) {
-        throw new Error("User not found after login");
+    try {
+      if (!formData.email) {
+        setError("Please enter your email.");
+        setLoading(false);
+        return;
       }
 
-      const userId = userData.user.id;
+      if (resetMethod === "email") {
+        const { error } = await supabase.auth.resetPasswordForEmail(
+          formData.email
+        );
 
-      // 3️⃣ Get profession
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("profession")
-        .eq("id", userId)
-        .single();
+        if (error) throw error;
 
-      if (profileError) {
-        throw new Error("Failed to fetch profession");
-      }
-
-      // 4️⃣ Close modal
-      onClose();
-
-      // 5️⃣ Redirect by profession
-      if (profile?.profession === "Job") {
-        navigate("/dashboard/job");
-      } else if (profile?.profession === "Business") {
-        navigate("/dashboard/business");
-      } else if (profile?.profession === "Student") {
-        navigate("/dashboard/student");
+        toast.success("Password reset link sent to your email");
       } else {
-        navigate("/");
+        toast.info("OTP reset method will be added soon");
       }
-
-      return;
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset instructions");
+    } finally {
+      setLoading(false);
     }
-
-    // ✅ ✅ ✅ SIGNUP FLOW (UNCHANGED)
-    await withTimeout(
-      signUp(formData.email, formData.password, {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        mobile_number: formData.mobile_number,
-        whatsapp_number: formData.whatsapp_number,
-        country_of_residence: formData.country_of_residence,
-        state_abroad: formData.state_abroad,
-        indian_state: formData.indian_state,
-        district: formData.district,
-        mandal: formData.mandal,
-        village: formData.village,
-        gender: formData.gender,
-        dob: formData.dob,
-        profession: formData.profession,
-        organization: formData.organization,
-        role_designation: formData.role_designation,
-        contribution: formData.contribution,
-        participate_campaign: formData.participate_campaign,
-        suggestions: formData.suggestions,
-        instagram_id: formData.instagram_id,
-        facebook_id: formData.facebook_id,
-        twitter_id: formData.twitter_id,
-        linkedin_id: formData.linkedin_id,
-        referred_by: formData.referred_by,
-      }),
-      20000
-    );
-
-    toast.success(
-      "Registration successful! Please check your email for verification.",
-      {
-        position: "top-right",
-        autoClose: 5000,
-      }
-    );
-
-    setFormData((f) => ({ ...f, password: "" }));
-    setConfirmPassword("");
-  } catch (err: unknown) {
-    const getErrorMessage = (e: unknown): string => {
-      if (e instanceof Error) return e.message;
-      if (typeof e === "string") return e;
-      if (typeof e === "object" && e !== null) {
-        const maybe = e as Record<string, unknown>;
-        if (typeof maybe.message === "string") return maybe.message;
-      }
-      return "An error occurred";
-    };
-
-    const msg = getErrorMessage(err);
-    toast.error(msg, { position: "top-right", autoClose: 5000 });
-    setError(msg);
-  } finally {
-    if (isMounted.current) setLoading(false);
-  }
-};
-// ⭐ ADD THIS FUNCTION (Forgot Password Handler)
-const handleForgotPassword = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
-
-  try {
-    if (!formData.email) {
-      setError("Please enter your email.");
-      return;
-    }
-
-    if (resetMethod === "email") {
-      // Reset link method
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        formData.email
-      );
-
-      if (error) throw error;
-
-      toast.success("Password reset link sent to your email");
-    } else {
-      // OTP method (not implemented yet)
-      toast.info("OTP reset method will be added soon");
-    }
-  } catch (err: any) {
-    setError(err.message || "Failed to send reset instructions");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   return (
