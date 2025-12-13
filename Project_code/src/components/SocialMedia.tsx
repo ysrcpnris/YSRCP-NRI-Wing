@@ -97,26 +97,45 @@ const BottomCards: React.FC = () => {
         </div>
       </div>
 
-      {openModal && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 px-4">
-          <div className="bg-white rounded-xl p-8 w-full max-w-3xl relative">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setOpenModal(false)}
-            >
-              ×
-            </button>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">{modalContent.title}</h2>
-            <p className="text-sm sm:text-md text-gray-700 mb-6">{modalContent.description}</p>
-            <button
-              className="bg-gray-400 text-white px-6 py-3 rounded font-bold cursor-not-allowed"
-              disabled
-            >
-              Coming Soon
-            </button>
-          </div>
-        </div>
-      )}
+   {openModal && (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 px-4">
+    <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl relative animate-fadeIn">
+      {/* Close Button */}
+      <button
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl font-bold transition"
+        onClick={() => setOpenModal(false)}
+        aria-label="Close"
+      >
+        ×
+      </button>
+
+      {/* Title */}
+      <h2 className="text-3xl sm:text-4xl font-extrabold mb-3 text-gray-900 text-center">
+        {modalContent.title}
+      </h2>
+
+      {/* Description */}
+      <p className="text-sm sm:text-md text-gray-600 mb-8 text-center max-w-2xl mx-auto">
+        {modalContent.description}
+      </p>
+
+      {/* Coming Soon Section */}
+      <div className="flex flex-col items-center justify-center gap-4">
+        <div className="text-6xl animate-bounce">🚀</div>
+        <span className="text-lg sm:text-xl font-semibold text-gray-500 tracking-wide">
+          Coming Soon
+        </span>
+        <button
+          className="mt-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white px-8 py-3 rounded-full font-bold cursor-not-allowed shadow-md"
+          disabled
+        >
+          Stay Tuned ✨
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
