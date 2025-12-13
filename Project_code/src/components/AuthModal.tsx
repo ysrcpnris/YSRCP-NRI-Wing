@@ -66,7 +66,7 @@ export default function AuthModal({
     linkedin_id: "",
 
     // Referral
-    referred_by: "Allu Samba Siva Reddy",
+    referred_by: "",
   });
 
   // Sample data for dropdowns
@@ -570,6 +570,7 @@ export default function AuthModal({
       });
     });
 
+<<<<<<< HEAD
   try {
     // ✅ ADMIN LOGIN SHORTCUT
     if (
@@ -577,6 +578,101 @@ export default function AuthModal({
       formData.email === "nriwing@gmail.com" &&
       formData.password === "nriwing"
     ) {
+=======
+    try {
+      // local admin shortcut
+      if (
+        mode === "signin" &&
+        formData.email === "nriwing@gmail.com" &&
+        formData.password === "nriwing"
+      ) {
+        // ensure loading is cleared before navigating
+        if (isMounted.current) setLoading(false);
+        onClose(); // close modal
+        localStorage.setItem("is_admin", "true");
+        window.location.href = "/admin/dashboard"; // navigate directly
+        return;
+      }
+
+      if (mode === "signin") {
+        await withTimeout(signIn(formData.email, formData.password), 15000);
+        // sign-in success: close modal and let app auth flow handle navigation
+        if (isMounted.current) setLoading(false);
+        onClose();
+        return;
+      } else {
+        const profilePayload: Record<string, unknown> = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          mobile_number: formData.mobile_number,
+          whatsapp_number: formData.whatsapp_number,
+          country_of_residence: formData.country_of_residence,
+          state_abroad: formData.state_abroad,
+          indian_state: formData.indian_state,
+          district: formData.district,
+          mandal: formData.mandal,
+          village: formData.village,
+          gender: formData.gender,
+          dob: formData.dob,
+          profession: formData.profession,
+          organization: formData.organization,
+          role_designation: formData.role_designation,
+          contribution: formData.contribution,
+          participate_campaign: formData.participate_campaign,
+          suggestions: formData.suggestions,
+          instagram_id: formData.instagram_id,
+          facebook_id: formData.facebook_id,
+          twitter_id: formData.twitter_id,
+          linkedin_id: formData.linkedin_id,
+        };
+
+        // only include referred_by when user provided a value
+        if (formData.referred_by && String(formData.referred_by).trim() !== "") {
+          (profilePayload as Record<string, unknown>).referred_by = formData.referred_by;
+        }
+
+        await withTimeout(signUp(formData.email, formData.password, profilePayload), 20000);
+
+        // signup success: keep modal open, show toast, clear sensitive fields
+        if (isMounted.current) setLoading(false);
+        toast.success(
+          "Registration successful! Please check your email for verification.",
+          {
+            position: "top-right",
+            autoClose: 5000,
+          }
+        );
+        setFormData((f) => ({ ...f, password: "" }));
+        setConfirmPassword("");
+        return;
+      }
+    } catch (err: unknown) {
+      // helper to extract a safe message from unknown errors without using `any`
+      const getErrorMessage = (e: unknown): string => {
+        if (e instanceof Error) return e.message;
+        if (typeof e === "string") return e;
+        if (typeof e === "object" && e !== null) {
+          const maybe = e as Record<string, unknown>;
+          if (typeof maybe.message === "string") return maybe.message;
+        }
+        return "An error occurred";
+      };
+
+      const msg = getErrorMessage(err);
+
+      // detect common rate-limit / verification email errors and show friendly message
+      if (/rate|too many|exceed|429/i.test(msg)) {
+        toast.error(
+          "Verification email rate limit exceeded. Please wait a few minutes (or up to an hour) before trying again, or use a different email address.",
+          { position: "top-right", autoClose: 7000 }
+        );
+      } else {
+        toast.error(msg, { position: "top-right", autoClose: 5000 });
+      }
+
+      setError(msg);
+    } finally {
+>>>>>>> landing-page
       if (isMounted.current) setLoading(false);
       onClose();
       localStorage.setItem("is_admin", "true");
@@ -737,7 +833,9 @@ const handleForgotPassword = async (e: React.FormEvent) => {
         onMouseDown={() => onClose()}
       >
         <div
-          className="bg-white rounded-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto relative shadow-2xl"
+          className={`bg-white rounded-2xl w-full ${
+            mode === "signup" ? "max-w-4xl" : "max-w-xl"
+          } max-h-[95vh] overflow-y-auto relative shadow-2xl`}
           style={{ border: "5px solid #1e88e5" }} // Blue thick border
           onMouseDown={(e) => e.stopPropagation()}
         >
@@ -1073,15 +1171,12 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                       </div>
                     </div>
 
-                    {/* Indian Address Details */}
-
-                    {/* Indian Address Details */}
+                    {/* COMMENTED OUT: Indian Address Details to Referral
                     <div className="border-b pb-4 mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">
                         Indian Address Details
                       </h3>
                       <div className="grid md:grid-cols-2 gap-4">
-                        {/* State Dropdown */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             State <span className="text-red-500">*</span>
@@ -1108,7 +1203,6 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                           </select>
                         </div>
 
-                        {/* District Dropdown */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             District <span className="text-red-500">*</span>
@@ -1139,7 +1233,6 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                         </div>
                       </div>
 
-                      {/* Assembly Constituency, Mandal, Village */}
                       <div className="grid md:grid-cols-3 gap-4 mt-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1210,7 +1303,6 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                       </div>
                     </div>
 
-                    {/* Demographics & Professional Details */}
                     <div className="border-b pb-4 mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">
                         Demographics & Professional Details
@@ -1319,109 +1411,39 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                       </div>
                     </div>
 
-                    {/* Engagement & Participation */}
+                    {/* Engagement & Referral */}
                     <div className="border-b pb-4 mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Engagement & Participation
+                      <h3 className="text-lg font-semibold text-white mb-3 p-2 rounded bg-blue-600">
+                        Engagement & Referral
                       </h3>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          How would you like to contribute?{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
+
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">How would you like to contribute?</label>
                         <select
-                          required
                           value={formData.contribution}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              contribution: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setFormData({ ...formData, contribution: e.target.value })}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                          <option value="">Select Contribution</option>
-                          {contributions.map((contrib) => (
-                            <option key={contrib} value={contrib}>
-                              {contrib}
-                            </option>
+                          <option value="">Select contribution</option>
+                          {contributions.map((c) => (
+                            <option key={c} value={c}>{c}</option>
                           ))}
                         </select>
                       </div>
 
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Are you willing to participate in the upcoming
-                          Assembly Election Campaign?{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <div className="space-y-2">
-                          {["Yes", "No"].map((option) => (
-                            <label key={option} className="flex items-center">
-                              <input
-                                type="radio"
-                                name="participate_campaign"
-                                value={option}
-                                checked={
-                                  formData.participate_campaign === option
-                                }
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    participate_campaign: e.target.value,
-                                  })
-                                }
-                                className="mr-2"
-                              />
-                              {option}
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Suggestions or Messages for the Party
-                        </label>
-                        <textarea
-                          value={formData.suggestions}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              suggestions: e.target.value,
-                            })
-                          }
-                          rows={3}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                    {/* Referral Section */}
-                    <div className="border-b pb-4 mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Referral{" "}
-                      </h3>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Who referred you?{" "}
-                          <span className="text-gray-400 text-sm"></span>
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Referred By</label>
                         <input
                           type="text"
-                          placeholder="Enter name or email of referrer"
                           value={formData.referred_by}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              referred_by: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setFormData({ ...formData, referred_by: e.target.value })}
+                          placeholder="Name of referrer (optional)"
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                     </div>
 
-                    {/* Social Media Handles */}
+                    {/* COMMENTED OUT: Social Media Handles
                     <div className="border-b pb-4 mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">
                         Social Media Handles
@@ -1493,6 +1515,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                         </div>
                       </div>
                     </div>
+                    */}
                   </>
                 )}
 

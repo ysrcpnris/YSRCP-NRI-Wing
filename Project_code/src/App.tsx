@@ -33,6 +33,7 @@ import Gorumudda from './pages/Gorumudda';
 import Cheyutha from './pages/Cheyutha';
 import Yuvanestham from './pages/Yuvanestham';
 import LiveStreamPage from './pages/LiveStream';
+import RegisterPage from './pages/RegisterPage';
 
 // ✅ ADMIN
 import AdminLogin from './AdminDashboard/AdminLogin';
@@ -129,6 +130,7 @@ function AppContent() {
         />
 
         <Route path="/live" element={<LiveStreamPage />} />
+<<<<<<< HEAD
         <Route
           path="/health"
           element={
@@ -239,6 +241,22 @@ function AppContent() {
             />
           }
         />
+=======
+        <Route path="/health" element={<Health setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/education" element={<Education setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/agriculture" element={<Agriculture setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/women" element={<Women setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/students" element={<StudentYouth setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+          
+        <Route path="/welfare/amma-vodi" element={<RegisterPage setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/welfare/amma-vodi" element={<AmmaVodi setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/welfare/vidya-deevena" element={<VidyaDeevena setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/welfare/vasathi-deevena" element={<VasathiDeevena setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/welfare/nri-connect" element={<NriConnect setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/welfare/gorumudda" element={<Gorumudda setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/welfare/cheyutha" element={<Cheyutha setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/welfare/yuvanestham" element={<Yuvanestham setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+>>>>>>> landing-page
 
         <Route
           path="/contact"
@@ -252,7 +270,19 @@ function AppContent() {
         <Route path="/jagan-mark" element={<JaganMark />} />
         <Route path="/contact" element={<Contact setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
 
+<<<<<<< HEAD
         {/* ADMIN */}
+=======
+        {/* Redirect old suggestions path to new Glimpse (Gallery) */}
+        <Route path="/suggestions" element={<Navigate to="/glimpse" replace />} />
+        <Route path="/glimpse" element={<Glimpse />} />
+
+        {/* Services page mapping to Initiatives */}
+        <Route path="/services" element={<Initiatives />} />
+
+        <Route path="/register" element={<RegisterPage />} />
+
+>>>>>>> landing-page
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route

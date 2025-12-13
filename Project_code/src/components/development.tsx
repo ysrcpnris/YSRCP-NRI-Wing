@@ -8,46 +8,47 @@ type Scheme = {
 };
 
 export const SCHEMES: Scheme[] = [
-  { title: 'Medical Colleges', description: 'Establishing new medical colleges.', image: '/images/jagan1.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Grama Sachivalayams', description: 'Village secretariats.', image: '/images/jagan2.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'RBKS', description: 'Rythu Bharosa Kendras.', image: '/images/jagan3.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Nadu-Nedu', description: 'Revamping schools & hospitals.', image: '/images/jagan4.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Health Infra', description: 'Strengthening healthcare systems.', image: '/images/jagan1.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Amma Vodi', description: 'Financial support to mothers.', image: '/images/jagan2.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'YSR Pension Kanuka', description: 'Social security pensions.', image: '/images/jagan3.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Jagananna Housing', description: 'Housing for the poor.', image: '/images/jagan4.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Kapu Nestham', description: 'Financial aid for Kapu women.', image: '/images/jagan1.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Public Welfare', description: 'Comprehensive welfare.', image: '/images/jagan2.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Ports', description: 'Developing new ports.', image: '/images/jagan3.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Harbours', description: 'Fishing harbours.', image: '/images/jagan4.jpg.jpg', url: 'https://ysrcp.in' },
-  { title: 'Industries', description: 'Industrial development.', image: '/images/jagan1.jpg.jpg', url: 'https://ysrcp.in' },
+  { title: 'Medical Colleges', description: 'Establishing new medical colleges.', image: '/images/jagan1.jpg.jpg', url: 'https://www.ysrcongress.com/top-stories/ysrcp-launches-state-wide-98115' },
+  { title: 'Grama Sachivalayams', description: 'Village secretariats.', image: '/images/jagan2.jpg.jpg', url: 'https://www.ysrcongress.com/news/ap-village-secretariat-69595' },
+  { title: 'RBKS', description: 'Rythu Bharosa Kendras.', image: '/images/jagan3.jpg.jpg', url: 'https://www.ysrcongress.com/top-stories/naidu-pushes-farmers-crisis-99264' },
+  { title: 'Nadu-Nedu', description: 'Revamping schools & hospitals.', image: '/images/jagan4.jpg.jpg', url: 'https://www.ysrcongress.com/tags/nadu-nedu' },
+  { title: 'Health Infra', description: 'Strengthening healthcare systems.', image: '/images/jagan1.jpg.jpg', url: 'https://www.ysrcongress.com/special-news/ysrcp%E2%80%99s-statewide-protest-98775' },
+  { title: 'Amma Vodi', description: 'Financial support to mothers.', image: '/images/jagan2.jpg.jpg', url: 'https://www.ysrcongress.com/top-stories/amma-vodi-scheme-announced-70962' },
+  { title: 'YSR Pension Kanuka', description: 'Social security pensions.', image: '/images/jagan3.jpg.jpg', url: 'https://services.india.gov.in/service/detail/ysr-pension-kanuka-sanction-of-new-pension-in-andhra-pradesh-1' },
+  { title: 'Jagananna Housing', description: 'Housing for the poor.', image: '/images/jagan4.jpg.jpg', url: 'https://www.ysrcongress.com/en' },
+  { title: 'Kapu Nestham', description: 'Financial aid for Kapu women.', image: '/images/jagan1.jpg.jpg', url: 'https://www.ysrcongress.com/en' },
+  { title: 'Public Welfare', description: 'Comprehensive welfare.', image: '/images/jagan2.jpg.jpg', url: 'https://www.ysrcongress.com/en' },
+  { title: 'Ports', description: 'Developing new ports.', image: '/images/jagan3.jpg.jpg', url: 'https://www.ysrcongress.com/en' },
+  { title: 'Harbours', description: 'Fishing harbours.', image: '/images/jagan4.jpg.jpg', url: 'https://www.ysrcongress.com/en' },
+  { title: 'Industries', description: 'Industrial development.', image: '/images/jagan1.jpg.jpg', url: 'https://www.ysrcongress.com/en' },
 ];
 
 export default function DevelopmentShowcase() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const speed = 0.8; // ✅ smooth speed
-    let animationFrame: number;
+  const speed = 1.8; // fast & smooth
+  let animationFrame: number;
 
-    const autoScroll = () => {
-      const el = scrollRef.current;
-      if (el) {
-        el.scrollLeft += speed;
+  const autoScroll = () => {
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollLeft += speed;
 
-        // loop back to start
-        if (el.scrollLeft >= el.scrollWidth - el.clientWidth) {
-          el.scrollLeft = 0;
-        }
+      // ✅ reset exactly at half (because content is duplicated)
+      if (el.scrollLeft >= el.scrollWidth / 2) {
+        el.scrollLeft = 0;
       }
-
-      animationFrame = requestAnimationFrame(autoScroll);
-    };
+    }
 
     animationFrame = requestAnimationFrame(autoScroll);
+  };
 
-    return () => cancelAnimationFrame(animationFrame);
-  }, []);
+  animationFrame = requestAnimationFrame(autoScroll);
+
+  return () => cancelAnimationFrame(animationFrame);
+}, []);
+
 
   return (
     <div id="development" className="w-full py-10">
@@ -85,8 +86,8 @@ export default function DevelopmentShowcase() {
               className="w-full h-full object-contain bg-gray-100 select-none pointer-events-none"
             />
 
-            <div className="absolute bottom-0 left-0 w-full bg-black/60 px-2 py-2 text-center">
-              <span className="text-white text-lg md:text-xl font-bold tracking-wide">
+            <div className="absolute bottom-0 left-0 w-full bg-white/60 px-2 py-2 text-center">
+              <span className="text-black text-lg md:text-xl font-bold tracking-wide">
                 {item.title}
               </span>
             </div>

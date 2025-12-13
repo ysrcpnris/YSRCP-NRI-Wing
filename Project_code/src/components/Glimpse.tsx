@@ -1,12 +1,11 @@
 import React from "react";
-import { Download } from "lucide-react";
 
 // Images array
 const images = [
-  { src: "/images/jagan1.jpg.jpg", highRes: "/images/jagan1.jpg.jpg" },
-  { src: "/images/jagan2.jpg.jpg", highRes: "/images/jagan2.jpg.jpg" },
-  { src: "/images/jagan3.jpg.jpg", highRes: "/images/jagan3.jpg.jpg" },
-  { src: "/images/jagan4.jpg.jpg", highRes: "/images/jagan4.jpg.jpg" },
+  { src: "/images/jagan1.jpg.jpg" },
+  { src: "/images/jagan2.jpg.jpg" },
+  { src: "/images/jagan3.jpg.jpg" },
+  { src: "/images/jagan4.jpg.jpg" },
 ];
 
 export default function GlimpseGallery() {
@@ -18,8 +17,7 @@ export default function GlimpseGallery() {
             📸 Glimpses of YSCP Party
           </h2>
           <p className="text-gray-700 text-sm sm:text-base">
-            Explore key moments and download high-resolution wallpapers directly
-            from the gallery.
+            Explore key moments from the gallery.
           </p>
         </div>
 
@@ -36,13 +34,6 @@ export default function GlimpseGallery() {
                   alt={`Glimpse ${index + 1}`}
                   className="w-full h-full object-contain object-center bg-blue-100 transition-transform duration-300 group-hover:scale-105"
                 />
-
-                <span className="absolute bottom-2 left-2 flex items-center gap-1 bg-blue-600 text-white text-xs px-2 py-1 rounded opacity-80 cursor-pointer">
-                  <Download size={14} />
-                  <a href={img.highRes} download className="hover:underline">
-                    Download
-                  </a>
-                </span>
               </div>
             ))}
           </div>
@@ -58,7 +49,7 @@ export default function GlimpseGallery() {
           }
 
           .animate-scroll {
-            animation: scroll 40s linear infinite;
+            animation: scroll 25s linear infinite;
           }
         `}
       </style>

@@ -85,51 +85,57 @@ const journeyData: Record<
 // COMPONENT
 // ===========================================
 export default function PoliticalJourney() {
-  const [selectedYear, setSelectedYear] = useState<number>(2011);
-
+  const [selectedYear, setSelectedYear] = useState<number>(2018);
   const selected = journeyData[selectedYear];
 
   return (
-    <section className="w-full bg-[#063A7A] py-12 md:py-16 text-white" id="journey">
-      {/* MAIN TITLE */}
+    <section
+      className="w-full bg-[#063A7A] py-10 md:py-14 text-white"
+      id="journey"
+    >
+      {/* TITLE */}
       <h2
-        className="text-center text-2xl sm:text-3xl md:text-4xl font-extrabold mb-6 sm:mb-8 tracking-wide"
+        className="text-center text-2xl sm:text-3xl md:text-4xl font-extrabold mb-6"
         style={{ fontFamily: "Times New Roman, serif" }}
       >
         Our Political Journey: The Path to People's Trust
       </h2>
 
-     
-      {/* MAIN CARD */}
+      {/* CARD */}
       <div
         className="
-          max-w-5xl sm:max-w-6xl mx-auto bg-white text-black rounded-2xl shadow-2xl 
-          p-4 sm:p-6 md:p-10 
-          flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center
+          max-w-6xl mx-auto bg-white text-black rounded-2xl shadow-2xl
+          p-4 sm:p-5 md:p-6
+          flex flex-col md:flex-row gap-4 md:gap-6 items-center
           border-4 border-[#00C85350]
         "
       >
-        {/* LEFT IMAGE FRAME */}
-        <div className="w-full md:w-1/2 flex justify-center">
-          <div className="bg-white border-4 border-[#00C853] rounded-xl shadow-xl p-1 sm:p-2">
+        {/* IMAGE SECTION */}
+        <div className="w-full md:w-3/5">
+          <div className="bg-white border-4 border-[#00C853] rounded-xl shadow-xl p-2 w-full">
             <img
               src={selected.image}
               alt={selected.title}
-              className="w-full max-h-[250px] sm:max-h-[300px] md:max-h-[350px] rounded-lg object-cover shadow-lg"
+              className="
+                w-full
+                h-[300px] sm:h-[360px] md:h-[440px]
+                rounded-lg shadow-lg
+                object-cover object-[50%_35%]
+              "
             />
           </div>
         </div>
 
-        {/* RIGHT CONTENT */}
-        <div className="w-full md:w-1/2">
+        {/* TEXT SECTION */}
+        <div className="w-full md:w-2/5">
           <h3
-            className="text-xl sm:text-2xl md:text-3xl font-bold text-[#063A7A] mb-3 sm:mb-4 underline underline-offset-4 decoration-[#00C853]"
-            style={{ fontFamily: "Times New Roman, serif" }}
+            className="text-xl sm:text-2xl md:text-3xl font-bold text-[#063A7A] mb-3 underline underline-offset-4 decoration-[#00C853]"
+            style={{ fontFamily: 'Times New Roman, serif' }}
           >
             {selected.title}
           </h3>
 
-          <ul className="list-disc ml-4 space-y-2 sm:space-y-3 text-gray-800 text-sm sm:text-base leading-relaxed">
+          <ul className="list-disc ml-4 space-y-2 text-gray-800 text-sm sm:text-base leading-relaxed">
             {selected.points.map((point, idx) => (
               <li key={idx}>{point}</li>
             ))}
@@ -137,8 +143,8 @@ export default function PoliticalJourney() {
         </div>
       </div>
 
-      {/* YEAR BUTTONS */}
-      <div className="flex justify-center mt-6 md:mt-10 gap-2 sm:gap-3 flex-wrap px-2 sm:px-3">
+      {/* YEAR SELECTOR */}
+      <div className="flex justify-center mt-6 md:mt-8 gap-2 sm:gap-3 flex-wrap px-2">
         {Object.keys(journeyData).map((yr) => {
           const year = Number(yr);
           const active = year === selectedYear;
@@ -151,9 +157,11 @@ export default function PoliticalJourney() {
                 px-3 sm:px-5 md:px-7 py-1.5 sm:py-2 md:py-2.5
                 rounded-lg font-semibold text-xs sm:text-sm md:text-base
                 transition-all duration-200
-                ${active
-                  ? "bg-[#00C853] text-white shadow-lg scale-105"
-                  : "border border-white text-white hover:bg-white hover:text-[#063A7A]"}
+                ${
+                  active
+                    ? "bg-[#00C853] text-white shadow-lg scale-105"
+                    : "border border-white text-white hover:bg-white hover:text-[#063A7A]"
+                }
               `}
               style={{ fontFamily: "Times New Roman, serif" }}
             >
