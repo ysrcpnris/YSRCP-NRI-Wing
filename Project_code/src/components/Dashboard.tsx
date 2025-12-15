@@ -78,13 +78,11 @@ const Dashboard: React.FC = () => {
     null
   );
   const { user, refreshProfile, profile,signOut } = useAuth();
-  if (!user) {
-  return (
-    <div className="flex h-screen items-center justify-center text-lg">
-      Loading dashboard...
-    </div>
-  );
+ if (!user) {
+  window.location.replace("/");
+  return null;
 }
+
   
   // Photo upload state
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -134,6 +132,50 @@ const Dashboard: React.FC = () => {
   const toggleSection = (section: SectionKey) => {
     setExpandedSection((prev) => (prev === section ? null : section));
   };
+const handleRemovePhoto = async () => {
+  if (!user || !profile?.profile_photo) {
+    showToast("No profile photo to remove", "info");
+    return;
+  }
+
+  try {
+    // Extract storage path from public URL
+    const filePath = profile.profile_photo.split(
+      "/storage/v1/object/public/profile-photos/"
+    )[1];
+
+    if (!filePath) {
+      showToast("Invalid photo path", "info");
+      return;
+    }
+
+    // 1️⃣ Remove from storage
+    const { error: storageError } = await supabase.storage
+      .from("profile-photos")
+      .remove([filePath]);
+
+    if (storageError) throw storageError;
+
+    // 2️⃣ Remove from DB
+    const { error: dbError } = await supabase
+      .from("profiles")
+      .update({ profile_photo: null })
+      .eq("id", user.id);
+
+    if (dbError) throw dbError;
+
+    // 3️⃣ Update UI
+    setPhotoFile(null);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(null);
+
+    await refreshProfile();
+    showToast("Profile photo removed", "success");
+  } catch (err) {
+    console.error("Remove photo error:", err);
+    showToast("Failed to remove photo", "info");
+  }
+};
 
   // Photo handlers
   const handleSelectPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -445,11 +487,92 @@ const { error: updateError } = await supabase
       </div>
     </div>
   );
+const handleSaveProfile = async () => {
+  if (!user) return;
+
+  try {
+    const fullName =
+      (document.getElementById("fullName") as HTMLInputElement)?.value || "";
+
+    const email =
+      (document.getElementById("email") as HTMLInputElement)?.value || "";
+
+    const mobile_number =
+      (document.getElementById("mobile_number") as HTMLInputElement)?.value || "";
+const indian_state =
+  (document.getElementById("indian_state") as HTMLInputElement)?.value || "";
+
+const district =
+  (document.getElementById("district") as HTMLInputElement)?.value || "";
+
+const mandal =
+  (document.getElementById("mandal") as HTMLInputElement)?.value || "";
+const assembly_constituency =
+  (document.getElementById("assembly_constituency") as HTMLInputElement)?.value || "";
+
+const village =
+  (document.getElementById("village") as HTMLInputElement)?.value || "";
+
+    const facebook =
+      (document.getElementById("facebook") as HTMLInputElement)?.value || "";
+
+    const twitter =
+      (document.getElementById("twitter") as HTMLInputElement)?.value || "";
+
+    const linkedin =
+      (document.getElementById("linkedin") as HTMLInputElement)?.value || "";
+
+    const instagram =
+      (document.getElementById("instagram") as HTMLInputElement)?.value || "";
+
+    const [first_name, ...rest] = fullName.trim().split(" ");
+    const last_name = rest.join(" ");
+
+   const updates: any = {
+  first_name,
+  last_name,
+  email,
+  mobile_number,
+  indian_state,
+  district,
+  mandal,
+  assembly_constituency,
+  village,
+  facebook_id: facebook,
+  twitter_id: twitter,
+  linkedin_id: linkedin,
+  instagram_id: instagram,
+  updated_at: new Date().toISOString(),
+};
+
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", user.id);
+
+    if (error) throw error;
+
+    await refreshProfile();
+    showToast("Profile Updated Successfully!", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to update profile", "info");
+  }
+};
+
+const addressHeading = useMemo(() => {
+  if (profile?.country_of_residence) {
+    return `${profile.country_of_residence} Address`;
+  }
+  return "Address Details";
+}, [profile?.country_of_residence]);
 
   // --- EXPANDED CONTENT RENDERERS ---
 
   const renderProfileContent = () => (
-    <div className="pt-4 animate-fade-in">
+    <div className="pt-4 ">
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Progress & Stats */}
         <div className="lg:col-span-1 space-y-6">
@@ -502,6 +625,18 @@ const { error: updateError } = await supabase
                 {uploading ? 'Uploading...' : 'Upload Photo'}
               </button>
             </div>
+            {profile?.profile_photo && (
+  <div className="mt-2">
+    <button
+      onClick={handleRemovePhoto}
+      className="px-3 py-1 bg-red-50 text-red-600 border border-red-200
+                 rounded-lg text-xs font-bold hover:bg-red-100"
+    >
+      Remove Photo
+    </button>
+  </div>
+)}
+
           </div>
           <div className="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
@@ -559,6 +694,7 @@ const { error: updateError } = await supabase
                 Full Name
               </label>
               <input
+              id="fullName"
                 type="text"
                 defaultValue={fullName}
                 className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
@@ -569,46 +705,95 @@ const { error: updateError } = await supabase
                 Email
               </label>
               <input
+              id="email"
                 type="email"
                 defaultValue={profile?.email ?? ''}
                 className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               />
             </div>
-          </div>
+            <div>
+  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+    Mobile Number
+  </label>
+  <input
+    id="mobile_number"
+    type="tel"
+    defaultValue={profile?.mobile_number || ""}
+    placeholder="Mobile Number"
+    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700"
+  />
+</div>
 
-          <div className="p-5 bg-indigo-50/50 rounded-xl border border-indigo-100">
-            <h4 className="text-xs font-black text-indigo-900 mb-3 flex items-center gap-2">
-              <MapPin size={14} /> INDIAN ADDRESS
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <select className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 outline-none">
-                <option>{profile?.indian_state || 'Select State'}</option>
-              </select>
-              <select className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 outline-none">
-                <option>{profile?.district || 'Select District'}</option>
-              </select>
-              <select className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 outline-none">
-                <option>{profile?.mandal || 'Select Mandal'}</option>
-              </select>
-            </div>
           </div>
+          <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mt-4 mb-2">
+  {addressHeading}
+</h4>
+
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+  <input
+    id="indian_state"
+    type="text"
+    defaultValue={profile?.indian_state || ""}
+    placeholder="Indian State"
+    className="w-full p-3 bg-white border border-gray-200 rounded-lg
+               text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500"
+  />
+
+  <input
+    id="district"
+    type="text"
+    defaultValue={profile?.district || ""}
+    placeholder="District"
+    className="w-full p-3 bg-white border border-gray-200 rounded-lg
+               text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500"
+  />
+
+  <input
+    id="mandal"
+    type="text"
+    defaultValue={profile?.mandal || ""}
+    placeholder="Mandal"
+    className="w-full p-3 bg-white border border-gray-200 rounded-lg
+               text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500"
+  />
+  <input
+  id="assembly_constituency"
+  type="text"
+  defaultValue={profile?.assembly_constituency || ""}
+  placeholder="Assembly Constituency"
+  className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm font-bold"
+/>
+
+<input
+  id="village"
+  type="text"
+  defaultValue={profile?.village || ""}
+  placeholder="Village"
+  className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm font-bold"
+/>
+
+     </div>
 
           <div className="p-5 bg-white rounded-xl border border-gray-200">
             <h4 className="text-xs font-black text-gray-500 mb-3 uppercase tracking-wider">
               Professional & Social
             </h4>
 
-            {/* Profession - Free Text */}
-            <div className="mb-4">
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                Profession / Designation
-              </label>
-              <input
-             type="text"
-             defaultValue={profile?.profession || profile?.role_designation || ""}
-            placeholder="e.g. Senior Software Architect"
-            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            />
+        {/* Profession - View Only */}
+<div className="mb-4">
+  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+    Profession / Designation
+  </label>
+
+  <div
+    className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg
+               text-sm font-bold text-gray-600 cursor-not-allowed"
+  >
+    {profile?.profession || profile?.role_designation || "Not Provided"}
+  </div>
+
+
 
             </div>
 
@@ -617,6 +802,7 @@ const { error: updateError } = await supabase
               <div className="relative">
                 <Facebook className="absolute left-3 top-3 text-blue-600" size={16} />
                 <input
+                id="facebook"
                   type="text"
                   defaultValue={profile?.facebook_id ?? ''}
                   placeholder="Facebook Profile URL / ID"
@@ -626,6 +812,7 @@ const { error: updateError } = await supabase
               <div className="relative">
                 <Twitter className="absolute left-3 top-3 text-black" size={16} />
                 <input
+                id="twitter"
                   type="text"
                   defaultValue={profile?.twitter_id ?? ''}
                   placeholder="X (Twitter) Handle"
@@ -635,6 +822,7 @@ const { error: updateError } = await supabase
               <div className="relative">
                 <Linkedin className="absolute left-3 top-3 text-blue-700" size={16} />
                 <input
+                id="linkedin"
                   type="text"
                   defaultValue={profile?.linkedin_id ?? ''}
                   placeholder="LinkedIn Profile URL"
@@ -644,6 +832,7 @@ const { error: updateError } = await supabase
               <div className="relative">
                 <Instagram className="absolute left-3 top-3 text-pink-600" size={16} />
                 <input
+                id="instagram"
                   type="text"
                   defaultValue={profile?.instagram_id ?? ''}
                   placeholder="Instagram Handle"
@@ -677,7 +866,7 @@ const { error: updateError } = await supabase
 
           <div className="flex justify-end pt-2">
             <button
-              onClick={() => showToast('Profile Saved Successfully!')}
+  onClick={handleSaveProfile}
               className="px-6 py-2.5 bg-gray-900 text-white font-bold rounded-lg shadow-lg hover:bg-black transition-all flex items-center gap-2 text-xs uppercase tracking-wider"
             >
               <Check size={14} /> Save Details
@@ -1127,28 +1316,28 @@ const { error: updateError } = await supabase
           </div>
         </button>
 
+        
         {/* Expanded Content Body */}
-        <div
-          className={`transition-all duration-500 ease-in-out ${
-            isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="px-4 pb-6 sm:px-6 border-t border-gray-100 bg-white relative z-10">
-            {content}
-          </div>
-        </div>
+{isOpen && (
+  <div className="px-4 pb-6 sm:px-6 border-t border-gray-100 bg-white">
+    {content}
+  </div>
+)}
+
       </div>
     );
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col animate-fade-in font-sans bg-gray-100/95 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex flex-col font-sans bg-gray-100/95 backdrop-blur-sm">
+
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-fade-in-up ${
-            toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-blue-600 text-white'
-          }`}
+       className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 ${
+  toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-blue-600 text-white'
+}`}
+
         >
           {toast.type === 'success' ? <CheckCircle size={16} /> : <Info size={16} />}
           <span className="text-xs font-bold uppercase tracking-wide">{toast.msg}</span>
@@ -1214,7 +1403,8 @@ const { error: updateError } = await supabase
       </div>
 
       {/* Main Content List */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative z-10">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative z-10 overscroll-contain">
+
         <div className="max-w-7xl mx-auto pb-20">
           <AccordionItem
             id="profile"
