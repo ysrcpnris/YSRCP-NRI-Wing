@@ -339,6 +339,96 @@ const { error: updateError } = await supabase
 
   const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
 
+
+
+  // 🔹 Profile completion calculation
+const profileCompletion = useMemo(() => {
+  if (!profile) return 0;
+
+  const TOTAL_SECTIONS = 5;
+  let completed = 0;
+
+  if (profile.first_name && profile.last_name) completed++; // Name
+  if (profile.mobile_number) completed++;                   // Mobile
+  if (profile.profile_photo) completed++;                   // Photo
+
+  const country = profile.country_of_residence?.toLowerCase();
+  const isIndia = !country || country === "india";
+
+  if (
+    !isIndia ||
+    (profile.indian_state &&
+      profile.district &&
+      profile.mandal &&
+      profile.assembly_constituency &&
+      profile.village)
+  ) {
+    completed++; // Address
+  }
+
+  // ✅ FIXED SOCIAL LOGIC (ALL REQUIRED)
+  if (
+    profile.facebook_id &&
+    profile.twitter_id &&
+    profile.linkedin_id &&
+    profile.instagram_id
+  ) {
+    completed++;
+  }
+
+  return Math.round((completed / TOTAL_SECTIONS) * 100);
+}, [profile]);
+
+// 🔹 Missing profile fields detection
+
+const missingProfileFields = useMemo(() => {
+  if (!profile) return [];
+
+  const missing: { key: string; label: string }[] = [];
+
+  if (!profile.profile_photo)
+    missing.push({ key: "photo", label: "Add Profile Photo" });
+
+  if (!profile.mobile_number)
+    missing.push({ key: "mobile", label: "Add Mobile Number" });
+
+  const country = profile.country_of_residence?.trim().toLowerCase();
+  const isIndia = !country || country === "india";
+
+  if (
+    isIndia &&
+    (!profile.indian_state ||
+      !profile.district ||
+      !profile.mandal ||
+      !profile.assembly_constituency ||
+      !profile.village)
+  ) {
+    missing.push({
+      key: "address",
+      label: "Complete Indian Address",
+    });
+  }
+
+  if (
+  !profile.facebook_id ||
+  !profile.twitter_id ||
+  !profile.linkedin_id ||
+  !profile.instagram_id
+) {
+  missing.push({
+    key: "socials",
+    label: "Complete Social Accounts",
+  });
+}
+
+
+  if (!profile.profession && !profile.role_designation)
+    missing.push({ key: "profession", label: "Add Profession" });
+
+  return missing;
+}, [profile]);
+
+
   // --- ENRICHED SUMMARY RENDERERS (Visible when Collapsed) ---
 
   const renderProfileSummary = () => (
@@ -347,10 +437,15 @@ const { error: updateError } = await supabase
         <div className="flex justify-between text-xs font-bold text-gray-500 mb-1.5">
           <span>Profile Completion</span>
           {/* still static for now, you can compute this later from filled fields */}
-          <span className="text-indigo-600">75%</span>
+          <span className="text-indigo-600">{profileCompletion}%</span>
+
         </div>
         <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-          <div className="h-full bg-indigo-600 w-3/4 rounded-full shadow-sm"></div>
+       <div
+  className="h-full bg-indigo-600 rounded-full shadow-sm"
+  style={{ width: `${profileCompletion}%` }}
+></div>
+
         </div>
       </div>
       <div className="flex items-center gap-4 text-xs font-medium text-gray-500 sm:border-l sm:border-gray-200 sm:pl-4">
@@ -499,19 +594,8 @@ const handleSaveProfile = async () => {
 
     const mobile_number =
       (document.getElementById("mobile_number") as HTMLInputElement)?.value || "";
-const indian_state =
-  (document.getElementById("indian_state") as HTMLInputElement)?.value || "";
 
-const district =
-  (document.getElementById("district") as HTMLInputElement)?.value || "";
 
-const mandal =
-  (document.getElementById("mandal") as HTMLInputElement)?.value || "";
-const assembly_constituency =
-  (document.getElementById("assembly_constituency") as HTMLInputElement)?.value || "";
-
-const village =
-  (document.getElementById("village") as HTMLInputElement)?.value || "";
 
     const facebook =
       (document.getElementById("facebook") as HTMLInputElement)?.value || "";
@@ -527,21 +611,40 @@ const village =
 
     const [first_name, ...rest] = fullName.trim().split(" ");
     const last_name = rest.join(" ");
+const indian_state =
+  (document.getElementById("indian_state") as HTMLSelectElement)?.value || "";
 
-   const updates: any = {
+const district =
+  (document.getElementById("district") as HTMLSelectElement)?.value || "";
+
+const mandal =
+  (document.getElementById("mandal") as HTMLSelectElement)?.value || "";
+
+const assembly_constituency =
+  (document.getElementById("assembly_constituency") as HTMLSelectElement)?.value || "";
+
+const village =
+  (document.getElementById("village") as HTMLSelectElement)?.value || "";
+
+
+const updates: any = {
   first_name,
   last_name,
   email,
   mobile_number,
-  indian_state,
+
+ indian_state,
   district,
   mandal,
   assembly_constituency,
   village,
+
+
   facebook_id: facebook,
   twitter_id: twitter,
   linkedin_id: linkedin,
   instagram_id: instagram,
+
   updated_at: new Date().toISOString(),
 };
 
@@ -561,12 +664,7 @@ const village =
   }
 };
 
-const addressHeading = useMemo(() => {
-  if (profile?.country_of_residence) {
-    return `${profile.country_of_residence} Address`;
-  }
-  return "Address Details";
-}, [profile?.country_of_residence]);
+
 
   // --- EXPANDED CONTENT RENDERERS ---
 
@@ -652,7 +750,7 @@ const addressHeading = useMemo(() => {
                   />
                   <path
                     className="text-white"
-                    strokeDasharray="75, 100"
+                    strokeDasharray={`${profileCompletion}, 100`}
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
                     stroke="currentColor"
@@ -661,11 +759,20 @@ const addressHeading = useMemo(() => {
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-black">75%</span>
+                  <span className="text-sm font-black">{profileCompletion}%</span>
+
                 </div>
               </div>
-              <h3 className="text-base font-bold">Gold Member</h3>
-              <p className="text-indigo-200 text-xs mb-3">Complete profile to unlock Platinum</p>
+              <h3 className="text-base font-bold">
+  {profileCompletion === 100 ? "Platinum Member" : "Gold Member"}
+</h3>
+
+              <p className="text-indigo-200 text-xs mb-3">
+  {profileCompletion === 100
+    ? "Your profile is complete 🎉"
+    : "Complete profile to unlock Platinum"}
+</p>
+
             </div>
           </div>
 
@@ -673,21 +780,37 @@ const addressHeading = useMemo(() => {
             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
               Missing Info
             </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded hover:border-indigo-300 cursor-pointer transition-all">
-                <span className="text-xs font-bold text-gray-600">Link Socials</span>
-                <ArrowRight size={12} className="text-indigo-500" />
-              </div>
-              <div className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded hover:border-indigo-300 cursor-pointer transition-all">
-                <span className="text-xs font-bold text-gray-600">Add Profession</span>
-                <ArrowRight size={12} className="text-indigo-500" />
-              </div>
-            </div>
+           <div className="space-y-2">
+ {profileCompletion === 100 ? (
+  <div className="text-xs text-green-600 font-bold">
+    🎉 Profile fully completed
+  </div>
+) : (
+
+    missingProfileFields.map((item) => (
+      <div
+        key={item.key}
+        onClick={() => setExpandedSection("profile")}
+        className="flex items-center justify-between p-2 bg-white
+                   border border-gray-200 rounded hover:border-indigo-300
+                   cursor-pointer transition-all"
+      >
+        <span className="text-xs font-bold text-gray-600">
+          {item.label}
+        </span>
+        <ArrowRight size={12} className="text-indigo-500" />
+      </div>
+    ))
+  )}
+</div>
+
           </div>
         </div>
 
         {/* Right Column: Form */}
         <div className="lg:col-span-2 space-y-6">
+
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
@@ -723,57 +846,127 @@ const addressHeading = useMemo(() => {
     className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700"
   />
 </div>
+{/* 🌍 Current Residency */}
+<div className="md:col-span-2 mt-4">
+  <label className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
+    
+     Current Residency
 
-          </div>
-          <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mt-4 mb-2">
-  {addressHeading}
-</h4>
+  </label>
+
+  <div
+    className="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg
+               text-sm font-bold text-gray-700 cursor-not-allowed"
+  >
+    {profile?.country_of_residence || "India"}
+  </div>
+</div>
+
+{/* 📍 Address Details */}
+<div className="md:col-span-2 mt-4">
+  <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
+   Indian Address 
+  </h4>
+
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    {/* State */}
+    <select
+  id="indian_state"
+  defaultValue={profile?.indian_state || ""}
+  className="
+    w-full h-11 px-3
+    bg-gray-50 border border-gray-300 rounded-lg
+    text-[16px] md:text-sm font-semibold text-gray-900
+    focus:bg-white focus:ring-2 focus:ring-indigo-500
+    outline-none
+  "
+>
+
+      <option value="" disabled>
+        Select State
+      </option>
+      <option value="Andhra Pradesh">Andhra Pradesh</option>
+    </select>
+
+    {/* District */}
+   <select
+  id="district"
+  defaultValue={profile?.district || ""}
+  className="
+    w-full h-11 px-3
+    bg-gray-50 border border-gray-300 rounded-lg
+    text-[16px] md:text-sm font-semibold text-gray-900
+    focus:bg-white focus:ring-2 focus:ring-indigo-500
+    outline-none
+  "
+>
+  <option value="" disabled>
+    Select District
+  </option>
+  <option value="Kadapa">Kadapa</option>
+  <option value="Kurnool">Kurnool</option>
+</select>
 
 
-<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-  <input
-    id="indian_state"
-    type="text"
-    defaultValue={profile?.indian_state || ""}
-    placeholder="Indian State"
-    className="w-full p-3 bg-white border border-gray-200 rounded-lg
-               text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500"
-  />
-
-  <input
-    id="district"
-    type="text"
-    defaultValue={profile?.district || ""}
-    placeholder="District"
-    className="w-full p-3 bg-white border border-gray-200 rounded-lg
-               text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500"
-  />
-
-  <input
-    id="mandal"
-    type="text"
-    defaultValue={profile?.mandal || ""}
-    placeholder="Mandal"
-    className="w-full p-3 bg-white border border-gray-200 rounded-lg
-               text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500"
-  />
-  <input
+    {/* Assembly */}
+<select
   id="assembly_constituency"
-  type="text"
   defaultValue={profile?.assembly_constituency || ""}
-  placeholder="Assembly Constituency"
-  className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm font-bold"
-/>
+  className="
+    w-full h-11 px-3
+    bg-gray-50 border border-gray-300 rounded-lg
+    text-[16px] md:text-sm font-semibold text-gray-900
+    focus:bg-white focus:ring-2 focus:ring-indigo-500
+    outline-none
+  "
+>
+  <option value="" disabled>
+    Select Assembly
+  </option>
+  <option value="Pulivendula">Pulivendula</option>
+</select>
 
-<input
+
+    {/* Mandal */}
+    <select
+  id="mandal"
+  defaultValue={profile?.mandal || ""}
+  className="
+    w-full h-11 px-3
+    bg-gray-50 border border-gray-300 rounded-lg
+    text-[16px] md:text-sm font-semibold text-gray-900
+    focus:bg-white focus:ring-2 focus:ring-indigo-500
+    outline-none
+  "
+>
+
+      <option value="" disabled>
+        Select Mandal
+      </option>
+      <option value="Vempalli">Vempalli</option>
+    </select>
+
+    {/* Village */}
+   <select
   id="village"
-  type="text"
   defaultValue={profile?.village || ""}
-  placeholder="Village"
-  className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm font-bold"
-/>
+  className="
+    w-full h-11 px-3
+    bg-gray-50 border border-gray-300 rounded-lg
+    text-[16px] md:text-sm font-semibold text-gray-900
+    focus:bg-white focus:ring-2 focus:ring-indigo-500
+    outline-none
+  "
+>
+      <option value="" disabled>
+        Select Village
+      </option>
+      <option value="Sample Village">Sample Village</option>
+    </select>
+  </div>
+</div>
+          </div>  
 
-     </div>
 
           <div className="p-5 bg-white rounded-xl border border-gray-200">
             <h4 className="text-xs font-black text-gray-500 mb-3 uppercase tracking-wider">
@@ -1134,12 +1327,12 @@ const addressHeading = useMemo(() => {
               placeholder="Applicant Name"
               defaultValue={fullName}
             />
-            <input
-            type="text"
-           className="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs font-medium outline-none focus:border-blue-500 transition-all"
-           placeholder="Current Location"
-          defaultValue={profile?.city_abroad || profile?.country_of_residence || ""}
+           <input
+  type="text"
+  placeholder="Current Location"
+  defaultValue={profile?.country_of_residence || ""}
 />
+
 
           </div>
           <textarea
