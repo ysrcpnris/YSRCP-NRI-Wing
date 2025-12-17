@@ -27,7 +27,7 @@ export default function DevelopmentShowcase() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-  const speed = 1.8; // fast & smooth
+  const speed = 0.5; // fast & smooth
   let animationFrame: number;
 
   const autoScroll = () => {

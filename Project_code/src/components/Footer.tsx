@@ -1,155 +1,160 @@
-import React from "react";
-import { Globe, Mail, Phone, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import React, { useState } from "react";
+import {
+  Globe,
+  Mail,
+  Phone,
+  Facebook,
+  Twitter,
+  Instagram,
+  Youtube,
+  ChevronDown,
+} from "lucide-react";
 
 const Footer: React.FC = () => {
-  const footerLinks = {
-    services: [
-      "Document Services",
-      "Property Assistance",
-      "Business Support",
-      "Education Services",
-      "Legal Help",
-      "Investment Guidance",
-    ],
-    quickLinks: [
-      "About YSRCP",
-      "Leadership",
-      "Policies",
-      "Press Releases",
-      "Career Opportunities",
-      "Privacy Policy",
-    ],
-    regions: [
-      "USA & Canada",
-      "Middle East",
-      "Europe & UK",
-      "Australia & New Zealand",
-      "Singapore & Malaysia",
-      "Other Regions",
-    ],
-  };
+  const [open, setOpen] = useState<string | null>(null);
+
+  const sections = [
+    {
+      title: "NRI Services",
+      items: [
+        "Document Services",
+        "Property Assistance",
+        "Business Support",
+        "Education Services",
+        "Legal Help",
+        "Investment Guidance",
+      ],
+    },
+    {
+      title: "Quick Links",
+      items: [
+        "About YSRCP",
+        "Leadership",
+        "Policies",
+        "Press Releases",
+        "Careers",
+        "Privacy Policy",
+      ],
+    },
+    {
+      title: "Regions",
+      items: [
+        "USA & Canada",
+        "Middle East",
+        "Europe & UK",
+        "Australia & NZ",
+        "Singapore & Malaysia",
+      ],
+    },
+  ];
 
   return (
-    <footer className="relative bg-gray-900 text-white">
+    <footer className="relative bg-gray-900 text-white overflow-hidden">
       {/* BACKGROUND IMAGE */}
-      <div className="absolute inset-0 opacity-10 hidden md:block">
+      <div className="absolute inset-0 hidden md:block">
         <img
           src="/ECOd9I9UYAAkV4h.jpg"
-          alt="YSRCP Background"
-          className="w-full h-full object-cover"
+          alt="YSRCP background"
+          className="w-full h-full object-cover object-top opacity-35"
         />
+        {/* DARK OVERLAY */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
-        {/* TOP GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-          {/* LOGO + SOCIAL */}
-          <div>
-            <div className="flex items-center space-x-3 mb-5">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center">
-                <Globe className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold">YSRCP</h3>
-                <p className="text-gray-400 text-sm">NRI Portal</p>
-              </div>
+      <div className="relative max-w-7xl mx-auto px-4 py-4">
+        {/* TOP */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          {/* LOGO */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center">
+              <Globe className="w-4 h-4" />
             </div>
-
-            <p className="text-gray-400 mb-6 text-sm leading-relaxed">
-              Connecting Non-Resident Indians worldwide with the YSR Congress Party.
-            </p>
-
-            <div className="flex space-x-4">
-              {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition"
-                >
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
+            <div>
+              <h3 className="font-bold text-sm">YSRCP</h3>
+              <p className="text-[11px] text-gray-400">NRI Portal</p>
             </div>
           </div>
 
-          {/* SERVICES */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">NRI Services</h4>
-            <ul className="space-y-2 text-sm">
-              {footerLinks.services.map((link, i) => (
-                <li key={i}>
-                  <a href="#" className="text-gray-400 hover:text-white">
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* QUICK LINKS */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm">
-              {footerLinks.quickLinks.map((link, i) => (
-                <li key={i}>
-                  <a href="#" className="text-gray-400 hover:text-white">
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* REGIONS */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Regional Presence</h4>
-            <ul className="space-y-2 text-sm">
-              {footerLinks.regions.map((region, i) => (
-                <li key={i}>
-                  <a href="#" className="text-gray-400 hover:text-white">
-                    {region}
-                  </a>
-                </li>
-              ))}
-            </ul>
+          {/* SOCIAL */}
+          <div className="flex gap-2">
+            {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
+              <a
+                key={i}
+                href="#"
+                className="w-7 h-7 bg-blue-600/90 rounded-full flex items-center justify-center hover:bg-blue-700 transition"
+              >
+                <Icon className="w-3.5 h-3.5" />
+              </a>
+            ))}
           </div>
         </div>
 
-        {/* CONTACT INFO */}
-        <div className="border-t border-gray-800 mt-10 pt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
-          <div className="flex items-center space-x-3">
-            <Mail className="w-5 h-5 text-blue-400" />
-            <div>
-              <p className="font-medium">Email Support</p>
-              <p className="text-gray-400">nri@ysrcp.in</p>
+        {/* MOBILE ACCORDION */}
+        <div className="md:hidden mt-3 border-t border-gray-800">
+          {sections.map((sec) => (
+            <div key={sec.title} className="border-b border-gray-800">
+              <button
+                onClick={() => setOpen(open === sec.title ? null : sec.title)}
+                className="w-full flex justify-between items-center py-2.5 text-sm font-medium"
+              >
+                {sec.title}
+                <ChevronDown
+                  className={`w-4 h-4 transition ${
+                    open === sec.title ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {open === sec.title && (
+                <ul className="pb-2 space-y-1 text-xs text-gray-400">
+                  {sec.items.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </div>
+          ))}
+        </div>
 
-          <div className="flex items-center space-x-3">
-            <Phone className="w-5 h-5 text-blue-400" />
-            <div>
-              <p className="font-medium">24/7 Helpline</p>
-              <p className="text-gray-400">+91-40-1234-5678</p>
+        {/* DESKTOP GRID */}
+        <div className="hidden md:grid grid-cols-3 gap-5 mt-5 text-sm">
+          {sections.map((sec) => (
+            <div key={sec.title}>
+              <h4 className="font-semibold mb-2 text-sm">{sec.title}</h4>
+              <ul className="space-y-1 text-gray-400 text-xs">
+                {sec.items.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
             </div>
-          </div>
+          ))}
+        </div>
 
-          <div className="flex items-center space-x-3">
-            <Globe className="w-5 h-5 text-blue-400" />
-            <div>
-              <p className="font-medium">Website</p>
-              <p className="text-gray-400">www.ysrcp.in</p>
-            </div>
+        {/* CONTACT */}
+        <div className="mt-4 pt-3 border-t border-gray-800 flex flex-col sm:flex-row gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <Mail className="w-4 h-4 text-blue-400" />
+            nri@ysrcp.in
+          </div>
+          <div className="flex items-center gap-2">
+            <Phone className="w-4 h-4 text-blue-400" />
+            +91-40-1234-5678
+          </div>
+          <div className="flex items-center gap-2">
+            <Globe className="w-4 h-4 text-blue-400" />
+            www.ysrcp.in
           </div>
         </div>
 
         {/* COPYRIGHT */}
-        <div className="border-t border-gray-800 mt-6 pt-4 text-center text-gray-400 text-xs">
-          © 2025 YSR Congress Party. All rights reserved.
-          <div className="mt-2">
-            <a href="#" className="hover:text-white mx-1">Terms</a> |
-            <a href="#" className="hover:text-white mx-1">Privacy</a> |
-            <a href="#" className="hover:text-white mx-1">Cookies</a>
-          </div>
+        <div className="mt-2 text-center text-[11px] text-gray-400">
+          © 2025 YSR Congress Party ·
+          <a href="#" className="mx-1 hover:text-white">
+            Terms
+          </a>
+          |
+          <a href="#" className="mx-1 hover:text-white">
+            Privacy
+          </a>
         </div>
       </div>
     </footer>
