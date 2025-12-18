@@ -19,6 +19,8 @@ export default function RegisterPage() {
     last_name: '',
     mobile_number: '',
     whatsapp_number: '',
+    mobile_country_code: '+91',
+    whatsapp_country_code: '+91',
     email: '',
     password: '',
     country_of_residence: '',
@@ -45,6 +47,19 @@ export default function RegisterPage() {
   });
 
   const professions = ['Job', 'Business', 'Student'];
+
+  const countryCodes = [
+    { code: '+1', name: 'US/CA' },
+    { code: '+44', name: 'UK' },
+    { code: '+61', name: 'AU' },
+    { code: '+49', name: 'DE' },
+    { code: '+971', name: 'UAE' },
+    { code: '+65', name: 'SG' },
+    { code: '+60', name: 'MY' },
+    { code: '+64', name: 'NZ' },
+    { code: '+31', name: 'NL' },
+    { code: '+91', name: 'IN' },
+  ];
 
   const countryData: Record<string, { name: string; cities: string[] }[]> = {
     USA: [
@@ -140,8 +155,8 @@ export default function RegisterPage() {
       const profilePayload: Record<string, unknown> = {
         first_name: formData.first_name,
         last_name: formData.last_name,
-        mobile_number: formData.mobile_number,
-        whatsapp_number: formData.whatsapp_number,
+        mobile_number: formData.mobile_country_code + formData.mobile_number,
+        whatsapp_number: formData.whatsapp_country_code + formData.whatsapp_number,
         country_of_residence: formData.country_of_residence,
         state_abroad: formData.state_abroad,
         indian_state: formData.indian_state,
@@ -163,9 +178,7 @@ export default function RegisterPage() {
         linkedin_id: formData.linkedin_id,
       };
 
-      if (formData.referred_by && formData.referred_by.trim() !== '') {
-        profilePayload.referred_by = formData.referred_by.trim();
-      }
+
 
       await withTimeout(signUp(formData.email, formData.password, profilePayload), 20000);
 
@@ -214,7 +227,7 @@ export default function RegisterPage() {
     <>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
       
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-6 px-3 sm:py-12 sm:px-4">
+      <div className="min-h-screen bg-blue-50 py-6 px-3 sm:py-12 sm:px-4">
         <div className="max-w-4xl mx-auto">
           <div
             className="bg-white rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-8"
@@ -227,7 +240,7 @@ export default function RegisterPage() {
               ← Back to Home
             </button>
 
-            <h2 className="text-xl sm:text-3xl font-bold mb-2 text-white bg-gradient-to-r from-blue-600 to-green-500 p-2 sm:p-3 rounded-lg shadow">
+            <h2 className="text-xl sm:text-3xl font-bold mb-2 text-white bg-blue-600 p-2 sm:p-3 rounded-lg shadow">
               Join YSRCP NRI Wing
             </h2>
 
@@ -280,27 +293,53 @@ export default function RegisterPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Mobile Number <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.mobile_number}
-                      onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value })}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="+1 (123) 456-7890"
-                    />
+                    <div className="flex">
+                      <select
+                        value={formData.mobile_country_code}
+                        onChange={(e) => setFormData({ ...formData, mobile_country_code: e.target.value })}
+                        className="px-2 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {countryCodes.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.code} ({country.name})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="tel"
+                        required
+                        value={formData.mobile_number}
+                        onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value })}
+                        className="flex-1 px-3 py-2 border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="1234567890"
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       WhatsApp Number <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.whatsapp_number}
-                      onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="+1 (123) 456-7890"
-                    />
+                    <div className="flex">
+                      <select
+                        value={formData.whatsapp_country_code}
+                        onChange={(e) => setFormData({ ...formData, whatsapp_country_code: e.target.value })}
+                        className="px-2 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {countryCodes.map((country) => (
+                          <option key={country.code} value={country.code}>
+                            {country.code} ({country.name})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="tel"
+                        required
+                        value={formData.whatsapp_number}
+                        onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
+                        className="flex-1 px-3 py-2 border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="1234567890"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -436,7 +475,8 @@ export default function RegisterPage() {
                       minLength={6}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0A2A66] focus:border-transparent"
+
                     />
                   </div>
                 </div>
@@ -553,7 +593,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white py-3.5 sm:py-3 rounded-lg text-base font-semibold hover:shadow-lg transition disabled:opacity-60"
+                className="w-full bg-blue-600 text-white py-3.5 sm:py-3 rounded-lg text-base font-semibold hover:shadow-lg transition disabled:opacity-60"
               >
                 {loading ? 'Creating account...' : 'Register'}
               </button>
