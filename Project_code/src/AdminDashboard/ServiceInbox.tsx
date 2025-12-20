@@ -1,129 +1,184 @@
-// src/pages/ServiceInbox.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  Briefcase,
+  GraduationCap,
+  Scale,
+  Users,
+  MapPin,
+  Clock,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+import { supabase } from "../lib/supabase";
+
+type ServiceRequest = {
+  id: number;
+  user_id: string;
+  service_type: string;
+  applicant_name: string;
+  current_location: string;
+  description: string;
+  status: string;
+  created_at: string;
+};
+
+const serviceIcon = (type: string) => {
+  switch (type.toLowerCase()) {
+    case "student":
+      return <GraduationCap className="text-blue-600" />;
+    case "legal":
+      return <Scale className="text-purple-600" />;
+    case "career":
+      return <Briefcase className="text-amber-600" />;
+    default:
+      return <Users className="text-gray-600" />;
+  }
+};
 
 export default function ServiceInbox() {
-  const [requests, setRequests] = useState([
-    {
-      id: "REQ-202401",
-      name: "Shiva Reddy",
-      type: "STUDENT SUPPORT",
-      date: "Jan 11, 2025",
-      status: "Pending",
-    },
-    {
-      id: "REQ-202402",
-      name: "Sarathi Nair",
-      type: "STUDENT SUPPORT",
-      date: "May 12, 2025",
-      status: "Pending",
-    },
-    {
-      id: "REQ-202403",
-      name: "Maher Sathik",
-      type: "STUDENT SUPPORT",
-      date: "Aug 13, 2025",
-      status: "Pending",
-    },
-    {
-      id: "REQ-202404",
-      name: "Sharmas Vali",
-      type: "STUDENT SUPPORT",
-      date: "March 12, 2025",
-      status: "Pending",
-    },
-    {
-      id: "REQ-202405",
-      name: "Suparna Das",
-      type: "STUDENT SUPPORT",
-      date: "June 12, 2025",
-      status: "Pending",
-    },
-  ]);
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>("all");
 
-  const updateStatus = (reqId: string, newStatus: string) => {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === reqId ? { ...r, status: newStatus } : r))
-    );
+  /* ================= FETCH REQUESTS ================= */
+  const fetchRequests = async () => {
+    setLoading(true);
+
+    const { data, error } = await supabase
+      .from("service_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Service fetch error:", error);
+    } else {
+      setRequests(data as ServiceRequest[]);
+    }
+
+    setLoading(false);
   };
 
-  return (
-    <div className="p-4 sm:p-8">
-      <h1 className="text-3xl font-bold text-[#1368d6] mb-6 text-center sm:text-left">
-        SERVICE REQUESTS
-      </h1>
+  useEffect(() => {
+    fetchRequests();
+  }, []);
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-5">
-          Service Request Inbox
+  /* ================= UPDATE STATUS ================= */
+  const updateStatus = async (id: number, status: string) => {
+    const { error } = await supabase
+      .from("service_requests")
+      .update({ status })
+      .eq("id", id);
+
+    if (error) {
+      alert("Failed to update status");
+      return;
+    }
+
+    fetchRequests();
+  };
+
+  /* ================= FILTER ================= */
+  const filteredRequests =
+    filter === "all"
+      ? requests
+      : requests.filter((r) => r.status === filter);
+
+  /* ================= UI ================= */
+  return (
+    <div className="bg-white rounded-xl border shadow-sm p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-black text-gray-800">
+          📨 Service Requests Inbox
         </h2>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700 border-b">
-                <th className="py-3 px-4 text-left">REQUEST ID</th>
-                <th className="py-3 px-4 text-left">USER NAME</th>
-                <th className="py-3 px-4 text-left">SERVICE TYPE</th>
-                <th className="py-3 px-4 text-left">DATE</th>
-                <th className="py-3 px-4 text-left">STATUS</th>
-                <th className="py-3 px-4 text-left">ACTIONS</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {requests.map((r, i) => (
-                <tr
-                  key={r.id}
-                  className={`border-b ${
-                    i % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  } hover:bg-blue-50 transition`}
-                >
-                  <td className="py-3 px-4">{r.id}</td>
-
-                  <td className="py-3 px-4 font-semibold text-gray-900">
-                    {r.name}
-                  </td>
-
-                  <td className="py-3 px-4">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-md font-semibold">
-                      {r.type}
-                    </span>
-                  </td>
-
-                  <td className="py-3 px-4">{r.date}</td>
-
-                  {/* Status Dropdown */}
-                  <td className="py-3 px-4">
-                    <select
-                      value={r.status}
-                      onChange={(e) =>
-                        updateStatus(r.id, e.target.value)
-                      }
-                      className={`px-3 py-1 rounded-md border text-sm font-medium ${
-                        r.status === "Pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : r.status === "Resolved"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Resolved">Resolved</option>
-                    </select>
-                  </td>
-
-                  <td className="py-3 px-4">
-                    <button className="text-[#1368d6] font-semibold hover:underline">
-                      View Details
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border px-3 py-2 rounded text-sm"
+        >
+          <option value="all">All</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
       </div>
+
+      {loading ? (
+        <p className="text-sm text-gray-500">Loading requests…</p>
+      ) : filteredRequests.length === 0 ? (
+        <p className="text-sm text-gray-500">No service requests found.</p>
+      ) : (
+        <div className="space-y-4">
+          {filteredRequests.map((req) => (
+            <div
+              key={req.id}
+              className="border rounded-xl p-4 hover:shadow transition"
+            >
+              {/* HEADER */}
+              <div className="flex justify-between items-start">
+                <div className="flex gap-3 items-center">
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                    {serviceIcon(req.service_type)}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-800">
+                      {req.service_type.toUpperCase()} SERVICE
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      {req.applicant_name}
+                    </p>
+                  </div>
+                </div>
+
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    req.status === "approved"
+                      ? "bg-green-100 text-green-700"
+                      : req.status === "rejected"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}
+                >
+                  {req.status}
+                </span>
+              </div>
+
+              {/* BODY */}
+              <div className="mt-3 text-sm text-gray-600">
+                <p className="mb-2">{req.description}</p>
+
+                <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <MapPin size={12} /> {req.current_location}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock size={12} />{" "}
+                    {new Date(req.created_at).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* ACTIONS */}
+              {req.status === "pending" && (
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => updateStatus(req.id, "approved")}
+                    className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-bold"
+                  >
+                    <CheckCircle size={14} /> Approve
+                  </button>
+                  <button
+                    onClick={() => updateStatus(req.id, "rejected")}
+                    className="flex items-center gap-1 px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold"
+                  >
+                    <XCircle size={14} /> Reject
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
