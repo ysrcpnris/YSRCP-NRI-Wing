@@ -48,6 +48,26 @@ const Footer: React.FC = () => {
     },
   ];
 
+  /* ✅ YSRCP PARTY SOCIAL LINKS */
+  const footerSocialLinks = [
+    {
+      icon: Facebook,
+      url: "https://www.instagram.com/ysrcongress/?hl=en",
+    },
+    {
+      icon: Twitter,
+      url: "https://x.com/YSRCParty",
+    },
+    {
+      icon: Instagram,
+      url: "https://www.instagram.com/ysrcongress/?hl=en",
+    },
+    {
+      icon: Youtube,
+      url: "https://www.ysrcongress.com/",
+    },
+  ];
+
   return (
     <footer className="relative bg-gray-900 text-white overflow-hidden">
       {/* BACKGROUND IMAGE */}
@@ -57,7 +77,6 @@ const Footer: React.FC = () => {
           alt="YSRCP background"
           className="w-full h-full object-cover object-top opacity-35"
         />
-        {/* DARK OVERLAY */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
       </div>
 
@@ -75,13 +94,16 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* SOCIAL */}
+          {/* ✅ SOCIAL ICONS WITH REAL LINKS */}
           <div className="flex gap-2">
-            {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
+            {footerSocialLinks.map(({ icon: Icon, url }, i) => (
               <a
                 key={i}
-                href="#"
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-7 h-7 bg-blue-600/90 rounded-full flex items-center justify-center hover:bg-blue-700 transition"
+                aria-label="YSRCP social link"
               >
                 <Icon className="w-3.5 h-3.5" />
               </a>
@@ -141,7 +163,7 @@ const Footer: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4 text-blue-400" />
-            www.ysrcp.in
+            www.ysrcongress.com
           </div>
         </div>
 
