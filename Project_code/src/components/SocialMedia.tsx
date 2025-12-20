@@ -18,18 +18,22 @@ import {
 
 // Video data
 const ALL_VIDEOS = [
-  { title: 'Analysis on YS Jagan Hyderabad Tour & Future Plans', url: 'https://www.youtube.com/watch?v=yO6KKcmShCU', views: '12K', time: '2h ago' },
-  { title: 'Powerful Speech at YSRCP Formation Day Celebrations', url: 'https://www.youtube.com/watch?v=yUhWgtzhd7w', views: '45K', time: '5h ago' },
-  { title: 'Sensational Press Meet: Addressing Key State Issues', url: 'https://www.youtube.com/watch?v=mdCCuomaBc4', views: '89K', time: '1d ago' },
-  { title: 'YS Jagan Mohan Reddy Speech At Narsipatnam Public Meeting', url: 'https://www.youtube.com/watch?v=gVEHRqxh5hQ', views: '32K', time: '1d ago' },
-  { title: 'Cabinet Meeting Highlights: New Welfare Schemes 2024', url: 'https://www.youtube.com/watch?v=5H-qNq1sP7g', views: '15K', time: '2d ago' },
-  { title: 'Review on Education Reforms & School Infrastructure', url: 'https://www.youtube.com/watch?v=yO6KKcmShCU', views: '22K', time: '2d ago' },
-  { title: 'Visakhapatnam Industrial Summit Keynote Address', url: 'https://www.youtube.com/watch?v=yUhWgtzhd7w', views: '10K', time: '3d ago' },
-  { title: 'Interactive Session with Farmers on Rythu Bharosa', url: 'https://www.youtube.com/watch?v=mdCCuomaBc4', views: '56K', time: '3d ago' },
-  { title: 'Polavaram Project Site Visit & Progress Review', url: 'https://www.youtube.com/watch?v=gVEHRqxh5hQ', views: '28K', time: '4d ago' },
-  { title: 'Inauguration of 5 New Medical Colleges Across AP', url: 'https://www.youtube.com/watch?v=5H-qNq1sP7g', views: '41K', time: '5d ago' },
-  { title: 'Press Briefing on Annual Welfare Calendar Release', url: 'https://www.youtube.com/watch?v=yO6KKcmShCU', views: '18K', time: '6d ago' },
-  { title: 'Global Investors Summit: AP as the Destination', url: 'https://www.youtube.com/watch?v=yUhWgtzhd7w', views: '95K', time: '1w ago' },
+  { title: 'Analysis on YS Jagan Hyderabad Tour & Future Plans', url: 'https://www.youtube.com/watch?v=yO6KKcmShCU', views: '12K', time: '2h ago',image: '/video1.jpg.png' },
+  { title: 'Powerful Speech at YSRCP Formation Day Celebrations', url: 'https://www.youtube.com/watch?v=yUhWgtzhd7w', views: '45K', time: '5h ago',image: '/video2.jpg.png' },
+  { title: 'Sensational Press Meet: Addressing Key State Issues', url: 'https://www.youtube.com/watch?v=mdCCuomaBc4', views: '89K', time: '1d ago', image: '/video.3.jpg.png' },
+    {
+    title: 'YS Jagan Mohan Reddy Speech At Narsipatnam Public Meeting',
+    url: 'https://www.youtube.com/watch?v=gVEHRqxh5hQ',
+    views: '32K',
+    time: '1d ago',
+    image: '/video4.jpg.png',
+  },
+  { title: 'Review on Education Reforms & School Infrastructure', url: 'https://www.youtube.com/watch?v=yO6KKcmShCU', views: '22K', time: '2d ago',image: '/video1.jpg.png' },
+  { title: 'Visakhapatnam Industrial Summit Keynote Address', url: 'https://www.youtube.com/watch?v=yUhWgtzhd7w', views: '10K', time: '3d ago' ,image: '/video2.jpg.png' },
+  { title: 'Interactive Session with Farmers on Rythu Bharosa', url: 'https://www.youtube.com/watch?v=mdCCuomaBc4', views: '56K', time: '3d ago',image: '/video.3.jpg.png' },
+  { title: 'Polavaram Project Site Visit & Progress Review', url: 'https://www.youtube.com/watch?v=gVEHRqxh5hQ', views: '28K', time: '4d ago', image: '/video9.jpg.png' },
+  { title: 'Press Briefing on Annual Welfare Calendar Release', url: 'https://www.youtube.com/watch?v=yO6KKcmShCU', views: '18K', time: '6d ago',image: '/video4.jpg.png'},
+  { title: 'Global Investors Summit: AP as the Destination', url: 'https://www.youtube.com/watch?v=yUhWgtzhd7w', views: '95K', time: '1w ago',image: '/video2.jpg.png' },
 ];
 
 // Social Icon
@@ -179,7 +183,7 @@ const PressMeetsAndSocial: React.FC = () => {
     >
       <div className="relative h-[140px] sm:h-[150px] bg-black overflow-hidden">
         <img
-          src={`https://img.youtube.com/vi/${new URL(video.url).searchParams.get("v")}/hqdefault.jpg`}
+          src={video.image || `https://img.youtube.com/vi/${new URL(video.url).searchParams.get("v")}/video.jpg.png`}
           alt={video.title}
           className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
         />
