@@ -1210,44 +1210,43 @@ export default function RegisterPage() {
     <>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
       
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-6 px-3 sm:py-12 sm:px-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-4 px-2 sm:py-12 sm:px-4 md:px-6">
+        <div className="max-w-5xl mx-auto">
           <div
-            className="bg-white rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-8"
-            style={{ border: '4px solid #1e88e5' }}
+            className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl md:shadow-2xl p-3 sm:p-6 md:p-8"
+            style={{ border: '2px sm:border-4 solid #1e88e5' }}
           >
             <button
               onClick={() => navigate('/')}
-              className="mb-4 inline-block text-blue-600 hover:text-blue-700 font-semibold text-sm sm:text-base"
+              className="mb-3 sm:mb-4 inline-block text-blue-600 hover:text-blue-700 font-semibold text-xs sm:text-sm md:text-base"
             >
               ← Back to Home
             </button>
 
-            <h2 className="text-xl sm:text-3xl font-bold mb-2 text-white bg-gradient-to-r from-[#1356aed2] to-[#1E6BD6] p-2 sm:p-3 rounded-lg shadow">
-
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold mb-2 text-white bg-gradient-to-r from-[#1356aed2] to-[#1E6BD6] p-2 sm:p-3 md:p-4 rounded-lg shadow">
               Join YSRCP NRI Wing
             </h2>
 
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
               Register to become part of our global community
             </p>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 sm:px-4 sm:py-3 rounded-lg mb-4 text-sm sm:text-base">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Personal Information */}
-              <div className="border-b pb-4">
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 p-2 rounded bg-blue-600">
+              <div className="border-b pb-3 sm:pb-4">
+                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white mb-2 sm:mb-3 p-2 sm:p-2.5 rounded bg-blue-600">
                   Personal Information
                 </h3>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1255,7 +1254,7 @@ export default function RegisterPage() {
                       required
                       value={formData.first_name}
                       onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-blue-400 rounded-lg bg-blue-50 focus:ring-2 focus:ring-green-500 focus:border-blue-600"
+                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-blue-400 rounded-lg bg-blue-50 focus:ring-2 focus:ring-green-500 focus:border-blue-600"
                     />
                   </div>
                   {/* <div>
@@ -1272,7 +1271,7 @@ export default function RegisterPage() {
                   </div> */}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Country of Residence <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -1287,7 +1286,7 @@ export default function RegisterPage() {
                           city_abroad: '',
                         });
                       }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Select Country</option>
                       {Object.keys(countryData).map((country) => (
@@ -1299,24 +1298,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
-                  
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      WhatsApp Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.whatsapp_number}
-                      onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="+1 (123) 456-7890"
-                    />
-                  </div> */}
-
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mt-3 sm:mt-4">
                    <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Email ID <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1324,11 +1308,44 @@ export default function RegisterPage() {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                      Mobile Number <span className="text-red-500">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <select
+                          required
+                          value={getCurrentCountryCode()}
+                          onChange={(e) => {
+                            const newCode = e.target.value;
+                            const numberOnly = formData.mobile_number.replace(/^\+\d+/, '');
+                            setFormData({ ...formData, mobile_number: newCode + numberOnly });
+                          }}
+                          className="w-1/3 px-2 sm:px-3 py-2.5 sm:py-2 text-xs sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          {countryCodes.map((country) => (
+                            <option key={country.code} value={country.code}>
+                              {country.code}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="tel"
+                          required
+                          value={formData.mobile_number}
+                          onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value })}
+                          className="w-2/3 px-2 sm:px-3 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="+911234567890"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Password <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -1338,7 +1355,7 @@ export default function RegisterPage() {
                         minLength={6}
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-3 py-2.5 sm:px-4 sm:py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                       <button
                         type="button"
@@ -1347,43 +1364,6 @@ export default function RegisterPage() {
                       >
                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mobile Number <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <select
-                        required
-                        value={getCurrentCountryCode()}
-                        onChange={(e) => {
-                          const newCode = e.target.value;
-                          const numberOnly = formData.mobile_number.replace(/^\+\d+/, '');
-                          setFormData({ ...formData, mobile_number: newCode + numberOnly });
-                        }}
-                        className="w-24 px-2 py-2.5 sm:px-3 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        {countryCodes.map((country) => (
-                          <option key={country.code} value={country.code}>
-                            {country.code}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="tel"
-                        required
-                        value={formData.mobile_number.replace(/^\+\d+/, '')}
-                        onChange={(e) => {
-                          const countryCode = getCurrentCountryCode();
-                          setFormData({ ...formData, mobile_number: countryCode + e.target.value });
-                        }}
-                        className="flex-1 px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="1234567890"
-                      />
                     </div>
                   </div>
                 </div>
@@ -1482,14 +1462,14 @@ export default function RegisterPage() {
               </div>
 
                {/* {/* COMMENTED OUT: Indian Address Details to Referral */}
-                    <div className="border-b pb-4 mb-4">
-                      <h3 className="text-xl sm:text-xl font-semibold text-blue-600 mb-3 flex items-center">
-                        <MapPin size={20} className="mr-2 text-blue-600" />
+                    <div className="border-b pb-3 sm:pb-4 mb-3 sm:mb-4">
+                      <h3 className="text-sm sm:text-base md:text-lg font-semibold text-blue-600 mb-2 sm:mb-3 flex items-center">
+                        <MapPin size={18} className="mr-2 text-blue-600 flex-shrink-0" />
                         INDIAN ADDRESS DETAILS
                       </h3>
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                             State <span className="text-red-500">*</span>
                           </label>
                           <select
@@ -1503,7 +1483,7 @@ export default function RegisterPage() {
                                 assembly_constituency: "",
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
                             <option value="">Select State</option>
                             {Object.keys(indianAddressData).map((state) => (
@@ -1515,7 +1495,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                             District <span className="text-red-500">*</span>
                           </label>
                           <select
@@ -1529,7 +1509,7 @@ export default function RegisterPage() {
                               })
                             }
                             disabled={!formData.indian_state}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                           >
                             <option value="">Select District</option>
                             {formData.indian_state &&
@@ -1544,9 +1524,9 @@ export default function RegisterPage() {
                         </div>
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                             Assembly Constituency{" "}
                             <span className="text-red-500">*</span>
                           </label>
@@ -1561,7 +1541,7 @@ export default function RegisterPage() {
                               })
                             }
                             disabled={!formData.district}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                           >
                             <option value="">
                               Select Assembly Constituency
@@ -1579,7 +1559,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                             Mandal / Municipality{" "}
                             <span className="text-red-500">*</span>
                           </label>
@@ -1593,7 +1573,7 @@ export default function RegisterPage() {
                               })
                             }
                             disabled={!formData.assembly_constituency}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                           >
                             <option value="">
                               Select Mandal / Municipality
@@ -1789,15 +1769,15 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] text-white py-3.5 sm:py-3 rounded-lg text-base font-semibold hover:shadow-lg transition disabled:opacity-60"
+                className="w-full bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:shadow-lg transition disabled:opacity-60"
 
               >
                 {loading ? 'Creating account...' : 'Register'}
               </button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-gray-600">
+            <div className="mt-4 sm:mt-6 text-center">
+              <p className="text-sm sm:text-base text-gray-600">
                 Already have an account?{' '}
                 <button
                   onClick={() => navigate('/')}
