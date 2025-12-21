@@ -376,7 +376,7 @@ function StatCard({
   active: boolean;
 }) {
   return (
-    <div className="rounded-xl bg-white border p-4 flex flex-col items-center">
+    <div className="rounded-xl bg-white border p-4 flex flex-col items-center max-w-60 max-auto ">
       <div className="text-gray-600 text-lg font-bold">{title}</div>
       <div className="text-3xl font-semibold mt-2 text-green-600">
         {value}

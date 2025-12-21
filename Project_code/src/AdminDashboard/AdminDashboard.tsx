@@ -7,7 +7,7 @@ import { Globe } from "lucide-react";
 import Visited from "./Visited";
 import Assistance from "./Assistance";
 import Suggestions from "./Suggestions";
-import ServiceInbox from "./ServiceInbox";
+// import ServiceInbox from "./ServiceInbox";
 import MasterData from "./MasterData";
 import ContentControl from "./ContentControl";
 import ysrLogo from "../components/nrilogo.png";
@@ -80,11 +80,17 @@ const CONTINENTS = [
 
 type Row = {
   id: string;
+  first_name?: string | null;
+  email?: string | null;
+  mobile_number?: string | null;
+  whatsapp_number?: string | null;
+  profession?: string | null;
   country_of_residence: string | null;
   state_abroad: string | null;
   city_abroad: string | null;
   created_at?: string | null;
 };
+
 type Bucket = { name: string; count: number };
 
 /* ---------- Helpers ---------- */
@@ -163,7 +169,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={CalendarDays} label="Visited" page="visited" />
             <Item icon={Newspaper} label="Assistance" page="assistance" />
             <Item icon={Users} label="Suggestions" page="suggestions" />
-            <Item icon={FolderKanban} label="Service Inbox" page="serviceInbox" />
+            {/* <Item icon={FolderKanban} label="Service Inbox" page="serviceInbox" /> */}
             <Item icon={Settings} label="Master Data" page="masterData" />
             <Item icon={Globe} label="Content Control" page="contentControl" />
 
@@ -214,73 +220,44 @@ function StatCard({
 }
 /* ---------- State Members Table ---------- */
 /* ---------- State Members Table (with Pagination) ---------- */
-function StateMembersTable({
-  continent,
-  country,
-  state,
+function StateMembersTable({ country, onBack }: { country: string; onBack: () => void }) {
+  // This component was previously querying supabase directly. To simplify
+  // rendering and avoid nested imports/parse issues, the dashboard will pass
+  // the members list to display. Keep this component as a presentational
+  // pagination table that expects `members` to be provided by the parent.
+  return null;
+}
+
+function MembersList({
+  title,
+  members,
   onBack,
 }: {
-  continent: string;
-  country: string;
-  state: string;
+  title: string;
+  members: Row[];
   onBack: () => void;
 }) {
-  const [members, setMembers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
   const [page, setPage] = useState(1);
-  const pageSize = 8; // members per page
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "id, first_name, email, mobile_number, whatsapp_number, profession, country_of_residence, state_abroad"
-        )
-        .eq("country_of_residence", country)
-        .eq("state_abroad", state);
-
-      if (error) setError(error.message);
-      else setMembers(data || []);
-      setLoading(false);
-    })();
-  }, [continent, country, state]);
-
-  // pagination
+  const pageSize = 8;
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
   const paginated = members.slice(start, end);
-  const totalPages = Math.ceil(members.length / pageSize);
-
-  if (loading)
-    return <div className="text-center text-gray-500 mt-8">Loading members...</div>;
-  if (error)
-    return (
-      <div className="p-4 rounded bg-red-50 border border-red-200 text-red-700">
-        {error}
-      </div>
-    );
+  const totalPages = Math.max(1, Math.ceil(members.length / pageSize));
 
   return (
     <div className="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-      {/* Header */}
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-xl font-semibold text-[#1368d6]">
-          Members Registered in {state}, {country}
-        </h2>
+        <h2 className="text-xl font-semibold text-[#1368d6]">{title}</h2>
         <button
           onClick={onBack}
           className="px-4 py-2 text-sm rounded-md bg-[#1368d6] text-white hover:bg-green-600 transition"
         >
-          ← Back to States
+          ← Back
         </button>
       </div>
 
-      {/* Table */}
       {members.length === 0 ? (
-        <div className="text-gray-600 p-6">No members registered in this state.</div>
+        <div className="text-gray-600 p-6">No members found.</div>
       ) : (
         <>
           <div className="overflow-x-auto">
@@ -298,22 +275,19 @@ function StateMembersTable({
                 {paginated.map((m, i) => (
                   <tr
                     key={m.id}
-                    className={`text-sm hover:bg-blue-50 ${
-                      i % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }`}
+                    className={`text-sm hover:bg-blue-50 ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
                   >
-                    <td className="py-2 px-4">{m.first_name || "-"}</td>
-                    <td className="py-2 px-4">{m.email || "-"}</td>
-                    <td className="py-2 px-4">{m.mobile_number || "-"}</td>
-                    <td className="py-2 px-4">{m.whatsapp_number || "-"}</td>
-                    <td className="py-2 px-4">{m.profession || "-"}</td>
+                    <td className="py-2 px-4">{(m as any).first_name || "-"}</td>
+                    <td className="py-2 px-4">{(m as any).email || "-"}</td>
+                    <td className="py-2 px-4">{(m as any).mobile_number || "-"}</td>
+                    <td className="py-2 px-4">{(m as any).whatsapp_number || "-"}</td>
+                    <td className="py-2 px-4">{(m as any).profession || "-"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex justify-between items-center mt-5 text-sm text-gray-700">
               <span>
@@ -373,7 +347,9 @@ export default function AdminDashboard() {
       setErr("");
       const { data, error } = await supabase
         .from(TABLE_NAME)
-        .select("id, country_of_residence, state_abroad, city_abroad, created_at");
+        .select(
+          "id, first_name, email, mobile_number, whatsapp_number, profession, country_of_residence, state_abroad, city_abroad, created_at"
+        );
       if (!active) return;
       if (error) setErr(error.message);
       else setRows((data || []) as Row[]);
@@ -400,15 +376,7 @@ export default function AdminDashboard() {
     return group(filtered, "country");
   }, [rows, selectedContinent]);
 
-  const stateBuckets = useMemo(() => {
-    if (!selectedContinent || !selectedCountry) return [];
-    const filtered = rows.filter(
-      (r) =>
-        toContinent(norm(r.country_of_residence)) === selectedContinent &&
-        norm(r.country_of_residence) === selectedCountry
-    );
-    return group(filtered, "state");
-  }, [rows, selectedContinent, selectedCountry]);
+  // No more state-level grouping: we directly show members for a country
 
   const handleLogout = () => {
     localStorage.removeItem("is_admin");
@@ -417,7 +385,7 @@ export default function AdminDashboard() {
 
   const chartData = selectedContinent
     ? selectedCountry
-      ? stateBuckets
+      ? []
       : countryBuckets
     : continentBuckets;
 
@@ -430,6 +398,8 @@ export default function AdminDashboard() {
     "#0ea5e9",
     "#475569",
   ];
+
+  const showCharts = !(selectedContinent && (selectedCountry || countryBuckets.length === 0));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex">
@@ -495,9 +465,7 @@ export default function AdminDashboard() {
             {selectedContinent && !selectedCountry && (
               <>
                 <div className="flex justify-between items-center mt-8 mb-3">
-                  <h2 className="text-xl font-bold text-[#1368d6]">
-                    Countries in {selectedContinent}
-                  </h2>
+                  <h2 className="text-xl font-bold text-[#1368d6]">Countries in {selectedContinent}</h2>
                   <button
                     onClick={() => setSelectedContinent(null)}
                     className="px-3 py-2 text-sm rounded border hover:bg-blue-50 text-[#1368d6]"
@@ -505,66 +473,41 @@ export default function AdminDashboard() {
                     ← Back
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-5xl">
-                  {countryBuckets.map((b) => (
-                    <StatCard
-                      key={b.name}
-                      title={b.name}
-                      value={b.count}
-                      onClick={() => setSelectedCountry(b.name)}
-                    />
-                  ))}
-                </div>
+
+                {countryBuckets.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-5xl">
+                    {countryBuckets.map((b) => (
+                      <StatCard
+                        key={b.name}
+                        title={b.name}
+                        value={b.count}
+                        onClick={() => setSelectedCountry(b.name)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <MembersList
+                    title={`Members in ${selectedContinent}`}
+                    members={rows.filter((r) => toContinent(norm(r.country_of_residence)) === selectedContinent)}
+                    onBack={() => setSelectedContinent(null)}
+                  />
+                )}
               </>
             )}
 
             {selectedContinent && selectedCountry && (
-  <>
-    {/* If a state is selected, show the table */}
-    {typeof selectedCountry === "object" ? (
-      <StateMembersTable
-        continent={selectedCountry.continent}
-        country={selectedCountry.country}
-        state={selectedCountry.state}
-        onBack={() => setSelectedCountry(null)}
-      />
-    ) : (
-      <>
-        <div className="flex justify-between items-center mt-8 mb-3">
-          <h2 className="text-xl font-bold text-[#1368d6]">
-            States in {selectedCountry}
-          </h2>
-          <button
-            onClick={() => setSelectedCountry(null)}
-            className="px-3 py-2 text-sm rounded border hover:bg-blue-50 text-[#1368d6]"
-          >
-            ← Back
-          </button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-5xl">
-          {stateBuckets.map((b) => (
-            <StatCard
-              key={b.name}
-              title={b.name}
-              value={b.count}
-              onClick={() =>
-                setSelectedCountry({
-                  continent: selectedContinent,
-                  country: selectedCountry,
-                  state: b.name,
-                })
-              }
-            />
-          ))}
-        </div>
-      </>
-    )}
-  </>
-)}
+              <>
+                <MembersList
+                  title={`Members Registered in ${selectedCountry}`}
+                  members={rows.filter((r) => norm(r.country_of_residence) === selectedCountry)}
+                  onBack={() => setSelectedCountry(null)}
+                />
+              </>
+            )}
 
 
             {/* ---------- CHARTS ---------- */}
-            {!(selectedContinent && selectedCountry && typeof selectedCountry === "object") && (
+            {showCharts && (
               <div className="bg-white border rounded-xl p-6 shadow-sm mt-10">
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-[#1368d6]">
                   <BarChart3 size={18} /> Statistics Overview
@@ -608,7 +551,7 @@ export default function AdminDashboard() {
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
       {currentPage === "suggestions" && <Suggestions />}
-      {currentPage === "serviceInbox" && <ServiceInbox />}
+      {/* {currentPage === "serviceInbox" && <ServiceInbox />} */}
       {currentPage === "masterData" && <MasterData />}
       {currentPage === "contentControl" && <ContentControl />}
 

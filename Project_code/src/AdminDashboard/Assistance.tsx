@@ -1,322 +1,277 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
+/* ---------------- TYPES ---------------- */
 type AssistanceItem = {
   id: number;
-  name: string;
-  requestType: string;
-  date: string;
-  status: "Pending" | "Resolved";
+  applicant_name: string;
+  service_type: string;
+  current_location: string;
   description: string;
-  location: string;
-  assignedTo?: string;
-  actionTaken?: string;
-  comments?: string;
+  created_at: string;
+  status: "pending" | "resolved" | "rejected";
+  assigned_to?: string;
+  action_taken?: string;
+  admin_comments?: string;
 };
 
-const dummyData: AssistanceItem[] = [
-  {
-    id: 1,
-    name: "Ramesh Kumar",
-    requestType: "Medical Help",
-    date: "2025-10-15",
-    status: "Resolved",
-    description: "Requested help for hospital expenses.",
-    location: "India",
-    assignedTo: "Health Team (Hyd)",
-    actionTaken: "Guided to hospital support scheme"
-  },
-  {
-    id: 2,
-    name: "Anjali Singh",
-    requestType: "Education Support",
-    date: "2025-10-17",
-    status: "Pending",
-    description: "Scholarship request for USA studies.",
-    location: "USA"
-  },
-  {
-    id: 3,
-    name: "David Thomas",
-    requestType: "Legal Aid",
-    date: "2025-10-18",
-    status: "Pending",
-    description: "Passport issue in UAE.",
-    location: "UAE"
-  },
-  {
-    id: 4,
-    name: "Priya Sharma",
-    requestType: "Travel Assistance",
-    date: "2025-10-20",
-    status: "Pending",
-    description: "Ticket booking and visa issues.",
-    location: "UK"
-  },
-  {
-    id: 5,
-    name: "Mohammed Ali",
-    requestType: "Employment Support",
-    date: "2025-10-25",
-    status: "Resolved",
-    description: "Guidance for job placement.",
-    location: "Dubai",
-    assignedTo: "Employment Team (Dubai)",
-    actionTaken: "Helped with company interview placement"
-  }
-];
-
-// Teams based on location
+/* ---------------- TEAM MAP ---------------- */
 const TeamsByLocation: Record<string, string[]> = {
-  India: ["Health Team (Hyd)", "Education Cell (AP)", "Legal Cell (Vijayawada)"],
-  USA: ["NRI Cell – USA", "Education Support – USA", "Legal Advisors – USA"],
-  UK: ["NRI Team UK", "Scholarship Dept. UK", "Legal Support UK"],
+  India: ["Education Cell AP", "Health Cell AP", "Legal Cell AP"],
+  USA: ["NRI USA Education Team", "Legal Advisors USA"],
+  UK: ["UK NRI Team", "Scholarship UK"],
   UAE: ["Dubai Coordination Team", "Embassy Support UAE"],
-  Dubai: ["Employment Team (Dubai)", "Legal Team Dubai"],
+  NewZealand: ["NZ Student Support Team"],
+  Italy: ["Europe Legal Cell"],
 };
 
-function StatCard({
-  title,
-  value,
-  color,
-  onClick,
-}: {
-  title: string;
-  value: number;
-  color: string;
-  onClick?: () => void;
-}) {
-  return (
-    <div className="rounded-xl bg-white border border-gray-200 hover:shadow-lg transition-all p-6 flex flex-col justify-between max-w-xs">
-      <div>
-        <div className="text-gray-600 text-lg font-bold text-center">{title}</div>
-        <div className={`text-3xl font-semibold mt-2 ${color} text-center`}>
-          {value.toLocaleString()}
-        </div>
-      </div>
-      <button
-        onClick={onClick}
-        className="mt-4 bg-[#1368d6] text-white px-3 py-2 rounded-md text-sm hover:bg-green-600 transition-all mx-auto"
-      >
-        View More
-      </button>
-    </div>
-  );
-}
-
+/* ---------------- COMPONENT ---------------- */
 export default function Assistance() {
-  const [data, setData] = useState<AssistanceItem[]>(dummyData);
+  const [data, setData] = useState<AssistanceItem[]>([]);
   const [selected, setSelected] = useState<"total" | "pending" | "resolved" | null>(null);
 
-  // modal controls
+  const [loading, setLoading] = useState(false);
+
+  /* -------- Modal State -------- */
   const [allocateModalOpen, setAllocateModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<AssistanceItem | null>(null);
 
+  const [assignedTo, setAssignedTo] = useState("");
+  const [actionTaken, setActionTaken] = useState("");
+  const [comments, setComments] = useState("");
+
+  /* ---------------- FETCH DATA ---------------- */
+  const fetchRequests = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("service_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) setData(data as AssistanceItem[]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  /* ---------------- COUNTS ---------------- */
   const total = data.length;
-  const pending = data.filter((d) => d.status === "Pending").length;
-  const resolved = data.filter((d) => d.status === "Resolved").length;
+  const pending = data.filter((d) => d.status === "pending").length;
+  const resolved = data.filter((d) => d.status === "resolved").length;
 
   const tableData =
     selected === "pending"
-      ? data.filter((d) => d.status === "Pending")
+      ? data.filter((d) => d.status === "pending")
       : selected === "resolved"
-      ? data.filter((d) => d.status === "Resolved")
+      ? data.filter((d) => d.status === "resolved")
       : selected === "total"
       ? data
       : [];
 
-  // form fields
-  const [assignedTo, setAssignedTo] = useState("");
-  const [actionType, setActionType] = useState("");
-  const [comments, setComments] = useState("");
-
+  /* ---------------- HANDLERS ---------------- */
   const openAllocationForm = (req: AssistanceItem) => {
     setSelectedRequest(req);
     setAllocateModalOpen(true);
+    setAssignedTo(req.assigned_to || "");
+    setActionTaken(req.action_taken || "");
+    setComments(req.admin_comments || "");
   };
 
-  const handleAllocate = () => {
+  const handleResolve = async () => {
     if (!selectedRequest) return;
+    const { data: updated, error } = await supabase
+      .from("service_requests")
+      .update({
+        status: "resolved",
+        assigned_to: assignedTo,
+        action_taken: actionTaken,
+        admin_comments: comments,
+      })
+      .eq("id", selectedRequest.id)
+      .select()
+      .single();
 
-    const updated = data.map((item) =>
-      item.id === selectedRequest.id
-        ? {
-            ...item,
-            status: "Resolved",
-            assignedTo,
-            actionTaken: actionType,
-            comments,
-          }
-        : item
-    );
+    if (error) {
+      console.error("Failed to update request:", error);
+      // minimal user feedback
+      alert("Failed to update request: " + error.message);
+      return;
+    }
 
-    setData(updated);
+    // update local state to reflect the change immediately
+    setData((prev) => prev.map((it) => (it.id === updated.id ? (updated as AssistanceItem) : it)));
+
     setAllocateModalOpen(false);
+    setSelectedRequest(null);
     setAssignedTo("");
-    setActionType("");
+    setActionTaken("");
     setComments("");
   };
 
+  /* ---------------- UI ---------------- */
   return (
     <div className="p-6">
 
       {/* HEADER */}
-      <h1 className="text-2xl font-bold text-[#1368d6] mb-2">
+      <h1 className="text-2xl font-bold text-[#1368d6] mb-1">
         Assistance Requests Overview
       </h1>
       <p className="text-gray-500 mb-6">
-        Assign, manage, and resolve NRI assistance requests effectively.
+        Allocate and resolve NRI service requests based on location & service type.
       </p>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total Requests" value={total} color="text-[#1368d6]" onClick={() => setSelected("total")} />
-        <StatCard title="Pending Requests" value={pending} color="text-yellow-600" onClick={() => setSelected("pending")} />
-        <StatCard title="Resolved Requests" value={resolved} color="text-green-600" onClick={() => setSelected("resolved")} />
+      {/* STATS */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <StatCard title="Total Requests" value={total} onClick={() => setSelected("total")} />
+        <StatCard title="Pending Requests" value={pending} onClick={() => setSelected("pending")} />
+        <StatCard title="Resolved Requests" value={resolved} onClick={() => setSelected("resolved")} />
       </div>
 
-      {/* Table */}
+      {/* TABLE */}
       {selected && (
-        <div className="bg-white border rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-[#1368d6]">
-              {selected === "total" ? "All Assistance Requests" : selected === "pending" ? "Pending Requests" : "Resolved Requests"}
+        <div className="bg-white rounded-xl border shadow-sm p-6">
+          <div className="flex justify-between mb-4">
+            <h2 className="text-lg font-semibold text-[#1368d6] capitalize">
+              {selected} Requests
             </h2>
-
             <button
               onClick={() => setSelected(null)}
-              className="px-3 py-1.5 text-sm border rounded hover:bg-blue-50 text-[#1368d6]"
+              className="text-sm px-3 py-1 border rounded hover:bg-blue-50"
             >
               Close
             </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-200 rounded-lg">
+          <div className="overflow-x-auto relative">
+            <table className="min-w-full border rounded-lg">
               <thead className="bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white">
                 <tr>
                   <th className="px-4 py-2 text-left">Name</th>
-                  <th className="px-4 py-2 text-left">Request Type</th>
+                  <th className="px-4 py-2 text-left">Service</th>
                   <th className="px-4 py-2 text-left">Location</th>
                   <th className="px-4 py-2 text-left">Date</th>
                   <th className="px-4 py-2 text-left">Status</th>
                   <th className="px-4 py-2 text-left">Description</th>
-                  <th className="px-4 py-2 text-left">Actions</th>
+                  <th className="px-4 py-2 text-left">Action</th>
                 </tr>
               </thead>
 
               <tbody>
                 {tableData.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-blue-50">
-                    <td className="px-4 py-2">{item.name}</td>
-                    <td className="px-4 py-2">{item.requestType}</td>
-                    <td className="px-4 py-2">{item.location}</td>
-                    <td className="p-3 whitespace-nowrap text-sm">{item.date}</td>
-
-                    <td
-                      className={`px-4 py-2 font-medium ${
-                        item.status === "Pending" ? "text-yellow-600" : "text-green-600"
-                      }`}
-                    >
+                    <td className="px-4 py-2">{item.applicant_name}</td>
+                    <td className="px-4 py-2">{item.service_type}</td>
+                    <td className="px-4 py-2">{item.current_location}</td>
+                    <td className="px-4 py-2">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </td>
+                    <td className={`px-4 py-2 font-medium ${
+                      item.status === "pending" ? "text-yellow-600" : "text-green-600"
+                    }`}>
                       {item.status}
                     </td>
-
                     <td className="px-4 py-2">{item.description}</td>
-
                     <td className="px-4 py-2">
-                      {item.status === "Pending" ? (
+                      {item.status === "pending" ? (
                         <button
-                          onClick={() => openAllocationForm(item)}
-                          className="px-3 py-1 text-sm bg-[#1368d6] text-white rounded hover:bg-green-600"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openAllocationForm(item);
+                          }}
+                          className="bg-[#1368d6] text-white px-3 py-1 rounded hover:bg-green-600 z-10 relative"
                         >
                           Resolve / Allocate
                         </button>
                       ) : (
-                        <span className="text-green-600 text-sm">Assigned to: {item.assignedTo}</span>
+                        <span className="text-green-600 text-sm">
+                          Assigned to: {item.assigned_to}
+                        </span>
                       )}
                     </td>
-
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {loading && <p className="text-center mt-4 text-gray-500">Loading...</p>}
         </div>
       )}
 
-      {/* ALLOCATION MODAL */}
+      {/* MODAL */}
       {allocateModalOpen && selectedRequest && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
           <div className="bg-white w-full max-w-lg rounded-xl shadow-xl p-6">
+            <h3 className="text-xl font-semibold text-[#1368d6] mb-4">
+              Resolve Request – {selectedRequest.applicant_name}
+            </h3>
 
-            <h2 className="text-xl font-semibold text-[#1368d6] mb-4">
-              Resolve Request • {selectedRequest.name}
-            </h2>
-
-            {/* FORM */}
             <div className="space-y-4">
-              {/* TEAM SELECTION */}
-              <div>
-                <label className="text-sm font-medium">Assign to Team</label>
-                <select
-                  className="border w-full p-2 rounded mt-1"
-                  onChange={(e) => setAssignedTo(e.target.value)}
-                >
-                  <option value="">Select Team</option>
-                  {(TeamsByLocation[selectedRequest.location] || ["General Support Team"]).map((team) => (
-                    <option key={team} value={team}>{team}</option>
-                  ))}
-                </select>
-              </div>
+              <select
+                className="w-full border p-2 rounded"
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+              >
+                <option value="">Assign to Team</option>
+                {(TeamsByLocation[selectedRequest.current_location] || ["General Support Team"]).map(
+                  (t) => (
+                    <option key={t} value={t}>{t}</option>
+                  )
+                )}
+              </select>
 
-              {/* ACTION */}
-              <div>
-                <label className="text-sm font-medium">Action Type</label>
-                <select
-                  className="border w-full p-2 rounded mt-1"
-                  onChange={(e) => setActionType(e.target.value)}
-                >
-                  <option value="">Select Action</option>
-                  <option>Scholarship Guidance</option>
-                  <option>Medical Support</option>
-                  <option>Travel Assistance</option>
-                  <option>Legal Assistance</option>
-                  <option>Employment Support</option>
-                  <option>Financial Support</option>
-                </select>
-              </div>
+              <input
+                placeholder="Action Taken"
+                className="w-full border p-2 rounded"
+                value={actionTaken}
+                onChange={(e) => setActionTaken(e.target.value)}
+              />
 
-              {/* COMMENTS */}
-              <div>
-                <label className="text-sm font-medium">Comments / Notes</label>
-                <textarea
-                  rows={3}
-                  className="border w-full p-2 rounded mt-1"
-                  onChange={(e) => setComments(e.target.value)}
-                  placeholder="Add details about the action taken..."
-                />
-              </div>
+              <textarea
+                placeholder="Comments"
+                className="w-full border p-2 rounded"
+                rows={3}
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+              />
             </div>
 
-            {/* Buttons */}
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setAllocateModalOpen(false)}
-                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                className="px-4 py-2 bg-gray-300 rounded"
               >
                 Cancel
               </button>
-
               <button
-                onClick={handleAllocate}
-                className="px-4 py-2 rounded bg-[#1368d6] text-white hover:bg-green-600"
+                onClick={handleResolve}
+                className="px-4 py-2 bg-[#1368d6] text-white rounded hover:bg-green-600"
               >
                 Submit & Resolve
               </button>
             </div>
-
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ---------------- CARD ---------------- */
+function StatCard({ title, value, onClick }: any) {
+  return (
+    <div className="bg-white border rounded-xl p-6 text-center shadow hover:shadow-md max-w-60 mx-px">
+      <h3 className="text-gray-600 text-lg font-bold">{title}</h3>
+      <p className="text-3xl font-bold text-green-600 my-3">{value}</p>
+      <button
+        onClick={onClick}
+        className="bg-[#1368d6] text-white px-4 py-2 rounded hover:bg-green-600"
+      >
+        View More
+      </button>
     </div>
   );
 }
