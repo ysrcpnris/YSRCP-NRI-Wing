@@ -551,13 +551,11 @@ export default function AuthModal({
       },
     ],
   };
-
- const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setError("");
   setLoading(true);
 
-  // ✅ helper: promise timeout wrapper
   const withTimeout = <T,>(p: Promise<T>, ms = 15000): Promise<T> =>
     new Promise<T>((resolve, reject) => {
       const id = setTimeout(() => reject(new Error("Request timed out")), ms);
@@ -570,103 +568,97 @@ export default function AuthModal({
       });
     });
 
-    try {
-      // local admin shortcut
-      if (
-        mode === "signin" &&
-        formData.email === "nriwing@gmail.com" &&
-        formData.password === "nriwing"
-      ) {
-        // ensure loading is cleared before navigating
-        if (isMounted.current) setLoading(false);
-        onClose(); // close modal
-        localStorage.setItem("is_admin", "true");
-        window.location.href = "/admin/dashboard"; // navigate directly
-        return;
-      }
+  try {
+   if (mode === "signin") {
+  // 1 Sign in (AuthContext handles Supabase auth)
+  await withTimeout(
+    signIn(formData.email, formData.password),
+    15000
+  );
 
-      if (mode === "signin") {
-        await withTimeout(signIn(formData.email, formData.password), 15000);
-        // sign-in success: close modal and let app auth flow handle navigation
-        if (isMounted.current) setLoading(false);
-        onClose();
-          navigate("/dashboard");
-        return;
-      } else {
-        const profilePayload: Record<string, unknown> = {
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          mobile_number: formData.mobile_number,
-          whatsapp_number: formData.whatsapp_number,
-          country_of_residence: formData.country_of_residence,
-          state_abroad: formData.state_abroad,
-          indian_state: formData.indian_state,
-          district: formData.district,
-          mandal: formData.mandal,
-          village: formData.village,
-          gender: formData.gender,
-          dob: formData.dob,
-          profession: formData.profession,
-          organization: formData.organization,
-          role_designation: formData.role_designation,
-          contribution: formData.contribution,
-          participate_campaign: formData.participate_campaign,
-          suggestions: formData.suggestions,
-          instagram_id: formData.instagram_id,
-          facebook_id: formData.facebook_id,
-          twitter_id: formData.twitter_id,
-          linkedin_id: formData.linkedin_id,
-        };
+  //  Get logged-in user (Supabase v2 way)
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-        // only include referred_by when user provided a value
-        if (formData.referred_by && String(formData.referred_by).trim() !== "") {
-          (profilePayload as Record<string, unknown>).referred_by = formData.referred_by;
-        }
+  if (userError || !user) {
+    throw new Error("Unable to fetch user after login");
+  }
 
-        await withTimeout(signUp(formData.email, formData.password, profilePayload), 20000);
+  // 3 Fetch role from profiles (SAFE)
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle(); 
 
-        // signup success: keep modal open, show toast, clear sensitive fields
-        if (isMounted.current) setLoading(false);
-        toast.success(
-          "Registration successful! Please check your email for verification.",
-          {
-            position: "top-right",
-            autoClose: 5000,
-          }
-        );
-        setFormData((f) => ({ ...f, password: "" }));
-        setConfirmPassword("");
-        return;
-      }
-    } catch (err: unknown) {
-      // helper to extract a safe message from unknown errors without using `any`
-      const getErrorMessage = (e: unknown): string => {
-        if (e instanceof Error) return e.message;
-        if (typeof e === "string") return e;
-        if (typeof e === "object" && e !== null) {
-          const maybe = e as Record<string, unknown>;
-          if (typeof maybe.message === "string") return maybe.message;
-        }
-        return "An error occurred";
-      };
+  if (profileError) throw profileError;
 
-      const msg = getErrorMessage(err);
+  onClose();
 
-      // detect common rate-limit / verification email errors and show friendly message
-      if (/rate|too many|exceed|429/i.test(msg)) {
-        toast.error(
-          "Verification email rate limit exceeded. Please wait a few minutes (or up to an hour) before trying again, or use a different email address.",
-          { position: "top-right", autoClose: 7000 }
-        );
-      } else {
-        toast.error(msg, { position: "top-right", autoClose: 5000 });
-      }
+  //  Role-based redirect
+  if (profile?.role === "admin") {
+    navigate("/admin/dashboard");
+  } else {
+    navigate("/dashboard");
+  }
 
-      setError(msg);
-    } finally {
-      if (isMounted.current) setLoading(false);
+  return;
+}
+
+    /* ================= SIGN UP ================= */
+    const profilePayload: Record<string, unknown> = {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      mobile_number: formData.mobile_number,
+      whatsapp_number: formData.whatsapp_number,
+      country_of_residence: formData.country_of_residence,
+      state_abroad: formData.state_abroad,
+      indian_state: formData.indian_state,
+      district: formData.district,
+      mandal: formData.mandal,
+      village: formData.village,
+      gender: formData.gender,
+      dob: formData.dob,
+      profession: formData.profession,
+      organization: formData.organization,
+      role_designation: formData.role_designation,
+      contribution: formData.contribution,
+      participate_campaign: formData.participate_campaign,
+      suggestions: formData.suggestions,
+      instagram_id: formData.instagram_id,
+      facebook_id: formData.facebook_id,
+      twitter_id: formData.twitter_id,
+      linkedin_id: formData.linkedin_id,
+    };
+
+    if (formData.referred_by?.trim()) {
+      profilePayload.referred_by = formData.referred_by;
     }
-  };
+
+    await withTimeout(
+      signUp(formData.email, formData.password, profilePayload),
+      20000
+    );
+
+    toast.success(
+      "Registration successful! Please check your email for verification.",
+      { position: "top-right", autoClose: 5000 }
+    );
+
+    setFormData((f) => ({ ...f, password: "" }));
+    setConfirmPassword("");
+  } catch (err: unknown) {
+    const msg =
+      err instanceof Error ? err.message : "Something went wrong";
+
+    toast.error(msg, { position: "top-right", autoClose: 5000 });
+    setError(msg);
+  } finally {
+    if (isMounted.current) setLoading(false);
+  }
+};
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -721,7 +713,7 @@ export default function AuthModal({
           className={`bg-white rounded-2xl w-full ${
             mode === "signup" ? "max-w-4xl" : "max-w-xl"
           } max-h-[95vh] overflow-y-auto relative shadow-2xl`}
-          style={{ border: "5px solid #1e88e5" }} // Blue thick border
+          style={{ border: "5px solid #0B4DA2" }} // YSRCP Blue thick border
           onMouseDown={(e) => e.stopPropagation()}
         >
           <button
@@ -735,7 +727,7 @@ export default function AuthModal({
             <h2
               className={`text-3xl font-bold mb-2 ${
                 mode === "signup"
-                  ? "text-white bg-gradient-to-r from-blue-600 to-green-500 p-3 rounded-lg shadow"
+                  ? "text-white bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] p-3 rounded-lg shadow"
                   : "text-gray-900"
               }`}
             >
@@ -776,7 +768,7 @@ export default function AuthModal({
                     onClick={() => setResetMethod("email")}
                     className={`flex-1 py-2 px-4 rounded-lg ${
                       resetMethod === "email"
-                        ? "bg-blue-600 text-white"
+                        ? "bg-[#0B4DA2] text-white"
                         : "bg-gray-200 text-gray-700"
                     }`}
                   >
@@ -787,7 +779,7 @@ export default function AuthModal({
                     onClick={() => setResetMethod("otp")}
                     className={`flex-1 py-2 px-4 rounded-lg ${
                       resetMethod === "otp"
-                        ? "bg-blue-600 text-white"
+                        ? "bg-[#0B4DA2] text-white"
                         : "bg-gray-200 text-gray-700"
                     }`}
                   >
@@ -797,7 +789,7 @@ export default function AuthModal({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50"
                 >
                   {loading
                     ? "Sending..."
@@ -806,7 +798,7 @@ export default function AuthModal({
                 <button
                   type="button"
                   onClick={() => setForgotPassword(false)}
-                  className="w-full text-blue-600 hover:text-blue-700 font-medium transition"
+                  className="w-full text-[#0B4DA2] hover:text-[#0B4DA2] font-medium transition"
                 >
                   Back to Login
                 </button>
@@ -817,7 +809,7 @@ export default function AuthModal({
                   <>
                     {/* Personal Information */}
                     <div className="border-b pb-4 mb-4">
-                      <h3 className="text-lg font-semibold text-white mb-3 p-2 rounded bg-blue-600">
+                      <h3 className="text-lg font-semibold text-white mb-3 p-2 rounded bg-[#0B4DA2]">
                         Personal Information
                       </h3>
 
@@ -853,7 +845,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 last_name: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
                           />
                         </div>
                       </div>
@@ -874,7 +866,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 mobile_number: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
                             placeholder="+1 (123) 456-7890"
                           />
                         </div>
@@ -893,7 +885,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 whatsapp_number: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
                             placeholder="+1 (123) 456-7890"
                           />
                         </div>
@@ -910,7 +902,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                           onChange={(e) =>
                             setFormData({ ...formData, email: e.target.value })
                           }
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
                         />
                       </div>
 
@@ -1231,7 +1223,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                               setFormData({ ...formData, dob: e.target.value })
                             }
                             max={new Date().toISOString().split("T")[0]} // Prevent future dates
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
                           />
                         </div>
 
@@ -1248,7 +1240,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 profession: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
                           >
                             <option value="">Select Profession</option>
                             {professions.map((prof) => (
@@ -1467,7 +1459,10 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50"
+                  className="w-full bg-blue-700 text-white py-3 rounded-lg font-semibold 
+hover:bg-blue-800 hover:shadow-md 
+transition disabled:opacity-50"
+
                 >
                   {loading
                     ? "Please wait..."
