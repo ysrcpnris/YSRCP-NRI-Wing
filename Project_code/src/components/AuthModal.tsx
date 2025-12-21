@@ -570,34 +570,27 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   try {
    if (mode === "signin") {
-  // 1 Sign in (AuthContext handles Supabase auth)
-  await withTimeout(
+  const authData = await withTimeout(
     signIn(formData.email, formData.password),
     15000
   );
 
-  //  Get logged-in user (Supabase v2 way)
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  const user = authData?.user;
 
-  if (userError || !user) {
-    throw new Error("Unable to fetch user after login");
+  if (!user) {
+    throw new Error("Login successful but user not available");
   }
 
-  // 3 Fetch role from profiles (SAFE)
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
-    .maybeSingle(); 
+    .maybeSingle();
 
   if (profileError) throw profileError;
 
   onClose();
 
-  //  Role-based redirect
   if (profile?.role === "admin") {
     navigate("/admin/dashboard");
   } else {
@@ -607,10 +600,12 @@ const handleSubmit = async (e: React.FormEvent) => {
   return;
 }
 
+
     /* ================= SIGN UP ================= */
     const profilePayload: Record<string, unknown> = {
       first_name: formData.first_name,
-      last_name: formData.last_name,
+      last_name: formData.last_name || formData.first_name,
+
       mobile_number: formData.mobile_number,
       whatsapp_number: formData.whatsapp_number,
       country_of_residence: formData.country_of_residence,

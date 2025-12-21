@@ -1,7 +1,942 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo ,useRef} from 'react';
+import { Listbox } from "@headlessui/react";
+
+// Indian States → Districts → Assembly Constituencies → Mandals
+  const indianAddressData: Record<
+    string,
+    {
+      name: string;
+      constituencies: {
+        name: string;
+        mandals: string[];
+      }[];
+    }[]
+  > = {
+    "Andhra Pradesh": [
+      {
+        name: "Prakasam",
+        constituencies: [
+          {
+            name: "Yerragondapalem",
+            mandals: ["Dornala", "Peddaraveedu", "Pullalacheruvu", "Tripuranthakam", "Yerragondapalem"],
+          },
+          {
+            name: "Ongole",
+            mandals: ["Ongole MC Ongole", "Kothapatnam", "Ongole"],
+          },
+          {
+            name: "Santhanuthalapadu",
+            mandals: ["Ongole MC SNPADU", "Chimakurthi", "Maddipadu", "Naguluppala Padu", "Santhanuthalapadu", "Chimakurthy (NP)"],
+          },
+          {
+            name: "Markapuram",
+            mandals: ["Konakanamitla", "Markapuram", "Podili", "Tarlupadu", "Markapur Municipality", "Podili (NP)"],
+          },
+          {
+            name: "Kanigiri",
+            mandals: ["Chandra Sekhara Puram", "Hanumanthunipadu", "Kanigiri", "Pamur", "Pedacherlo Palle", "Veligandla", "Kanigiri (NP)"],
+          },
+          {
+            name: "Giddalur",
+            mandals: ["Ardhaveedu", "Bestavaripeta", "Cumbum", "Giddalur", "Komarolu", "Racherla", "Giddalur (NP)"],
+          },
+          {
+            name: "Kondapi",
+            mandals: ["Kondapi", "Marripudi", "Ponnaluru", "Singarayakonda", "Tangutur", "Zarugumalli"],
+          },
+          {
+            name: "Darsi",
+            mandals: ["Darsi", "Donakonda", "Kurichedu", "Mundlamuru", "Tallur", "Darsi (NP)"],
+          },
+        ],
+      },
+      {
+        name: "Kurnool",
+        constituencies: [
+          {
+            name: "Yemmiganur",
+            mandals: ["Gonegandla", "Nandavaram", "Yemmiganur", "Yemmiganur Municipality"],
+          },
+          {
+            name: "Kurnool",
+            mandals: ["Kurnool MC Kurnool"],
+          },
+          {
+            name: "Adoni",
+            mandals: ["Adoni", "Adoni Municipality"],
+          },
+          {
+            name: "Nandikotkur",
+            mandals: ["Jupadu Bungalow", "Kothapalle", "Midthur", "Nandikotkur", "Pagidyala", "Pamulapadu", "Nandikotkur Municipality"],
+          },
+          {
+            name: "Panyam",
+            mandals: ["Gadivemula", "Orvakal", "Panyam"],
+          },
+          {
+            name: "Kodumur",
+            mandals: ["Kurnool MC Kodumuru", "Kurnool MC Koduru", "Guduru", "C.Belagal", "Kodumur", "Guduru Municipality"],
+          },
+          {
+            name: "Pattikonda",
+            mandals: ["Krishnagiri", "Maddikera East", "Pattikonda", "Tuggali", "Veldurthi"],
+          },
+          {
+            name: "Mantralayam",
+            mandals: ["Kosigi", "Kowthalam", "Mantralayam", "Peddakadubur"],
+          },
+          {
+            name: "aluru",
+            mandals: ["Alur", "Aspari", "Chippagiri", "Devanakonda", "Halaharvi", "Holagunda"],
+          },
+        ],
+      },
+      {
+        name: "Anakapalle",
+        constituencies: [
+          {
+            name: "Yelamanchili",
+            mandals: ["Atchutapuram", "Munagapaka", "Rambilli", "Yelamanchili", "Yelamanchili Municipality"],
+          },
+          {
+            name: "Narsipatnam",
+            mandals: ["Golugonda", "Makavarapalem", "Nathavaram", "Narsipatnam", "Narsipatnam Municipality"],
+          },
+          {
+            name: "Anakapalle",
+            mandals: ["Anakapalle", "Kasimkota", "GVMC (anakapalli)"],
+          },
+          {
+            name: "Madugula",
+            mandals: ["Cheedikada", "Devarapalle Ank", "K.Kotapadu", "Madugula"],
+          },
+          {
+            name: "Pendurthi (P)",
+            mandals: ["Paravada", "Pendurthi", "Sabbavaram", "GVMC (pendurthi)", "GVMC Pendurthi"],
+          },
+          {
+            name: "Payakaraopeta",
+            mandals: ["Kotauratla", "Nakkapalle", "Payakaraopeta", "S.Rayavaram"],
+          },
+          {
+            name: "Chodavaram",
+            mandals: ["Rolugunta", "Chodavaram", "Butchayyapeta", "Ravikamatham"],
+          },
+        ],
+      },
+      {
+        name: "Vizianagaram",
+        constituencies: [
+          {
+            name: "Vizianagaram",
+            mandals: ["Vizianagaram"],
+          },
+          {
+            name: "Srungavarapukota",
+            mandals: ["Jami", "Kothavalasa", "Lakkavarapukota", "Srungavarapukota", "Vepada"],
+          },
+          {
+            name: "Rajam",
+            mandals: ["Rajam", "Regidi Amadalavalasa", "Santhakaviti", "Vangara", "Rajam Municipality"],
+          },
+          {
+            name: "Nellimarla",
+            mandals: ["Bhogapuram", "Denkada", "Nellimarla", "Pusapatirega", "Nellimarla (NP)"],
+          },
+          {
+            name: "Bobbili",
+            mandals: ["Badangi", "Bobbili", "Ramabhadrapuram", "Therlam", "Bobbili Municipality"],
+          },
+          {
+            name: "Cheepurupalli",
+            mandals: ["Cheepurupalli", "Garividi", "Gurla", "Merakamudidam"],
+          },
+          {
+            name: "Gajapathinagaram",
+            mandals: ["Bondapalle", "Dattirajeru", "Gajapathinagaram", "Gantyada"],
+          },
+        ],
+      },
+      {
+        name: "Visakhapatnam",
+        constituencies: [
+          {
+            name: "Visakhapatnam West",
+            mandals: ["GVMC West"],
+          },
+          {
+            name: "Visakhapatnam South",
+            mandals: ["GVMC south"],
+          },
+          {
+            name: "Visakhapatnam North",
+            mandals: ["GVMC North"],
+          },
+          {
+            name: "Visakhapatnam East",
+            mandals: ["GVMC EAST"],
+          },
+          {
+            name: "Gajuwaka",
+            mandals: ["GVMC Gajuwaka"],
+          },
+          {
+            name: "Bhimili",
+            mandals: ["GVMC (Bhimilli)", "Anandapuram", "Bheemunipatnam", "Padmanabham"],
+          },
+        ],
+      },
+      {
+        name: "Palnadu",
+        constituencies: [
+          {
+            name: "Vinukonda",
+            mandals: ["Bollapalle", "Ipur", "Nuzendla", "Savalyapuram", "Vinukonda", "Vinukonda Municipality"],
+          },
+          {
+            name: "Narasaraopeta",
+            mandals: ["Narasaraopet", "Rompicherla N", "Narasaraopeta Municipality"],
+          },
+          {
+            name: "Sattenapalli",
+            mandals: ["Muppalla", "Nekarikallu", "Rajupalem", "Sattenapalli", "Sattenapalli Municipality"],
+          },
+          {
+            name: "Pedakurapadu",
+            mandals: ["Amaravathi", "Atchampet", "Bellamkonda", "Krosuru", "Pedakurapadu"],
+          },
+          {
+            name: "Macherla",
+            mandals: ["Durgi", "Karempudi", "Macherla", "Rentachintala", "Veldurthie", "Macherla Municipality"],
+          },
+          {
+            name: "Gurajala",
+            mandals: ["Dachepalle", "Gurajala", "Machavaram", "Piduguralla", "Dachepalli (NP)", "Gurajala (NP)", "Piduguralla Municipality"],
+          },
+          {
+            name: "Chilakaluripeta",
+            mandals: ["Chilakaluripet", "Edlapadu", "Nadendla", "Chilakaluripet Municipality"],
+          },
+        ],
+      },
+      {
+        name: "NTR",
+        constituencies: [
+          {
+            name: "Vijayawada West",
+            mandals: ["Viajayawada MC West"],
+          },
+          {
+            name: "Vijayawada East",
+            mandals: ["Vijayawada MC East"],
+          },
+          {
+            name: "Vijayawada Central",
+            mandals: ["Vijayawada MC central"],
+          },
+          {
+            name: "Tiruvuru",
+            mandals: ["A.Konduru", "Gampalagudem", "Tiruvuru", "Vissannapet", "Tiruvuru (NP)"],
+          },
+          {
+            name: "Nandigama",
+            mandals: ["Chandarlapadu", "Kanchikacherla", "Nandigama", "Veerullapadu", "Nandigama (NP)"],
+          },
+          {
+            name: "Jaggayyapeta",
+            mandals: ["Jaggayyapeta", "Penuganchiprolu", "Vatsavai", "Jaggayyapeta Municipality"],
+          },
+          {
+            name: "Mylavaram",
+            mandals: ["G.Konduru", "Ibrahimpatnam", "Mylavaram", "Reddigudem", "Vijayawada (Rural) M", "Kondapalli Municipality"],
+          },
+        ],
+      },
+      {
+        name: "SPS Nellore",
+        constituencies: [
+          {
+            name: "Venkatagiri (P)",
+            mandals: ["Balayapalle", "Dakkili", "Venkatagiri", "Venkatagiri Municipality", "Kaluvoya", "Rapur", "Sydapuram"],
+          },
+          {
+            name: "Udayagiri",
+            mandals: ["Duttalur", "Jaladanki", "Kaligiri", "Kondapuram", "Seetharamapuram", "Udayagiri", "Varikuntapadu", "Vinjamur"],
+          },
+          {
+            name: "Nellore Rural",
+            mandals: ["Nellore MC Rural", "Nellore Rural"],
+          },
+          {
+            name: "Nellore City",
+            mandals: ["Nellore MC City"],
+          },
+          {
+            name: "Sullurpeta",
+            mandals: ["Doravarisatram", "Naidupeta", "Ozili", "Pellakuru", "Sullurpeta", "Tada", "Naidupeta Municipality", "Sullurpet Municipality"],
+          },
+          {
+            name: "Sarvepalli",
+            mandals: ["Manubolu", "Muthukur", "Podalakur", "Thotapalligudur", "Venkatachalam"],
+          },
+          {
+            name: "Kandukur",
+            mandals: ["Gudluru", "Kandukur", "Lingasamudram", "Ulavapadu", "Voletivaripalem", "Kandukur Municipality"],
+          },
+          {
+            name: "Kavali",
+            mandals: ["Allur", "Bogole", "Dagadarthi", "Kavali", "Alluru (NP)", "Kavali Municipality"],
+          },
+          {
+            name: "Gudur",
+            mandals: ["Gudur", "Gudur Municipality", "Chillakur", "Chittamur", "Kota", "Vakadu"],
+          },
+          {
+            name: "Atmakur",
+            mandals: ["Ananthasagaram", "Anumasamudrampeta", "Atmakur", "Chejerla", "Marripadu", "Sangam", "Atmakur Municipality"],
+          },
+          {
+            name: "Kovur",
+            mandals: ["Buchireddipalem", "Indukurpet", "Kodavalur", "Kovur", "Vidavalur", "Buchireddypalem (NP)"],
+          },
+        ],
+      },
+      {
+        name: "Bapatla",
+        constituencies: [
+          {
+            name: "Vemuru",
+            mandals: ["Amruthalur", "Bhattiprolu", "Kollur", "Tsundur", "Vemuru"],
+          },
+          {
+            name: "Repalle",
+            mandals: ["Cherukupalle", "Nagaram", "Nizampatnam", "Repalle", "Repalle Municipality"],
+          },
+          {
+            name: "Parchuru",
+            mandals: ["Chinaganjam", "Inkollu", "Karamchedu", "Martur", "Parchur", "Yaddanapudi"],
+          },
+          {
+            name: "Chirala",
+            mandals: ["Chirala", "Vetapalem", "Chirala Municipality"],
+          },
+          {
+            name: "Bapatla",
+            mandals: ["Bapatla", "Karlapalem", "Pittalavanipalem", "Bapatla Municipality"],
+          },
+          {
+            name: "Addanki",
+            mandals: ["Addanki", "Ballikurava", "Janakavarampanguluru", "Korisapadu", "Santhamaguluru", "Addanki (NP)"],
+          },
+        ],
+      },
+      {
+        name: "Ananthapuramu",
+        constituencies: [
+          {
+            name: "Uravakonda",
+            mandals: ["Beluguppa", "Kudair", "Uravakonda", "Vajrakarur", "Vidapanakal"],
+          },
+          {
+            name: "Tadipatri",
+            mandals: ["Peddapappur", "Peddavadugur", "Tadipatri", "Yadiki", "Tadipatri Municipality"],
+          },
+          {
+            name: "Singanamala",
+            mandals: ["Bukkarayasamudram", "Garladinne", "Narpala", "Putlur", "Singanamala", "Yellanur"],
+          },
+          {
+            name: "Rayadurg",
+            mandals: ["Bommanahal", "D.Hirehal", "Gummagatta", "Kanekal", "Rayadurg", "Rayadurg Municipality"],
+          },
+          {
+            name: "Gunthakal",
+            mandals: ["Gooty", "Guntakal", "Pamidi", "Gooty Municipality", "Guntakal Municipality", "Pamidi (NP)"],
+          },
+          {
+            name: "Kalyandurg",
+            mandals: ["Brahmasamudram", "Kalyandurg", "Kambadur", "Kundurpi", "Settur", "Kalyanadurgam Municipality"],
+          },
+          {
+            name: "Ananthapur Urban",
+            mandals: ["Anantapur MC", "Anantapur (Rural)"],
+          },
+        ],
+      },
+      {
+        name: "Eluru",
+        constituencies: [
+          {
+            name: "Unguturu",
+            mandals: ["Bhimadole", "Ganapavaram", "Nidamarru", "Unguturu"],
+          },
+          {
+            name: "Nuzivid",
+            mandals: ["Agiripalle", "Chatrai", "Musunuru", "Nuzvid", "Nuzividu Municipality"],
+          },
+          {
+            name: "Kaikalur",
+            mandals: ["Kaikalur", "Kalidindi", "Mandavalli", "Mudinepalle"],
+          },
+          {
+            name: "Polavaram",
+            mandals: ["Buttayagudem", "Jeelugumilli", "Koyyalagudem", "Kukunoor", "Polavaram", "T.Narasapuram", "Velairpadu"],
+          },
+          {
+            name: "Chinthalapudi",
+            mandals: ["Chintalapudi", "Jangareddigudem", "Kamavarapukota", "Lingapalem", "Jangareddygudem Municipality", "Chinthalapudi (NP)"],
+          },
+          {
+            name: "Denduluru",
+            mandals: ["Denduluru", "Eluru", "Pedapadu", "Pedavegi"],
+          },
+          {
+            name: "Eluru",
+            mandals: ["Eluru MC"],
+          },
+        ],
+      },
+      {
+        name: "West Godavari",
+        constituencies: [
+          {
+            name: "Undi",
+            mandals: ["Akividu", "Kalla", "Palacoderu", "Undi", "Akivedu (NP)"],
+          },
+          {
+            name: "Tanuku",
+            mandals: ["Attili", "Iragavaram", "Tanuku", "Tanuku Municipality"],
+          },
+          {
+            name: "Tadepalligudem",
+            mandals: ["Pentapadu", "Tadepalligudem", "Tadepalligudem Municipality"],
+          },
+          {
+            name: "Narasapuram",
+            mandals: ["Mogalthur", "Narasapuram", "Narasapur Municipality"],
+          },
+          {
+            name: "Palacole",
+            mandals: ["Poduru Palacole", "Elamanchili", "Palacole", "Palacole Municipality"],
+          },
+          {
+            name: "Bhimavaram",
+            mandals: ["Bhimavaram", "Veeravasaram", "Bhimavaram Municipality"],
+          },
+          {
+            name: "Achanta",
+            mandals: ["Achanta", "Penugonda", "Penumantra", "Poduru"],
+          },
+        ],
+      },
+      {
+        name: "Kakinada",
+        constituencies: [
+          {
+            name: "Tuni",
+            mandals: ["Kotananduru", "Thondangi", "Tuni", "Tuni Municipality"],
+          },
+          {
+            name: "Prathipadu",
+            mandals: ["Prathipadu", "Rowthulapudi", "Sankhavaram", "Yeleswaram", "Yeleswaram (NP)"],
+          },
+          {
+            name: "Pithapuram",
+            mandals: ["Gollaprolu", "Pithapuram", "U. Kothapalli", "Gollaprollu (NP)", "Pithapuram Municipality"],
+          },
+          {
+            name: "Peddapuram",
+            mandals: ["Peddapuram", "Samalkota", "Peddapuram Municipality", "Samalkot Municipality"],
+          },
+          {
+            name: "Kakinada Rural",
+            mandals: ["Kakinada MC Rural", "Kakinada Rural", "Karapa"],
+          },
+          {
+            name: "Kakinada City",
+            mandals: ["Kakinada MC City"],
+          },
+          {
+            name: "Jaggampeta (P)",
+            mandals: ["Gandepalle", "Jaggampeta", "Kirlampudi"],
+          },
+        ],
+      },
+      {
+        name: "East Godavari",
+        constituencies: [
+          {
+            name: "Rajanagaram",
+            mandals: ["Korukonda", "Rajanagaram", "Seethanagaram"],
+          },
+          {
+            name: "Rajahmundry Rural",
+            mandals: ["Kadiam", "Rajahmundry Rural", "Rajahmundry MC Rural"],
+          },
+          {
+            name: "Rajahmundry City",
+            mandals: ["Rajahmundry MC City"],
+          },
+          {
+            name: "Nidadavole",
+            mandals: ["Nidadavole", "Peravali", "Undrajavaram", "Nidadavole Municipality"],
+          },
+          {
+            name: "Gopalapuram (P)",
+            mandals: ["Dwarakatirumala", "Devarapalle", "Gopalapuram", "Nallajerla"],
+          },
+          {
+            name: "Anaparthi (P)",
+            mandals: ["Pedapudi", "Anaparthi", "Biccavolu", "Rangampeta"],
+          },
+          {
+            name: "Kovvur",
+            mandals: ["Chagallu", "Kovvur", "Tallapudi", "Kovvur Municipality"],
+          },
+        ],
+      },
+      {
+        name: "Guntur",
+        constituencies: [
+          {
+            name: "Guntur West",
+            mandals: ["GMC West"],
+          },
+          {
+            name: "Guntur East",
+            mandals: ["GMC EAST"],
+          },
+          {
+            name: "Mangalagiri",
+            mandals: ["Duggirala", "Tadepalle", "Mangalagiri", "MTMC"],
+          },
+          {
+            name: "Tenali",
+            mandals: ["Tenali", "Kollipara", "Tenali Municipality"],
+          },
+          {
+            name: "Sattenapalli",
+            mandals: ["Muppalla", "Nekarikallu", "Rajupalem", "Sattenapalli", "Sattenapalli Municipality"],
+          },
+          {
+            name: "Tadikonda",
+            mandals: ["Medikonduru", "Phirangipuram", "Tadikonda", "Thullur"],
+          },
+          {
+            name: "Prathipadu (SC)",
+            mandals: ["GMC Prathipadu", "Guntur", "Kakumanu", "Pedanandipadu", "Prathipadu (SC)", "Vatticherukuru"],
+          },
+          {
+            name: "Ponnur",
+            mandals: ["Chebrolu", "Pedakakani", "Ponnur", "Ponnur Municipality"],
+          },
+        ],
+      },
+      {
+        name: "Krishna",
+        constituencies: [
+          {
+            name: "Penamaluru",
+            mandals: ["Kankipadu", "Penamaluru", "Vuyyuru", "YSR Tadigadapa Municipality", "Vuyyuru (NP)"],
+          },
+          {
+            name: "Pedana",
+            mandals: ["Bantumilli", "Gudurru", "Kruthivennu", "Pedana", "Pedana Municipality"],
+          },
+          {
+            name: "Pamarru",
+            mandals: ["Movva", "Pamarru", "Pamidimukkala", "Pedaparupudi", "Thotlavalluru"],
+          },
+          {
+            name: "Gudivada",
+            mandals: ["Gudivada", "Gudlavalleru", "Nandivada", "Gudivada Municipality"],
+          },
+          {
+            name: "Gannavaram",
+            mandals: ["Bapulapadu", "Gannavaram", "Vijayawada (Rural) G"],
+          },
+          {
+            name: "Machilipatnam",
+            mandals: ["Machilipatnam MC", "Machilipatnam"],
+          },
+          {
+            name: "Avanigadda",
+            mandals: ["Avanigadda", "Challapalli", "Ghantasala", "Koduru", "Mopidevi", "Nagayalanka"],
+          },
+        ],
+      },
+      {
+        name: "Tirupati",
+        constituencies: [
+          {
+            name: "Tirupati",
+            mandals: ["Tirupati MC (Tirupati)"],
+          },
+          {
+            name: "Srikalahasti",
+            mandals: ["Renigunta", "Srikalahasthi", "Thottambedu", "Yerpedu", "Srikalahasti Municipality"],
+          },
+          {
+            name: "Satyavedu",
+            mandals: ["Buchinaidu Kandriga", "K.V.B.Puram", "Nagalapuram", "Narayanavanam", "Pichatur", "Satyavedu", "Varadaiahpalem"],
+          },
+          {
+            name: "Chandragiri",
+            mandals: ["Chandragiri", "Chinnagottigallu", "Pakala", "Rama chandrapuram", "Tirupati Rural", "Yerravaripalem"],
+          },
+        ],
+      },
+      {
+        name: "Annamaya",
+        constituencies: [
+          {
+            name: "Thamballapalle",
+            mandals: ["B.Kothakota", "Kurabalakota", "Mulakalacheruvu", "Peddamandyam", "Peddatippasamudram", "Thamballapalle", "B.Kothakota (NP)"],
+          },
+          {
+            name: "Rayachoty",
+            mandals: ["Chinnamandem", "Galiveedu", "Lakkireddipalle", "Ramapuram", "Rayachoti", "Sambepalle", "Rayachoty Municipality"],
+          },
+          {
+            name: "Rajampeta (P)",
+            mandals: ["Vontimitta", "Nandalur", "Rajampet", "T Sundupalle", "Veeraballe", "Rajampeta Municipality"],
+          },
+          {
+            name: "Railway Kodur",
+            mandals: ["Chitvel", "Obulavaripalle", "Penagalur", "Pullampeta", "Kodur"],
+          },
+          {
+            name: "Madanapalle",
+            mandals: ["Madanapalle", "Nimmanapalle", "Ramasamudram", "Madanapalle Municipality"],
+          },
+          {
+            name: "Pileru",
+            mandals: ["Gurramkonda", "Kalakada", "Kalikiri", "Kambhamvaripalle", "Pileru", "Valmikipuram"],
+          },
+        ],
+      },
+      {
+        name: "Chittoor",
+        constituencies: [
+          {
+            name: "Chittoor",
+            mandals: ["Chittoor", "Gudipala", "Chitoor corporation"],
+          },
+          {
+            name: "Punganur",
+            mandals: ["Chowdepalle", "Pulicherla", "Punganur", "Rompicherla", "Sodam", "Somala", "Punganur Municipality"],
+          },
+          {
+            name: "Kuppam",
+            mandals: ["Gudupalle", "Kuppam", "Ramakuppam", "Santhipuram", "Kuppam Municipality"],
+          },
+          {
+            name: "Puthalapattu",
+            mandals: ["Bangarupalem", "Irala", "Puthalapattu", "Thavanampalle", "Yadamarri"],
+          },
+          {
+            name: "Palamaneru",
+            mandals: ["Baireddipalle", "Gangavaramu", "Palamaner", "Peddapanjani", "Venkatagirikota", "Palamaneru Municipality"],
+          },
+          {
+            name: "Nagari (P)",
+            mandals: ["Puttur", "Puttur Municipality", "Vadamalapeta", "Nagari", "Nindra", "Vijayapuram", "Nagari Municipality"],
+          },
+          {
+            name: "Gangadhara Nellore",
+            mandals: ["Gangadhara Nellore", "Karvetinagar", "Palasamudram", "Penumuru", "Srirangarajapuram", "Vedurukuppam"],
+          },
+        ],
+      },
+      {
+        name: "Srikakulam",
+        constituencies: [
+          {
+            name: "Srikakulam",
+            mandals: ["Srikakulam MC", "Gara", "Srikakulam"],
+          },
+          {
+            name: "Amadalavalasa",
+            mandals: ["Amadalavalasa", "Burja", "Ponduru", "Sarubujjili", "Amadalavalasa Municipality"],
+          },
+          {
+            name: "Palasa",
+            mandals: ["Mandasa", "Palasa", "Vajrapukothuru", "Palasa-Kasibugga Municipality"],
+          },
+          {
+            name: "Ichapuram",
+            mandals: ["Ichapuram", "Kanchili", "Kaviti", "Sompeta", "Ichapuram Municipality"],
+          },
+          {
+            name: "Pathapatnam",
+            mandals: ["Hiramandalam", "Kothuru", "Lakshminarsupeta", "Meliaputti", "Pathapatnam"],
+          },
+          {
+            name: "Tekkali",
+            mandals: ["Kotabommali", "Nandigam", "Santhabommali", "Tekkali"],
+          },
+          {
+            name: "Narasannapeta",
+            mandals: ["Jalumuru", "Narasannapeta", "Polaki", "Saravakota"],
+          },
+          {
+            name: "Etcherla",
+            mandals: ["Etcherla", "Ganguvarisigadam", "Laveru", "Ranastalam"],
+          },
+        ],
+      },
+      {
+        name: "Nandyala",
+        constituencies: [
+          {
+            name: "Srisailam",
+            mandals: ["Atmakur Srisailam", "Bandi Atmakur", "Mahanandi", "Velugodu", "Srisailam", "Atmakuru Municipality"],
+          },
+          {
+            name: "Nandyala",
+            mandals: ["Gospadu", "Nandyal", "Nandyal Municipality"],
+          },
+          {
+            name: "Nandikotkur",
+            mandals: ["Jupadu Bungalow", "Kothapalle", "Midthur", "Nandikotkur", "Pagidyala", "Pamulapadu", "Nandikotkur Municipality"],
+          },
+          {
+            name: "Allagadda",
+            mandals: ["Allagadda", "Chagalamarri", "Dornipadu", "Rudravaram", "Sirvel", "Uyyalawada", "Allagadda Municipality"],
+          },
+          {
+            name: "Banaganapalle",
+            mandals: ["Banaganapalle", "Koilkuntla", "Kolimigundla", "Owk", "Sanjamala"],
+          },
+          {
+            name: "Dhone",
+            mandals: ["Bethamcherla", "Dhone", "Peapally", "Dhone Municipality", "Bethamcherla (NP)"],
+          },
+          {
+            name: "Panyam (P)",
+            mandals: ["Gadivemula", "Orvakal", "Panyam"],
+          },
+        ],
+      },
+      {
+        name: "Parvathipuram Manyam",
+        constituencies: [
+          {
+            name: "Parvathipuram",
+            mandals: ["Balijipeta", "Parvathipuram", "Seethanagaram Araku", "Parvathipuram Municipality"],
+          },
+          {
+            name: "Salur (P)",
+            mandals: ["Makkuva", "Pachipenta", "Salur", "Salur Municipality", "Mentada"],
+          },
+          {
+            name: "Palakonda",
+            mandals: ["Bhamini", "Palakonda", "Seethampeta", "Veeraghattam", "Palakonda (NP)"],
+          },
+          {
+            name: "Kurupam",
+            mandals: ["Garugubilli", "Gummalakshmipuram", "Jiyyammavalasa", "Komarada", "Kurupam"],
+          },
+        ],
+      },
+      {
+        name: "Dr. B.R. Ambedkar Konaseema",
+        constituencies: [
+          {
+            name: "Razole",
+            mandals: ["Mamidikuduru Razole", "Malikipuram", "Razole", "Sakhinetipalle"],
+          },
+          {
+            name: "Ramachandrapuram (P)",
+            mandals: ["K Gangavaram", "Ramachandrapuram", "Ramachandrapuram Municipality", "Kajuluru"],
+          },
+          {
+            name: "Mandapeta",
+            mandals: ["Kapileswarapuram", "Mandapeta", "Rayavaram", "Mandapeta Municipality"],
+          },
+          {
+            name: "Kothapeta",
+            mandals: ["Alamuru", "Atreyapuram", "Kothapeta", "Ravulapalem"],
+          },
+          {
+            name: "Mummidivaram (P)",
+            mandals: ["I. Polavaram", "Katrenikona", "Mummidivaram", "Mummidivaram (NP)", "Thallarevu"],
+          },
+          {
+            name: "P. Gannavaram",
+            mandals: ["Mamidikuduru PGVaram", "Ainavilli", "Ambajipeta", "P.Gannavaram"],
+          },
+          {
+            name: "Amalapuram",
+            mandals: ["Allavaram", "Amalapuram", "Uppalaguptam", "Amalapuram Municipality"],
+          },
+        ],
+      },
+      {
+        name: "Alluri Sitharama Raju",
+        constituencies: [
+          {
+            name: "Araku",
+            mandals: ["Ananthagiri", "Araku Valley", "Dumbriguda", "Hukumpeta", "Munchingiputtu", "Peda Bayalu"],
+          },
+          {
+            name: "Paderu",
+            mandals: ["Chintapalle", "G.Madugula", "Gudem Kotha Veedhi", "Koyyuru", "Paderu"],
+          },
+          {
+            name: "Rampachodavaram",
+            mandals: ["Addateegala", "Chintur", "Devipatnam", "Gangavaram", "Kunavaram", "Maredumilli", "Nellipaka", "Rajavommangi", "Rampachodavaram", "Vararamachandrapuram", "Y. Ramavaram"],
+          },
+        ],
+      },
+      {
+        name: "Sri Sathya Sai",
+        constituencies: [
+          {
+            name: "Raptadu (P)",
+            mandals: ["Anantapur (Rural) R", "Atmakur ATP", "Raptadu", "Chennekothapalle", "Kanaganapalle", "Ramagiri"],
+          },
+          {
+            name: "Puttaparthi",
+            mandals: ["Amadagur", "Bukkapatnam", "Kothacheruvu", "Nallamada", "Obuladevaracheruvu", "Puttaparthi", "Puttaparthi (NP)"],
+          },
+          {
+            name: "Penukonda",
+            mandals: ["Gorantla", "Parigi", "Penukonda", "Roddam", "Somandepalle", "Penukonda (NP)"],
+          },
+          {
+            name: "Kadiri",
+            mandals: ["Gandlapenta", "Kadiri", "Nallacheruvu", "Nambulipulikunta", "Talupula", "Tanakal", "Kadiri Municipality"],
+          },
+          {
+            name: "Madakasira",
+            mandals: ["Agali", "Amarapuram", "Gudibanda", "Madakasira", "Rolla", "Madakasira (NP)"],
+          },
+          {
+            name: "Dharmavaram",
+            mandals: ["Bathalapalle", "Dharmavaram", "Mudigubba", "Tadimarri", "Dharmavaram Municipality"],
+          },
+          {
+            name: "Hindupur",
+            mandals: ["Chilamathur", "Hindupur", "Lepakshi", "Hindupur Municipality"],
+          },
+        ],
+      },
+      {
+        name: "YSR",
+        constituencies: [
+          {
+            name: "Pulivendula",
+            mandals: ["Chakrayapeta", "Lingala", "Pulivendula", "Simhadripuram", "Thondur", "Vempalle", "Vemula", "Pulivendula Municipality"],
+          },
+          {
+            name: "Proddatur",
+            mandals: ["Proddatur", "Rajupalem (YSR)", "Proddatur Municipality"],
+          },
+          {
+            name: "Kadapa",
+            mandals: ["Kadapa MC Kadapa", "Kadapa"],
+          },
+          {
+            name: "Kamalapuram",
+            mandals: ["Kadapa MC Kamalapuram", "Chennur", "Chinthakommadinne", "Kamalapuram", "Pendlimarri", "Vallur", "Veerapunayunipalle", "Kamalapuram (NP)"],
+          },
+          {
+            name: "Badvel",
+            mandals: ["Atlur", "B.Kodur", "Badvel", "Gopavaram", "Kalasapadu", "Porumamilla", "Sri Avadhutha Kasinayana", "Badvel Municipality"],
+          },
+          {
+            name: "Mydukur",
+            mandals: ["Brahmamgarimattam", "Chapadu", "Duvvur", "Khajipeta", "Mydukur", "Mydukur Municipality"],
+          },
+          {
+            name: "Jammalamadugu",
+            mandals: ["Jammalamadugu", "Kondapuram YSR", "Muddanur", "Mylavaram YSR", "Peddamudium", "Yerraguntla", "Jammalamadugu (NP)", "Yerraguntla (NP)"],
+          },
+        ],
+      },
+    ],
+
+    Telangana: [
+      {
+        name: "Hyderabad",
+        constituencies: [
+          {
+            name: "Khairatabad",
+            mandals: ["Khairatabad"],
+          },
+          {
+            name: "Jubilee Hills",
+            mandals: ["Jubilee Hills"],
+          },
+          {
+            name: "Serilingampally",
+            mandals: ["Serilingampally"],
+          },
+          {
+            name: "Sanathnagar",
+            mandals: ["Sanathnagar"],
+          },
+          {
+            name: "Amberpet",
+            mandals: ["Amberpet"],
+          },
+          {
+            name: "Malakpet",
+            mandals: ["Malakpet"],
+          },
+          {
+            name: "Karwan",
+            mandals: ["Karwan"],
+          },
+          {
+            name: "Goshamahal",
+            mandals: ["Goshamahal"],
+          },
+          {
+            name: "Charminar",
+            mandals: ["Charminar"],
+          },
+          {
+            name: "Yakutpura",
+            mandals: ["Yakutpura"],
+          },
+        ],
+      },
+      {
+        name: "Rangareddy",
+        constituencies: [
+          {
+            name: "Ibrahimpatnam",
+            mandals: ["Ibrahimpatnam"],
+          },
+          {
+            name: "L.B. Nagar",
+            mandals: ["L.B. Nagar"],
+          },
+          {
+            name: "Maheshwaram",
+            mandals: ["Maheshwaram"],
+          },
+          {
+            name: "Rajendranagar",
+            mandals: ["Rajendranagar"],
+          },
+          {
+            name: "Chevella",
+            mandals: ["Chevella"],
+          },
+          {
+            name: "Vikarabad",
+            mandals: ["Vikarabad"],
+          },
+        ],
+      },
+    ],
+  };
+
 import {
-  X,
   User,
   Users,
   Calendar,
@@ -34,7 +969,9 @@ type SectionKey =
   | 'connect'
   | 'services'
   | 'events'
-  | 'notifications';
+  | 'notifications'
+  | 'suggestions';
+
 
 type Referral = {
   id: number;
@@ -45,13 +982,15 @@ type Referral = {
 };
 
 type Leader = {
-  id: number;
-  role: string;
+  id: string;
   name: string;
-  avatar_url: string | null;
+  role: string;
   whatsapp_number: string | null;
-  sort_order?: number;
+  constituency: string | null;
+  sort_order: number | null;
+  is_active: boolean | null;
 };
+
 
 type EventItem = {
   id: number;
@@ -68,36 +1007,117 @@ type NotificationItem = {
   created_at: string;
   is_read: boolean;
 };
-
 const Dashboard: React.FC = () => {
-
-
-  const [expandedSection, setExpandedSection] = useState<SectionKey | null>('profile');
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(
-    null
-  );
-  const { user, refreshProfile, profile,signOut } = useAuth();
- if (!user) {
+  const { user, refreshProfile, profile, signOut } = useAuth();
+// ---------------- AUTH GUARD (AFTER HOOKS) ----------------
+if (!user) {
   window.location.replace("/");
   return null;
 }
+  const [expandedSection, setExpandedSection] =
+    useState<SectionKey | null>("profile");
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [activeReferralCount, setActiveReferralCount] = useState<number>(0);
 
-  
-  // Photo upload state
+  const [submittingService, setSubmittingService] = useState(false);
+
+  const [toast, setToast] = useState<{
+    msg: string;
+    type: "success" | "info";
+  } | null>(null);
+
+// ✅ FIXED: ACTIVE REFERRAL COUNT (USES profile.id)
+useEffect(() => {
+  if (!profile?.id) return;
+
+  const fetchReferralCount = async () => {
+    const { count, error } = await supabase
+      .from("referrals")
+      .select("*", { count: "exact", head: true })
+      .eq("referrer_id", profile.id); // ✅ CORRECT KEY
+
+    if (error) {
+      console.error("Referral count error:", error);
+      return;
+    }
+
+    setActiveReferralCount(count ?? 0);
+  };
+
+  fetchReferralCount();
+}, [profile?.id]);
+
+
+
+const normalizeDistrict = (value: string) => {
+  return value.replace(/district/i, "").trim();
+};
+
+const normalizeMandal = (value: string) => {
+  return value.replace(/mandal/i, "").trim();
+};
+
+const normalizeAssembly = (value: string) => {
+  return value.replace(/assembly constituency|ac/i, "").trim();
+};
+
+
+  // ---------------- PHOTO UPLOAD STATE ----------------
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [indianState, setIndianState] = useState("");
+const [district, setDistrict] = useState("");
+const [assembly, setAssembly] = useState("");
+const [mandal, setMandal] = useState("");
+const [profession, setProfession] = useState<string>(
+  profile?.profession || ""
+);
+useEffect(() => {
+  if (profile?.profession) {
+    setProfession(profile.profession);
+  }
+}, [profile?.profession]);
 
-  // Dynamic data state
+useEffect(() => {
+  if (!profile) return;
+
+  setIndianState(profile.indian_state?.trim() || "");
+
+  setDistrict(
+    profile.district
+      ? normalizeDistrict(profile.district)
+      : ""
+  );
+
+  setAssembly(
+    profile.assembly_constituency
+      ? normalizeAssembly(profile.assembly_constituency)
+      : ""
+  );
+
+  setMandal(
+    profile.mandal
+      ? normalizeMandal(profile.mandal)
+      : ""
+  );
+}, [profile]);
+
+  // ---------------- DYNAMIC DATA ----------------
   const [activeReferrals, setActiveReferrals] = useState<Referral[]>([]);
   const [passiveReferrals, setPassiveReferrals] = useState<Referral[]>([]);
   const [leaders, setLeaders] = useState<Leader[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notifications, setNotifications] =
+    useState<NotificationItem[]>([]);
+
+  const [submittingSuggestion, setSubmittingSuggestion] = useState(false);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
 
-  // Summary stats for referrals
+  const serviceMessageRef = useRef<HTMLTextAreaElement | null>(null);
+  const suggestionRef = useRef<HTMLTextAreaElement | null>(null);
+
+ // ---------------- REFERRAL STATS ----------------
   const referralStats = useMemo(() => {
     const active = activeReferrals.length;
     const passive = passiveReferrals.length;
@@ -105,10 +1125,9 @@ const Dashboard: React.FC = () => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    const createdThisWeek = [...activeReferrals, ...passiveReferrals].filter((r) => {
-      const d = new Date(r.created_at);
-      return d >= weekAgo;
-    }).length;
+    const createdThisWeek = [...activeReferrals, ...passiveReferrals].filter(
+      (r) => new Date(r.created_at) >= weekAgo
+    ).length;
 
     return {
       active,
@@ -117,21 +1136,76 @@ const Dashboard: React.FC = () => {
     };
   }, [activeReferrals, passiveReferrals]);
 
-  // Toast timeout
+  // ---------------- TOAST ----------------
   useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
   }, [toast]);
 
-  const showToast = (msg: string, type: 'success' | 'info' = 'success') => {
+  const showToast = (
+    msg: string,
+    type: "success" | "info" = "success"
+  ) => {
     setToast({ msg, type });
   };
 
   const toggleSection = (section: SectionKey) => {
     setExpandedSection((prev) => (prev === section ? null : section));
   };
+
+const handleSubmitService = async () => {
+  const message = serviceMessageRef.current?.value.trim() || "";
+
+  if (!selectedService) {
+    showToast("Please select a service type", "info");
+    return;
+  }
+
+  if (!message) {
+    showToast("Please describe your requirement", "info");
+    return;
+  }
+
+  if (!user) return;
+
+  try {
+    setSubmittingService(true);
+
+    const { error } = await supabase
+      .from("service_requests")
+      .insert({
+        user_id: user.id,
+        applicant_name: fullName,
+        current_location: profile?.country_of_residence || "India",
+        description: message,
+        status: "pending",
+        service_type: selectedService,
+      });
+
+    if (error) {
+      console.error("SERVICE ERROR:", error);
+      showToast(error.message, "info");
+      return;
+    }
+
+    // ✅ clear textarea manually
+    if (serviceMessageRef.current) {
+      serviceMessageRef.current.value = "";
+    }
+
+    showToast("Service request submitted successfully!", "success");
+    setSelectedService(null);
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to submit service request", "info");
+  } finally {
+    setSubmittingService(false);
+  }
+};
+
+
+
 const handleRemovePhoto = async () => {
   if (!user || !profile?.profile_photo) {
     showToast("No profile photo to remove", "info");
@@ -241,72 +1315,123 @@ const { error: updateError } = await supabase
     }
   };
 
-  // Fetch dashboard data from Supabase
-  useEffect(() => {
-    if (!user) return;
+  /// Fetch dashboard data from Supabase
+useEffect(() => {
+  if (!user) return;
 
-    const loadDashboard = async () => {
-      setLoadingDashboard(true);
-      try {
-        // 1. Referrals for this user
-        const { data: referralData, error: referralError } = await supabase
-          .from('referrals')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+  const loadDashboard = async () => {
+    setLoadingDashboard(true);
 
-        if (referralError) {
-          console.error('Referrals fetch error', referralError);
-        } else if (referralData) {
-          const active = (referralData as Referral[]).filter((r) => r.type === 'active');
-          const passive = (referralData as Referral[]).filter((r) => r.type === 'passive');
-          setActiveReferrals(active);
-          setPassiveReferrals(passive);
-        }
+    try {
 
-        // 2. Leaders
-        const { data: leadersData, error: leadersError } = await supabase
-          .from('leaders')
-          .select('*')
-          .order('sort_order', { ascending: true });
+// ---------------- ACTIVE REFERRALS ----------------
+const { data: activeData, error: activeError } = await supabase
+  .from("referrals")
+  .select(`
+    id,
+    created_at,
+    source,
+    profiles:referred_id (
+      first_name,
+      last_name,
+      country_of_residence
+    )
+  `)
+  .eq("referrer_id", profile.id)
+  .in("source", ["direct", "active"])
+  .order("created_at", { ascending: false });
 
-        if (leadersError) {
-          console.error('Leaders fetch error', leadersError);
-        } else if (leadersData) {
-          setLeaders(leadersData as Leader[]);
-        }
+if (activeError) {
+  console.error("Active referral error:", activeError);
+}
 
-        // 3. Events (nearest upcoming first)
-        const { data: eventsData, error: eventsError } = await supabase
-          .from('events')
-          .select('*')
-          .order('event_date', { ascending: true });
+setActiveReferrals(
+  (activeData || []).map((r: any) => ({
+    id: r.id,
+    member_name: `${r.profiles?.first_name ?? ""} ${r.profiles?.last_name ?? ""}`.trim(),
+    location: r.profiles?.country_of_residence ?? "—",
+    type: "active",
+    created_at: r.created_at,
+  }))
+);
 
-        if (eventsError) {
-          console.error('Events fetch error', eventsError);
-        } else if (eventsData) {
-          setEvents(eventsData as EventItem[]);
-        }
+// ---------------- PASSIVE REFERRALS ----------------
+const { data: passiveData, error: passiveError } = await supabase
+  .from("referrals")
+  .select(`
+    id,
+    created_at,
+    profiles:referred_id (
+      first_name,
+      last_name,
+      country_of_residence
+    )
+  `)
+  .eq("referrer_id", profile.id)
+  .eq("source", "passive")
+  .order("created_at", { ascending: false });
 
-        // 4. Notifications (latest first) – both read & unread; UI highlights unread count
-        const { data: notifData, error: notifError } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+if (passiveError) {
+  console.error("Passive referral error:", passiveError);
+}
 
-        if (notifError) {
-          console.error('Notifications fetch error', notifError);
-        } else if (notifData) {
-          setNotifications(notifData as NotificationItem[]);
-        }
-      } finally {
-        setLoadingDashboard(false);
-      }
-    };
+setPassiveReferrals(
+  (passiveData || []).map((r: any) => ({
+    id: r.id,
+    member_name: `${r.profiles?.first_name ?? ""} ${r.profiles?.last_name ?? ""}`.trim(),
+    location: r.profiles?.country_of_residence ?? "—",
+    type: "passive",
+    created_at: r.created_at,
+  }))
+);
 
-    loadDashboard();
-  }, [user]);
+ // 2. Leaders
+      const { data: leadersData, error } = await supabase
+  .from("leaders")
+  .select(`
+    id,
+    name,
+    role,
+    whatsapp_number,
+    constituency,
+    sort_order,
+    is_active
+  `)
+  .eq("is_active", true)          // ✅ show only active leaders
+  .order("sort_order", { ascending: true }); // ✅ proper order
+if (!error) {
+  setLeaders(leadersData || []);
+}
+
+
+      // =======================
+      // 3. EVENTS
+      // =======================
+      const { data: eventsData } = await supabase
+        .from("events")
+        .select("*")
+        .order("event_date", { ascending: true });
+
+      if (eventsData) setEvents(eventsData as EventItem[]);
+
+      // =======================
+      // 4. NOTIFICATIONS
+      // =======================
+      const { data: notifData } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("referrer_id", profile.id)
+
+        .order("created_at", { ascending: false });
+
+      if (notifData) setNotifications(notifData as NotificationItem[]);
+    } finally {
+      setLoadingDashboard(false);
+    }
+  };
+
+  loadDashboard();
+}, [user]);
 
   // Helper to format dates like "Jan 12, 2025"
   const formatDate = (iso: string) => {
@@ -328,14 +1453,25 @@ const { error: updateError } = await supabase
     };
   };
 
-  const fullName =
-    (profile?.first_name || profile?.last_name) ?
-      `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() :
-      '';
+const fullName = profile?.first_name
+  ? profile.last_name && profile.last_name !== profile.first_name
+    ? `${profile.first_name} ${profile.last_name}`
+    : profile.first_name
+  : "Member";
 
-  const referralLink = profile
-    ? `https://ysrcp.com/join/${profile.id}`
-    : 'https://ysrcp.com/join/YOURCODE';
+
+      // ======>Uncommet this after buying the domain==========
+// const referralLink =
+//   profile?.referral_code && profile?.first_name
+//     ? `https://ysrcpnriwing.org/ref/${profile.first_name.toLowerCase()}/${profile.referral_code}`
+//     : '';
+
+const referralLink =
+  profile?.referral_code && profile?.first_name
+    ? `${window.location.origin}/ref/${profile.first_name.toLowerCase()}/${profile.referral_code}`
+    : '';
+
+
 
   const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
 
@@ -360,8 +1496,7 @@ const profileCompletion = useMemo(() => {
     (profile.indian_state &&
       profile.district &&
       profile.mandal &&
-      profile.assembly_constituency &&
-      profile.village)
+      profile.assembly_constituency)
   ) {
     completed++; // Address
   }
@@ -400,8 +1535,7 @@ const missingProfileFields = useMemo(() => {
     (!profile.indian_state ||
       !profile.district ||
       !profile.mandal ||
-      !profile.assembly_constituency ||
-      !profile.village)
+      !profile.assembly_constituency )
   ) {
     missing.push({
       key: "address",
@@ -431,7 +1565,7 @@ const missingProfileFields = useMemo(() => {
 
   // --- ENRICHED SUMMARY RENDERERS (Visible when Collapsed) ---
 
-  const renderProfileSummary = () => (
+ const renderProfileSummary = () => (
     <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full mt-1 opacity-90">
       <div className="flex-1 min-w-[200px]">
         <div className="flex justify-between text-xs font-bold text-gray-500 mb-1.5">
@@ -490,9 +1624,9 @@ const missingProfileFields = useMemo(() => {
         </span>
       </div>
     </div>
-  );
+  ); 
 
-  const renderConnectSummary = () => (
+const renderConnectSummary = () => (
     <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
       <div className="flex items-center gap-3">
         <div className="flex -space-x-2">
@@ -582,6 +1716,7 @@ const missingProfileFields = useMemo(() => {
       </div>
     </div>
   );
+
 const handleSaveProfile = async () => {
   if (!user) return;
 
@@ -595,6 +1730,8 @@ const handleSaveProfile = async () => {
     const mobile_number =
       (document.getElementById("mobile_number") as HTMLInputElement)?.value || "";
 
+const profession =
+  (document.getElementById("profession") as HTMLSelectElement)?.value || "";
 
 
     const facebook =
@@ -609,22 +1746,14 @@ const handleSaveProfile = async () => {
     const instagram =
       (document.getElementById("instagram") as HTMLInputElement)?.value || "";
 
-    const [first_name, ...rest] = fullName.trim().split(" ");
-    const last_name = rest.join(" ");
-const indian_state =
-  (document.getElementById("indian_state") as HTMLSelectElement)?.value || "";
+const nameParts = fullName.trim().split(/\s+/);
 
-const district =
-  (document.getElementById("district") as HTMLSelectElement)?.value || "";
+const first_name = nameParts[0];
+const last_name =
+  nameParts.length > 1
+    ? nameParts.slice(1).join(" ")
+    : first_name; // ✅ fallback
 
-const mandal =
-  (document.getElementById("mandal") as HTMLSelectElement)?.value || "";
-
-const assembly_constituency =
-  (document.getElementById("assembly_constituency") as HTMLSelectElement)?.value || "";
-
-const village =
-  (document.getElementById("village") as HTMLSelectElement)?.value || "";
 
 
 const updates: any = {
@@ -632,12 +1761,12 @@ const updates: any = {
   last_name,
   email,
   mobile_number,
+  profession,
 
- indian_state,
-  district,
-  mandal,
-  assembly_constituency,
-  village,
+ indian_state: indianState,
+district: district,
+mandal: mandal,
+assembly_constituency: assembly,
 
 
   facebook_id: facebook,
@@ -665,9 +1794,44 @@ const updates: any = {
 };
 
 
+const handleSubmitSuggestion = async () => {
+  const message = suggestionRef.current?.value.trim() || "";
+
+  if (!message) {
+    showToast("Please enter your suggestion", "info");
+    return;
+  }
+
+  try {
+    setSubmittingSuggestion(true);
+
+    const { error } = await supabase.from("suggestions").insert({
+      name: fullName,
+      country: profile?.country_of_residence || "India",
+      suggestion: message,
+      suggestion_date: new Date().toISOString().split("T")[0], // ✅ CORRECT
+    });
+
+    if (error) throw error;
+
+    if (suggestionRef.current) {
+      suggestionRef.current.value = "";
+    }
+
+    showToast("Suggestion submitted successfully!", "success");
+  } catch (err) {
+    console.error("Suggestion error:", err);
+    showToast("Failed to submit suggestion", "info");
+  } finally {
+    setSubmittingSuggestion(false);
+  }
+};
+
+
 
   // --- EXPANDED CONTENT RENDERERS ---
 
+ 
   const renderProfileContent = () => (
     <div className="pt-4 ">
 
@@ -863,106 +2027,242 @@ const updates: any = {
 </div>
 
 {/* 📍 Address Details */}
-<div className="md:col-span-2 mt-4">
+<div className="md:col-span-2 mt-4 ">
   <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
    Indian Address 
   </h4>
 
   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
     {/* State */}
-    <select
-  id="indian_state"
-  defaultValue={profile?.indian_state || ""}
-  className="
-    w-full h-11 px-3
-    bg-gray-50 border border-gray-300 rounded-lg
-    text-[16px] md:text-sm font-semibold text-gray-900
-    focus:bg-white focus:ring-2 focus:ring-indigo-500
-    outline-none
-  "
+   {/* ===== STATE ===== */}
+<Listbox
+  value={indianState}
+  onChange={(value) => {
+    setIndianState(value);
+    setDistrict("");
+    setAssembly("");
+    setMandal("");
+  }}
 >
+  <div className="relative">
+    <Listbox.Button
+      className="
+        w-full h-11 px-3
+        bg-gray-50 border border-gray-300 rounded-lg
+        flex items-center justify-between
+        text-left text-[16px] md:text-sm font-semibold text-gray-900
+        focus:bg-white focus:ring-2 focus:ring-indigo-500
+        outline-none
+      "
+    >
+      <span className="truncate">
+        {indianState || "Select State"}
+      </span>
+      <ChevronDown size={18} className="text-gray-500" />
+    </Listbox.Button>
 
-      <option value="" disabled>
-        Select State
-      </option>
-      <option value="Andhra Pradesh">Andhra Pradesh</option>
-    </select>
+    <Listbox.Options
+      className="
+        absolute z-50 mt-1 w-full
+        max-h-60 overflow-auto
+        rounded-lg bg-white
+        border border-gray-300
+        shadow-lg text-sm
+      "
+    >
+      {["Andhra Pradesh", "Telangana"].map((state) => (
+        <Listbox.Option
+          key={state}
+          value={state}
+          className={({ active }) =>
+            `cursor-pointer px-3 py-2 ${
+              active ? "bg-gray-100 text-gray-900" : "text-gray-900"
+            }`
+          }
+        >
+          {state}
+        </Listbox.Option>
+      ))}
+    </Listbox.Options>
+  </div>
+</Listbox>
+
 
     {/* District */}
-   <select
-  id="district"
-  defaultValue={profile?.district || ""}
+{/* District (Mobile Friendly) */}
+<div className="relative">
+  <Listbox
+    value={district}
+    onChange={(value) => {
+      setDistrict(value);
+      setAssembly("");
+      setMandal("");
+    }}
+  >
+    {/* Button */}
+    <Listbox.Button
   className="
-    w-full h-11 px-3
+     w-full h-11 px-3
     bg-gray-50 border border-gray-300 rounded-lg
-    text-[16px] md:text-sm font-semibold text-gray-900
+    text-left text-[16px] md:text-sm font-semibold text-gray-900
+    flex items-center justify-between
     focus:bg-white focus:ring-2 focus:ring-indigo-500
     outline-none
   "
 >
-  <option value="" disabled>
-    Select District
-  </option>
-  <option value="Kadapa">Kadapa</option>
-  <option value="Kurnool">Kurnool</option>
-</select>
+  <span className="truncate">
+    {district || "Select District"}
+  </span>
+
+  <ChevronDown
+    size={18}
+    className="text-gray-500 shrink-0"
+  />
+</Listbox.Button>
+
+
+    {/* Dropdown Options */}
+    <Listbox.Options
+      className="
+        absolute z-50 mt-1 w-full
+        max-h-60 overflow-auto
+        rounded-lg bg-white
+        border border-gray-200
+        shadow-lg
+        text-sm
+      "
+    >
+      {indianState &&
+        indianAddressData[indianState]?.map((d) => (
+          <Listbox.Option
+            key={d.name}
+            value={d.name}
+            className={({ active }) =>
+              `cursor-pointer px-3 py-2 ${
+                active
+                  ? "bg-indigo-100 text-indigo-900"
+                  : "text-gray-900"
+              }`
+            }
+          >
+            {d.name}
+          </Listbox.Option>
+        ))}
+    </Listbox.Options>
+  </Listbox>
+</div>
 
 
     {/* Assembly */}
-<select
-  id="assembly_constituency"
-  defaultValue={profile?.assembly_constituency || ""}
-  className="
-    w-full h-11 px-3
-    bg-gray-50 border border-gray-300 rounded-lg
-    text-[16px] md:text-sm font-semibold text-gray-900
-    focus:bg-white focus:ring-2 focus:ring-indigo-500
-    outline-none
-  "
+{/* ===== ASSEMBLY ===== */}
+<Listbox
+  value={assembly}
+  onChange={(value) => {
+    setAssembly(value);
+    setMandal("");
+  }}
 >
-  <option value="" disabled>
-    Select Assembly
-  </option>
-  <option value="Pulivendula">Pulivendula</option>
-</select>
+  <div className="relative">
+    <Listbox.Button
+      className="
+        w-full h-11 px-3
+        bg-gray-50 border border-gray-300 rounded-lg
+        flex items-center justify-between
+        text-left text-[16px] md:text-sm font-semibold text-gray-900
+        focus:bg-white focus:ring-2 focus:ring-indigo-500
+        outline-none
+      "
+    >
+      <span className="truncate">
+        {assembly || "Select Assembly"}
+      </span>
+      <ChevronDown size={18} className="text-gray-500" />
+    </Listbox.Button>
+
+    <Listbox.Options
+      className="
+        absolute z-50 mt-1 w-full
+        max-h-60 overflow-auto
+        rounded-lg bg-white
+        border border-gray-300
+        shadow-lg text-sm
+      "
+    >
+      {indianState &&
+        district &&
+        indianAddressData[indianState]
+          ?.find((d) => d.name === district)
+          ?.constituencies.map((c) => (
+            <Listbox.Option
+              key={c.name}
+              value={c.name}
+              className={({ active }) =>
+                `cursor-pointer px-3 py-2 ${
+                  active ? "bg-gray-100 text-gray-900" : "text-gray-900"
+                }`
+              }
+            >
+              {c.name}
+            </Listbox.Option>
+          ))}
+    </Listbox.Options>
+  </div>
+</Listbox>
 
 
     {/* Mandal */}
-    <select
-  id="mandal"
-  defaultValue={profile?.mandal || ""}
-  className="
-    w-full h-11 px-3
-    bg-gray-50 border border-gray-300 rounded-lg
-    text-[16px] md:text-sm font-semibold text-gray-900
-    focus:bg-white focus:ring-2 focus:ring-indigo-500
-    outline-none
-  "
->
+  {/* ===== MANDAL ===== */}
+<Listbox value={mandal} onChange={setMandal}>
+  <div className="relative">
+    <Listbox.Button
+      className="
+        w-full h-11 px-3
+        bg-gray-50 border border-gray-300 rounded-lg
+        flex items-center justify-between
+        text-left text-[16px] md:text-sm font-semibold text-gray-900
+        focus:bg-white focus:ring-2 focus:ring-indigo-500
+        outline-none
+      "
+    >
+      <span className="truncate">
+        {mandal || "Select Mandal"}
+      </span>
+      <ChevronDown size={18} className="text-gray-500" />
+    </Listbox.Button>
 
-      <option value="" disabled>
-        Select Mandal
-      </option>
-      <option value="Vempalli">Vempalli</option>
-    </select>
+    <Listbox.Options
+      className="
+        absolute z-50 mt-1 w-full
+        max-h-60 overflow-auto
+        rounded-lg bg-white
+        border border-gray-300
+        shadow-lg text-sm
+      "
+    >
+      {indianState &&
+        district &&
+        assembly &&
+        indianAddressData[indianState]
+          ?.find((d) => d.name === district)
+          ?.constituencies.find((c) => c.name === assembly)
+          ?.mandals.map((m) => (
+            <Listbox.Option
+              key={m}
+              value={m}
+              className={({ active }) =>
+                `cursor-pointer px-3 py-2 ${
+                  active ? "bg-gray-100 text-gray-900" : "text-gray-900"
+                }`
+              }
+            >
+              {m}
+            </Listbox.Option>
+          ))}
+    </Listbox.Options>
+  </div>
+</Listbox>
 
-    {/* Village */}
-   <select
-  id="village"
-  defaultValue={profile?.village || ""}
-  className="
-    w-full h-11 px-3
-    bg-gray-50 border border-gray-300 rounded-lg
-    text-[16px] md:text-sm font-semibold text-gray-900
-    focus:bg-white focus:ring-2 focus:ring-indigo-500
-    outline-none
-  "
->
-      <option value="" disabled>
-        Select Village
-      </option>
-      <option value="Sample Village">Sample Village</option>
-    </select>
+ 
   </div>
 </div>
           </div>  
@@ -973,23 +2273,65 @@ const updates: any = {
               Professional & Social
             </h4>
 
-        {/* Profession - View Only */}
+  
+{/* Profession */}
 <div className="mb-4">
   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-    Profession / Designation
+    Profession
   </label>
+<Listbox
+  value={profession}
+  onChange={(value) => setProfession(value)}
+>
+  <div className="relative">
+    <Listbox.Button
+      className="
+        w-full h-12 px-3
+        bg-gray-50 border border-gray-300 rounded-lg
+        flex items-center justify-between
+        text-base font-semibold text-gray-900
+        focus:ring-2 focus:ring-indigo-500
+        outline-none
+      "
+    >
+      <span className="truncate">
+        {profession || "Select Profession"}
+      </span>
+      <ChevronDown size={18} className="text-gray-500" />
+    </Listbox.Button>
 
-  <div
-    className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg
-               text-sm font-bold text-gray-600 cursor-not-allowed"
-  >
-    {profile?.profession || profile?.role_designation || "Not Provided"}
+    <Listbox.Options
+      className="
+        absolute z-50 mt-1 w-full
+        max-h-60 overflow-auto
+        rounded-lg bg-white
+        border border-gray-300
+        shadow-lg
+        text-base
+      "
+    >
+      {["Job", "Business", "Student"].map((opt) => (
+        <Listbox.Option
+          key={opt}
+          value={opt}
+          className={({ active }) =>
+            `cursor-pointer px-4 py-3 ${
+              active
+                ? "bg-indigo-100 text-indigo-900"
+                : "text-gray-900"
+            }`
+          }
+        >
+          {opt}
+        </Listbox.Option>
+      ))}
+    </Listbox.Options>
   </div>
+</Listbox>
 
 
-
-            </div>
-
+ 
+</div>
             {/* Social Media Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
@@ -1071,7 +2413,7 @@ const updates: any = {
   );
 
   const renderReferralsContent = () => (
-    <div className="pt-4 animate-fade-in space-y-6">
+    <div className="pt-4">
       {/* Top Row */}
       <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
         <div>
@@ -1194,7 +2536,7 @@ const updates: any = {
     </div>
   );
 
-  const renderConnectContent = () => {
+   const renderConnectContent = () => {
     const colorClasses = [
       { text: 'text-purple-600', border: 'border-purple-200' },
       { text: 'text-blue-600', border: 'border-blue-200' },
@@ -1203,7 +2545,7 @@ const updates: any = {
     ];
 
     return (
-      <div className="pt-4 animate-fade-in">
+      <div className="pt-4 ">
         {leaders.length === 0 ? (
           <div className="text-xs text-gray-500">No leadership contacts configured yet.</div>
         ) : (
@@ -1215,18 +2557,15 @@ const updates: any = {
                   key={leader.id}
                   className={`bg-white border ${colors.border} rounded-xl p-4 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-all group`}
                 >
-                  <div className="w-16 h-16 rounded-full p-0.5 bg-white border border-gray-200 mb-3 relative">
-                    <img
-                      src={
-                        leader.avatar_url ||
-                        `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
-                          leader.name || 'Leader'
-                        )}`
-                      }
-                      alt={leader.name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
+                <div
+  className="w-16 h-16 rounded-full bg-gray-100 border border-gray-300
+             flex items-center justify-center mb-3"
+>
+  <span className="text-lg font-black text-gray-600">
+    {leader.name?.charAt(0) || "L"}
+  </span>
+</div>
+
                   <span
                     className={`text-[9px] font-black uppercase tracking-widest mb-1 ${colors.text}`}
                   >
@@ -1236,19 +2575,25 @@ const updates: any = {
                     {leader.name || 'Leader'}
                   </h4>
 
-                  <button
-                    onClick={() =>
-                      showToast(
-                        leader.whatsapp_number
-                          ? `Opening WhatsApp with ${leader.name}...`
-                          : 'WhatsApp contact not available',
-                        'info'
-                      )
-                    }
-                    className="w-full py-2 rounded-lg bg-[#25D366] hover:bg-[#20b85a] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-                  >
-                    <MessageSquare size={14} fill="white" /> WhatsApp
-                  </button>
+                 <button
+  onClick={() => {
+    if (!leader.whatsapp_number) {
+      showToast("WhatsApp contact not available", "info");
+      return;
+    }
+
+    const phone = leader.whatsapp_number.replace(/\D/g, "");
+    window.open(`https://wa.me/${phone}`, "_blank");
+
+    showToast(`Opening WhatsApp with ${leader.name}`, "info");
+  }}
+  className="w-full py-2 rounded-lg bg-[#25D366] hover:bg-[#20b85a]
+             text-white font-bold text-xs flex items-center justify-center
+             gap-1.5 transition-colors shadow-sm"
+>
+  <MessageSquare size={14} fill="white" /> WhatsApp
+</button>
+
                 </div>
               );
             })}
@@ -1258,103 +2603,135 @@ const updates: any = {
     );
   };
 
-  const renderServicesContent = () => (
-    <div className="pt-4 animate-fade-in">
-      {!selectedService ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            {
-              id: 'student',
-              title: 'Student Support',
-              icon: <GraduationCap size={28} />,
-              color: 'text-blue-600',
-              bg: 'bg-blue-50',
-            },
-            {
-              id: 'legal',
-              title: 'Legal Advisor',
-              icon: <Scale size={28} />,
-              color: 'text-purple-600',
-              bg: 'bg-purple-50',
-            },
-            {
-              id: 'career',
-              title: 'Career Coach',
-              icon: <Briefcase size={28} />,
-              color: 'text-amber-600',
-              bg: 'bg-amber-50',
-            },
-            {
-              id: 'local',
-              title: 'Local Connector',
-              icon: <Users size={28} />,
-              color: 'text-emerald-600',
-              bg: 'bg-emerald-50',
-            },
-          ].map((s) => (
+
+ const renderServicesContent = () => (
+  <div className="pt-4 ">
+    {!selectedService ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          {
+            id: "student",
+            title: "Student Support",
+            icon: <GraduationCap size={28} />,
+            color: "text-blue-600",
+            bg: "bg-blue-50",
+          },
+          {
+            id: "legal",
+            title: "Legal Advisor",
+            icon: <Scale size={28} />,
+            color: "text-purple-600",
+            bg: "bg-purple-50",
+          },
+          {
+            id: "career",
+            title: "Career Coach",
+            icon: <Briefcase size={28} />,
+            color: "text-amber-600",
+            bg: "bg-amber-50",
+          },
+          {
+            id: "local",
+            title: "Local Connector",
+            icon: <Users size={28} />,
+            color: "text-emerald-600",
+            bg: "bg-emerald-50",
+          },
+        ].map((s) => (
+          <div
+            key={s.id}
+            onClick={() => setSelectedService(s.id)}
+            className="bg-white border border-gray-200 rounded-xl p-5
+                       hover:border-blue-400 hover:shadow-md transition-all
+                       cursor-pointer group flex flex-col items-center text-center"
+          >
             <div
-              key={s.id}
-              onClick={() => setSelectedService(s.id)}
-              className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group flex flex-col items-center text-center"
+              className={`w-12 h-12 ${s.bg} ${s.color}
+                          rounded-xl flex items-center justify-center
+                          mb-3 group-hover:scale-110 transition-transform`}
             >
-              <div
-                className={`w-12 h-12 ${s.bg} ${s.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
-              >
-                {s.icon}
-              </div>
-              <h3 className="font-bold text-sm text-gray-800 mb-2">{s.title}</h3>
-              <span className="text-[10px] font-bold text-gray-400 group-hover:text-blue-600 uppercase tracking-wide flex items-center gap-1">
-                Request Info <ArrowRight size={10} />
-              </span>
+              {s.icon}
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 relative animate-fade-in">
-          <button
-            onClick={() => setSelectedService(null)}
-            className="text-xs font-bold text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4"
-          >
-            <ArrowRight size={12} className="rotate-180" /> Back to Services
-          </button>
-
-          <h3 className="font-black text-lg text-gray-900 mb-4">Request Form</h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <input
-              type="text"
-              className="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs font-medium outline-none focus:border-blue-500 transition-all"
-              placeholder="Applicant Name"
-              defaultValue={fullName}
-            />
-           <input
-  type="text"
-  placeholder="Current Location"
-  defaultValue={profile?.country_of_residence || ""}
-/>
-
-
+            <h3 className="font-bold text-sm text-gray-800 mb-2">
+              {s.title}
+            </h3>
+            <span className="text-[10px] font-bold text-gray-400
+                             group-hover:text-blue-600 uppercase tracking-wide
+                             flex items-center gap-1">
+              Request Info <ArrowRight size={10} />
+            </span>
           </div>
-          <textarea
-            className="w-full p-3 bg-white border border-gray-200 rounded-lg text-xs font-medium outline-none focus:border-blue-500 transition-all resize-none h-24 mb-4"
-            placeholder="Describe your requirement..."
-          ></textarea>
-          <button
-            onClick={() => {
-              showToast('Application Submitted!');
-              setSelectedService(null);
-            }}
-            className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-          >
-            <Send size={14} /> Submit Request
-          </button>
+        ))}
+      </div>
+    ) : (
+<div
+  className="bg-gray-50 rounded-xl p-6 border border-gray-200"
+  style={{ minHeight: "360px" }}
+>
+
+        <button
+          onClick={() => setSelectedService(null)}
+          className="text-xs font-bold text-gray-500 hover:text-gray-900
+                     flex items-center gap-1 mb-4"
+        >
+          <ArrowRight size={12} className="rotate-180" /> Back to Services
+        </button>
+
+        <h3 className="font-black text-lg text-gray-900 mb-4">
+          Request Form
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <input
+            type="text"
+            value={fullName}
+            disabled
+            className="w-full p-3 bg-gray-100 border border-gray-200
+                       rounded-lg text-xs font-bold text-gray-600
+                       cursor-not-allowed"
+          />
+
+          <input
+            type="text"
+            value={profile?.country_of_residence || "India"}
+            disabled
+            className="w-full p-3 bg-gray-100 border border-gray-200
+                       rounded-lg text-xs font-bold text-gray-600
+                       cursor-not-allowed"
+          />
         </div>
-      )}
-    </div>
-  );
+
+<textarea
+  ref={serviceMessageRef}
+  rows={4}
+  className="w-full p-3 bg-white border border-gray-200 rounded-lg
+             text-xs font-medium outline-none focus:border-blue-500
+             resize-none"
+  placeholder="Describe your requirement..."
+  style={{
+    height: "120px",
+    lineHeight: "1.5rem",
+  }}
+/>
+        <button
+          onClick={handleSubmitService}
+          disabled={submittingService}
+          className="w-full py-2.5 bg-blue-600 text-white rounded-lg
+                     text-xs font-bold hover:bg-blue-700 transition-all
+                     flex items-center justify-center gap-2
+                     disabled:opacity-60"
+        >
+          <Send size={14} />
+          {submittingService ? "Submitting..." : "Submit Request"}
+        </button>
+      </div>
+    )}
+  </div>
+);
+
 
   const renderEventsContent = () => (
-    <div className="pt-4 animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="pt-4 ">
       {events.length === 0 ? (
         <div className="text-xs text-gray-500">No events found.</div>
       ) : (
@@ -1392,9 +2769,74 @@ const updates: any = {
       )}
     </div>
   );
+const renderSuggestionsContent = () => (
+  <div className="pt-4 ">
+    <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+
+      <h3 className="text-sm font-black text-gray-800">
+        Share Your Suggestions
+      </h3>
+
+      {/* Name */}
+      <div>
+        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
+          Name
+        </label>
+        <input
+          value={fullName}
+          disabled
+          className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg
+                     text-sm font-bold text-gray-600 cursor-not-allowed"
+        />
+      </div>
+
+      {/* Country */}
+      <div>
+        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
+          Country
+        </label>
+        <input
+          value={profile?.country_of_residence || "India"}
+          disabled
+          className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg
+                     text-sm font-bold text-gray-600 cursor-not-allowed"
+        />
+      </div>
+
+      {/* Suggestion */}
+      <div>
+        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
+          Your Suggestion
+        </label>
+    
+<textarea
+  ref={suggestionRef}
+  rows={4}
+  className="w-full p-3 bg-white border border-gray-300 rounded-lg
+             text-sm outline-none focus:ring-2 focus:ring-indigo-500
+             resize-none"
+  placeholder="Write your suggestion here..."
+/>
+
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={handleSubmitSuggestion}
+          disabled={submittingSuggestion}
+          className="px-6 py-2 bg-indigo-600 text-white text-xs font-bold
+                     rounded-lg hover:bg-indigo-700 disabled:opacity-60"
+        >
+          {submittingSuggestion ? "Submitting..." : "Submit Suggestion"}
+        </button>
+      </div>
+
+    </div>
+  </div>
+);
 
   const renderNotificationsContent = () => (
-    <div className="pt-4 animate-fade-in">
+    <div className="pt-4 ">
       <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
         {notifications.length === 0 ? (
           <div className="p-4 text-xs text-gray-500">No notifications yet.</div>
@@ -1448,12 +2890,16 @@ const updates: any = {
     const isOpen = expandedSection === id;
 
     return (
-      <div
-        className={`
-            transition-all duration-300 ease-out mb-3 rounded-xl border overflow-hidden group
-            ${isOpen ? 'bg-white border-gray-300 shadow-xl ring-1 ring-black/5 z-10' : 'bg-white border-gray-200 shadow-sm hover:border-gray-300'}
-        `}
-      >
+    <div
+  className={`
+    mb-3 rounded-xl border overflow-hidden group
+    ${isOpen
+      ? 'bg-white border-gray-300 shadow-xl ring-1 ring-black/5 z-10'
+      : 'bg-white border-gray-200 shadow-sm hover:border-gray-300'}
+  `}
+>
+
+
         {/* Header Bar */}
         <button
           onClick={() => toggleSection(id)}
@@ -1511,12 +2957,13 @@ const updates: any = {
 
         
         {/* Expanded Content Body */}
-{isOpen && (
-  <div className="px-4 pb-6 sm:px-6 border-t border-gray-100 bg-white">
-    {content}
-  </div>
-)}
-
+<div
+  className={`px-4 pb-6 sm:px-6 border-t border-gray-100 bg-white
+    ${isOpen ? "block" : "hidden"}
+  `}
+>
+  {content}
+</div>
       </div>
     );
   };
@@ -1530,7 +2977,6 @@ const updates: any = {
        className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 ${
   toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-blue-600 text-white'
 }`}
-
         >
           {toast.type === 'success' ? <CheckCircle size={16} /> : <Info size={16} />}
           <span className="text-xs font-bold uppercase tracking-wide">{toast.msg}</span>
@@ -1549,8 +2995,6 @@ const updates: any = {
     ? `${profile.profession} Dashboard`
     : "My Portal"}
 </h1>
-
-
             <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider mt-0.5">
               ● {loadingDashboard ? 'Syncing…' : 'Online'}
             </p>
@@ -1590,13 +3034,10 @@ const updates: any = {
 
  
 </div>
-
-  
-
       </div>
 
       {/* Main Content List */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative z-10 overscroll-contain">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative z-10 ">
 
         <div className="max-w-7xl mx-auto pb-20">
           <AccordionItem
@@ -1652,6 +3093,20 @@ const updates: any = {
             content={renderNotificationsContent()}
             color="bg-red-500"
           />
+<AccordionItem
+  id="suggestions"
+  title="Suggestions"
+  summary={
+    <div className="text-xs text-gray-500 mt-1">
+      Share your ideas & feedback
+    </div>
+  }
+  icon={<MessageSquare size={20} />}
+  content={renderSuggestionsContent()}
+  color="bg-indigo-600"
+/>
+
+
         </div>
       </div>
     </div>
