@@ -24,6 +24,7 @@ import Agriculture from './pages/Agriculture';
 import Education from './pages/Education';
 import Women from './pages/Women';
 import StudentYouth from './pages/Studentyouth';
+import ReferralRedirect from "./pages/ReferralRedirect";
 
 import AmmaVodi from './pages/AmmaVodi';
 import VidyaDeevena from './pages/VidyaDeevena';
@@ -158,6 +159,8 @@ function AppContent() {
         {/* Redirect old suggestions path to new Glimpse (Gallery) */}
         <Route path="/suggestions" element={<Navigate to="/glimpse" replace />} />
         <Route path="/glimpse" element={<Glimpse />} />
+        <Route path="/ref/:name/:code" element={<ReferralRedirect />} />
+
 
         {/* Services page mapping to Initiatives */}
         <Route path="/services" element={<Initiatives />} />

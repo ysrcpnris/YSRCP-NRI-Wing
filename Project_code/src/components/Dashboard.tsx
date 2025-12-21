@@ -1346,14 +1346,20 @@ if (activeError) {
 }
 
 setActiveReferrals(
-  (activeData || []).map((r: any) => ({
-    id: r.id,
-    member_name: `${r.profiles?.first_name ?? ""} ${r.profiles?.last_name ?? ""}`.trim(),
-    location: r.profiles?.country_of_residence ?? "—",
-    type: "active",
-    created_at: r.created_at,
-  }))
+  (activeData || []).map((r: any) => {
+    const first = r.profiles?.first_name ?? "";
+    const last = r.profiles?.last_name ?? "";
+
+    return {
+      id: r.id,
+      member_name: last && last !== first ? `${first} ${last}` : first,
+      location: r.profiles?.country_of_residence ?? "—",
+      type: "active",
+      created_at: r.created_at,
+    };
+  })
 );
+
 
 // ---------------- PASSIVE REFERRALS ----------------
 const { data: passiveData, error: passiveError } = await supabase
@@ -1376,13 +1382,18 @@ if (passiveError) {
 }
 
 setPassiveReferrals(
-  (passiveData || []).map((r: any) => ({
-    id: r.id,
-    member_name: `${r.profiles?.first_name ?? ""} ${r.profiles?.last_name ?? ""}`.trim(),
-    location: r.profiles?.country_of_residence ?? "—",
-    type: "passive",
-    created_at: r.created_at,
-  }))
+  (passiveData || []).map((r: any) => {
+    const first = r.profiles?.first_name ?? "";
+    const last = r.profiles?.last_name ?? "";
+
+    return {
+      id: r.id,
+      member_name: last && last !== first ? `${first} ${last}` : first,
+      location: r.profiles?.country_of_residence ?? "—",
+      type: "passive",
+      created_at: r.created_at,
+    };
+  })
 );
 
  // 2. Leaders
@@ -1752,8 +1763,7 @@ const first_name = nameParts[0];
 const last_name =
   nameParts.length > 1
     ? nameParts.slice(1).join(" ")
-    : first_name; // ✅ fallback
-
+    : null; // ✅ FIX
 
 
 const updates: any = {
