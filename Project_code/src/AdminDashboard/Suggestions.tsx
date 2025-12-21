@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 type Suggestion = {
   id: number;
@@ -8,37 +9,46 @@ type Suggestion = {
   suggestion: string;
 };
 
-const dummySuggestions: Suggestion[] = [
-  {
-    id: 1,
-    name: "Ravi Teja",
-    country: "UAE",
-    date: "2025-10-21",
-    suggestion: "Introduce more skill development programs for NRIs.",
-  },
-  {
-    id: 2,
-    name: "Samantha Raj",
-    country: "USA",
-    date: "2025-10-22",
-    suggestion:
-      "Need a digital helpdesk to address quick assistance requests for overseas citizens.",
-  },
-  {
-    id: 3,
-    name: "Abdul Rahman",
-    country: "Saudi Arabia",
-    date: "2025-10-24",
-    suggestion: "Organize cultural events to strengthen NRI connections.",
-  },
-  {
-    id: 4,
-    name: "Priyanka Das",
-    country: "Singapore",
-    date: "2025-10-25",
-    suggestion: "Provide simplified online registration for NRI members.",
-  },
-];
+const dummySuggestions: Suggestion[] = [];
+
+// live suggestions state (fetched from Supabase)
+// we keep the variable name `dummySuggestions` only where UI references it
+// but populate `suggestions` and use that in rendering below.
+const useFetchSuggestions = () => {
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("suggestions")
+        .select("*")
+        .order("suggestion_date", { ascending: false });
+
+      if (error) {
+        console.error("Fetch suggestions error:", error);
+        setSuggestions([]);
+      } else {
+        setSuggestions(
+          (data || []).map((d: any) => ({
+            id: d.id,
+            name: d.name,
+            country: d.country,
+            date: d.suggestion_date,
+            suggestion: d.suggestion,
+          })) as Suggestion[]
+        );
+      }
+
+      setLoading(false);
+    };
+
+    fetch();
+  }, []);
+
+  return { suggestions, loading };
+};
 
 function StatCard({
   title,
@@ -71,7 +81,8 @@ function StatCard({
 
 export default function Suggestions() {
   const [showTable, setShowTable] = useState(false);
-  const totalSuggestions = dummySuggestions.length;
+  const { suggestions } = useFetchSuggestions();
+  const totalSuggestions = suggestions.length;
 
   return (
     <div className="p-6">
@@ -126,7 +137,7 @@ export default function Suggestions() {
                 </tr>
               </thead>
               <tbody>
-                {dummySuggestions.map((s) => (
+                {suggestions.map((s) => (
                   <tr
                     key={s.id}
                     className="border-b hover:bg-blue-50 transition"
