@@ -63,6 +63,7 @@ export default function Header({ onSignUp }: HeaderProps) {
               <button onClick={() => scrollToSection("hero")} className="hover:text-blue-600">Home</button>
               <button onClick={() => scrollToSection("journey")} className="hover:text-blue-600">About</button>
               <button onClick={() => scrollToSection('services')} className="hover:text-blue-600">Services</button>
+              <button onClick={() => navigate('/pillars')} className="hover:text-blue-600">Pillars</button>
 
               {/* Jagan-Mark Dropdown */}
               <div className="relative jagan-dropdown" onMouseEnter={() => setOpenJaganMenu(true)} onMouseLeave={() => setOpenJaganMenu(false)}>
@@ -137,6 +138,7 @@ export default function Header({ onSignUp }: HeaderProps) {
               <button onClick={() => navigate('/welfare')} className="block w-full text-left py-2 pl-4">Welfare</button>
               <button onClick={() => navigate('/reforms')} className="block w-full text-left py-2 pl-4">Reforms</button> */}
               <button onClick={() => scrollToSection('services')} className="block w-full text-left py-2">Services</button>
+              <button onClick={() => { navigate('/pillars'); setMobileMenuOpen(false); }} className="block w-full text-left py-2">Pillars</button>
               <button onClick={() => scrollToSection('glimpse')} className="block w-full text-left py-2">Gallery</button>
 
               {/* Mobile Login/Register */}

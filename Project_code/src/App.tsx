@@ -6,6 +6,9 @@ import Hero from './components/Hero';
 import About from './components/About';
 import Mission from './components/Mission';
 import Initiatives from './components/Initiatives';
+import TenPillars from './components/TenPillar';
+import PillarPage from './components/PillarPage';
+import PillarDetailWrapper from './components/PillarDetailWrapper';
 import Development from './components/development';
 import Events from './components/Events';
 import News from './components/News';
@@ -76,6 +79,7 @@ function MainLandingPage({
       <Mission />
       <PoliticalJourney />
       <Initiatives />
+      <TenPillars />
       <Development />
       <Events />
       <News />
@@ -165,6 +169,13 @@ function AppContent() {
         {/* Services page mapping to Initiatives */}
         <Route path="/services" element={<Initiatives />} />
 
+        {/* Pillars Page */}
+        <Route path="/pillars" element={<PillarPage onBack={() => window.history.back()} onPillarSelect={() => {}} />} />
+        
+        {/* Pillar Detail Wrapper (from direct navigation) */}
+        <Route path="/pillars/:id" element={<PillarDetailWrapper />} />
+
+        
         <Route path="/register" element={<RegisterPage />} />
 
         {/* ADMIN */}
