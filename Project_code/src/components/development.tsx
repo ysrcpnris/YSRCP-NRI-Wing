@@ -4,7 +4,7 @@ import { useRef, useEffect } from "react";
 //   title: string;
 //   description: string;
 //   image: string;
-//   url: string;
+//   url: string;/
 // };
 
 // export const SCHEMES: Scheme[] = [
