@@ -148,6 +148,7 @@ const BottomCards: React.FC = () => {
 const PressMeetsAndSocial: React.FC = () => {
   const row1Ref = useRef<HTMLDivElement>(null);
   const row2Ref = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
 
   // Continuous smooth scrolling
   useEffect(() => {
@@ -158,19 +159,29 @@ const PressMeetsAndSocial: React.FC = () => {
       let scrollLeft = 0;
       let direction = 1;
 
+      let rafId: number;
       const step = () => {
         if (!el) return;
-        scrollLeft += speed * direction;
-        if (scrollLeft >= el.scrollWidth - el.clientWidth) direction = -1;
-        if (scrollLeft <= 0) direction = 1;
-        el.scrollTo({ left: scrollLeft, behavior: "smooth" });
-        requestAnimationFrame(step);
+        if (!pausedRef.current) {
+          scrollLeft += speed * direction;
+          if (scrollLeft >= el.scrollWidth - el.clientWidth) direction = -1;
+          if (scrollLeft <= 0) direction = 1;
+          // use instant scroll for smoother continuous effect
+          el.scrollTo({ left: scrollLeft, behavior: "auto" });
+        }
+        rafId = requestAnimationFrame(step);
       };
       step();
+      return () => cancelAnimationFrame(rafId);
     };
 
-    scrollRow(row1Ref, 0.5); // slightly faster
-    scrollRow(row2Ref, 0.5);
+    const stop1 = scrollRow(row1Ref, 0.5); // slightly faster
+    const stop2 = scrollRow(row2Ref, 0.5);
+
+    return () => {
+      if (stop1) stop1();
+      if (stop2) stop2();
+    };
   }, []);
 
   const renderVideoCard = (video: any, idx: number) => (
@@ -222,10 +233,26 @@ const PressMeetsAndSocial: React.FC = () => {
         </div>
 
         <div className="flex flex-col gap-4 sm:gap-6">
-          <div ref={row1Ref} className="overflow-x-hidden">
+          <div
+            ref={row1Ref}
+            className="overflow-x-auto"
+            style={{ touchAction: 'pan-x' }}
+            onPointerDown={() => { pausedRef.current = true; }}
+            onPointerUp={() => { pausedRef.current = false; }}
+            onTouchStart={() => { pausedRef.current = true; }}
+            onTouchEnd={() => { pausedRef.current = false; }}
+          >
             <div className="flex gap-3 sm:gap-4 min-w-max">{ALL_VIDEOS.slice(0,6).map(renderVideoCard)}</div>
           </div>
-          <div ref={row2Ref} className="overflow-x-hidden">
+          <div
+            ref={row2Ref}
+            className="overflow-x-auto"
+            style={{ touchAction: 'pan-x' }}
+            onPointerDown={() => { pausedRef.current = true; }}
+            onPointerUp={() => { pausedRef.current = false; }}
+            onTouchStart={() => { pausedRef.current = true; }}
+            onTouchEnd={() => { pausedRef.current = false; }}
+          >
             <div className="flex gap-3 sm:gap-4 min-w-max">{ALL_VIDEOS.slice(6,12).map(renderVideoCard)}</div>
           </div>
         </div>
