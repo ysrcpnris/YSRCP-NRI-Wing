@@ -20,6 +20,7 @@ interface PillarTab {
   image: string;
   points: string[];
   visionStatement?: string;
+  description?: string;
   detailStatement?: string;
   metrics?: { label: string; value: string; }[];
 }
@@ -29,6 +30,7 @@ interface PillarSection {
   icon: React.ReactNode;
   image: string;
   points: string[];
+  description?: string;
 }
 
 interface PillarDetailContent {
@@ -51,11 +53,43 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     themeColor: "from-[#003366] to-ysrcp-blue",
     accentColor: "ysrcp-blue",
     accentHex: "#0055a5",
+    impactPoints: ["Income Security", "Modern Ports", "No Migration", "Marine Exports", "Local Jobs", "Community Dignity", "Coastal Safety", "Market Stability"],
     sections: [
-      { title: "Marine Vision", icon: <Ship size={18} />, image: "/blueeconomy.png", points: ["Focus on welfare of coastal families", "Sustainable coastal development", "Marine livelihood protection"] },
-      { title: "Port Network", icon: <Anchor size={18} />, image: "/machilipatnam.png", points: ["Ramayapatnam Port construction", "Machilipatnam Port progress", "Bhavanapadu Port development"] },
-      { title: "Modern Fisheries", icon: <Target size={18} />, image: "/fish.png", points: ["₹10,000 cash support", "10 modern fishing harbours", "Subsidized diesel/power"] },
-      { title: "Economic Growth", icon: <TrendingUp size={18} />, image: "/fisheconomy.png", points: ["Skill development centers", "Marine processing MSMEs", "Global trade gateway"] }
+      {
+        title: "Marine Vision",
+        icon: <Ship size={18} />,
+        image: "/blueeconomy.png",
+        points: ["Welfare of coastal families", "Sustainable coastal development", "Marine livelihood protection"],
+        description: `YS Jagan Mohan Reddy, popularly known as Jagan Anna, during his tenure as Chief Minister of Andhra Pradesh (2019–2024), envisioned the state as a major driver of India's Blue Economy. With the second-longest coastline in the country spanning 974 km, he positioned Andhra Pradesh to capitalize on its vast maritime potential for sustainable economic growth, employment generation, and industrial transformation. His vision revolved around port-led development as the engine of progress. Andhra Pradesh had one major port (Visakhapatnam), five operational state ports, and several notified ports handling over 170 million tonnes of cargo annually, ranking second only to Gujarat. Jagan Anna aimed to significantly expand this infrastructure by developing four new ports and ten modern fishing harbors, with planned investments of approximately ₹16,000 crore. The overarching goal was to elevate the state's share of national exports from around 4% to 10% by 2030. The Blue Economy vision extended beyond mere trade volumes to encompass a holistic ecosystem. Key sectors included fisheries and aquaculture, shipbuilding, coastal tourism, petrochemical industries, and marine biotechnology. He emphasized sustainable and inclusive growth, ensuring eco-friendly practices while creating direct and indirect jobs for coastal communities. Under his leadership, Andhra Pradesh achieved the top rank in the Ease of Doing Business index in 2020, largely credited to streamlined port policies and infrastructure reforms. Even after the 2024 elections, the YSR Congress Party continues to highlight this legacy, arguing that Jagan Anna's focused push on the Blue Economy laid a strong foundation for unlocking Andhra Pradesh's coastal economic potential and positioning it as a maritime powerhouse in India.`
+      },
+      {
+        title: "Greenfield Ports",
+        icon: <Anchor size={18} />,
+        image: "/machilipatnam.png",
+        points: ["Ramayapatnam Port", "Machilipatnam Port", "Mulapeta/Bhavanapadu", "Kakinada Gateway/SEZ"],
+        description: `Jagan Anna spearheaded the ambitious development of four new greenfield ports to unlock the state's Blue Economy potential. With Andhra Pradesh's 974 km coastline, he aimed to drive port-led growth, boost maritime trade, exports, and sectors like fisheries, aquaculture, shipbuilding, and coastal industries. The four ports—Machilipatnam (Krishna district), Ramayapatnam (Prakasam/Nellore), Mulapeta/Bhavanapadu (Srikakulam), and Kakinada Gateway/SEZ (East Godavari)—were planned with investments of ₹16,000–17,000 crore. These projects targeted an additional 100–145 million tonnes per annum cargo capacity, creating lakhs of direct and indirect jobs while decongesting ports like Visakhapatnam. Jagan Anna personally laid the foundation stones and initiated land acquisition, environmental clearances, and early construction works, aligning these projects with national initiatives like Sagarmala for sustainable inclusive development.`
+      },
+      {
+        title: "Fishing Harbours",
+        icon: <Target size={18} />,
+        image: "/fish.png",
+        points: ["10 modern harbours", "Fish landing centres", "Support for fisher folk"],
+        description: `Jagan Anna spearheaded the development of 10 new fishing harbours as part of his Blue Economy vision. Leveraging the state's 974 km coastline, he aimed to boost fisheries, prevent migration of fishermen, create jobs, and enhance livelihoods in coastal communities. The initiative targeted modern, world-class harbours and fish landing centres at a cost of ₹3,700–3,800 crore, with six additional fish landing centres. Key projects included Juvvaladinne (Nellore), Nizampatnam (Bapatla), Machilipatnam (Krishna), Uppada (East Godavari), Vodarevu (Bapatla), and others like Budagatlapalem, Pudimadaka, Biyyaputippa, and Kottapatnam. These harbours were designed to accommodate thousands of boats, increase fish production, and align with national schemes like Blue Revolution and Sagarmala.`
+      },
+      {
+        title: "Coastal Industrial Corridors",
+        icon: <Globe size={18} />,
+        image: "/fisheconomy.png",
+        points: ["VCIC acceleration", "VK-PCPIR revival", "Coastal economic zones"],
+        description: `Jagan Anna prioritized sea-based industrial corridors and related coastal initiatives as core elements of his Blue Economy vision. He accelerated the Visakhapatnam-Chennai Industrial Corridor (VCIC) and pushed rapid infrastructure development in coastal nodes like Nakkapalli, Atchutapuram, and Kakinada, focusing on petrochemicals, pharma, food processing, and logistics parks. He revived the VK-PCPIR project and promoted coastal economic zones around new ports, integrating industries with maritime infrastructure for export-oriented growth and job creation.`
+      },
+      {
+        title: "Aquaculture & Fisheries Support",
+        icon: <Ship size={18} />,
+        image: "/blueeconomy.png",
+        points: ["YSR Matsyakara Bharosa", "Diesel subsidy", "Aqua labs & hubs"],
+        description: `Jagan Anna strongly supported fishermen and aquaculture farmers as part of his Blue Economy vision. Key initiatives included the YSR Matsyakara Bharosa scheme providing ₹10,000 annual assistance to fishermen families, diesel subsidy, low-cost power for aqua farmers, enhanced ex-gratia and compensation schemes, and establishment of the Andhra Pradesh Aquaculture Development Authority, aqua labs, and aqua hubs to boost exports and production. These measures prevented migration and drove fisheries growth, making Andhra Pradesh a leading marine exports state.`
+      }
     ]
   },
   2: {
@@ -67,9 +101,18 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#28a745",
     impactPoints: ["Zero Distress", "Stable Incomes", "Direct Support", "Local Access", "Crop Insurance", "Women SHG Dairy", "MSP Security", "Modern Tech"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Leaf size={18} />, image: "/livestock.png", visionStatement: "Farmer dignity is the state's prosperity.", points: ["Agriculture as top priority", "₹1.5 lakh crore spending", "Middlemen-free delivery"] },
-      { id: 'Support', title: 'Rythu Bharosa', icon: <Coins size={18} />, image: "/agricultue.png", detailStatement: "Direct income for 52 lakh farmers.", metrics: [{label: "Annual Aid", value: "₹13,500"}, {label: "Total DBT", value: "₹34K Cr"}], points: ["Annual financial support", "Free 9-hour power supply", "Zero interest crop loans"] },
-      { id: 'RBKs', title: 'RBK Network', icon: <ShieldCheck size={18} />, image: "/agricultue.png", detailStatement: "Bringing government to fields.", metrics: [{label: "RBKs", value: "10,700+"}, {label: "MSP Crops", value: "24 Items"}], points: ["Village level support hubs", "Free crop insurance premium", "Price stabilization fund"] },
+      {
+        id: 'Overview',
+        title: 'Vision',
+        icon: <Leaf size={18} />,
+        image: "/livestock.png",
+        points: ["Agriculture as top priority", "₹1.5 lakh crore spending", "Middlemen-free delivery"],
+        description: `Jagan Anna, during his tenure as Chief Minister of Andhra Pradesh (2019–2024), placed agriculture at the core of his vision for rural prosperity, aiming to make farming profitable, sustainable, and dignified for small and marginal farmers who constitute over 70% of the state's cultivators. His flagship YSR Rythu Bharosa scheme provided direct annual financial assistance of ₹13,500 per farmer family, disbursing more than ₹34,000 crore to over 53 lakh beneficiaries and covering approximately 80% of cultivation costs. This was complemented by YSR Sunna Vaddi for zero-interest crop loans, government-funded crop insurance premiums (making AP a national leader), and free borewells for irrigation. Rythu Bharosa Kendras, established in every village, acted as one-stop centers offering quality inputs, seeds, fertilizers, soil testing, expert advisory services, and direct procurement to eliminate middlemen exploitation. Under his leadership, agricultural growth accelerated, foodgrain production increased from 154 lakh tonnes to over 166 lakh tonnes, and allied sectors like dairy, poultry, and fisheries saw significant expansion. Initiatives also promoted natural farming (ZBNF) through subsidies and training, strengthened Rythu Bazars, and integrated e-NAM for better market access. Aligned with Navaratnalu welfare promises, these efforts ensured income security, reduced risks from natural disasters, and empowered farmers. Post-2024, YSRCP continues to champion these reforms as Jagan Anna's enduring legacy for a self-reliant, farmer-friendly Andhra Pradesh.`
+      },
+      { id: 'Support', title: 'Rythu Bharosa', icon: <Coins size={18} />, image: "/agricultue.png", detailStatement: "Direct income for 52 lakh farmers.", description: `Jagan Anna launched the YSR Rythu Bharosa Scheme on October 15, 2019, to deliver direct financial support to Andhra Pradesh farmers, providing ₹13,500 annually per eligible family in three installments (₹5,500 for Kharif, ₹4,000 for Rabi, and ₹2,000 for Zaid/Sankranti), integrating central PM-KISAN's ₹6,000 with an additional ₹7,500 from the state, totaling ₹67,500 over five years. Over 53 lakh farmers, including tenants and RoFR holders, received more than ₹34,000 crore through transparent DBT transfers to Aadhaar-linked accounts. The scheme was supported by Rythu Bharosa Kendras, which supplied quality inputs, soil testing, advisory services, and direct MSP procurement. Under his leadership, the government also paid full crop insurance premiums under PMFBY, making AP a national leader in coverage, while YSR Sunna Vaddi offered zero-interest loans to reduce debt traps. Free borewells and input subsidies for calamity losses further bolstered financial security. These measures ensured income stability, boosted foodgrain production from 154 lakh tonnes to over 166 lakh tonnes, and improved the state's agricultural ranking significantly.`, metrics: [{label: "Annual Aid", value: "₹13,500"}, {label: "Total DBT", value: "₹34K Cr"}], points: ["Annual financial support", "Free 9-hour power supply", "Zero interest crop loans"] },
+      { id: 'RBKs', title: 'RBK Network', icon: <ShieldCheck size={18} />, image: "/agricultue.png", detailStatement: "Bringing government to fields.", description: `Jagan Anna launched the YSR Rythu Bharosa Scheme on October 15, 2019, as a landmark initiative to empower Andhra Pradesh's farmers by providing direct financial support of ₹13,500 annually per eligible family, disbursed in three installments (₹5,500 for Kharif, ₹4,000 for Rabi, and ₹2,000 for Zaid/Sankranti), integrating the central PM-KISAN's ₹6,000 with an additional ₹7,500 from the state, totaling ₹67,500 over five years to cover cultivation costs without repayment obligations. Over 53 lakh farmers, including small and marginal landholders, tenant farmers, and RoFR pattadar holders from marginalized communities, benefited from more than ₹34,000 crore in direct cash transfers via Aadhaar-linked DBT accounts, ensuring transparency and eliminating intermediaries. The scheme was bolstered by Rythu Bharosa Kendras (over 10,778 village-level centers) that offered quality inputs, seeds, fertilizers, soil testing, expert advisory services, e-crop registration, and direct procurement at MSP, significantly reducing middlemen exploitation while promoting modern and sustainable farming practices. Under its impact, agricultural growth turned positive, foodgrain production rose from 154 lakh tonnes to over 166 lakh tonnes, and the state improved its national agriculture ranking, alongside reduced debt burdens and rural migration. Aligned with Navaratnalu promises, it emphasized farmer dignity, income security, and inclusive growth, though discontinued post-2024 by the new government, it remains a celebrated legacy of Jagan Anna's commitment to transforming agriculture and rural prosperity in Andhra Pradesh.`, metrics: [{label: "RBKs", value: "10,700+"}, {label: "MSP Crops", value: "24 Items"}], points: ["Village level support hubs", "Free crop insurance premium", "Price stabilization fund"] },
+      { id: 'Markets', title: 'Market Reforms', icon: <Briefcase size={18} />, image: "/agricultue.png", description: `Jagan Anna, during his tenure as Chief Minister (2019–2024), introduced key market reforms to empower farmers by ensuring fair prices, reducing middlemen exploitation, and providing direct market access. The Rythu Bharosa Kendras (RBKs), over 10,778 village-level centers, served as procurement hubs for crops like paddy, maize, and pulses at Minimum Support Price (MSP), enabling direct government purchases and timely payments. These Kendras integrated with e-NAM for online trading, connecting farmers to wider markets and better rates while eliminating intermediaries. Rythu Bazars were modernized with improved infrastructure, cold storage, and quality testing facilities to facilitate direct sales to consumers. The government implemented price stabilization measures, including buffer stocks and intervention purchases during market crashes, protecting farmers from volatility. Contract farming was encouraged for crops like chillies, tobacco, and horticulture to secure assured buyers. These reforms strengthened the APMC system with transparency and farmer-centric mechanisms, aligned with Navaratnalu promises. Under his leadership, Andhra Pradesh saw improved farmer incomes, reduced post-harvest losses, and stronger market linkages. Even post-2024, YSRCP advocates for these as a vital part of Jagan Anna's legacy for fair, efficient, and profitable agricultural marketing in the state.` },
+      
       { id: 'Amila', title: 'Amila / Dairy', icon: <Users size={18} />, image: "/agricultue.png", detailStatement: "Economic power to rural women.", metrics: [{label: "Dairy Units", value: "4.6 Lakh"}, {label: "Women SHGs", value: "9.0 Lakh"}], points: ["Free cows and buffaloes", "Paala Velluva collection", "Veterinary services at doorstep"] }
     ]
   },
@@ -82,10 +125,44 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#4f46e5",
     impactPoints: ["Zero Dropouts", "Global Confidence", "Modern Schools", "Digital Learning", "Higher Enrolment", "Fee Security", "Women Education", "Skill Readiness"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <GraduationCap size={18} />, image: "/education.png", visionStatement: "Quality education is the key to social equality.", points: ["English medium transformation", "Nadu-Nedu school revamp", "Digital boards in villages"] },
-      { id: 'Support', title: 'Direct Aid', icon: <Coins size={18} />, image: "/education.png", detailStatement: "Removing financial barriers.", metrics: [{label: "Amma Vodi", value: "₹15,000"}, {label: "Full Fee", value: "100% Reimb"}], points: ["Amma Vodi annual support", "Vidya Deevena fee reimbursement", "Vasathi Deevena lodging aid"] },
-      { id: 'Kit', title: 'Vidya Kanuka', icon: <Briefcase size={18} />, image: "/education.png", detailStatement: "Basic needs for every child.", metrics: [{label: "Kits", value: "45 Lakh"}, {label: "Items", value: "7 Types"}], points: ["Bags, Shoes, Uniforms, Books", "Nutritious Mid-day meals", "Free tabs for 8th graders"] },
-      { id: 'Skills', title: 'Employability', icon: <TrendingUp size={18} />, image: "/education.png", detailStatement: "Job-oriented higher education.", metrics: [{label: "New Univs", value: "2 Nodes"}, {label: "Courses", value: "Job-Ready"}], points: ["Curriculum mapping with industry", "Skill development hubs", "Microsoft certification aid"] }
+      {
+        id: 'Overview',
+        title: 'Overview',
+        icon: <GraduationCap size={18} />,
+        image: "/education.png",
+        points: ["English medium transformation", "Nadu-Nedu school revamp", "Digital boards in villages"],
+        description: `Jagan Anna envisioned education and skill development in Andhra Pradesh not just as local empowerment but as a pathway to producing global citizens—youth who are knowledgeable, skilled, multilingual, culturally aware, and competitive on the world stage. During his tenure as Chief Minister (2019–2024), he aimed to transform the state's education system into a modern, inclusive, and world-class model that prepares students to thrive in a globalized economy, embrace diversity, and contribute meaningfully beyond borders. Through Navaratnalu initiatives, he introduced English-medium education from Class 1 in government schools, supported by bilingual textbooks, extensive teacher training, and digital classrooms to build strong English proficiency alongside mother tongue fluency. Schemes like Jagananna Amma Vodi (₹15,000 annual incentive to mothers) and Jagananna Vidya Deevena (full fee reimbursement for higher education) ensured access for marginalized students, fostering equity and global readiness. Jagananna Vidya Kanuka provided free kits, while infrastructure upgrades brought smart labs and technology to rural classrooms. For skills, the YSR Skill Development Scheme trained over 10 lakh youth in IT, technical trades, soft skills, and industry-aligned programs through partnerships with global companies. Jagananna Kaushala Vidyalayam in polytechnics and ITIs, along with plans for a YSR Skill University, focused on international standards, innovation, and employability. These efforts aimed to create confident, adaptable individuals capable of working in global industries, starting businesses, or contributing to international knowledge economies.`
+      },
+      {
+        id: 'Support',
+        title: 'Direct Aid',
+        icon: <Coins size={18} />,
+        image: "/education.png",
+        detailStatement: "Removing financial barriers.",
+        metrics: [{label: "Amma Vodi", value: "₹15,000"}, {label: "Full Fee", value: "100% Reimb"}],
+        points: ["Amma Vodi annual support", "Vidya Deevena fee reimbursement", "Vasathi Deevena lodging aid"],
+        description: `Jagan Anna, during his tenure as Chief Minister of Andhra Pradesh (2019–2024), implemented transformative reforms in school education to make it more accessible, quality-driven, and inclusive for every child, particularly those from rural and marginalized communities. He introduced the flagship Jagananna Amma Vodi scheme, providing ₹15,000 annually to mothers for every child attending government schools from Classes 1 to 12, benefiting over 42 lakh mothers and significantly reducing dropout rates by addressing economic barriers. To enhance language proficiency and global competitiveness, he pioneered English-medium education in all government schools from Class 1, supported by bilingual textbooks, extensive teacher training programs, and digital resources. The Jagananna Vidya Kanuka initiative distributed free school kits—including uniforms, notebooks, shoes, belts, and bags—to all government school students annually, while Jagananna Vidyalaya Deevena focused on massive infrastructure upgrades such as smart classrooms, digital labs, modern toilets, drinking water facilities, and compound walls. Mid-day meals were improved with nutritious additions like eggs and milk to boost attendance and health. Teacher recruitment and training were scaled up to support the transition to English-medium instruction. These Navaratnalu-aligned efforts improved enrollment, learning outcomes, and infrastructure, positioning government schools as viable and competitive options. Even after 2024, YSRCP highlights these reforms as Jagan Anna’s enduring legacy for an empowered and equitable school education system in Andhra Pradesh.`
+      },
+      {
+        id: 'Kit',
+        title: 'Vidya Kanuka',
+        icon: <Briefcase size={18} />,
+        image: "/education.png",
+        detailStatement: "Basic needs for every child.",
+        metrics: [{label: "Kits", value: "45 Lakh"}, {label: "Items", value: "7 Types"}],
+        points: ["Bags, Shoes, Uniforms, Books", "Nutritious Mid-day meals", "Free tabs for 8th graders"],
+        description: `Jagan Anna, during his tenure as Chief Minister (2019–2024), introduced comprehensive reforms in higher education to make it more accessible, industry-aligned, flexible, and skill-oriented, ensuring students from all backgrounds could pursue quality degrees and become globally competitive. The flagship Jagananna Vidya Deevena provided full fee reimbursement—including tuition, hostel, mess, books, and other expenses—for students from SC/ST/BC/Minorities and economically backward classes pursuing degree, PG, and professional courses, benefiting over 20 lakh students by removing financial barriers. He implemented curriculum reforms with the Choice-Based Credit System (CBCS), allowing multiple entry/exit options, interdisciplinary learning, and flexible credits to modernize academic programs. The single-minor system was introduced, enabling students to pursue one minor subject alongside their major (e.g., a science student taking management or data analytics as a minor) for broader knowledge and enhanced employability. Mandatory internships were mandated for all UG and PG students, with academic credits awarded and strong industry tie-ups to provide real-world exposure and bridge the academia-industry gap. Industry-oriented courses were promoted in emerging fields like AI, data science, biotechnology, and renewable energy through collaborations with companies, ensuring job-ready graduates. Additionally, Vasthu Deevena (part of Vidya Deevena) offered dedicated support for hostel and mess fees, helping rural and poor students afford residential education without stress. These Navaratnalu-aligned reforms aimed to boost enrollment, reduce dropouts, improve employability, and position Andhra Pradesh’s higher education as globally competitive.`
+      },
+      {
+        id: 'Skills',
+        title: 'Employability',
+        icon: <TrendingUp size={18} />,
+        image: "/education.png",
+        detailStatement: "Job-oriented higher education.",
+        metrics: [{label: "New Univs", value: "2 Nodes"}, {label: "Courses", value: "Job-Ready"}],
+        points: ["Curriculum mapping with industry", "Skill development hubs", "Microsoft certification aid"],
+        description: `Jagan Anna, during his tenure as Chief Minister (2019–2024), envisioned skill development as a critical driver for youth empowerment, unemployment reduction, and making Andhra Pradesh a hub of skilled workforce ready for global opportunities. He launched the YSR Skill Development Scheme, training over 10 lakh youth in IT, technical trades, soft skills, and emerging technologies like AI, data science, and renewable energy through strong industry partnerships. To modernize vocational education, he upgraded over 100 ITIs and polytechnic colleges with state-of-the-art labs, advanced machinery, digital tools, and qualified trainers for hands-on practical training. He initiated plans for a dedicated YSR Skill University to offer specialized degree and diploma programs aligned with international standards, fostering innovation and entrepreneurship. Mandatory internships and apprenticeships were introduced in polytechnics, ITIs, and universities, with academic credits awarded and direct industry linkages for real-world exposure. English proficiency and soft skills training were integrated into all programs to enhance global employability. These Navaratnalu-aligned reforms aimed to bridge the skill gap, boost job placements in manufacturing, IT, and services, and create lakhs of opportunities for youth.`
+      }
     ]
     
   },
@@ -98,7 +175,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#dc2626",
     impactPoints: ["Zero Leakage", "Dignity in Life", "Direct DBT", "No Corruption", "Women Empowerment", "Housing for All", "Pension Security", "Health Safety"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Heart size={18} />, image: "/welfare.png", visionStatement: "Welfare is a right that reaches every home.", points: ["Navaratnalu core foundation", "₹2.55 lakh crore DBT", "Saturation-based delivery"] },
+      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/welfare.png", points: ["Navaratnalu core foundation", "₹2.55 lakh crore DBT", "Saturation-based delivery"] },
       { id: 'Pensions', title: 'Social Security', icon: <Users size={18} />, image: "/welfare.png", detailStatement: "Support for the vulnerable.", metrics: [{label: "Monthly Pension", value: "₹3,000"}, {label: "Beneficiaries", value: "66 Lakh"}], points: ["Old age and widow support", "Disabled pension increase", "Doorstep pension on day one"] },
       { id: 'Housing', title: 'Mega Housing', icon: <Landmark size={18} />, image: "/welfare.png", detailStatement: "Dignity through ownership.", metrics: [{label: "House Sites", value: "31 Lakh"}, {label: "Townships", value: "17,000"}], points: ["Free house sites for poor", "Basic infra in new layouts", "Registry in name of women"] },
       { id: 'Finance', title: 'Livelihoods', icon: <Coins size={18} />, image: "/welfare.png", detailStatement: "Empowering specific sectors.", metrics: [{label: "Cheyutha", value: "₹75,000"}, {label: "Asara", value: "Loan Waiver"}], points: ["YSR Cheyutha for women", "YSR Asara for SHG groups", "Nethanna Nestham for weavers"] }
@@ -113,7 +190,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#0055a5",
     impactPoints: ["Zero Corruption", "24hr Response", "Citizen Power", "Village Growth", "Verified Trust", "Digital Access", "Volunteer Care", "Fast Justice"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Landmark size={18} />, image: "\governance.png", visionStatement: "Governance that respects every citizen's voice.", points: ["Village Secretariat system", "Recruitment of 1.35 lakh youth", "Decentralised administration"] },
+      { id: 'Overview', title: 'Overview', icon: <Landmark size={18} />, image: "\governance.png", points: ["Village Secretariat system", "Recruitment of 1.35 lakh youth", "Decentralised administration"] },
       { id: 'Secretariat', title: 'GSWS System', icon: <Activity size={18} />, image: "\governance.png", detailStatement: "Service at the doorstep.", metrics: [{label: "Services", value: "540+"}, {label: "Units", value: "15,000"}], points: ["No more traveling to district HQ", "Transparent service tracking", "Saturation of benefits"] },
       { id: 'Volunteers', title: 'Volunteer Force', icon: <Users size={18} />, image: "\governance.png", detailStatement: "One person for 50 homes.", metrics: [{label: "Volunteers", value: "2.6 Lakh"}, {label: "Coverage", value: "100% Homes"}], points: ["Doorstep delivery of pensions", "Pandemic crisis management", "Resolving local grievances"] },
       { id: 'Safety', title: 'Disha / Safety', icon: <ShieldCheck size={18} />, image: "\governance.png", detailStatement: "Justice for every woman.", metrics: [{label: "Disha Apps", value: "1 Cr+"}, {label: "Stations", value: "18 Nodes"}], points: ["Disha Act for rapid justice", "Fast-track legal support", "Free sand for housing"] }
@@ -128,7 +205,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#d97706",
     impactPoints: ["Regional Balance", "Air Connectivity", "Road Safety", "Water Security", "New Townships", "Local Jobs", "MSME Support", "Village Infra"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Landmark size={18} />, image: "/infrastructure.png", visionStatement: "Building assets that empower common citizens.", points: ["Balanced regional development", "Infrastructure linked to jobs", "Irrigation for every acre"] },
+      { id: 'Overview', title: 'Overview', icon: <Landmark size={18} />, image: "/infrastructure.png", points: ["Balanced regional development", "Infrastructure linked to jobs", "Irrigation for every acre"] },
       { id: 'Connectivity', title: 'Roads & Air', icon: <TrendingUp size={18} />, image: "/infrastructure.png", detailStatement: "Gatey to the world.", metrics: [{label: "Airports", value: "Bhogapuram"}, {label: "Highways", value: "8,000 KM"}], points: ["International air terminal", "National Highway corridors", "Inter-district bypass roads"] },
       { id: 'Water', title: 'Water Security', icon: <Leaf size={18} />, image: "/infrastructure.png", detailStatement: "Irrigating the future.", metrics: [{label: "Polavaram", value: "Priority"}, {label: "Lift Irrigation", value: "12 Nodes"}], points: ["Accelerated project works", "Rehabilitation of families", "Drinking water in every tap"] },
       { id: 'Housing', title: 'Infrastructure', icon: <Landmark size={18} />, image: "/infrastructure.png", detailStatement: "Building 17,000 Townships.", metrics: [{label: "Units", value: "31 Lakh"}, {label: "Amenities", value: "Full Scale"}], points: ["Underground power & drain", "Schools in every layout", "Community health centers"] }
@@ -143,7 +220,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#475569",
     impactPoints: ["Youth Jobs", "Local Economy", "Zero Migration", "MSME Growth", "State Revenue", "Clean Energy", "Transparent Policy", "Skill Mapping"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Users size={18} />, image: "/growth.png", visionStatement: "Industrialisation must serve the local community.", points: ["Focus on job creation", "Sustainable industrial nodes", "Transparency in approvals"] },
+      { id: 'Overview', title: 'Overview', icon: <Users size={18} />, image: "/growth.png", points: ["Focus on job creation", "Sustainable industrial nodes", "Transparency in approvals"] },
       { id: 'Policy', title: 'Support Policy', icon: <Factory size={18} />, image: "/growth.png", detailStatement: "Ease of doing business.", metrics: [{label: "Single Window", value: "Fast Track"}, {label: "Incentives", value: "Clear Dues"}], points: ["Timely release of incentives", "MSME protection scheme", "Support for local entrepreneurs"] },
       { id: 'Energy', title: 'Green Jobs', icon: <Zap size={18} />, image: "/growth.png", detailStatement: "Powering the next decade.", metrics: [{label: "Green Storage", value: "World Class"}, {label: "Capacity", value: "10 GW"}], points: ["Greenko storage project", "Renewable energy corridor", "Low carbon footprint units"] },
       { id: 'Skills', title: 'Employment', icon: <TrendingUp size={18} />, image: "/growth.png", detailStatement: "Direct Jobs for Youth.", metrics: [{label: "New Jobs", value: "2.0 Lakh"}, {label: "Placements", value: "Skill Based"}], points: ["Local hiring mandates", "Corporate skill partnerships", "Job fairs in every district"] }
@@ -158,7 +235,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#db2777",
     impactPoints: ["Financial Power", "Social Dignity", "Safety Security", "Decision Making", "Health Access", "Girl Education", "SHG Strength", "Legal Justice"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Users size={18} />, image: "/women.png", visionStatement: "Empowered women build empowered nations.", points: ["Household dignity focus", "Safety as top priority", "Economic independence drive"] },
+      { id: 'Overview', title: 'Overview', icon: <Users size={18} />, image: "/women.png", points: ["Household dignity focus", "Safety as top priority", "Economic independence drive"] },
       { id: 'Economics', title: 'Financial Aid', icon: <Coins size={18} />, image: "/women.png", detailStatement: "YSR Asara & Cheyutha.", metrics: [{label: "Cheyutha", value: "₹75,000"}, {label: "Asara", value: "Zero Debt"}], points: ["SHG loan burdens cleared", "Support for women 45-60", "Direct bank transfers"] },
       { id: 'Livelihoods', title: 'New Income', icon: <Briefcase size={18} />, image: "/women.png", detailStatement: "Dairy & Livestock units.", metrics: [{label: "Dairy Units", value: "4.6 Lakh"}, {label: "Paala Velluva", value: "Active"}], points: ["Free cows and buffaloes", "Sheep and goat distribution", "Collection centers for milk"] },
       { id: 'Safety', title: 'Disha Safety', icon: <ShieldCheck size={18} />, image: "/women.png", detailStatement: "Response in 10 minutes.", metrics: [{label: "Disha Apps", value: "1.1 Cr"}, {label: "Stations", value: "Dedicated"}], points: ["Zero tolerance for crimes", "Disha police stations", "Special courts for fast trials"] }
@@ -173,7 +250,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#9333ea",
     impactPoints: ["Zero Inequality", "Total Inclusion", "Dignity for All", "DBT Accuracy", "Equal Opportunity", "Housing Rights", "Social Security", "Admin Justice"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Scale size={18} />, image: "/justice.png", visionStatement: "Uplifting the weakest links of society.", points: ["Discrimination-free delivery", "Constitutional rights focus", "Equitable resource split"] },
+      { id: 'Overview', title: 'Overview', icon: <Scale size={18} />, image: "/justice.png", points: ["Discrimination-free delivery", "Constitutional rights focus", "Equitable resource split"] },
       { id: 'Education', title: 'Future Access', icon: <GraduationCap size={18} />, image: "/justice.png", detailStatement: "Global Ed for everyone.", metrics: [{label: "Fee Reimb", value: "100%"}, {label: "Scholarships", value: "Direct"}], points: ["Vidya Deevena for SC/ST", "English medium Govt schools", "Removal of poverty barrier"] },
       { id: 'Empowerment', title: 'Economics', icon: <TrendingUp size={18} />, image: "/justice.png", detailStatement: "Targeted Livelihood Aid.", metrics: [{label: "Nethanna", value: "₹24,000"}, {label: "Chedodu", value: "Artisans"}], points: ["Aid for weavers & tailors", "Support for washermen", "Street vendor interest-free loans"] },
       { id: 'Representation', title: 'Admin Power', icon: <Landmark size={18} />, image: "/justice.png", detailStatement: "Voice in Governance.", metrics: [{label: "Nominated", value: "50% SC/ST"}, {label: "Secretariats", value: "All Castes"}], points: ["Local youth recruitment", "BC/SC corporation revamp", "Equal share in power"] }
@@ -188,7 +265,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#059669",
     impactPoints: ["Balanced Growth", "Local Admin", "Quick Services", "No Migration", "3 Capital Power", "Dist Empowerment", "Village Focus", "Jobs for All"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Landmark size={18} />, image: "/centra.png", visionStatement: "Development must reach every region.", points: ["Reduction in imbalances", "Government close to people", "Region-specific strategy"] },
+      { id: 'Overview', title: 'Overview', icon: <Landmark size={18} />, image: "/centra.png", points: ["Reduction in imbalances", "Government close to people", "Region-specific strategy"] },
       { id: 'Capitals', title: 'Three Capitals', icon: <Map size={18} />, image: "/centra.png", detailStatement: "Inclusive growth hubs.", metrics: [{label: "Vizag", value: "Executive"}, {label: "Kurnool", value: "Judicial"}], points: ["Visakhapatnam as IT Hub", "Amaravati as Legislative", "Kurnool for legal infra"] },
       { id: 'Districts', title: 'New Districts', icon: <ShieldCheck size={18} />, image: "/centra.png", detailStatement: "Administration at Door.", metrics: [{label: "Districts", value: "26 Nodes"}, {label: "Monitoring", value: "Local"}], points: ["Increased from 13 to 26", "One district per MP seat", "Reduced citizens' travel time"] },
       { id: 'Grassroots', title: 'Village Power', icon: <Users size={18} />, image: "/centra.png", detailStatement: "Decentralised Welfare.", metrics: [{label: "Secretariats", value: "15,000"}, {label: "Clinics", value: "Village"}], points: ["RBKs for village farmers", "Family Doctor system", "Preventive local care"] }
@@ -203,7 +280,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#b91c1c",
     impactPoints: ["Low Mortality", "Free Testing", "Oxygen Supply", "DBT Continuation", "Vaccine Reach", "Village Tracking", "MSME Relief", "Zero Hunger"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Heart size={18} />, image: "/covid.png", visionStatement: "Saving lives is our ultimate priority.", points: ["Humanitarian governance", "Profit-free healthcare", "Comprehensive protection"] },
+      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/covid.png", points: ["Humanitarian governance", "Profit-free healthcare", "Comprehensive protection"] },
       { id: 'Testing', title: 'Free Support', icon: <ShieldCheck size={18} />, image: "/covid.png", detailStatement: "Early detection model.", metrics: [{label: "Tests", value: "60K / Day"}, {label: "Cost Cap", value: "Affordable"}], points: ["Free RT-PCR tests", "Oxygen plants installed", "Black fungus treatment free"] },
       { id: 'Village', title: 'Local Response', icon: <Activity size={18} />, image: "/covid.png", detailStatement: "Tracking every home.", metrics: [{label: "Volunteers", value: "Doorstep"}, {label: "Tracking", value: "Family Dr"}], points: ["Fever surveys by volunteers", "Medicine kits at home", "Bike ambulances for tribals"] },
       { id: 'Welfare', title: 'Unbroken Aid', icon: <Coins size={18} />, image: "/covid.png", detailStatement: "Welfare despite Lockdowns.", metrics: [{label: "Pensions", value: "Contd"}, {label: "MSME Relief", value: "Special"}], points: ["Pensions reached day one", "Amma Vodi paid on time", "Support for small industries"] }
@@ -218,7 +295,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#e11d48",
     impactPoints: ["Zero Med-Debt", "New Med Colleges", "Family Doctor", "Free Eye Care", "Modern Hospitals", "Emergency 108", "Doorstep Tests", "Chronic Support"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <Heart size={18} />, image: "/health.png", visionStatement: "Health is the foundation of happiness.", points: ["Free treatment for poor", "Modernizing Govt hospitals", "Emphasis on prevention"] },
+      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/health.png", points: ["Free treatment for poor", "Modernizing Govt hospitals", "Emphasis on prevention"] },
       { id: 'Arogyasri', title: 'YSR Arogyasri', icon: <ShieldCheck size={18} />, image: "/health.png", detailStatement: "Free till ₹25 Lakh.", metrics: [{label: "Diseases", value: "3,000+"}, {label: "Coverage", value: "90% Pop"}], points: ["Free care in Pvt hospitals", "Cancer & Heart surgeries", "Includes COVID & Black Fungus"] },
       { id: 'Clinics', title: 'Village Clinics', icon: <Activity size={18} />, image: "/health.png", detailStatement: "The Family Doctor.", metrics: [{label: "Clinics", value: "10,000+"}, {label: "Tests", value: "Free Local"}], points: ["Family Dr village visits", "NCD tracking (BP, Sugar)", "Free essential medicines"] },
       { id: 'Medical', title: 'Med Education', icon: <GraduationCap size={18} />, image: "/health.png", detailStatement: "Colleges for All.", metrics: [{label: "New Colleges", value: "17 Nodes"}, {label: "Seats", value: "Double"}], points: ["One college per MP seat", "Infrastructure under Nadu-Nedu", "MBBS for rural students"] }
@@ -233,7 +310,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentHex: "#0284c7",
     impactPoints: ["Strong Markets", "Stable Incomes", "MSME Security", "Investor Trust", "Port Revenue", "Skill Ready", "Crisis Resilience", "State GDP+"],
     tabs: [
-      { id: 'Vision', title: 'Vision', icon: <TrendingUp size={18} />, image: "/economy.png", visionStatement: "Prosperity through people's empowerment.", points: ["Welfare as economic fuel", "Balanced region growth", "Long-term revenue assets"] },
+      { id: 'Overview', title: 'Overview', icon: <TrendingUp size={18} />, image: "/economy.png", points: ["Welfare as economic fuel", "Balanced region growth", "Long-term revenue assets"] },
       { id: 'Markets', title: 'DBT Drive', icon: <Coins size={18} />, image: "/economy.png", detailStatement: "Fueling local consumption.", metrics: [{label: "DBT Infusion", value: "₹2.5L Cr"}, {label: "Market Vel", value: "High"}], points: ["Boost to village shops", "Increased spending power", "Protection from recession"] },
       { id: 'Industry', title: 'Ports & MSME', icon: <Factory size={18} />, image: "/economy.png", detailStatement: "Sustainable production.", metrics: [{label: "Ports", value: "4 Nodes"}, {label: "GIS Summit", value: "Huge Inv"}], points: ["Clearing long pending dues", "Organising global summits", "Support during COVID period"] },
       { id: 'Confidence', title: 'Investor Trust', icon: <Globe size={18} />, image: "/economy.png", detailStatement: "Transparent Governance.", metrics: [{label: "EoDB", value: "#1 Rank"}, {label: "Growth", value: "Double Digit"}], points: ["Online approval systems", "Zero corruption mandate", "Stable policy environment"] }
@@ -378,38 +455,40 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                                 </div>
                             </div>
 
-                            {/* Conditional Statements (Only for non-Blue Economy pillars using Tabs) */}
-                            {details.tabs && (
-                              activeItemId === 'Vision' ? (
-                                <div className={`mb-10 p-7 bg-gradient-to-br ${details.themeColor} rounded-[1.5rem] shadow-xl shadow-blue-100 relative overflow-hidden group w-full`}>
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                                    <p className="text-white font-bold italic text-base lg:text-lg leading-relaxed relative z-10">
-                                      "{(currentItem as PillarTab).visionStatement}"
-                                    </p>
-                                </div>
-                              ) : (currentItem as PillarTab).detailStatement && (
-                                <div className="mb-8 p-6 bg-ysrcp-green/5 rounded-[1.25rem] border-l-8 border-ysrcp-green shadow-sm w-full">
-                                    <p className="text-gray-800 font-bold italic text-sm lg:text-base leading-relaxed">
-                                      "{(currentItem as PillarTab).detailStatement}"
-                                    </p>
-                                </div>
-                              )
+                            {/* Show detailStatement only (vision quotes removed). */}
+                            {details.tabs && (currentItem as PillarTab).detailStatement && (
+                              <div className="mb-8 p-6 bg-ysrcp-green/5 rounded-[1.25rem] border-l-8 border-ysrcp-green shadow-sm w-full">
+                                  <p className="text-gray-800 font-bold italic text-sm lg:text-base leading-relaxed">
+                                    "{(currentItem as PillarTab).detailStatement}"
+                                  </p>
+                              </div>
                             )}
 
+                            {/* Section description (full paragraphs) shown when available */}
+                            {(currentItem as any)?.description ? (
+                              <div className="mb-6">
+                                <div className="p-6 rounded-2xl bg-white border-2 shadow-sm text-gray-800 leading-relaxed" style={{ borderColor: details.accentHex }}>
+                                  {(currentItem as any).description.split('\n\n').map((p: string, i: number) => (
+                                    <p key={i} className="mb-4">{p}</p>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+
                             <div className="flex items-center gap-3 mb-6 w-full">
-                                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-ysrcp-green">Key Initiatives</span>
-                                <div className="flex-1 h-px bg-gray-100"></div>
+                              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-ysrcp-green">Key Initiatives</span>
+                              <div className="flex-1 h-px bg-gray-100"></div>
                             </div>
 
                             <ul className="space-y-6 mb-10 w-full">
-                                {(currentItem?.points || []).map((point, idx) => (
-                                    <li key={idx} className="flex items-start gap-4 text-gray-700 text-base font-bold leading-snug group/item text-left">
-                                        <div className="w-5 h-5 bg-green-50 rounded-full flex items-center justify-center shrink-0 mt-0.5 border border-green-100 group-hover/item:bg-ysrcp-green group-hover/item:text-white transition-all duration-300">
-                                            <Check size={12} />
-                                        </div>
-                                        <span className="group-hover/item:text-gray-900 transition-colors">{point}</span>
-                                    </li>
-                                ))}
+                              {(currentItem?.points || []).map((point, idx) => (
+                                <li key={idx} className="flex items-start gap-4 text-gray-700 text-base font-bold leading-snug group/item text-left">
+                                  <div className="w-5 h-5 bg-green-50 rounded-full flex items-center justify-center shrink-0 mt-0.5 border border-green-100 group-hover/item:bg-ysrcp-green group-hover/item:text-white transition-all duration-300">
+                                    <Check size={12} />
+                                  </div>
+                                  <span className="group-hover/item:text-gray-900 transition-colors">{point}</span>
+                                </li>
+                              ))}
                             </ul>
 
                             {/* Metrics Area (Specific to standard pillars using Tabs) */}
@@ -503,32 +582,7 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                       </div>
                     </div>
 
-                    {/* Exclude Lasting Impact colorful grid for Agriculture (ID 2) as requested */}
-                    {pillar.id !== 2 && (
-                      <div className="max-w-7xl mx-auto w-full px-4">
-                        <div className={`relative pt-12 pb-14 rounded-[3.5rem] overflow-hidden bg-gradient-to-br ${details.themeColor} px-6 md:px-10 shadow-2xl`}>
-                            <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                            <div className="relative z-10">
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                  {details.impactPoints.slice(0, 6).map((point, idx) => {
-                                      const colors = [
-                                          'bg-white/10 border-blue-400/30', 'bg-white/10 border-emerald-400/30', 'bg-white/10 border-amber-400/30',
-                                          'bg-white/10 border-purple-400/30', 'bg-white/10 border-rose-400/30', 'bg-white/10 border-sky-400/30'
-                                      ];
-                                      return (
-                                          <div key={idx} className={`p-6 rounded-[2rem] border backdrop-blur-sm shadow-xl flex flex-col gap-4 transition-all hover:shadow-black/20 hover:-translate-y-1 group ${colors[idx % colors.length]}`}>
-                                              <div className="bg-white/20 w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-inner">
-                                                  <CheckCircle size={20} className="text-white" />
-                                              </div>
-                                              <span className="font-black text-sm lg:text-base leading-tight uppercase tracking-tight text-white">{point}</span>
-                                          </div>
-                                      );
-                                  })}
-                              </div>
-                            </div>
-                        </div>
-                      </div>
-                    )}
+                    {/* Colorful 6-card impact grid removed per request - keep only the small Impact Analysis strip above */}
                   </>
                 )}
                 
