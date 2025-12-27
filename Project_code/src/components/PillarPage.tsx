@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
@@ -33,6 +34,7 @@ interface PillarsPageProps {
 }
 
 const PillarsPage: React.FC<PillarsPageProps> = ({ onBack, onPillarSelect: onPillarSelectProp }) => {
+  const navigate = useNavigate();
   const [selectedPillar, setSelectedPillar] = useState<Pillar | null>(null);
 
   const handlePillarSelect = (pillar: Pillar) => {
@@ -55,7 +57,7 @@ const PillarsPage: React.FC<PillarsPageProps> = ({ onBack, onPillarSelect: onPil
       <div className="flex-1 bg-gray-50 pt-10 pb-20 px-6 animate-fade-in mt-16">
         <div className="max-w-7xl mx-auto">
         <button 
-          onClick={onBack}
+          onClick={() => navigate('/')}
           className="flex items-center gap-2 text-ysrcp-blue font-bold mb-10 hover:gap-3 transition-all uppercase text-sm"
         >
           <ArrowLeft size={20} /> Back to Home
