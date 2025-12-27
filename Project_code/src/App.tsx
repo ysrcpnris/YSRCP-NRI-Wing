@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { AuthProvider, useAuth } from './pages/contexts/AuthContext';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -8,6 +8,7 @@ import Mission from './components/Mission';
 import Initiatives from './components/Initiatives';
 import TenPillars from './components/TenPillar';
 import PillarPage from './components/PillarPage';
+import PillarDetailpage from './components/PillarDetailpage';
 import PillarDetailWrapper from './components/PillarDetailWrapper';
 import Events from './components/Events';
 import News from './components/News';
