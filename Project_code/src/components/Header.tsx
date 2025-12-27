@@ -1,172 +1,134 @@
-import { Menu, X } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import nriLogo from "./nrilogo.png";
-import AuthModal from "./AuthModal";
+import React, { useState } from 'react';
+import { Menu, X, User, LayoutDashboard } from 'lucide-react';
 
-type HeaderProps = {
-  onSignUp?: () => void;
-};
+interface HeaderProps {
+  onRegisterClick: () => void;
+  onLoginClick: () => void;
+  isLoggedIn?: boolean;
+  onDashboardClick?: () => void;
+  onPillarsClick?: () => void; // New callback for screen navigation
+}
 
-export default function Header({ onSignUp }: HeaderProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [openJaganMenu, setOpenJaganMenu] = useState(false);
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
-  const [showAuth, setShowAuth] = useState(false);
+const Header: React.FC<HeaderProps> = ({ 
+  onRegisterClick, 
+  onLoginClick, 
+  isLoggedIn = false, 
+  onDashboardClick,
+  onPillarsClick
+}) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    const handleClickOutside = (event: any) => {
-      if (!event.target.closest(".jagan-dropdown")) {
-        setOpenJaganMenu(false);
-      }
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const scrollToSection = (id: string) => {
-    if (location.pathname !== "/") {
-      navigate("/");
-      setTimeout(() => {
-        const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      }, 400);
-    } else {
-      const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setIsMenuOpen(false);
     }
-    setMobileMenuOpen(false);
+  };
+
+  const handlePillarsClick = () => {
+    if (onPillarsClick) {
+      onPillarsClick();
+      setIsMenuOpen(false);
+    } else {
+      scrollToSection('section-pillars');
+    }
   };
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-md z-50">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+    <header className="sticky top-0 left-0 w-full bg-white/95 backdrop-blur-sm z-50 px-6 py-3 shadow-sm transition-all duration-300 flex justify-between items-center border-b border-gray-100">
+      <div className="text-xl md:text-2xl font-black text-ysrcp-blue flex items-center gap-2 cursor-pointer" onClick={() => window.location.reload()}>
+        <div className="w-8 h-8 bg-ysrcp-blue rounded flex items-center justify-center text-white font-bold text-xs shadow-lg">YSRC</div>
+        <span className="tracking-tight">Global NRI</span>
+      </div>
 
-            {/* Logo */}
-            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate("/")}>
-              <div className="w-10 h-10 rounded-full overflow-hidden">
-                <img src={nriLogo} alt="logo" className="w-full h-full object-cover" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-blue-700">YSRCP NRI Wing</h1>
-                <p className="text-xs text-gray-600">Global Unity, Local Impact</p>
-              </div>
+      {/* Desktop Nav */}
+      <nav className="hidden xl:flex items-center gap-6 font-bold text-xs uppercase tracking-wide">
+        <button onClick={() => scrollToSection('section-2')} className="text-gray-600 hover:text-ysrcp-blue transition-colors hover:bg-blue-50 px-3 py-1 rounded">Our Journey</button>
+        <button onClick={handlePillarsClick} className="text-ysrcp-blue font-black hover:bg-blue-50 px-3 py-1 rounded border border-blue-100">10 Pillars</button>
+        <button onClick={() => scrollToSection('section-3')} className="text-gray-600 hover:text-ysrcp-blue transition-colors hover:bg-blue-50 px-3 py-1 rounded">Services</button>
+        <button onClick={() => scrollToSection('section-4')} className="text-gray-600 hover:text-ysrcp-blue transition-colors hover:bg-blue-50 px-3 py-1 rounded">Jagan Mark</button>
+        <button onClick={() => scrollToSection('section-5')} className="text-gray-600 hover:text-ysrcp-blue transition-colors hover:bg-blue-50 px-3 py-1 rounded">Leader's Message</button>
+        <button onClick={() => scrollToSection('section-6')} className="text-gray-600 hover:text-ysrcp-blue transition-colors hover:bg-blue-50 px-3 py-1 rounded">Links</button>
+        <button onClick={() => scrollToSection('section-7')} className="text-gray-600 hover:text-ysrcp-blue transition-colors hover:bg-blue-50 px-3 py-1 rounded">Gallery</button>
+        
+        <div className="ml-2 flex gap-3">
+          {isLoggedIn ? (
+            <div className="flex items-center gap-3">
+               <button 
+                className="px-4 py-2 bg-blue-50 text-ysrcp-blue font-bold rounded-md hover:bg-blue-100 transition-all uppercase text-xs flex items-center gap-2"
+                onClick={onDashboardClick}
+               >
+                <LayoutDashboard size={16} /> Dashboard
+               </button>
+               <div className="w-8 h-8 bg-ysrcp-green rounded-full flex items-center justify-center text-white font-bold cursor-pointer" onClick={onDashboardClick}>
+                 <User size={16} />
+               </div>
             </div>
-
-            {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-6 font-medium">
-              <button onClick={() => scrollToSection("hero")} className="hover:text-blue-600">Home</button>
-              <button onClick={() => scrollToSection("journey")} className="hover:text-blue-600">About</button>
-              <button onClick={() => scrollToSection('services')} className="hover:text-blue-600">Services</button>
-              <button onClick={() => navigate('/pillars')} className="hover:text-blue-600">Pillars</button>
-
-              {/* Jagan-Mark Dropdown */}
-              <div className="relative jagan-dropdown" onMouseEnter={() => setOpenJaganMenu(true)} onMouseLeave={() => setOpenJaganMenu(false)}>
-                <button onClick={() => scrollToSection('development')} className="font-semibold hover:text-blue-600 flex items-center gap-1">
-                  Jagan-Mark 
-                </button>
-                {/* {openJaganMenu && (
-                  <div className="absolute bg-white shadow-lg rounded-md mt-2 w-48 border z-50">
-                    <div className="relative group">
-                      <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-medium flex justify-between items-center">
-                        Development ▸
-                      </button>
-                      <div className="absolute left-full top-0 bg-white border shadow-md rounded-md w-52 hidden group-hover:block">
-                        <button onClick={() => navigate("/health")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Health</button>
-                        <button onClick={() => navigate("/education")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Education</button>
-                        <button onClick={() => navigate("/agriculture")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Agriculture</button>
-                        <button onClick={() => navigate("/women")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Women Empowerment</button>
-                        <button onClick={() => navigate("/students")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Student / Youth</button>
-                      </div>
-                    </div>
-                    <div className="relative group">
-                      <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-medium flex justify-between items-center">
-                        Welfare ▸
-                      </button>
-                      <div className="absolute left-full top-0 bg-white border shadow-md rounded-md w-64 hidden group-hover:block">
-                        <button onClick={() => navigate('/welfare/amma-vodi')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Amma Vodi</button>
-                        <button onClick={() => navigate('/welfare/vidya-deevena')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Vidya Deevena</button>
-                        <button onClick={() => navigate('/welfare/vasathi-deevena')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Vasathi Deevena</button>
-                        <button onClick={() => navigate('/welfare/nri-connect')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna NRI Connect</button>
-                        <button onClick={() => navigate('/welfare/gorumudda')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Gorumudda</button>
-                        <button onClick={() => navigate('/welfare/cheyutha')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Cheyutha</button>
-                        <button onClick={() => navigate('/welfare/yuvanestham')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Yuvanestham</button>
-                      </div>
-                    </div>
-                    <button onClick={() => navigate("/reforms")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Reforms</button>
-                  </div>
-                )} */}
-              </div>
-
-              <button onClick={() => scrollToSection('glimpse')} className="hover:text-blue-600">Gallery</button>
-
-              {/* Desktop Login/Register Buttons */}
-             <button
-  onClick={() => { setAuthMode("signin"); setShowAuth(true); }}
-  className="bg-blue-600 text-white px-5 py-2 rounded-md font-bold hover:bg-green-500"
->
-  Login
-</button>
-
-<button
-  onClick={() => navigate("/register")}
-  className="bg-blue-600 text-white px-5 py-2 rounded-md font-bold hover:bg-green-500"
->
-  Register
-</button>
-
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-gray-700">
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden py-4 space-y-3 border-t">
-              <button onClick={() => scrollToSection("hero")} className="block w-full text-left py-2">Home</button>
-              <button onClick={() => scrollToSection("journey")} className="block w-full text-left py-2">About</button>
-              <p className="font-semibold text-gray-800 px-2 pt-2">Jagan-Mark</p>
-              {/* <button onClick={() => scrollToSection('development')} className="block w-full text-left py-2 pl-4">Development</button>
-              <button onClick={() => navigate('/welfare')} className="block w-full text-left py-2 pl-4">Welfare</button>
-              <button onClick={() => navigate('/reforms')} className="block w-full text-left py-2 pl-4">Reforms</button> */}
-              <button onClick={() => scrollToSection('services')} className="block w-full text-left py-2">Services</button>
-              <button onClick={() => { navigate('/pillars'); setMobileMenuOpen(false); }} className="block w-full text-left py-2">Pillars</button>
-              <button onClick={() => scrollToSection('glimpse')} className="block w-full text-left py-2">Gallery</button>
-
-              {/* Mobile Login/Register */}
-              <button
-                onClick={() => { setAuthMode("signin"); setShowAuth(true); setMobileMenuOpen(false); }}
-                className="w-full bg-blue-600 text-white py-2 rounded-full font-bold hover:bg-green-500"
+          ) : (
+            <>
+              <button 
+                className="px-5 py-2 border-2 border-ysrcp-blue text-ysrcp-blue font-bold rounded-md hover:bg-ysrcp-blue hover:text-white transition-all uppercase text-xs"
+                onClick={onLoginClick}
               >
                 Login
               </button>
-              <button
-                onClick={() => { navigate("/register"); setMobileMenuOpen(false); }}
-                className="w-full bg-blue-600 text-white py-2 rounded-full font-bold hover:bg-green-500"
+              <button 
+                className="px-5 py-2 bg-ysrcp-green text-white font-bold rounded-md hover:bg-green-700 transition-all uppercase text-xs shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                onClick={onRegisterClick}
               >
                 Register
               </button>
-            </div>
+            </>
           )}
-        </nav>
-      </header>
+        </div>
+      </nav>
 
-      {/* Auth Modal */}
-      {showAuth && (
-        <AuthModal
-          mode={authMode}
-          onClose={() => setShowAuth(false)}
-          onSwitchMode={() => setAuthMode(authMode === "signin" ? "signup" : "signin")}
-        />
+      {/* Mobile Menu Toggle */}
+      <button className="xl:hidden text-ysrcp-blue p-2" onClick={toggleMenu}>
+        {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Mobile Nav */}
+      {isMenuOpen && (
+        <div className="absolute top-full left-0 w-full bg-white border-t shadow-xl flex flex-col p-6 space-y-4 xl:hidden animate-fade-in z-50 h-screen">
+          <button onClick={() => scrollToSection('section-2')} className="text-left text-ysrcp-blue font-bold text-lg border-b pb-2">Our Journey</button>
+          <button onClick={handlePillarsClick} className="text-left text-ysrcp-blue font-black text-lg border-b pb-2">10 Pillars</button>
+          <button onClick={() => scrollToSection('section-3')} className="text-left text-ysrcp-blue font-bold text-lg border-b pb-2">Services</button>
+          <button onClick={() => scrollToSection('section-4')} className="text-left text-ysrcp-blue font-bold text-lg border-b pb-2">Jagan Mark</button>
+          <button onClick={() => scrollToSection('section-5')} className="text-left text-ysrcp-blue font-bold text-lg border-b pb-2">Leader's Message</button>
+          <button onClick={() => scrollToSection('section-6')} className="text-left text-ysrcp-blue font-bold text-lg border-b pb-2">Links</button>
+          <button onClick={() => scrollToSection('section-7')} className="text-left text-ysrcp-blue font-bold text-lg border-b pb-2">Gallery</button>
+          
+          <div className="flex flex-col gap-3 mt-4">
+             {isLoggedIn ? (
+                <button 
+                    className="w-full py-3 bg-ysrcp-blue text-white font-bold rounded uppercase flex items-center justify-center gap-2"
+                    onClick={() => { onDashboardClick && onDashboardClick(); toggleMenu(); }}
+                >
+                    <LayoutDashboard size={18} /> My Dashboard
+                </button>
+             ) : (
+                <>
+                    <button className="w-full py-3 border-2 border-ysrcp-blue text-ysrcp-blue font-bold rounded uppercase" onClick={() => { onLoginClick(); toggleMenu();}}>Login</button>
+                    <button 
+                        className="w-full py-3 bg-ysrcp-green text-white font-bold rounded uppercase shadow-md" 
+                        onClick={() => {
+                            onRegisterClick(); 
+                            toggleMenu();
+                        }}
+                    >
+                        Register
+                    </button>
+                </>
+             )}
+          </div>
+        </div>
       )}
-    </>
+    </header>
   );
-}
+};
+
+export default Header;
