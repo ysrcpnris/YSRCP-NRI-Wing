@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './pages/contexts/AuthContext';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -9,7 +9,6 @@ import Initiatives from './components/Initiatives';
 import TenPillars from './components/TenPillar';
 import PillarPage from './components/PillarPage';
 import PillarDetailWrapper from './components/PillarDetailWrapper';
-import Development from './components/development';
 import Events from './components/Events';
 import News from './components/News';
 import Contact from './components/Contact';
@@ -80,7 +79,7 @@ function MainLandingPage({
       <PoliticalJourney />
       <Initiatives />
       <TenPillars />
-      <Development />
+      {/* <Development /> */}
       <Events />
       <News />
       <Contact setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />
@@ -172,10 +171,9 @@ function AppContent() {
         {/* Pillars Page */}
         <Route path="/pillars" element={<PillarPage onBack={() => window.history.back()} onPillarSelect={() => {}} />} />
         
-        {/* Pillar Detail Wrapper (from direct navigation) */}
+        {/* Pillar Detail Page (from direct navigation) */}
         <Route path="/pillars/:id" element={<PillarDetailWrapper />} />
 
-        
         <Route path="/register" element={<RegisterPage />} />
 
         {/* ADMIN */}
