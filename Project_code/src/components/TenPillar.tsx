@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Globe, Leaf, GraduationCap, HeartHandshake, Landmark, Construction, Factory, Users, Scale, Map, Activity, Heart, TrendingUp } from 'lucide-react';
 
 const PILLARS = [
@@ -6,91 +7,91 @@ const PILLARS = [
     id: 1,
     title: "Blue Economy",
     info: "Ports, shipping, fisheries, aquaculture, coastal trade and marine livelihoods.",
-    image: "https://images.unsplash.com/photo-1520267033929-79316982a39a?q=80&w=800",
+    image: "/blueeconomy.png",
     icon: <Globe className="text-blue-500" />
   },
   {
     id: 2,
     title: "Agricultural Reforms",
     info: "Farmer income security, MSP, irrigation, crop planning and agri exports.",
-    image: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=800",
+    image: "/agricultue.png",
     icon: <Leaf className="text-green-500" />
   },
   {
     id: 3,
     title: "Education, Skill Development & Youth",
     info: "Education reforms, skill universities, employability and youth empowerment.",
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800",
+    image: "/education.png",
     icon: <GraduationCap className="text-indigo-500" />
   },
   {
     id: 4,
     title: "Welfare Architecture",
     info: "Direct Benefit Transfer, pensions, farmer welfare and social security delivery.",
-    image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=800",
+    image: "/welfare.png",
     icon: <HeartHandshake className="text-red-500" />
   },
   {
     id: 5,
     title: "Governance Reforms",
     info: "Village and Ward Secretariats, volunteer system, transparency and citizen-centric service delivery.",
-    image: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=800",
+    image: "/governance.png",
     icon: <Landmark className="text-ysrcp-blue" />
   },
   {
     id: 6,
     title: "Infrastructure Development",
     info: "Roads, housing, water supply, sanitation and public infrastructure.",
-    image: "https://images.unsplash.com/photo-1541888946425-d81bb19480c5?q=80&w=800",
+    image: "/infrastructure.png",
     icon: <Construction className="text-amber-600" />
   },
   {
     id: 7,
     title: "Industrial & Employment Growth",
     info: "Industrial parks, MSMEs, manufacturing, investment facilitation and job creation.",
-    image: "https://images.unsplash.com/photo-1565514020179-026b92b84bb6?q=80&w=800",
+    image: "/growth.png",
     icon: <Factory className="text-slate-600" />
   },
   {
     id: 8,
     title: "Women Empowerment",
     info: "SHGs, entrepreneurship, credit linkage and financial inclusion.",
-    image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=800",
+    image: "/women.png",
     icon: <Users className="text-pink-500" />
   },
   {
     id: 9,
     title: "Social Justice",
     info: "SC, ST, BC, minority welfare and inclusive development.",
-    image: "https://images.unsplash.com/photo-1589216532372-1c2a11f90e4a?q=80&w=800",
+    image: "/justice.png",
     icon: <Scale className="text-purple-600" />
   },
   {
     id: 10,
     title: "Decentralised Development",
     info: "Regional balance, district empowerment and grassroots leadership.",
-    image: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?q=80&w=800",
+    image: "/centra.png",
     icon: <Map className="text-emerald-600" />
   },
   {
     id: 11,
     title: "COVID Crisis Response",
     info: "Saving lives, free treatment, oxygen infrastructure and uninterrupted welfare during the pandemic.",
-    image: "https://images.unsplash.com/photo-1584483766114-2cea6facdf57?q=80&w=800",
+    image: "/covid.png",
     icon: <Activity className="text-red-600" />
   },
   {
     id: 12,
     title: "Healthcare Reforms",
     info: "Free treatment via Arogyasri, medical colleges, and village clinics for strong public health.",
-    image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=800",
+    image: "/health.png",
     icon: <Heart className="text-red-500" />
   },
   {
     id: 13,
     title: "Economic Growth",
     info: "Welfare-led growth putting money in people's hands and strengthening local markets.",
-    image: "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=800",
+    image: "/economy.png",
     icon: <TrendingUp className="text-ysrcp-blue" />
   }
 ];
@@ -100,6 +101,13 @@ interface TenPillarsProps {
 }
 
 const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
+  const navigate = useNavigate();
+
+  const handlePillarClick = (pillar: any) => {
+    onPillarSelect?.(pillar);
+    // Navigate to the pillar details page with the pillar ID
+    navigate(`/pillars/${pillar.id}`);
+  };
   return (
     <section id="section-pillars" className="py-24 px-6 bg-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
@@ -109,12 +117,12 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
           <div className="w-24 h-2 bg-ysrcp-green mx-auto rounded-full"></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 grid-rows-3 gap-4">
           {PILLARS.map((pillar, idx) => {
             return (
               <div 
                 key={idx}
-                onClick={() => onPillarSelect?.(pillar)}
+                onClick={() => handlePillarClick(pillar)}
                 className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 border border-gray-100 shadow-sm hover:shadow-xl h-[300px] hover:scale-[1.02] active:scale-95"
               >
                 {/* Background Image */}
