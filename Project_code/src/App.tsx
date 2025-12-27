@@ -8,7 +8,7 @@ import Mission from './components/Mission';
 import Initiatives from './components/Initiatives';
 import TenPillars from './components/TenPillar';
 import PillarPage from './components/PillarPage';
-import PillarDetailpage from './components/PillarDetailpage';
+// import PillarDetailpage from './components/PillarDetailpage';
 import PillarDetailWrapper from './components/PillarDetailWrapper';
 import Events from './components/Events';
 import News from './components/News';
@@ -19,7 +19,7 @@ import Glimpse from './components/Glimpse';
 import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import SocialMedia from './components/SocialMedia';
-import JaganMark from './components/JaganMark';
+// import JaganMark from './components/JaganMark';
 import PoliticalJourney from './components/PoliticalJourney';
 
 import Health from './pages/Health';
