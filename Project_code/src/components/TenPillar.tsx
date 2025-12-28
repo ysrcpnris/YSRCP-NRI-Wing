@@ -117,7 +117,7 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
           <div className="w-24 h-2 bg-ysrcp-green mx-auto rounded-full"></div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 grid-rows-3 gap-4">
+         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {PILLARS.map((pillar, idx) => {
             return (
               <div 
