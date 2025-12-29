@@ -468,7 +468,7 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                               <div className="mb-6">
                                 <div className="p-6 rounded-2xl bg-white border-2 shadow-sm text-gray-800 leading-relaxed" style={{ borderColor: details.accentHex }}>
                                   {(currentItem as any).description.split('\n\n').map((p: string, i: number) => (
-                                    <p key={i} className="mb-4">{p}</p>
+                                    <p key={i} className="mb-4 text-justify" style={{ textAlign: 'justify' }}>{p}</p>
                                   ))}
                                 </div>
                               </div>
