@@ -345,15 +345,44 @@ export default function AdminDashboard() {
     (async () => {
       setLoading(true);
       setErr("");
-      const { data, error } = await supabase
-        .from(TABLE_NAME)
-        .select(
-          "id, first_name, email, mobile_number, whatsapp_number, profession, country_of_residence, state_abroad, city_abroad, created_at"
-        );
-      if (!active) return;
-      if (error) setErr(error.message);
-      else setRows((data || []) as Row[]);
-      setLoading(false);
+
+      // Supabase/PostgREST commonly caps single requests (often at 1000 rows).
+      // To reliably fetch large datasets we page using `.range()` in batches.
+      const batchSize = 1000;
+      let offset = 0;
+      const allRows: Row[] = [];
+
+      try {
+        while (active) {
+          const { data, error } = await supabase
+            .from(TABLE_NAME)
+            .select(
+              "id, first_name, email, mobile_number, whatsapp_number, profession, country_of_residence, state_abroad, city_abroad, created_at"
+            )
+            .range(offset, offset + batchSize - 1);
+
+          if (!active) return;
+
+          if (error) {
+            setErr(error.message);
+            break;
+          }
+
+          const chunk = (data || []) as Row[];
+          allRows.push(...chunk);
+
+          // If we received fewer than a full batch, we're done
+          if (chunk.length < batchSize) break;
+
+          offset += batchSize;
+        }
+
+        if (active) setRows(allRows);
+      } catch (e: any) {
+        if (active) setErr(e?.message || String(e));
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
     return () => {
       active = false;
