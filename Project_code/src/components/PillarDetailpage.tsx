@@ -173,6 +173,43 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentColor: "red-600",
     accentHex: "#dc2626",
     impactPoints: ["Zero Leakage", "Dignity in Life", "Direct DBT", "No Corruption", "Women Empowerment", "Housing for All", "Pension Security", "Health Safety"],
+    sections: [
+      {
+        title: "Vision",
+        icon: <Heart size={18} />,
+        image: "/welfare.png",
+        points: ["People-first governance", "Inclusive development"],
+        description: `The vision of the Jagananna welfare architecture revolves around a “people-first” governance model inherited from our Mahanetha Dr. YS Rajasekhara Reddy garu. It emphasizes inclusive development, social justice, and the empowerment of marginalized communities through the Navaratnalu framework, treating welfare as a fundamental right rather than charity. The approach focuses on citizen-centric reforms, decentralization through Village and Ward Secretariats, and a saturation model to ensure no eligible beneficiary is excluded, irrespective of caste, creed, or political affiliation. Direct state–citizen engagement is enabled through over 2.6 lakh volunteers delivering doorstep services, supported by data-driven governance and sustained investment in human capital. The overarching objective is to build an equitable welfare state by reducing poverty, enhancing dignity, and ensuring economic security for vulnerable groups such as SC/ST/BCs, minorities, the elderly, persons with disabilities, and women, with technology-driven transparency and efficiency.`
+      },
+      {
+        title: "DBT",
+        icon: <Coins size={18} />,
+        image: "/welfare.png",
+        points: ["₹2.5–2.7 Lakh Cr disbursed", "Aadhaar-linked DBT"],
+        description: `The Jagananna welfare architecture, implemented by the YSRCP government in Andhra Pradesh from 2019 to 2024, disbursed approximately ₹2.5–2.7 lakh crore through Direct Benefit Transfer (DBT) under the Navaratnalu and allied schemes, benefiting nearly 1.4–2 crore households with saturation coverage. Major allocations included ₹90,602 crore for YSR Pension Kanuka, ₹34,378 crore for YSR Rythu Bharosa, ₹26,000 crore for Jagananna Amma Vodi, ₹12,609 crore for Jagananna Vidya Deevena, and ₹19,189 crore for YSR Cheyutha, along with support for housing, health, and livelihood programs. Funds were credited directly into Aadhaar-linked bank accounts, largely in women’s names, ensuring transparency, reducing leakages, and promoting financial inclusion.`
+      },
+      {
+        title: "Saturation",
+        icon: <Users size={18} />,
+        image: "/welfare.png",
+        points: ["Universal coverage", "No eligible beneficiary excluded"],
+        description: `The saturation approach in the Jagananna welfare architecture ensures universal coverage by reaching every eligible beneficiary without caps or exclusions, reflecting the principle of “no one left behind.” Implemented across Navaratnalu, it uses Aadhaar-linked data, household surveys, and digital platforms to cover education, health, agriculture, housing, and social security. Amma Vodi supports all mothers with school-going children; Rythu Bharosa assists small, marginal, and tenant farmers; Vidya and Vasathi Deevena remove fee burdens for backward and EBC students; Pension Kanuka covers eligible elderly, widows, and persons with disabilities; Cheyutha and Asara empower qualifying women and SHGs; Arogyasri provides health cover to low-income families; and Pedalandariki Illu targets over 25 lakh houses, mostly in women’s names.`
+      },
+      {
+        title: "Digital Governance",
+        icon: <Globe size={18} />,
+        image: "/welfare.png",
+        points: ["Spandana, e-Pragati, JnanaBhumi", "AP State FibreNet"],
+        description: `Digital governance under the Jagananna architecture transformed administration by leveraging technology for efficiency, transparency, and last-mile accessibility. Core platforms such as Spandana for grievance redressal, the CM Dashboard for real-time scheme monitoring, JnanaBhumi for education DBTs, and e-Pragati for AI/ML-driven e-governance enabled data-based decision-making. Over 15,000 Village/Ward Secretariats delivered 500+ services, while RBKs supported farmers through kiosks, e-Crop registration, advisories, and procurement tracking.`
+      },
+      {
+        title: "Grievance Redressal",
+        icon: <Info size={18} />,
+        image: "/welfare.png",
+        points: ["Spandana Portal", "1902 CM Call Centre"],
+        description: `Under the Jagananna architecture grievance redressal was streamlined through the Spandana Portal and integrated digital systems to ensure transparent and time-bound resolution. Citizens could lodge complaints via multiple channels—online, Village/Ward Secretariats, police stations, or the 24/7 toll-free 1902 CM Call Centre—each assigned a unique ID with fixed timelines, escalations, and monthly collector reviews. Jagananna Suraksha camps reached about 1.6 crore families at the village level to resolve issues related to documents and scheme access. Supported by 2.6 lakh volunteers and digital feedback loops, the system resolved millions of grievances, reduced delays, improved trust, and enabled faster DBT disbursals.`
+      }
+    ],
     tabs: [
       { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/welfare.png", points: ["Navaratnalu core foundation", "₹2.55 lakh crore DBT", "Saturation-based delivery"] },
       { id: 'Pensions', title: 'Social Security', icon: <Users size={18} />, image: "/welfare.png", detailStatement: "Support for the vulnerable.", metrics: [{label: "Monthly Pension", value: "₹3,000"}, {label: "Beneficiaries", value: "66 Lakh"}], points: ["Old age and widow support", "Disabled pension increase", "Doorstep pension on day one"] },
@@ -181,33 +218,115 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     ]
   },
   5: {
-    fullTitle: "Governance Reforms",
-    subTitle: "Doorstep Governance & Transparent Admin",
-    vision: "Inspired by Gandhiji’s vision of Gram Swarajya, bringing power back to the common man through local secretariats.",
-    themeColor: "from-blue-800 to-ysrcp-blue",
-    accentColor: "ysrcp-blue",
-    accentHex: "#0055a5",
-    impactPoints: ["Zero Corruption", "24hr Response", "Citizen Power", "Village Growth", "Verified Trust", "Digital Access", "Volunteer Care", "Fast Justice"],
+    fullTitle: "Healthcare & Aarogya Andhra Pradesh",
+    subTitle: "Aarogya Andhra Pradesh — Universal, Accessible Care",
+    vision: "Creating an 'Aarogya Andhra Pradesh' where every citizen, especially the poor and marginalised, receives accessible, affordable and high-quality health services without financial hardship.",
+    themeColor: "from-rose-800 to-rose-600",
+    accentColor: "rose-600",
+    accentHex: "#e11d48",
+    impactPoints: ["Universal Health Coverage", "YSR Arogyasri ₹25L", "Village Clinics", "Family Doctor", "Digital Telehealth", "17 New Med Colleges", "Last-mile Services", "COVID Resilience"],
+    sections: [
+      {
+        title: "Vision",
+        icon: <Heart size={18} />,
+        image: "/health.png",
+        points: ["Aarogya Andhra Pradesh", "Health as a right, not charity"],
+        description: `The health care vision under the YSRCP government (2019–2024) centered on creating an "Aarogya Andhra Pradesh" — a state where every citizen, especially the poor and marginalized, receives accessible, affordable, and high-quality health services without financial hardship. Drawing from Dr. YS Rajasekhara Reddy's legacy, it emphasized preventive, curative, and rehabilitative care with saturation coverage, zero out-of-pocket expenses for serious illnesses, and seamless integration of primary, secondary, and tertiary levels. Core principles included universal health coverage, social justice, women-centric delivery, and rural empowerment. Flagship initiatives included expanding YSR Arogyasri to ₹25 lakh cashless coverage, launching YSR Village Clinics, the Family Doctor system, YSR Kanti Velugu, and Jagananna Arogya Suraksha camps. The model treated health as a right, seeking to reduce infant/maternal mortality, control NCDs, and set a national benchmark for inclusive healthcare.`
+      },
+      {
+        title: "Arogyasri",
+        icon: <ShieldCheck size={18} />,
+        image: "/aro.png",
+        points: ["₹25 Lakh cashless cover", "2,500+ network hospitals", "Covers 4.25 crore beneficiaries"],
+        description: `YSR Arogyasri, revamped and expanded under YSRCP (2019–2024), was the cornerstone of health insurance in Andhra Pradesh, providing cashless treatment for serious illnesses to over 4.25 crore beneficiaries. It covered families with incomes below ₹5 lakh, including pre-existing conditions, with an annual limit of ₹25 lakh for thousands of procedures across multiple specialities. Implemented through public–private partnerships with 2,500+ network hospitals, Arogyasri ensured end-to-end cashless services, pre-authorizations, follow-ups, and post-hospitalization care, reducing financial ruin for poor families and markedly improving health equity.`
+      },
+      {
+        title: "Strengthening Health Infrastructure",
+        icon: <Landmark size={18} />,
+        image: "/infrastructure.png",
+        points: ["17 new medical colleges", "Nadu-Nedu upgrades", "10,000+ village clinics"],
+        description: `From 2019 to 2024, the YSRCP government invested heavily to modernize health infrastructure, spending over ₹10,000 crore annually. Major milestones included sanctioning 17 new medical colleges, upgrading 16,000+ facilities under the Nadu-Nedu model, establishing YSR Village Clinics and Family Doctor coverage, and strengthening emergency services including bike ambulances for remote areas. The focus was on bridging rural–urban gaps, improving emergency response, and creating health jobs to build a resilient health ecosystem.`
+      },
+      {
+        title: "Last Mile Health Services",
+        icon: <Users size={18} />,
+        image: "/villageclinic.png",
+        points: ["YSR Village Clinics 24x7", "Family Doctor household care", "Jagananna Arogya Suraksha camps"],
+        description: `Last-mile delivery focused on bringing services to rural and underserved communities. Key elements included YSR Village Clinics (one per village offering 24x7 primary care), the Family Doctor system for household monitoring, and Jagananna Arogya Suraksha camps for doorstep surveys, NCD screening, maternal/child health checks, and referrals. Enhanced ambulance systems and a large volunteer force ensured continuity of care and effective referrals, reducing hospital overload and improving preventive care.`
+      },
+      {
+        title: "Digital Health Care",
+        icon: <Globe size={18} />,
+        image: "/telehealth.png",
+        points: ["Telemedicine hubs", "Arogyasri app integration", "EHR & CM Dashboard"],
+        description: `Digital initiatives transformed service delivery through telehealth (YSR Telemedicine), the Arogyasri app for authorizations and locators, CM Dashboards for monitoring, and digitized records in Village Secretariats. Over 1,000 telemedicine hubs connected rural patients to specialists for real-time consultations, reducing travel costs and hospital crowding while enabling e-prescriptions and follow-ups. Integration with national systems enhanced continuity of care.`
+      },
+      {
+        title: "Managing COVID-19 Crisis",
+        icon: <Activity size={18} />,
+        image: "/covid.png",
+        points: ["Mass testing & beds", "Arogyasri COVID packages", "Vaccination drives"],
+        description: `The YSRCP government managed COVID-19 with a three-tier system for containment, testing, and treatment; ramped up testing, deployed oxygen concentrators and dedicated beds, and included COVID packages in Arogyasri. Vaccination drives achieved high coverage, telehealth was scaled up for non-COVID care, and doorstep services ensured rural reach. The response combined infrastructure, digital tools, and proactive welfare measures to minimize mortality and maintain essential services.`
+      }
+    ],
     tabs: [
-      { id: 'Overview', title: 'Overview', icon: <Landmark size={18} />, image: "\governance.png", points: ["Village Secretariat system", "Recruitment of 1.35 lakh youth", "Decentralised administration"] },
-      { id: 'Secretariat', title: 'GSWS System', icon: <Activity size={18} />, image: "\governance.png", detailStatement: "Service at the doorstep.", metrics: [{label: "Services", value: "540+"}, {label: "Units", value: "15,000"}], points: ["No more traveling to district HQ", "Transparent service tracking", "Saturation of benefits"] },
-      { id: 'Volunteers', title: 'Volunteer Force', icon: <Users size={18} />, image: "\governance.png", detailStatement: "One person for 50 homes.", metrics: [{label: "Volunteers", value: "2.6 Lakh"}, {label: "Coverage", value: "100% Homes"}], points: ["Doorstep delivery of pensions", "Pandemic crisis management", "Resolving local grievances"] },
-      { id: 'Safety', title: 'Disha / Safety', icon: <ShieldCheck size={18} />, image: "\governance.png", detailStatement: "Justice for every woman.", metrics: [{label: "Disha Apps", value: "1 Cr+"}, {label: "Stations", value: "18 Nodes"}], points: ["Disha Act for rapid justice", "Fast-track legal support", "Free sand for housing"] }
+      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/health.png", points: ["Universal care focus", "Prevention & advanced treatment", "Family Doctor system"] },
+      { id: 'Arogyasri', title: 'YSR Arogyasri', icon: <ShieldCheck size={18} />, image: "/aro.png", detailStatement: 'Cashless cover up to ₹25 Lakh for serious illnesses.', metrics: [{label: 'Coverage', value: '4.25 Cr+'}, {label: 'Hospitals', value: '2,500+'}], points: ['Cashless high-cost care', 'Post-hospital follow-up'] },
+      { id: 'Infrastructure', title: 'Health Infra', icon: <Landmark size={18} />, image: "/infrastructure.png", detailStatement: 'New colleges & Nadu-Nedu upgrades.', metrics: [{label: 'Colleges', value: '17+'}, {label: 'Clinics', value: '10,000+'}], points: ['Medical colleges', 'Village Clinics & upgrades'] },
+      { id: 'Digital', title: 'Telehealth', icon: <Globe size={18} />, image: "/telehealth.png", detailStatement: 'Telemedicine & integrated apps.', metrics: [{label: 'Hubs', value: '1,000+'}, {label: 'Consults', value: 'Lakhs/yr'}], points: ['Telemedicine for specialty care', 'Arogyasri app integration'] }
     ]
   },
   6: {
     fullTitle: "Infrastructure Development",
-    subTitle: "People-Centric & Region-Balanced Growth",
-    vision: "Developing infrastructure that directly impacts livelihoods, connected to jobs, housing, and rural markets.",
+    subTitle: "Modern, Inclusive Andhra Pradesh",
+    vision: "Creating a modern, people-centric Andhra Pradesh by prioritizing rapid, high-quality and inclusive infrastructure to drive growth and jobs.",
     themeColor: "from-amber-800 to-amber-600",
     accentColor: "amber-600",
     accentHex: "#d97706",
-    impactPoints: ["Regional Balance", "Air Connectivity", "Road Safety", "Water Security", "New Townships", "Local Jobs", "MSME Support", "Village Infra"],
+    impactPoints: ["Balanced Growth", "Roads & Ports", "Housing for All", "Water Security", "Industrial Parks", "Digital Connectivity", "Green Energy", "Village Access"],
+    sections: [
+      {
+        title: "Vision",
+        icon: <Landmark size={18} />,
+        image: "/infrastructure.png",
+        points: ["Modern, Inclusive Andhra Pradesh", "Saturation & sustainability"],
+        description: `The infrastructure development vision under the Jagan Anna tenure aimed at creating a "Modern, Inclusive Andhra Pradesh" by prioritizing rapid, high-quality, and people-centric infrastructure to drive economic growth, generate employment, and enhance quality of life for rural and urban populations. Inspired by Dr. YS Rajasekhara Reddy’s legacy, it focused on saturation coverage, sustainable practices, women-owned assets, and convergence with welfare schemes. Investments emphasized roads, ports, housing, water supply, urban renewal, industrial corridors, digital connectivity, and social facilities with an aim for balanced regional development and equitable growth.`
+      },
+      {
+        title: "Roads, Ports & Connectivity",
+        icon: <TrendingUp size={18} />,
+        image: "/roads.png",
+        points: ["1.2 lakh km roads", "5,000+ km 4-lane", "Port modernisation"],
+        description: `During the Jagananna era, Andhra Pradesh saw unprecedented infrastructure growth in roads, ports, and connectivity. The government constructed over 1.2 lakh km of roads, including more than 5,000 km of new four-lane highways, 10,000+ km of black-topped village roads, and 2,000+ km of coastal highways. Ports were modernized with investments exceeding ₹20,000 crore, boosting combined cargo capacity and export potential. Projects advanced under Bharatmala and Sagarmala, airport upgrades, and strengthened rural connectivity through Village Secretariats, significantly cutting travel times and creating large numbers of construction and logistics jobs.`
+      },
+      {
+        title: "Housing, Water & Urban Infrastructure",
+        icon: <Map size={18} />,
+        image: "/housing.png",
+        points: ["Pedalandariki Illu: 25 Lakh target", "Mission Bhagiratha: piped water", "Smart Townships & AMRUT"],
+        description: `The administration delivered transformative projects for housing, water, and urban infrastructure. Under Pedalandariki Illu it targeted 25 lakh free houses and completed over 18 lakh by 2024, mostly registered in women's names. Mission Bhagiratha extended piped drinking water to nearly 1.5 crore households. Urban renewal via Smart Cities, AMRUT, PMAY and slum redevelopment improved sanitation, reduced waterborne diseases, and elevated urban living standards across major cities and towns.`
+      },
+      {
+        title: "Industrial & Economic Infrastructure",
+        icon: <Factory size={18} />,
+        image: "/industry.png",
+        points: ["Three industrial corridors", "50+ industrial clusters", "₹15 Lakh Cr MoUs"],
+        description: `The government pursued industrial growth by establishing major corridors and over 50 industrial clusters and mega parks focused on electronics, pharma, textiles, food processing, and defense. It attracted large MoUs, set up SEZs, logistics parks and renewable energy plants, and supported MSMEs through targeted schemes. These efforts created hundreds of thousands of direct jobs, boosted exports, diversified the economy, and built an industrial ecosystem linked to ports and connectivity.`
+      },
+      {
+        title: "Digital & Social Infrastructure",
+        icon: <Globe size={18} />,
+        image: "/digital.png",
+        points: ["AP State FibreNet", "Nadu-Nedu digital schools", "Village Secretariats services"],
+        description: `The era built a strong foundation for digital and social infrastructure: AP State FibreNet connected thousands of villages, SDWAN linked mandals, Village Secretariats delivered 500+ services, and Nadu-Nedu upgraded schools with digital classrooms. Health and social assets—including new medical colleges, village clinics, sports complexes and community halls—expanded access and bridged the digital divide, improving governance transparency and inclusive service delivery.`
+      }
+    ],
     tabs: [
-      { id: 'Overview', title: 'Overview', icon: <Landmark size={18} />, image: "/infrastructure.png", points: ["Balanced regional development", "Infrastructure linked to jobs", "Irrigation for every acre"] },
-      { id: 'Connectivity', title: 'Roads & Air', icon: <TrendingUp size={18} />, image: "/infrastructure.png", detailStatement: "Gatey to the world.", metrics: [{label: "Airports", value: "Bhogapuram"}, {label: "Highways", value: "8,000 KM"}], points: ["International air terminal", "National Highway corridors", "Inter-district bypass roads"] },
-      { id: 'Water', title: 'Water Security', icon: <Leaf size={18} />, image: "/infrastructure.png", detailStatement: "Irrigating the future.", metrics: [{label: "Polavaram", value: "Priority"}, {label: "Lift Irrigation", value: "12 Nodes"}], points: ["Accelerated project works", "Rehabilitation of families", "Drinking water in every tap"] },
-      { id: 'Housing', title: 'Infrastructure', icon: <Landmark size={18} />, image: "/infrastructure.png", detailStatement: "Building 17,000 Townships.", metrics: [{label: "Units", value: "31 Lakh"}, {label: "Amenities", value: "Full Scale"}], points: ["Underground power & drain", "Schools in every layout", "Community health centers"] }
+      { id: 'Overview', title: 'Overview', icon: <Landmark size={18} />, image: "/infrastructure.png", points: ["Modern inclusive vision", "People-centric projects", "Large investment push"] },
+      { id: 'Connectivity', title: 'Roads & Ports', icon: <TrendingUp size={18} />, image: "/roads.png", detailStatement: 'Major expansion in roads, ports and airports.', metrics: [{label: 'Roads', value: '1.2 Lakh KM+'}, {label: 'Ports Capacity', value: '200 MTPA+'}], points: ['Highways, coastal corridors', 'Port modernisation & new terminals'] },
+      { id: 'Housing', title: 'Housing & Water', icon: <Map size={18} />, image: "/housing.png", detailStatement: 'Pedalandariki Illu & Mission Bhagiratha.', metrics: [{label: 'Houses', value: '18 Lakh+ Completed'}, {label: 'Households Water', value: '1.5 Cr+'}], points: ['Free houses for poor', 'Piped drinking water coverage'] },
+      { id: 'Industry', title: 'Industrial Parks', icon: <Factory size={18} />, image: "/industry.png", detailStatement: 'Corridors, clusters and SEZs to boost jobs.', metrics: [{label: 'Clusters', value: '50+'}, {label: 'MoUs', value: '₹15 Lakh Cr+'}], points: ['Mega parks & logistics hubs', 'MSME & export promotion'] },
+      { id: 'Digital', title: 'Digital & Social', icon: <Globe size={18} />, image: "/digital.png", detailStatement: 'FibreNet, SDWAN & Nadu-Nedu scale-up.', metrics: [{label: 'Villages Connected', value: '15,000+'}, {label: 'Schools Upgraded', value: '45,000+'}], points: ['High-speed broadband', 'Digital classrooms & services'] }
     ]
   },
   7: {
@@ -357,11 +476,18 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
     <div className="min-h-screen bg-white animate-fade-in pb-0 font-sans w-full overflow-x-hidden">
       
       {/* 1. Hero Section */}
-      <div className="relative h-[48vh] w-full overflow-hidden">
-        <div className={`w-full h-full bg-gradient-to-br ${details.themeColor}`}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-        
-        <div className="absolute inset-0 flex flex-col justify-end px-4 md:px-12 pb-10">
+      <div className="relative h-[50vh] w-full overflow-hidden">
+        {pillar.id === 1 && (
+          <img
+            src={'/pillarbackground.jpeg'}
+            alt="background"
+            className="absolute inset-0 w-full h-full object-cover opacity-30 z-0"
+          />
+        )}
+        <div className={`absolute inset-0 w-full h-full bg-gradient-to-br ${details.themeColor} z-10`}></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-20"></div>
+
+        <div className="absolute inset-0 flex flex-col justify-end px-4 md:px-12 pb-10 z-30">
            <div className="w-full">
               <button 
                 onClick={onBack}
@@ -397,12 +523,9 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                 <div className="flex flex-col lg:flex-row gap-0 bg-white rounded-[3rem] overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.1)] border border-gray-100 min-h-[600px]">
                   
                   {/* Part A: Navigation Panel (18% width) */}
-                  <div className="w-full lg:w-[18%] bg-gray-50/50 p-8 border-r border-gray-100 flex flex-col gap-2 shrink-0 z-20 relative">
+                  <div className="w-full lg:w-[20%] bg-gray-50/50 p-8 border-r border-gray-100 flex flex-col gap-2 shrink-0 z-20 relative">
                       <div className="absolute top-0 left-0 w-1 h-full bg-ysrcp-blue/5"></div>
-                      <div className="mb-10 px-2">
-                          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] mb-2">Navigation</h3>
-                          <p className="text-xs font-bold text-gray-800">Operational Focus</p>
-                      </div>
+                        {/* Navigation header removed per design: hide 'Navigation' and 'Operational Focus' labels */}
                       <div className="space-y-4">
                         {(details.sections || details.tabs || []).map((item) => {
                           const itemId = (item as PillarTab).id || (item as PillarSection).title;
@@ -436,9 +559,9 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                   </div>
 
                   {/* Part B: Content Area (57% width) */}
-                  <div className="w-full lg:w-[82%] flex flex-col md:flex-row animate-fade-in relative z-10 overflow-hidden">
+                  <div className="w-full lg:w-[100%] flex flex-col md:flex-row items-stretch animate-fade-in relative z-10 overflow-hidden">
                       {currentItem && (
-                        <div className="w-full lg:w-[57%] p-10 lg:p-12 flex flex-col items-start bg-white border-r border-gray-100 relative overflow-hidden">
+                        <div className="w-full lg:w-[80%] p-10 lg:p-1 flex flex-col items-start bg-white border-r border-gray-100 relative overflow-hidden">
                           <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-ysrcp-blue/5 rounded-full blur-3xl pointer-events-none"></div>
 
                           <div className="relative z-10 w-full flex flex-col items-start h-full">
@@ -498,14 +621,13 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
 
                       {/* Part C: Image Panel (43% width) */}
                       {currentItem && (
-                        <div className="w-full lg:w-[36%] relative h-[200px] md:h-auto overflow-hidden bg-gray-900">
-                            <img 
+                        <div className="w-full lg:w-[36%] relative overflow-hidden flex items-stretch self-stretch">
+                            <img
                               key={activeItemId}
-                              src={currentItem.image} 
-                              alt={(currentItem as PillarTab).title || (currentItem as PillarSection).title} 
-                              className="absolute inset-0 w-full h-full object-cover transition-all duration-700 animate-fade-in"
+                              src={currentItem.image}
+                              alt={(currentItem as PillarTab).title || (currentItem as PillarSection).title}
+                              className="w-full h-full object-cover transition-all duration-700 animate-fade-in"
                             />
-                            <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
                             <div className="absolute bottom-6 right-6 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl">
                               <p className="text-white text-[9px] font-black uppercase tracking-widest">Progress Visualized</p>
                             </div>
