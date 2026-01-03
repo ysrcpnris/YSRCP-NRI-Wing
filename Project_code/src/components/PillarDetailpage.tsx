@@ -690,7 +690,7 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
       {/* 1. Hero Section */}
       <div className="relative h-[50vh] w-full overflow-hidden">
         <img
-          src={'/pillarbackground.jpeg'}
+          src={'/Pillarbackground.jpeg'}
           alt="background"
           className="absolute inset-0 w-full h-full object-cover opacity-100 z-0"
         />
