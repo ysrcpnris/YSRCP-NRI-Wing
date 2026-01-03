@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 import { Eye, EyeOff, MapPin } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -89,6 +89,29 @@ export default function RegisterPage() {
     { name: 'Sri Lanka', code: '+94' },
   ];
 
+  // Expected national number lengths (approximate) for validation (digits after country code)
+  const phoneLengths: Record<string, number> = {
+    '+91': 10,
+    '+1': 10,
+    '+44': 10,
+    '+61': 9,
+    '+971': 9,
+    '+966': 9,
+    '+65': 8,
+    '+81': 10,
+    '+82': 9,
+    '+353': 9,
+    '+60': 9,
+    '+852': 8,
+    '+886': 9,
+    '+86': 11,
+    '+92': 10,
+    '+880': 10,
+    '+94': 9,
+    '+358': 9,
+    '+420': 9,
+  };
+
   const professions = ['Job', 'Business', 'Student'];
 
   // Helper function to extract current country code from mobile number
@@ -102,6 +125,8 @@ export default function RegisterPage() {
     }
     return '+91'; // default
   };
+
+  const [phoneError, setPhoneError] = useState('');
 
   const countryData: Record<string, { name: string; cities: string[] }[]> = {
     USA: [
@@ -1108,6 +1133,14 @@ export default function RegisterPage() {
       setError('Password must be at least 6 characters long');
       return;
     }
+    // Validate mobile number length for selected country code
+    const currentCode = getCurrentCountryCode();
+    const numberOnly = formData.mobile_number.slice(currentCode.length);
+    const expected = phoneLengths[currentCode];
+    if (expected && numberOnly.length !== expected) {
+      setError(`Mobile number must be ${expected} digits for ${currentCode}`);
+      return;
+    }
     // if (formData.password !== confirmPassword) {
     //   setError('Passwords do not match');
     //   return;
@@ -1316,32 +1349,55 @@ export default function RegisterPage() {
                       Mobile Number <span className="text-red-500">*</span>
                     </label>
                     <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <select
-                          required
-                          value={getCurrentCountryCode()}
-                          onChange={(e) => {
-                            const newCode = e.target.value;
-                            const numberOnly = formData.mobile_number.replace(/^\+\d+/, '');
-                            setFormData({ ...formData, mobile_number: newCode + numberOnly });
-                          }}
-                          className="w-1/3 px-2 sm:px-3 py-2.5 sm:py-2 text-xs sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          {countryCodes.map((country) => (
-                            <option key={country.code} value={country.code}>
-                              {country.code}
-                            </option>
-                          ))}
-                        </select>
+                      <div className="flex">
+                        <div className="flex items-center border border-gray-300 rounded-l-lg bg-gray-50 px-2">
+                          <select
+                            required
+                            value={getCurrentCountryCode()}
+                            onChange={(e) => {
+                              const newCode = e.target.value;
+                              const prevCode = getCurrentCountryCode();
+                              const numberOnly = formData.mobile_number.slice(prevCode.length);
+                              setFormData({ ...formData, mobile_number: newCode + numberOnly });
+                              // validate on code change
+                              const expected = phoneLengths[newCode];
+                              if (expected && numberOnly.length > 0 && numberOnly.length !== expected) {
+                                setPhoneError(`Mobile number must be ${expected} digits for ${newCode}`);
+                              } else {
+                                setPhoneError('');
+                              }
+                            }}
+                            className="bg-transparent text-sm sm:text-base outline-none px-2 py-2"
+                          >
+                            {countryCodes.map((country) => (
+                              <option key={country.code} value={country.code}>
+                                {country.code}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
                         <input
                           type="tel"
                           required
-                          value={formData.mobile_number}
-                          onChange={(e) => setFormData({ ...formData, mobile_number: e.target.value })}
-                          className="w-2/3 px-2 sm:px-3 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="+911234567890"
+                          value={formData.mobile_number.slice(getCurrentCountryCode().length)}
+                          onChange={(e) => {
+                            const currentCode = getCurrentCountryCode();
+                            let digits = e.target.value.replace(/\D/g, '');
+                            const expected = phoneLengths[currentCode];
+                            if (expected) digits = digits.slice(0, expected);
+                            setFormData({ ...formData, mobile_number: currentCode + digits });
+                            if (expected && digits.length > 0 && digits.length !== expected) {
+                              setPhoneError(`Mobile number must be ${expected} digits for ${currentCode}`);
+                            } else {
+                              setPhoneError('');
+                            }
+                          }}
+                          className="flex-1 px-3 py-2.5 text-sm sm:text-base border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder=" "
                         />
                       </div>
+                      {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
                     </div>
                   </div>
                   <div>

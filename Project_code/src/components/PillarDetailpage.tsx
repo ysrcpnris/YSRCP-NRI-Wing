@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  ArrowLeft, CheckCircle, Anchor, Users, ShieldCheck, TrendingUp, Heart, Leaf, Zap, 
-  Coins, GraduationCap, Award, Landmark, Factory, Scale, Map, Globe, Ship, 
-  BarChart3, Target, Check, Info, Activity, Briefcase 
+import {
+  ArrowLeft, CheckCircle, Anchor, Users, ShieldCheck, TrendingUp, Heart, Building2, Leaf, Zap,
+  Coins, GraduationCap, Award, Landmark, Factory, Scale, Map, Globe, Ship,
+  BarChart3, Target, Check, Info, Activity, Briefcase, Building
 } from 'lucide-react';
 import Footer from './Footer';
 
@@ -260,13 +260,6 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
         image: "/telehealth.png",
         points: ["Telemedicine hubs", "Arogyasri app integration", "EHR & CM Dashboard"],
         description: `Digital initiatives transformed service delivery through telehealth (YSR Telemedicine), the Arogyasri app for authorizations and locators, CM Dashboards for monitoring, and digitized records in Village Secretariats. Over 1,000 telemedicine hubs connected rural patients to specialists for real-time consultations, reducing travel costs and hospital crowding while enabling e-prescriptions and follow-ups. Integration with national systems enhanced continuity of care.`
-      },
-      {
-        title: "Managing COVID-19 Crisis",
-        icon: <Activity size={18} />,
-        image: "/covid.png",
-        points: ["Mass testing & beds", "Arogyasri COVID packages", "Vaccination drives"],
-        description: `The YSRCP government managed COVID-19 with a three-tier system for containment, testing, and treatment; ramped up testing, deployed oxygen concentrators and dedicated beds, and included COVID packages in Arogyasri. Vaccination drives achieved high coverage, telehealth was scaled up for non-COVID care, and doorstep services ensured rural reach. The response combined infrastructure, digital tools, and proactive welfare measures to minimize mortality and maintain essential services.`
       }
     ],
     tabs: [
@@ -337,6 +330,43 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentColor: "slate-600",
     accentHex: "#475569",
     impactPoints: ["Youth Jobs", "Local Economy", "Zero Migration", "MSME Growth", "State Revenue", "Clean Energy", "Transparent Policy", "Skill Mapping"],
+    sections: [
+      {
+        title: "Industries",
+        icon: <Factory size={18} />,
+        image: "/industries.png",
+        points: ["Manufacturing expansion", "IT & knowledge industries", "Renewables & green energy"],
+        description: `Jagan Anna envisioned transforming Andhra Pradesh into a vibrant industrial hub through welfare-linked economic growth. His administration prioritized creating a business-friendly environment with top-tier infrastructure to attract investments in manufacturing, IT, renewables, and more. Key initiatives included industrial corridors, skill development programs, and incentives for sustainable industries. RBI data confirms strong industrial growth (2019-2024), with AP leading South India in manufacturing GVA. Jagan emphasized decentralized industrial hubs for balanced regional progress. His 2019 US visit laid out a roadmap for trade and investments with USIBC. Vision Visakha positioned Visakhapatnam as a growth engine with projects in ports, tourism, and urban development. Overall, his strategy integrated social welfare with economic reforms, registering over 2 lakh new MSMEs and fostering job-oriented industries. This holistic approach aimed to make AP a global knowledge and industrial powerhouse, focusing on equitable and inclusive growth over centralized models.`
+      },
+      {
+        title: "Decentralized Industries",
+        icon: <Map size={18} />,
+        image: "/decentralized.png",
+        points: ["Regional industrial clusters", "Green decentralized energy", "Local value chains"],
+        description: `During Jagan Anna tenure, decentralized industries were a core policy for balanced regional development in Andhra Pradesh. He firmly stated that decentralization was the only way forward, rejecting single-capital models in favor of multi-hub strategies. This included specialized clusters: Rayalaseema as an electronics and automobile hub, Prakasam with major paper mills, and distributed projects such as pumped storage units, cement factories in Anantapur and Kurnool, and electronics ecosystems in Kopparthi and Sri City. RBI data highlights diversified industrial growth, with AP leading South India in manufacturing. Initiatives like Reliance CBG plants exemplified green, decentralized energy projects. His government promoted infrastructure in backward areas, establishing 311 major industries and creating over 1.3 lakh jobs through dispersed investments. This approach focused on equitable wealth distribution and administrative decentralization, including potential multi-capital setups, fostering inclusive growth across new industrial clusters.`
+      },
+      {
+        title: "MoUs & GIS Vizag",
+        icon: <Globe size={18} />,
+        image: "/gis.png",
+        points: ["Large MoUs at GIS 2023", "Cross-sector investments", "Follow-through and implementation"],
+        description: `The Global Investors Summit (GIS) 2023 in Visakhapatnam, under YS Jagan Mohan Reddy, attracted massive investments through MoUs. On day one alone, 92 MoUs worth ₹11.87 lakh crore were signed, projecting 6 million jobs across 20 sectors. Key deals involved NTPC, JSW Group, and others in energy, manufacturing, and infrastructure. By mid-2023, 352 total MoUs were signed, with 100 under implementation, yielding ₹2,739 crore in investments and 6,858 jobs. The IT sector secured 88 MoUs worth ₹44,963 crore. Jagan positioned GIS as a platform for global partnerships, highlighting Andhra Pradesh’s second national ranking in ease of doing business. Post-summit, 38 firms planned operations starting January 2024, boosting renewables, pharma, and more. While not all MoUs materialize, the administration demonstrated strong follow-through, setting a benchmark for subsequent summits.`
+      },
+      {
+        title: "MSME & Local Entrepreneurs",
+        icon: <Briefcase size={18} />,
+        image: "/msme.png",
+        points: ["ReSTART relief package", "2 lakh new MSMEs", "Local supply chain development"],
+        description: `Under Jagan Anna, Andhra Pradesh strongly supported MSMEs and local entrepreneurs. The ReSTART package provided ₹1,110 crore in incentives, benefiting 97,428 units and over 10 lakh employees during COVID. In 2021, ₹1,124 crore was disbursed to MSMEs and spinning mills. Between 2019-2023, over 2 lakh new MSMEs were registered, generating 12.62 lakh jobs. Total MSME units reached 1 lakh, employing 10 lakh people. Initiatives included ₹450 crore initial aid, cluster parks, and integration with larger investments via GIS MoUs. The government promoted local supply chains in textiles, food processing, and more, while encouraging youth entrepreneurship under the “one family, one entrepreneur” vision. These efforts positioned Andhra Pradesh high in ease of doing business for small enterprises, fostering grassroots innovation and economic empowerment.`
+      },
+      {
+        title: "Job Creation",
+        icon: <BarChart3 size={18} />,
+        image: "/jobs.png",
+        points: ["6.16 lakh jobs (2019-2024)", "2.06 lakh permanent govt jobs", "1.3 lakh industrial jobs"],
+        description: `During YS Jagan Mohan Reddy's tenure (2019-2024), Andhra Pradesh witnessed significant job creation totaling over 6.16 lakh opportunities. This included 2.06 lakh permanent government jobs, 37,908 contract roles, and 3.71 lakh outsourcing positions. Industrial growth from 311 major units added 1.3 lakh jobs. RBI data confirms robust manufacturing expansion, with AP leading South India. GIS 2023 MoUs projected 6 million jobs, while MSMEs contributed 12.62 lakh employments through 2 lakh new registrations. Government jobs increased to 2.39 lakh, far surpassing the 34,000 added under the previous regime. Welfare-linked schemes, including 17 new medical colleges, boosted employment in health and infrastructure. The focus on decentralized opportunities ensured diversified job growth across sectors, prioritizing youth employment and inclusive development.`
+      }
+    ],
     tabs: [
       { id: 'Overview', title: 'Overview', icon: <Users size={18} />, image: "/growth.png", points: ["Focus on job creation", "Sustainable industrial nodes", "Transparency in approvals"] },
       { id: 'Policy', title: 'Support Policy', icon: <Factory size={18} />, image: "/growth.png", detailStatement: "Ease of doing business.", metrics: [{label: "Single Window", value: "Fast Track"}, {label: "Incentives", value: "Clear Dues"}], points: ["Timely release of incentives", "MSME protection scheme", "Support for local entrepreneurs"] },
@@ -352,6 +382,43 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentColor: "pink-600",
     accentHex: "#db2777",
     impactPoints: ["Financial Power", "Social Dignity", "Safety Security", "Decision Making", "Health Access", "Girl Education", "SHG Strength", "Legal Justice"],
+    sections: [
+      {
+        title: "Vision",
+        icon: <Users size={18} />,
+        image: "/womenvision.png",
+        points: ["Women-centric governance", "Navaratnalu welfare focus", "Leadership & inclusion"],
+        description: `Jagan Anna made women empowerment the cornerstone of his governance in Andhra Pradesh (2019-2024). He believed that empowering women leads to stronger families and a prosperous society. Under the Navaratnalu framework, over 90% of welfare benefits were directed towards women through innovative schemes like YSR Cheyutha, YSR Aasara, YSR Sunna Vaddi, and Amma Vodi. His administration implemented more than 32 dedicated schemes for women’s progress, including zero-interest loans for Self-Help Groups (SHGs), direct cash transfers, skill training, and entrepreneurship support. Jagan pioneered 50% reservation for women in nominated posts, ensuring their presence in leadership roles across local bodies, corporations, and party structures. This vision focused on economic independence, political inclusion, education, and asset ownership, aiming to create self-reliant, secure, and empowered women across all castes and regions.`
+      },
+      {
+        title: "Economic Independence",
+        icon: <Coins size={18} />,
+        image: "/women_econ.png",
+        points: ["YSR Aasara & Cheyutha", "Zero-interest SHG loans", "Market linkages & MoUs"],
+        description: `YS Jagan’s government placed economic empowerment at the forefront, enabling lakhs of women to earn, save, and control their finances. The flagship YSR Aasara scheme waived outstanding SHG loans with very high recovery rates, freeing women from debt traps. YSR Cheyutha provided ₹75,000 over four years to 23 lakh women, supporting self-employment through MoUs with companies like ITC, Amul, and HUL for training and market access. YSR Sunna Vaddi offered zero-interest loans to SHGs, while other targeted schemes extended support for business ventures. More than ₹1.18 lakh crore in direct financial assistance reached women, transforming them into entrepreneurs and household decision-makers.`
+      },
+      {
+        title: "Reservation & Leadership",
+        icon: <ShieldCheck size={18} />,
+        image: "/women_reservation.png",
+        points: ["50% reservation in nominated posts", "Women in high offices", "Party & institutional inclusion"],
+        description: `YS Jagan Mohan Reddy took bold steps to ensure women’s political and institutional representation. His government legislated 50% reservation for women in nominated posts—a pioneering move that surpassed national norms. Women were encouraged to lead in panchayats, municipalities, corporations, and party structures, breaking traditional barriers and ensuring active participation in decision-making at every level.`
+      },
+      {
+        title: "Education & Skills",
+        icon: <GraduationCap size={18} />,
+        image: "/women_education.png",
+        points: ["Amma Vodi support", "Vidya & Vasathi Deevena", "Skill hubs & Bhavita programs"],
+        description: `Education and skill development formed a critical pillar of Jagan’s women empowerment vision. Amma Vodi provided ₹15,000 annually to mothers of school-going children, reducing dropout rates. Vidya Deevena and Vasathi Deevena reimbursed tuition and hostel fees to mothers' accounts, enabling higher education access. Skill initiatives like Bhavita programs and constituency skill hubs prepared women and girls for employment and entrepreneurship, linking training to industry partnerships.`
+      },
+      {
+        title: "Housing Ownership",
+        icon: <Map size={18} />,
+        image: "/women_housing.png",
+        points: ["House pattas in women’s name", "Pucca houses for poor women", "Generational asset creation"],
+        description: `Under Pedalandariki Illu, YS Jagan’s government distributed house-site pattas and constructed pucca houses registered in women’s names across the state. Over 25 lakh houses and 31.19 lakh house-site pattas were given in women’s names, creating generational wealth, security, and dignity. This measure ensured legal ownership and provided a strong safety net for millions of marginalized women.`
+      }
+    ],
     tabs: [
       { id: 'Overview', title: 'Overview', icon: <Users size={18} />, image: "/women.png", points: ["Household dignity focus", "Safety as top priority", "Economic independence drive"] },
       { id: 'Economics', title: 'Financial Aid', icon: <Coins size={18} />, image: "/women.png", detailStatement: "YSR Asara & Cheyutha.", metrics: [{label: "Cheyutha", value: "₹75,000"}, {label: "Asara", value: "Zero Debt"}], points: ["SHG loan burdens cleared", "Support for women 45-60", "Direct bank transfers"] },
@@ -367,6 +434,43 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     accentColor: "purple-600",
     accentHex: "#9333ea",
     impactPoints: ["Zero Inequality", "Total Inclusion", "Dignity for All", "DBT Accuracy", "Equal Opportunity", "Housing Rights", "Social Security", "Admin Justice"],
+    sections: [
+      {
+        title: "Vision",
+        icon: <Users size={18} />,
+        image: "/social_vision.png",
+        points: ["Inclusive governance", "Navaratnalu uplift", "Service to the last person"],
+        description: `Jagan Anna envisioned social justice as the bedrock of governance during his tenure (2019-2024). His philosophy was to build a society where every citizen enjoys dignity, security, and equal opportunity, irrespective of caste, class, gender, religion, or region. Through the Navaratnalu framework, the government acted as an active enabler to rectify historical injustices, uplift marginalized communities, and ensure development is truly inclusive, equitable, and people-centric. Special focus was given to the poor, backward classes, SCs, STs, minorities, women, and other vulnerable sections. Over 30 welfare schemes delivered direct, transparent benefits to crores of people, bypassing middlemen and corruption. The vision transformed welfare into a powerful tool for social transformation, creating an empathetic, just society where no one is left behind and progress is shared by all.`
+      },
+      {
+        title: "Equality of Opportunity",
+        icon: <GraduationCap size={18} />,
+        image: "/social_equality.png",
+        points: ["Universal education support", "Merit-based recruitment", "Uniform public services"],
+        description: `Jagananna’s vision ensured genuine equality of opportunity by removing barriers so birth or background never decides a person’s future. Key initiatives included Amma Vodi providing ₹15,000 annually to mothers of school-going children, Vidya Deevena and Vasathi Deevena reimbursing tuition and hostel fees directly to mothers’ accounts, and transparent recruitments that filled over 2.06 lakh permanent government jobs with adherence to reservations. Healthcare access expanded with 17 new medical colleges and strengthened YSR Arogyasri, while housing pattas and pensions were delivered directly and uniformly. These measures dismantled systemic inequalities and empowered the underprivileged.`
+      },
+      {
+        title: "Economic Inclusion",
+        icon: <Coins size={18} />,
+        image: "/social_economic.png",
+        points: ["Direct benefit transfers", "Livelihood support", "MSME & skilling push"],
+        description: `Economic inclusion was a cornerstone of Jagananna’s social justice vision, integrating the poor and marginalized into the mainstream economy. Direct benefit transfers totaling over ₹2.5 lakh crore reached beneficiaries through schemes like YSR Cheyutha, YSR Aasara, and YSR Sunna Vaddi. Programs like EBC Nestham and Kapu Nestham extended livelihood support, while over 2 lakh new MSMEs were registered generating 12.62 lakh jobs. Skill hubs and entrepreneurship programs targeted youth from backward communities, promoting self-reliance and financial stability.`
+      },
+      {
+        title: "Inclusive Development",
+        icon: <Map size={18} />,
+        image: "/social_inclusive.png",
+        points: ["Decentralized industrialization", "Regional infrastructure", "Equitable MoU distribution"],
+        description: `Jagananna prioritized inclusive development to ensure growth benefited every region and community, balancing urban-rural and forward-backward areas. Decentralized industrialization created specialized clusters in backward regions, infrastructure was prioritized in neglected districts, and initiatives like the Global Investors Summit sought equitable investments. Multi-capital concepts and regional universities addressed historical disparities, reducing migration and preventing regional imbalances.`
+      },
+      {
+        title: "Dignity & Social Security",
+        icon: <Heart size={18} />,
+        image: "/social_dignity.png",
+        points: ["Enhanced pensions", "Housing pattas in women’s name", "Universal health coverage"],
+        description: `Jagananna guaranteed dignity and social security for the elderly, women, disabled, and vulnerable groups through comprehensive support systems. Pensions were enhanced benefiting millions, Pedalandariki Illu distributed house-site pattas in women’s names creating generational wealth, and YSR Arogyasri expanded health coverage. These measures ensured safety, stability, and respect for vulnerable sections and reinforced the social security net.`
+      }
+    ],
     tabs: [
       { id: 'Overview', title: 'Overview', icon: <Scale size={18} />, image: "/justice.png", points: ["Discrimination-free delivery", "Constitutional rights focus", "Equitable resource split"] },
       { id: 'Education', title: 'Future Access', icon: <GraduationCap size={18} />, image: "/justice.png", detailStatement: "Global Ed for everyone.", metrics: [{label: "Fee Reimb", value: "100%"}, {label: "Scholarships", value: "Direct"}], points: ["Vidya Deevena for SC/ST", "English medium Govt schools", "Removal of poverty barrier"] },
@@ -374,37 +478,84 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
       { id: 'Representation', title: 'Admin Power', icon: <Landmark size={18} />, image: "/justice.png", detailStatement: "Voice in Governance.", metrics: [{label: "Nominated", value: "50% SC/ST"}, {label: "Secretariats", value: "All Castes"}], points: ["Local youth recruitment", "BC/SC corporation revamp", "Equal share in power"] }
     ]
   },
-  10: {
-    fullTitle: "Decentralised Development",
-    subTitle: "Balanced Growth & Power to the People",
-    vision: "Rejecting over-dependence on a single city, ensuring development and jobs reach every corner of Andhra Pradesh.",
-    themeColor: "from-emerald-800 to-emerald-600",
-    accentColor: "emerald-600",
-    accentHex: "#059669",
-    impactPoints: ["Balanced Growth", "Local Admin", "Quick Services", "No Migration", "3 Capital Power", "Dist Empowerment", "Village Focus", "Jobs for All"],
-    tabs: [
-      { id: 'Overview', title: 'Overview', icon: <Landmark size={18} />, image: "/centra.png", points: ["Reduction in imbalances", "Government close to people", "Region-specific strategy"] },
-      { id: 'Capitals', title: 'Three Capitals', icon: <Map size={18} />, image: "/centra.png", detailStatement: "Inclusive growth hubs.", metrics: [{label: "Vizag", value: "Executive"}, {label: "Kurnool", value: "Judicial"}], points: ["Visakhapatnam as IT Hub", "Amaravati as Legislative", "Kurnool for legal infra"] },
-      { id: 'Districts', title: 'New Districts', icon: <ShieldCheck size={18} />, image: "/centra.png", detailStatement: "Administration at Door.", metrics: [{label: "Districts", value: "26 Nodes"}, {label: "Monitoring", value: "Local"}], points: ["Increased from 13 to 26", "One district per MP seat", "Reduced citizens' travel time"] },
-      { id: 'Grassroots', title: 'Village Power', icon: <Users size={18} />, image: "/centra.png", detailStatement: "Decentralised Welfare.", metrics: [{label: "Secretariats", value: "15,000"}, {label: "Clinics", value: "Village"}], points: ["RBKs for village farmers", "Family Doctor system", "Preventive local care"] }
-    ]
-  },
+10: {
+  fullTitle: "Decentralization",
+  subTitle: "Balanced Growth Through People-Centric Governance",
+  vision: "Ensuring equitable development by taking administration, infrastructure, and economic opportunities closer to every citizen across Andhra Pradesh.",
+  themeColor: "from-[#5A2D82] to-ysrcp-blue",
+  accentColor: "ysrcp-blue",
+  accentHex: "#0055a5",
+  impactPoints: [
+    "Balanced Regional Growth",
+    "Reduced Migration",
+    "Grassroots Empowerment",
+    "Local Employment",
+    "Inclusive Development",
+    "Responsive Governance",
+    "Equitable Infrastructure",
+    "People-Centric Administration"
+  ],
+  sections: [
+    {
+      title: "Decentralization Vision",
+      icon: <Globe size={18} />,
+      image: "/decentralization.png",
+      points: [
+        "Equitable regional development",
+        "Development closer to people",
+        "Multi-hub growth model"
+      ],
+      description: `Jagan Anna, championed decentralized development as the key to equitable growth in Andhra Pradesh (2019-2024). His vision was to ensure that progress and opportunities reach every region, not just a few urban centers. By taking development closer to people, districts, mandals, and villages became hubs of economic activity, employment, and service delivery. Through spreading administration, investments, industries, and welfare across the state, the model aimed to reduce regional imbalances, curb rural-urban migration, and minimize inequality. Decentralization strengthened local governance, empowered grassroots institutions, and ensured decisions aligned with local needs. Jagan rejected the single-capital model, advocating for balanced, multi-hub development. His famous statement, “Development should knock at every door,” reflected this commitment. The approach made growth inclusive, sustainable, and people-centric, transforming Andhra Pradesh into a state where prosperity is shared equally across all regions.`
+    },
+    {
+      title: "Administrative Decentralization",
+      icon: <Building size={18} />,
+      image: "/administration.png",
+      points: [
+        "Village/Ward Secretariats",
+        "Volunteer-driven governance",
+        "Direct fund transfers"
+      ],
+      description: `Administrative decentralization was a core pillar of Jagananna’s vision, strengthening districts, mandals, and villages through empowered local institutions. The government established 15,714 Village/Ward Secretariats, bringing administration closer to people. Over 2.7  lakh village and ward volunteers were appointed to deliver services at doorsteps, improving governance efficiency. Field-level institutions were empowered with financial and decision-making authority for better service delivery. Key reforms included direct fund transfers to local bodies, reducing bureaucratic delays. This model ensured transparent, responsive governance, with services like pensions, housing pattas, and health schemes reaching beneficiaries faster. By decentralizing administration, Jagananna made government accountable and accessible, strengthening grassroots democracy and enabling needs-based development across the state.`
+    },
+    {
+      title: "Regional Economic Hubs",
+      icon: <Factory size={18} />,
+      image: "/industries.png",
+      points: [
+        "Multi-region industrial clusters",
+        "Local employment creation",
+        "Balanced economic growth"
+      ],
+      description: `Jagananna focused on creating multiple regional economic hubs to generate local employment and drive balanced growth. Decentralized industrialization established specialized clusters in backward areas: Rayalaseema as an electronics and automobile hub, Prakasam for paper mills, Anantapur and Kurnool for cement factories, and coastal districts for ports and logistics. Over 311 major industries were set up, creating 1.3 lakh jobs. The Global Investors Summit 2023 attracted investments distributed across regions. Agro-clusters and food processing units were promoted in rural districts, while electronics ecosystems grew in Kopparthi and Sri City. This multi-hub approach prevented concentration in a few cities, reduced migration, and boosted local economies. By developing growth centers in every region, Jagananna ensured economic opportunities reached districts and mandals, fostering sustainable regional prosperity.`
+    },
+    {
+      title: "Infrastructure Closer to People",
+      icon: <Building2 size={18} />,
+      image: "/infrastructure.png",
+      points: [
+        "Healthcare in every district",
+        "Housing and irrigation",
+        "Education and digital access"
+      ],
+      description: `Jagananna prioritized building infrastructure closer to people so citizens no longer had to travel far for essential services. The government constructed 17 new medical colleges, enhancing healthcare access in every district. Over 25 lakh pucca houses under Pedalandariki Illu were built in rural areas. Roads, irrigation projects like Polavaram and Handri-Neeva, and drinking water schemes reached remote mandals. Digital connectivity was strengthened with fiber optic networks and digital classrooms. Educational institutions, including skill hubs and regional universities, were established across backward regions. Housing pattas were distributed in women’s names, creating assets locally. This widespread infrastructure development ensured hospitals, colleges, roads, and connectivity were accessible, reducing urban dependence and empowering rural and backward areas with self-sufficiency and better quality of life.`
+    },
+    {
+      title: "Local Participation & Accountability",
+      icon: <Users size={18} />,
+      image: "/participation.png",
+      points: [
+        "Empowered local bodies",
+        "Community monitoring",
+        "Transparent governance"
+      ],
+      description: `Local participation and accountability were integral to Jagananna’s decentralized model. The government empowered panchayats, municipalities, and ward committees with greater roles in planning and implementation. Over 1.3 lakh village/ward volunteers acted as community bridges, ensuring transparency and grievance redressal. Rythu Bharosa Kendras, Rythu Nestham, and SHGs encouraged grassroots involvement in agriculture and livelihoods. People’s participation was fostered through direct benefit transfers, public audits, and community monitoring of schemes. Local bodies were given financial powers and decision-making authority for needs-based development. This approach made governance transparent, responsive, and accountable, ensuring development reflected local aspirations and prevented corruption. By involving communities, Jagananna strengthened grassroots institutions and built trust in the system.`
+    }
+  ]
+},
+
+
   11: {
-    fullTitle: "COVID Crisis Response",
-    subTitle: "Saving Lives, Protecting Families",
-    vision: "Treating the pandemic as a humanitarian crisis, ensuring healthcare and welfare reached every family without interruption.",
-    themeColor: "from-red-900 to-red-700",
-    accentColor: "red-700",
-    accentHex: "#b91c1c",
-    impactPoints: ["Low Mortality", "Free Testing", "Oxygen Supply", "DBT Continuation", "Vaccine Reach", "Village Tracking", "MSME Relief", "Zero Hunger"],
-    tabs: [
-      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/covid.png", points: ["Humanitarian governance", "Profit-free healthcare", "Comprehensive protection"] },
-      { id: 'Testing', title: 'Free Support', icon: <ShieldCheck size={18} />, image: "/covid.png", detailStatement: "Early detection model.", metrics: [{label: "Tests", value: "60K / Day"}, {label: "Cost Cap", value: "Affordable"}], points: ["Free RT-PCR tests", "Oxygen plants installed", "Black fungus treatment free"] },
-      { id: 'Village', title: 'Local Response', icon: <Activity size={18} />, image: "/covid.png", detailStatement: "Tracking every home.", metrics: [{label: "Volunteers", value: "Doorstep"}, {label: "Tracking", value: "Family Dr"}], points: ["Fever surveys by volunteers", "Medicine kits at home", "Bike ambulances for tribals"] },
-      { id: 'Welfare', title: 'Unbroken Aid', icon: <Coins size={18} />, image: "/covid.png", detailStatement: "Welfare despite Lockdowns.", metrics: [{label: "Pensions", value: "Contd"}, {label: "MSME Relief", value: "Special"}], points: ["Pensions reached day one", "Amma Vodi paid on time", "Support for small industries"] }
-    ]
-  },
-  12: {
     fullTitle: "Healthcare Reforms",
     subTitle: "Free Treatment & Preventive Public Health",
     vision: "Transforming healthcare into a basic right through free advanced treatment and village-level diagnostic support.",
@@ -419,21 +570,82 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
       { id: 'Medical', title: 'Med Education', icon: <GraduationCap size={18} />, image: "/health.png", detailStatement: "Colleges for All.", metrics: [{label: "New Colleges", value: "17 Nodes"}, {label: "Seats", value: "Double"}], points: ["One college per MP seat", "Infrastructure under Nadu-Nedu", "MBBS for rural students"] }
     ]
   },
-  13: {
-    fullTitle: "Economic Growth",
-    subTitle: "Welfare-Led Economy & Strong State Growth",
-    vision: "Putting money in people's hands to drive domestic demand and strengthening local rural-urban markets.",
-    themeColor: "from-sky-800 to-sky-600",
-    accentColor: "sky-600",
-    accentHex: "#0284c7",
-    impactPoints: ["Strong Markets", "Stable Incomes", "MSME Security", "Investor Trust", "Port Revenue", "Skill Ready", "Crisis Resilience", "State GDP+"],
-    tabs: [
-      { id: 'Overview', title: 'Overview', icon: <TrendingUp size={18} />, image: "/economy.png", points: ["Welfare as economic fuel", "Balanced region growth", "Long-term revenue assets"] },
-      { id: 'Markets', title: 'DBT Drive', icon: <Coins size={18} />, image: "/economy.png", detailStatement: "Fueling local consumption.", metrics: [{label: "DBT Infusion", value: "₹2.5L Cr"}, {label: "Market Vel", value: "High"}], points: ["Boost to village shops", "Increased spending power", "Protection from recession"] },
-      { id: 'Industry', title: 'Ports & MSME', icon: <Factory size={18} />, image: "/economy.png", detailStatement: "Sustainable production.", metrics: [{label: "Ports", value: "4 Nodes"}, {label: "GIS Summit", value: "Huge Inv"}], points: ["Clearing long pending dues", "Organising global summits", "Support during COVID period"] },
-      { id: 'Confidence', title: 'Investor Trust', icon: <Globe size={18} />, image: "/economy.png", detailStatement: "Transparent Governance.", metrics: [{label: "EoDB", value: "#1 Rank"}, {label: "Growth", value: "Double Digit"}], points: ["Online approval systems", "Zero corruption mandate", "Stable policy environment"] }
-    ]
-  }
+  12: {
+  fullTitle: "Economic Growth",
+  subTitle: "Welfare-Led Economy & Strong State Growth",
+  vision: "Putting money in people's hands to drive domestic demand and strengthening local rural-urban markets.",
+  themeColor: "from-sky-800 to-sky-600",
+  accentColor: "sky-600",
+  accentHex: "#0284c7",
+  impactPoints: [
+    "Strong Markets",
+    "Stable Incomes",
+    "MSME Security",
+    "Investor Trust",
+    "Port Revenue",
+    "Skill Ready Workforce",
+    "Crisis Resilience",
+    "Higher State GDP"
+  ],
+  sections: [
+    {
+      title: "Vision",
+      icon: <TrendingUp size={18} />,
+      image: "/economy.png",
+      points: [
+        "Inclusive, job-led prosperity",
+        "Welfare as economic investment",
+        "Regional equity"
+      ],
+      description: `Jagan Anna envisioned economic growth as inclusive, resilient, and truly people-centric during his tenure in Andhra Pradesh (2019-2024). The core objective was to build a strong economy that generates jobs, raises incomes, and enhances quality of life for every citizen—especially farmers, workers, women, youth, and small entrepreneurs. Growth was not judged solely by GDP figures but by its reach to the common people. His administration balanced welfare with development, strengthened local economies, attracted large-scale investments, and ensured economic progress translated into employment, financial stability, and regional equity. Through the Navaratnalu framework, direct benefits worth over ₹2.5 lakh crore reached the grassroots, while flagship initiatives like the Global Investors Summit 2023, decentralized industrialization, and agricultural reforms drove sustainable, broad-based growth. Jagan emphasized that real development occurs only when prosperity touches every household and region, creating a vibrant, self-reliant Andhra Pradesh.`
+    },
+    {
+      title: "Job-Led Growth",
+      icon: <Briefcase size={18} />,
+      image: "/economy.png",
+      points: [
+        "Focus on employment across sectors",
+        "Skill hubs and MSME growth",
+        "Reduced migration"
+      ],
+      description: `Job-led growth was the cornerstone of Jagananna’s economic vision, prioritizing employment creation across industry, MSMEs, infrastructure, agriculture, and services. His government delivered over 6.16 lakh jobs, including 2.06 lakh permanent government positions, 37,908 contract roles, 3.71 lakh outsourcing positions, and 1.3 lakh from 311 major industrial units. The Global Investors Summit 2023 projected 6 million jobs through MoUs. Over 2 lakh new MSMEs were registered, generating 12.62 lakh employments. Skill hubs in every constituency and industry partnerships equipped youth for jobs. Decentralized industrial clusters in backward areas ensured opportunities reached rural and local youth, reducing migration. Transparent, reservation-based recruitment and self-employment schemes like Cheyutha and Aasara further empowered women and marginalized groups.`
+    },
+    {
+      title: "Investment & Industrial Development",
+      icon: <Globe size={18} />,
+      image: "/economy.png",
+      points: [
+        "Large-scale MoUs and industrial hubs",
+        "Single-window clearances and incentives",
+        "Port-led infrastructure"
+      ],
+      description: `Jagananna aggressively pursued domestic and global investments to fuel industrial development. Andhra Pradesh improved its ease of doing business ranking to second nationally. The landmark Global Investors Summit 2023 in Visakhapatnam attracted 352 MoUs worth ₹11.87 lakh crore on day one, covering energy, manufacturing, IT, renewables, pharma, and more. Key projects included industrial parks, ports, logistics hubs, and sector-specific clusters like Sri City and Kopparthi for electronics. Decentralized industrialization placed hubs in backward regions—Rayalaseema for electronics and automobiles, Prakasam for paper mills—establishing 311 major industries and creating 1.3 lakh jobs. Single-window clearances, incentives, and infrastructure support made the state investor-friendly.`
+    },
+    {
+      title: "Strengthening Agriculture & Rural Economy",
+      icon: <Leaf size={18} />,
+      image: "/economy.png",
+      points: [
+        "Direct farmer support and irrigation",
+        "Value addition and market access",
+        "Rural infrastructure and housing"
+      ],
+      description: `Strengthening agriculture and the rural economy was a priority to ensure rural prosperity. Farmers received direct income support through YSR Rythu Bharosa (₹13,500 per annum per farmer), free borewells, and zero-interest crop loans. Major irrigation projects like Polavaram, Handri-Neeva, and others were accelerated, benefiting lakhs of acres. Value addition and food processing were promoted through clusters and MoUs with companies like Amul, ITC, and Hindustan Unilever. Market access improved via Rythu Bharosa Kendras, e-markets, and procurement centers. Rural infrastructure—roads, electricity, housing (Pedalandariki Illu), and drinking water—was enhanced, creating a resilient rural economy where agriculture became profitable, sustainable, and a driver of overall growth.`
+    },
+    {
+      title: "Inclusive & Balanced Growth",
+      icon: <Users size={18} />,
+      image: "/economy.png",
+      points: [
+        "Decentralized development and regional equity",
+        "Welfare targeted to vulnerable groups",
+        "MSME and entrepreneurship support"
+      ],
+      description: `Jagananna ensured inclusive and balanced growth by extending benefits to backward regions and vulnerable communities, reducing inequality and building long-term economic stability. Decentralized development placed industries, universities, skill hubs, and infrastructure in neglected areas like Rayalaseema and north coastal districts. The multi-capital concept addressed historical regional imbalances. Over 90% of welfare benefits targeted women, SC/ST/BC/minorities, and the poor. MSMEs and entrepreneurship programs empowered grassroots economies, while GIS 2023 investments were distributed equitably. Uniform implementation of schemes like Amma Vodi, Cheyutha, and housing prevented urban-rural divides. This approach reduced migration, bridged regional gaps, and created equitable prosperity, ensuring no region or community was left behind in Andhra Pradesh’s journey toward sustainable economic progress.`
+    }
+  ]
+},
+
 };
 
 interface PillarDetailPageProps {
@@ -477,15 +689,13 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
       
       {/* 1. Hero Section */}
       <div className="relative h-[50vh] w-full overflow-hidden">
-        {pillar.id === 1 && (
-          <img
-            src={'/pillarbackground.jpeg'}
-            alt="background"
-            className="absolute inset-0 w-full h-full object-cover opacity-30 z-0"
-          />
-        )}
-        <div className={`absolute inset-0 w-full h-full bg-gradient-to-br ${details.themeColor} z-10`}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-20"></div>
+        <img
+          src={'/pillarbackground.jpeg'}
+          alt="background"
+          className="absolute inset-0 w-full h-full object-cover opacity-100 z-0"
+        />
+        <div className={`absolute inset-0 w-full h-full bg-gradient-to-br ${details.themeColor} opacity-50 z-10`}></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-20"></div>
 
         <div className="absolute inset-0 flex flex-col justify-end px-4 md:px-12 pb-10 z-30">
            <div className="w-full">
@@ -561,7 +771,7 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                   {/* Part B: Content Area (57% width) */}
                   <div className="w-full lg:w-[100%] flex flex-col md:flex-row items-stretch animate-fade-in relative z-10 overflow-hidden">
                       {currentItem && (
-                        <div className="w-full lg:w-[80%] p-10 lg:p-1 flex flex-col items-start bg-white border-r border-gray-100 relative overflow-hidden">
+                        <div className="w-full lg:w-[80%] p-8 lg:p-12 flex flex-col items-start bg-white border-r border-gray-100 relative overflow-hidden">
                           <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-ysrcp-blue/5 rounded-full blur-3xl pointer-events-none"></div>
 
                           <div className="relative z-10 w-full flex flex-col items-start h-full">

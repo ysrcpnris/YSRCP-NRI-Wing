@@ -23,9 +23,8 @@ const PILLARS_DATA: Pillar[] = [
   { id: 8, title: "Women Empowerment", info: "SHGs, credit linkage, entrepreneurship and financial inclusion.", image: "/women.png" },
   { id: 9, title: "Social Justice", info: "SC, ST, BC, minority welfare, inclusive policies and equal opportunity.", image: "/justice.png" },
   { id: 10, title: "Decentralised Development", info: "Regional balance, district empowerment and grassroots leadership.", image: "/centra.png" },
-  { id: 11, title: "COVID Crisis Response", info: "Saving lives, free treatment, oxygen infrastructure and uninterrupted welfare.", image: "/covid.png" },
-  { id: 12, title: "Healthcare Reforms", info: "Free treatment via Arogyasri, medical colleges, and village clinics for strong public health.", image: "/health.png" },
-  { id: 13, title: "Economic Growth", info: "Welfare-led growth putting money in people's hands and strengthening local markets.", image: "/economy.png" }
+  { id: 11, title: "Healthcare Reforms", info: "Free treatment via Arogyasri, medical colleges, and village clinics for strong public health.", image: "/health.png" },
+  { id: 12, title: "Economic Growth", info: "Welfare-led growth putting money in people's hands and strengthening local markets.", image: "/economy.png" }
 ];
 
 interface PillarsPageProps {

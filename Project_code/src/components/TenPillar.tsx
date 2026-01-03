@@ -75,20 +75,13 @@ const PILLARS = [
   },
   {
     id: 11,
-    title: "COVID Crisis Response",
-    info: "Saving lives, free treatment, oxygen infrastructure and uninterrupted welfare during the pandemic.",
-    image: "/covid.png",
-    icon: <Activity className="text-red-600" />
-  },
-  {
-    id: 12,
     title: "Healthcare Reforms",
     info: "Free treatment via Arogyasri, medical colleges, and village clinics for strong public health.",
     image: "/health.png",
     icon: <Heart className="text-red-500" />
   },
   {
-    id: 13,
+    id: 12,
     title: "Economic Growth",
     info: "Welfare-led growth putting money in people's hands and strengthening local markets.",
     image: "/economy.png",
@@ -117,7 +110,7 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
           <div className="w-24 h-2 bg-ysrcp-green mx-auto rounded-full"></div>
         </div>
 
-         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {PILLARS.map((pillar, idx) => {
             return (
               <div 
