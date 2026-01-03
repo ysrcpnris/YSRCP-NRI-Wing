@@ -1735,15 +1735,8 @@ const handleSaveProfile = async () => {
     const fullName =
       (document.getElementById("fullName") as HTMLInputElement)?.value || "";
 
-    const email =
-      (document.getElementById("email") as HTMLInputElement)?.value || "";
-
     const mobile_number =
       (document.getElementById("mobile_number") as HTMLInputElement)?.value || "";
-
-const profession =
-  (document.getElementById("profession") as HTMLSelectElement)?.value || "";
-
 
     const facebook =
       (document.getElementById("facebook") as HTMLInputElement)?.value || "";
@@ -1756,44 +1749,40 @@ const profession =
 
     const instagram =
       (document.getElementById("instagram") as HTMLInputElement)?.value || "";
-
 const nameParts = fullName.trim().split(/\s+/);
 
 const first_name = nameParts[0];
 const last_name =
   nameParts.length > 1
     ? nameParts.slice(1).join(" ")
-    : null; // ✅ FIX
+    : ""; 
 
-
-const updates: any = {
-  first_name,
-  last_name,
-  email,
-  mobile_number,
-  profession,
-
- indian_state: indianState,
-district: district,
-mandal: mandal,
-assembly_constituency: assembly,
-
-
-  facebook_id: facebook,
-  twitter_id: twitter,
-  linkedin_id: linkedin,
-  instagram_id: instagram,
-
-  updated_at: new Date().toISOString(),
-};
-
+   
+    const updates = {
+      first_name,
+      last_name,
+      mobile_number,
+      profession, // ✅ FROM STATE
+      indian_state: indianState,
+      district,
+      mandal,
+      assembly_constituency: assembly,
+      facebook_id: facebook,
+      twitter_id: twitter,
+      linkedin_id: linkedin,
+      instagram_id: instagram,
+      updated_at: new Date().toISOString(),
+    };
 
     const { error } = await supabase
       .from("profiles")
       .update(updates)
       .eq("id", user.id);
 
-    if (error) throw error;
+    if (error) {
+      console.error("PROFILE UPDATE ERROR:", error);
+      throw error;
+    }
 
     await refreshProfile();
     showToast("Profile Updated Successfully!", "success");
