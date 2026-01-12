@@ -581,21 +581,25 @@ const handleSubmit = async (e: React.FormEvent) => {
     throw new Error("Login successful but user not available");
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
+const { data: profile, error: profileError } = await supabase
+  .from("profiles")
+  .select("role")
+  .eq("id", user.id)
+  .single();
 
-  if (profileError) throw profileError;
+if (profileError) throw profileError;
 
-  onClose();
+onClose();
 
-  if (profile?.role === "admin") {
-    navigate("/admin/dashboard");
-  } else {
-    navigate("/dashboard");
-  }
+if (profile?.role === "admin") {
+  localStorage.setItem("is_admin", "true"); // ✅ REQUIRED
+  navigate("/admin/dashboard");
+} else {
+  localStorage.removeItem("is_admin");
+  navigate("/dashboard");
+}
+
+
 
   return;
 }

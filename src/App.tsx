@@ -1,3 +1,5 @@
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -40,7 +42,7 @@ import LiveStreamPage from './pages/LiveStream';
 import RegisterPage from './pages/RegisterPage';
 
 // ✅ ADMIN
-import AdminLogin from './AdminDashboard/AdminLogin';
+// import AdminLogin from './AdminDashboard/AdminLogin';
 import AdminDashboard from './AdminDashboard/AdminDashboard';
 import AdminRoute from './routes/AdminRoute';
 
@@ -104,8 +106,20 @@ function MainLandingPage({
 }
 function AppContent() {
   const { loading } = useAuth();
+  const location = useLocation(); // ✅ ADD
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("signin");
+
+  useEffect(() => {
+  if (location.state?.openLogin) {
+    setAuthMode("signin");
+    setShowAuthModal(true);
+
+    // prevent modal reopening on refresh
+    window.history.replaceState({}, document.title);
+  }
+}, [location.state]);
+
 
   if (loading) {
     return (
@@ -178,8 +192,16 @@ function AppContent() {
         <Route path="/register" element={<RegisterPage />} />
 
         {/* ADMIN */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        
+        <Route
+  path="/admin/dashboard"
+  element={
+    <AdminRoute>
+      <AdminDashboard />
+    </AdminRoute>
+  }
+/>
+
         <Route
           path="/admin"
           element={
