@@ -969,7 +969,7 @@ type SectionKey =
   | 'connect'
   | 'services'
   | 'events'
-  | 'notifications'
+ // | 'notifications'
   | 'suggestions';
 
 
@@ -990,23 +990,26 @@ type Leader = {
   sort_order: number | null;
   is_active: boolean | null;
 };
-
-
 type EventItem = {
-  id: number;
-  title: string;
-  event_date: string; // ISO date string
-  city: string | null;
-  status: string | null; // e.g. "Upcoming"
+  id: string;          // uuid
+  title: React.ReactNode;
+
+  info: string | null; // admin message
+  status: string;      // Draft | Sent
+  created_at: string;
 };
 
-type NotificationItem = {
-  id: number;
-  title: string;
-  body: string | null;
-  created_at: string;
-  is_read: boolean;
-};
+
+
+// NOTIFICATIONS DISABLED
+// type NotificationItem = {
+//   id: number;
+//   title: string;
+//   body: string | null;
+//   created_at: string;
+//   is_read: boolean;
+// };
+
 const Dashboard: React.FC = () => {
   const { user, refreshProfile, profile, signOut } = useAuth();
 // ---------------- AUTH GUARD (AFTER HOOKS) ----------------
@@ -1016,6 +1019,8 @@ if (!user) {
 }
   const [expandedSection, setExpandedSection] =
     useState<SectionKey | null>("profile");
+    const [eventsSeen, setEventsSeen] = useState(false);
+
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [activeReferralCount, setActiveReferralCount] = useState<number>(0);
 
@@ -1108,8 +1113,8 @@ useEffect(() => {
   const [passiveReferrals, setPassiveReferrals] = useState<Referral[]>([]);
   const [leaders, setLeaders] = useState<Leader[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
-  const [notifications, setNotifications] =
-    useState<NotificationItem[]>([]);
+  //const [notifications, setNotifications] =
+    //useState<NotificationItem[]>([]);
 
   const [submittingSuggestion, setSubmittingSuggestion] = useState(false);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
@@ -1149,10 +1154,18 @@ useEffect(() => {
   ) => {
     setToast({ msg, type });
   };
+const toggleSection = (section: SectionKey) => {
+  setExpandedSection((prev) => {
+    const next = prev === section ? null : section;
 
-  const toggleSection = (section: SectionKey) => {
-    setExpandedSection((prev) => (prev === section ? null : section));
-  };
+    if (section === "events") {
+      setEventsSeen(true); // 👁 user opened Events
+    }
+
+    return next;
+  });
+};
+
 
 const handleSubmitService = async () => {
   const message = serviceMessageRef.current?.value.trim() || "";
@@ -1418,24 +1431,30 @@ if (!error) {
       // =======================
       // 3. EVENTS
       // =======================
-      const { data: eventsData } = await supabase
-        .from("events")
-        .select("*")
-        .order("event_date", { ascending: true });
+  const { data: eventsData, error: eventsError } = await supabase
+  .from("events")
+  .select("id, title, info, status, created_at")
+  .eq("status", "Sent")
+  .order("created_at", { ascending: false });
 
-      if (eventsData) setEvents(eventsData as EventItem[]);
+if (eventsError) {
+  console.error("Events fetch error:", eventsError);
+} else {
+  setEvents(eventsData as EventItem[]);
+}
+
 
       // =======================
       // 4. NOTIFICATIONS
       // =======================
-      const { data: notifData } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("referrer_id", profile.id)
+      //const { data: notifData } = await supabase
+        //.from("notifications")
+        //.select("*")
+        //.eq("referrer_id", profile.id)
 
-        .order("created_at", { ascending: false });
+        //.order("created_at", { ascending: false });
 
-      if (notifData) setNotifications(notifData as NotificationItem[]);
+      //if (notifData) setNotifications(notifData as NotificationItem[]);
     } finally {
       setLoadingDashboard(false);
     }
@@ -1443,6 +1462,18 @@ if (!error) {
 
   loadDashboard();
 }, [user]);
+const isNewEvent = (createdAt: string) => {
+  const now = new Date();
+  const created = new Date(createdAt);
+
+  const diffHours =
+    (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+
+  return diffHours <= 24; // new if within 24 hours
+};
+const hasNewEvents = events.some(
+  (e) => isNewEvent(e.created_at)
+);
 
   // Helper to format dates like "Jan 12, 2025"
   const formatDate = (iso: string) => {
@@ -1484,7 +1515,7 @@ const referralLink =
 
 
 
-  const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
+ // const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
 
 
 
@@ -1682,51 +1713,49 @@ const renderConnectSummary = () => (
       </div>
     </div>
   );
+const renderEventsSummary = () => {
+  const latest = events[0];
 
-  const renderEventsSummary = () => {
-    const nextEvent = events[0];
-    const monthDay = nextEvent ? getMonthDay(nextEvent.event_date) : null;
-
-    return (
-      <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
-        {nextEvent ? (
-          <>
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-center min-w-[36px]">
-                <span className="block text-[9px] font-black uppercase">
-                  {monthDay?.month}
-                </span>
-                <span className="block text-xs font-black leading-none">
-                  {monthDay?.day}
-                </span>
-              </div>
-              <div>
-                <span className="block text-xs font-bold text-gray-800">
-                  {nextEvent.title}
-                </span>
-              </div>
+  return (
+    <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
+      {latest ? (
+        <>
+          <div className="flex items-center gap-3">
+            <div className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-center min-w-[36px]">
+              <span className="block text-[9px] font-black uppercase">
+                {formatDate(latest.created_at)}
+              </span>
             </div>
-            <div className="text-[10px] font-bold text-white bg-pink-500 px-2 py-0.5 rounded-full">
-              {nextEvent.status || 'Upcoming'}
+            <div>
+              <span className="block text-xs font-bold text-gray-800">
+                {latest.title}
+              </span>
             </div>
-          </>
-        ) : (
-          <div className="text-xs text-gray-500">No upcoming events yet.</div>
-        )}
-      </div>
-    );
-  };
-
-  const renderNotificationsSummary = () => (
-    <div className="w-full mt-1 flex items-center justify-between opacity-90">
-      <div className="flex items-center gap-2">
-        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-          {unreadNotificationsCount}
-        </span>
-        <span className="text-xs text-gray-500 font-medium">Unread updates</span>
-      </div>
+          </div>
+        
+        </>
+      ) : (
+        <div className="text-xs text-gray-500">No updates yet.</div>
+      )}
     </div>
   );
+};
+
+
+ //  NOTIFICATIONS DISABLED
+// const renderNotificationsSummary = () => (
+//   <div className="w-full mt-1 flex items-center justify-between opacity-90">
+//     <div className="flex items-center gap-2">
+//       <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+//         {unreadNotificationsCount}
+//       </span>
+//       <span className="text-xs text-gray-500 font-medium">
+//         Unread updates
+//       </span>
+//     </div>
+//   </div>
+// );
+
 
 const handleSaveProfile = async () => {
   if (!user) return;
@@ -2727,54 +2756,55 @@ const handleSubmitSuggestion = async () => {
     )}
   </div>
 );
+const renderEventsContent = () => (
+  <div className="pt-4">
+    {events.length === 0 ? (
+      <div className="text-xs text-gray-500">No events or notifications.</div>
+    ) : (
+      events.map((event) => (
+        <div
+          key={event.id}
+          className={`rounded-xl border p-4 mb-3 ${
+            event.status === "Sent"
+              ? "bg-red-50 border-red-200"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex justify-between items-start">
+            <h4 className="font-bold text-sm text-gray-900">
+              {event.title}
+            </h4>
+            <span className="text-[10px] font-bold text-gray-500">
+              {formatDate(event.created_at)}
+            </span>
+          </div>
 
+          {event.info && (
+            <p className="text-xs text-gray-600 mt-1">
+              {event.info}
+            </p>
+          )}
 
-  const renderEventsContent = () => (
-    <div className="pt-4 ">
-      {events.length === 0 ? (
-        <div className="text-xs text-gray-500">No events found.</div>
-      ) : (
-        events.map((event) => {
-          const md = getMonthDay(event.event_date);
-          return (
-            <div
-              key={event.id}
-              className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 hover:shadow-md transition-all cursor-pointer group"
-            >
-              <div className="bg-gray-900 text-white w-16 h-16 rounded-lg flex flex-col items-center justify-center shrink-0 group-hover:bg-pink-600 transition-colors">
-                <span className="text-[9px] font-black uppercase">{md.month}</span>
-                <span className="text-2xl font-black leading-none">{md.day}</span>
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-sm text-gray-900 leading-tight mb-1">
-                  {event.title}
-                </h4>
-                <p className="text-[10px] font-bold text-gray-500 flex items-center gap-1">
-                  <MapPin size={10} /> {event.city || 'TBA'}
-                </p>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  showToast('RSVP Confirmed!');
-                }}
-                className="px-4 py-1.5 border-2 border-gray-100 text-gray-600 font-bold text-[10px] rounded hover:bg-gray-50 transition-colors uppercase tracking-wide"
-              >
-                RSVP
-              </button>
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
+         
+        </div>
+      ))
+    )}
+  </div>
+);
+
 const renderSuggestionsContent = () => (
-  <div className="pt-4 ">
+  <div className="pt-4">
     <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
 
-      <h3 className="text-sm font-black text-gray-800">
-        Share Your Suggestions
-      </h3>
+      {/* Title + Subtitle */}
+      <div>
+        <h3 className="text-sm font-black text-gray-800">
+          Suggestions
+        </h3>
+        <p className="text-xs text-gray-500 mt-1">
+          Share your ideas & feedback
+        </p>
+      </div>
 
       {/* Name */}
       <div>
@@ -2807,18 +2837,18 @@ const renderSuggestionsContent = () => (
         <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
           Your Suggestion
         </label>
-    
-<textarea
-  ref={suggestionRef}
-  rows={4}
-  className="w-full p-3 bg-white border border-gray-300 rounded-lg
-             text-sm outline-none focus:ring-2 focus:ring-indigo-500
-             resize-none"
-  placeholder="Write your suggestion here..."
-/>
 
+        <textarea
+          ref={suggestionRef}
+          rows={4}
+          className="w-full p-3 bg-white border border-gray-300 rounded-lg
+                     text-sm outline-none focus:ring-2 focus:ring-indigo-500
+                     resize-none"
+          placeholder="Write your suggestion here..."
+        />
       </div>
 
+      {/* Submit Button */}
       <div className="flex justify-end">
         <button
           onClick={handleSubmitSuggestion}
@@ -2834,41 +2864,21 @@ const renderSuggestionsContent = () => (
   </div>
 );
 
-  const renderNotificationsContent = () => (
-    <div className="pt-4 ">
-      <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
-        {notifications.length === 0 ? (
-          <div className="p-4 text-xs text-gray-500">No notifications yet.</div>
-        ) : (
-          notifications.map((n) => (
-            <div
-              key={n.id}
-              className="p-4 flex gap-3 hover:bg-gray-50 transition-colors group cursor-pointer"
-            >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                  n.is_read ? 'bg-blue-50 text-blue-600' : 'bg-red-100 text-red-600'
-                }`}
-              >
-                {n.is_read ? <Bell size={16} /> : <AlertCircle size={16} />}
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <h4 className="text-xs font-bold text-gray-900">{n.title}</h4>
-                  <span className="text-[9px] font-medium text-gray-400">
-                    {formatDate(n.created_at)}
-                  </span>
-                </div>
-                {n.body && (
-                  <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{n.body}</p>
-                )}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
+
+  //  NOTIFICATIONS DISABLED
+// const renderNotificationsContent = () => (
+//   <div className="pt-4 ">
+//     <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+//       {notifications.length === 0 ? (
+//         <div className="p-4 text-xs text-gray-500">No notifications yet.</div>
+//       ) : (
+//         notifications.map((n) => (
+//           <div key={n.id}>{n.title}</div>
+//         ))
+//       )}
+//     </div>
+//   </div>
+// );
 
   // Reusable Accordion Item
   const AccordionItem = ({
@@ -2883,7 +2893,7 @@ const renderSuggestionsContent = () => (
     title: string;
     icon: React.ReactNode;
     content: React.ReactNode;
-    summary: React.ReactNode;
+    summary?: React.ReactNode;
     color: string;
   }) => {
     const isOpen = expandedSection === id;
@@ -3074,36 +3084,44 @@ const renderSuggestionsContent = () => (
             content={renderServicesContent()}
             color="bg-amber-500"
           />
+<AccordionItem
+  id="events"
+  title={
+    <span className="inline-flex items-center gap-2">
+      <span>Events & Notifications</span>
 
-          <AccordionItem
-            id="events"
-            title="Events & Summits"
-            summary={renderEventsSummary()}
-            icon={<Calendar size={20} />}
-            content={renderEventsContent()}
-            color="bg-pink-600"
-          />
+      {hasNewEvents && !eventsSeen && (
+        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+      )}
+    </span>
+  }
+  summary={renderEventsSummary()}
+  icon={<Calendar size={20} />}
+  content={renderEventsContent()}
+  color="bg-pink-600"
+/>
 
-          <AccordionItem
-            id="notifications"
-            title="Notifications"
-            summary={renderNotificationsSummary()}
-            icon={<Bell size={20} />}
-            content={renderNotificationsContent()}
-            color="bg-red-500"
-          />
+
+
+{/*  NOTIFICATIONS DISABLED
+<AccordionItem
+  id="notifications"
+  title="Notifications"
+  summary={renderNotificationsSummary()}
+  icon={<Bell size={20} />}
+  content={renderNotificationsContent()}
+  color="bg-red-500"
+/>
+*/}
+
 <AccordionItem
   id="suggestions"
   title="Suggestions"
-  summary={
-    <div className="text-xs text-gray-500 mt-1">
-      Share your ideas & feedback
-    </div>
-  }
   icon={<MessageSquare size={20} />}
   content={renderSuggestionsContent()}
   color="bg-indigo-600"
 />
+
 
 
         </div>

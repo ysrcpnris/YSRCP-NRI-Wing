@@ -10,6 +10,7 @@ type Leader = {
   id: string;
   name: string;
   role: string;
+  whatsapp_number: string;
 };
 
 type NotificationItem = {
@@ -35,6 +36,7 @@ export default function MasterData() {
   /* ------------------ FORM STATE ------------------ */
   const [inputName, setInputName] = useState("");
   const [inputRole, setInputRole] = useState("");
+  const [inputPhone, setInputPhone] = useState("");
 
   const [eventTitle, setEventTitle] = useState("");
   const [eventInfo, setEventInfo] = useState("");
@@ -82,6 +84,7 @@ export default function MasterData() {
     setEditItem(leader || null);
     setInputName(leader?.name || "");
     setInputRole(leader?.role || "");
+    setInputPhone(leader?.whatsapp_number || "");
   };
 
   const openEventModal = (event?: NotificationItem) => {
@@ -103,12 +106,13 @@ export default function MasterData() {
     if (editItem) {
       await supabase
         .from("leaders")
-        .update({ name: inputName, role: inputRole })
+        .update({ name: inputName, role: inputRole, whatsapp_number: inputPhone })
         .eq("id", editItem.id);
     } else {
       await supabase.from("leaders").insert({
         name: inputName,
         role: inputRole,
+        whatsapp_number: inputPhone,
       });
     }
 
@@ -165,6 +169,7 @@ export default function MasterData() {
     setEditItem(null);
     setInputName("");
     setInputRole("");
+    setInputPhone("");
     setEventTitle("");
     setEventInfo("");
     setEventStatus("Draft");
@@ -201,6 +206,7 @@ export default function MasterData() {
                 <div>
                   <p className="font-semibold">{l.name}</p>
                   <p className="text-sm text-gray-500">{l.role}</p>
+                  <p className="text-sm text-gray-400">{l.whatsapp_number}</p>
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => openLeaderModal(l)}>
@@ -281,6 +287,12 @@ export default function MasterData() {
                 className="w-full border p-2 rounded mt-3"
                 value={inputRole}
                 onChange={(e) => setInputRole(e.target.value)}
+              />
+              <input
+                placeholder="WhatsApp Number"
+                className="w-full border p-2 rounded mt-3"
+                value={inputPhone}
+                onChange={(e) => setInputPhone(e.target.value)}
               />
               <button
                 onClick={saveLeader}
