@@ -980,16 +980,18 @@ type Referral = {
   type: 'active' | 'passive';
   created_at: string;
 };
-
-type Leader = {
-  id: string;
-  name: string;
+type LeaderAssignmentRow = {
   role: string;
-  whatsapp_number: string | null;
-  constituency: string | null;
   sort_order: number | null;
-  is_active: boolean | null;
+  leaders_master: {
+    id: string;
+    name: string;
+    whatsapp_number: string | null;
+    is_active: boolean;   
+  };
 };
+
+
 type EventItem = {
   id: string;          // uuid
   title: React.ReactNode;
@@ -1111,7 +1113,18 @@ useEffect(() => {
   // ---------------- DYNAMIC DATA ----------------
   const [activeReferrals, setActiveReferrals] = useState<Referral[]>([]);
   const [passiveReferrals, setPassiveReferrals] = useState<Referral[]>([]);
-  const [leaders, setLeaders] = useState<Leader[]>([]);
+  const [leadersByRole, setLeadersByRole] = useState<
+  Record<
+    string,
+    {
+      id: string;
+      name: string;
+      whatsapp_number: string | null;
+    }[]
+  >
+>({});
+
+
   const [events, setEvents] = useState<EventItem[]>([]);
   //const [notifications, setNotifications] =
     //useState<NotificationItem[]>([]);
@@ -1409,23 +1422,64 @@ setPassiveReferrals(
   })
 );
 
- // 2. Leaders
-      const { data: leadersData, error } = await supabase
-  .from("leaders")
-  .select(`
-    id,
-    name,
-    role,
-    whatsapp_number,
-    constituency,
-    sort_order,
-    is_active
-  `)
-  .eq("is_active", true)          // ✅ show only active leaders
-  .order("sort_order", { ascending: true }); // ✅ proper order
-if (!error) {
-  setLeaders(leadersData || []);
+     // 2. Leaders (NEW NORMALIZED LOGIC)
+    // 🔒 Clear leaders if district or assembly missing
+if (!district || !assembly) {
+
+  setLeadersByRole({});
+  return;
 }
+// ✅ ADD THIS LOG HERE
+console.log("LEADERS QUERY FILTERS", {
+  district: normalizeDistrict(district),
+  constituency: normalizeAssembly(assembly),
+});
+const { data, error } = await supabase
+  .from("leader_assignments")
+  .select(`
+    role,
+    sort_order,
+    leaders_master (
+      id,
+      name,
+      whatsapp_number,
+      is_active
+    )
+  `)
+  
+  .eq("district", normalizeDistrict(district))
+  .eq("constituency", normalizeAssembly(assembly))
+  .eq("is_active", true) // leader_assignments.is_active
+  .order("sort_order", { ascending: true });
+
+if (error) {
+  console.error("Leaders fetch error:", error);
+  return;
+}
+
+const grouped = (data as LeaderAssignmentRow[]).reduce(
+  (acc, item) => {
+    if (!item.leaders_master?.is_active) return acc;
+
+    if (!acc[item.role]) acc[item.role] = [];
+
+    acc[item.role].push({
+      id: item.leaders_master.id,
+      name: item.leaders_master.name,
+      whatsapp_number: item.leaders_master.whatsapp_number,
+    });
+
+    return acc;
+  },
+  {} as Record<
+    string,
+    { id: string; name: string; whatsapp_number: string | null }[]
+  >
+);
+
+setLeadersByRole(grouped);
+
+
 
 
       // =======================
@@ -1461,7 +1515,8 @@ if (eventsError) {
   };
 
   loadDashboard();
-}, [user]);
+}, [user, profile,district, assembly]);
+
 const isNewEvent = (createdAt: string) => {
   const now = new Date();
   const created = new Date(createdAt);
@@ -1667,36 +1722,39 @@ const missingProfileFields = useMemo(() => {
       </div>
     </div>
   ); 
+const renderConnectSummary = () => {
+  const allLeaders = Object.values(leadersByRole).flat();
+  const firstRole = Object.keys(leadersByRole)[0];
 
-const renderConnectSummary = () => (
+  return (
     <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
       <div className="flex items-center gap-3">
         <div className="flex -space-x-2">
-          {(leaders.slice(0, 4) || []).map((leader) => (
+          {allLeaders.slice(0, 4).map((leader) => (
             <div
               key={leader.id}
               className="w-7 h-7 rounded-full border-2 border-white bg-gray-100 overflow-hidden"
             >
               <img
-                src={
-                  leader.avatar_url ||
-                  `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
-                    leader.name || 'Leader'
-                  )}`
-                }
+                src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
+                  leader.name || "Leader"
+                )}`}
                 alt={leader.name}
                 className="w-full h-full object-cover"
               />
             </div>
           ))}
         </div>
+
         <span className="text-xs font-bold text-gray-600">
-          {leaders[0]?.role || 'Leadership Contacts'}{' '}
-          {leaders.length > 1 ? `& ${leaders.length - 1} Others` : ''}
+          {firstRole || "Leadership Contacts"}{" "}
+          {allLeaders.length > 1 ? `& ${allLeaders.length - 1} Others` : ""}
         </span>
       </div>
     </div>
   );
+};
+
 
   const renderServicesSummary = () => (
     <div className="flex flex-wrap items-center gap-4 w-full mt-1 opacity-90">
@@ -2202,7 +2260,7 @@ const handleSubmitSuggestion = async () => {
       "
     >
       <span className="truncate">
-        {assembly || "Select Assembly"}
+        {assembly || "Select Assembly Constituency"}
       </span>
       <ChevronDown size={18} className="text-gray-500" />
     </Listbox.Button>
@@ -2564,72 +2622,96 @@ const handleSubmitSuggestion = async () => {
     </div>
   );
 
-   const renderConnectContent = () => {
-    const colorClasses = [
-      { text: 'text-purple-600', border: 'border-purple-200' },
-      { text: 'text-blue-600', border: 'border-blue-200' },
-      { text: 'text-emerald-600', border: 'border-emerald-200' },
-      { text: 'text-orange-600', border: 'border-orange-200' },
-    ];
+const renderConnectContent = () => {
+  // 🔹 Flatten leadersByRole → single array with role included
+  const flatLeaders = Object.entries(leadersByRole).flatMap(
+    ([role, leaders]) =>
+      leaders.map((leader) => ({
+        ...leader,
+        role,
+      }))
+  );
 
-    return (
-      <div className="pt-4 ">
-        {leaders.length === 0 ? (
-          <div className="text-xs text-gray-500">No leadership contacts configured yet.</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {leaders.map((leader, idx) => {
-              const colors = colorClasses[idx % colorClasses.length];
-              return (
-                <div
-                  key={leader.id}
-                  className={`bg-white border ${colors.border} rounded-xl p-4 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-all group`}
+  const colorClasses = [
+    { text: "text-purple-600", border: "border-purple-200" },
+    { text: "text-blue-600", border: "border-blue-200" },
+    { text: "text-emerald-600", border: "border-emerald-200" },
+    { text: "text-orange-600", border: "border-orange-200" },
+  ];
+
+  return (
+    <div className="pt-4">
+      {flatLeaders.length === 0 ? (
+        <div className="text-xs text-gray-500">
+          No leadership contacts configured yet.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {flatLeaders.map((leader, idx) => {
+            const colors = colorClasses[idx % colorClasses.length];
+
+            return (
+              <div
+                key={leader.id}
+                className={`bg-white border ${colors.border}
+                rounded-xl p-4 flex flex-col items-center text-center
+                shadow-sm hover:shadow-md transition-all`}
+              >
+                {/* ROLE */}
+                <span
+                  className={`text-[9px] font-black uppercase tracking-widest mb-1 ${colors.text}`}
                 >
+                  {leader.role}
+                </span>
+
+                {/* AVATAR */}
                 <div
-  className="w-16 h-16 rounded-full bg-gray-100 border border-gray-300
-             flex items-center justify-center mb-3"
->
-  <span className="text-lg font-black text-gray-600">
-    {leader.name?.charAt(0) || "L"}
-  </span>
-</div>
-
-                  <span
-                    className={`text-[9px] font-black uppercase tracking-widest mb-1 ${colors.text}`}
-                  >
-                    {leader.role}
+                  className="w-16 h-16 rounded-full bg-gray-100
+                             border border-gray-300 flex items-center
+                             justify-center mb-3"
+                >
+                  <span className="text-lg font-black text-gray-600">
+                    {leader.name?.charAt(0) || "L"}
                   </span>
-                  <h4 className="text-sm font-bold text-gray-900 mb-4">
-                    {leader.name || 'Leader'}
-                  </h4>
-
-                 <button
-  onClick={() => {
-    if (!leader.whatsapp_number) {
-      showToast("WhatsApp contact not available", "info");
-      return;
-    }
-
-    const phone = leader.whatsapp_number.replace(/\D/g, "");
-    window.open(`https://wa.me/${phone}`, "_blank");
-
-    showToast(`Opening WhatsApp with ${leader.name}`, "info");
-  }}
-  className="w-full py-2 rounded-lg bg-[#25D366] hover:bg-[#20b85a]
-             text-white font-bold text-xs flex items-center justify-center
-             gap-1.5 transition-colors shadow-sm"
->
-  <MessageSquare size={14} fill="white" /> WhatsApp
-</button>
-
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
+
+                {/* NAME */}
+                <h4 className="text-sm font-bold text-gray-900 mb-4">
+                  {leader.name || "Leader"}
+                </h4>
+
+                {/* WHATSAPP BUTTON */}
+                <button
+                  onClick={() => {
+                    if (!leader.whatsapp_number) {
+                      showToast("WhatsApp contact not available", "info");
+                      return;
+                    }
+
+                    const phone = leader.whatsapp_number.replace(/\D/g, "");
+                    window.open(`https://wa.me/${phone}`, "_blank");
+
+                    showToast(
+                      `Opening WhatsApp with ${leader.name}`,
+                      "info"
+                    );
+                  }}
+                  className="w-full py-2 rounded-lg bg-[#25D366]
+                             hover:bg-[#20b85a] text-white font-bold
+                             text-xs flex items-center justify-center
+                             gap-1.5 transition-colors shadow-sm"
+                >
+                  <MessageSquare size={14} fill="white" /> WhatsApp
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 
  const renderServicesContent = () => (

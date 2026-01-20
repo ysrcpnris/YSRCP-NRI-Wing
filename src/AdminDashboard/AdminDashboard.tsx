@@ -9,6 +9,8 @@ import Assistance from "./Assistance";
 import Suggestions from "./Suggestions";
 // import ServiceInbox from "./ServiceInbox";
 import MasterData from "./MasterData";
+import EventsNotifications from "./EventsNotifications";
+
 import ContentControl from "./ContentControl";
 import ysrLogo from "../components/nrilogo.png";
 
@@ -169,10 +171,10 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
           onClick={onToggle}
         />
       )}
-      <aside className={`fixed md:relative top-0 left-0 w-64 p-4 bg-gradient-to-b from-white to-blue-50 border-r border-blue-100 flex flex-col justify-between h-screen z-50 transform transition-transform duration-300 ${
-        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-      }`}>
-        <div>
+      <aside className={`fixed top-0 left-0 w-64 h-screen bg-gradient-to-b from-white to-blue-50 border-r border-blue-100 z-40 flex flex-col transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      } md:translate-x-0`}>
+        <div className="flex-1 overflow-y-auto p-4">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <img
@@ -196,12 +198,13 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Users} label="Suggestions" page="suggestions" />
             {/* <Item icon={FolderKanban} label="Service Inbox" page="serviceInbox" /> */}
             <Item icon={Settings} label="Master Data" page="masterData" />
+            <Item icon={Newspaper} label="Events & Notifications" page="eventsnotifications" />
             <Item icon={Globe} label="Content Control" page="contentControl" />
 
           </nav>
         </div>
 
-        <div className="mt-6">
+        <div className="sticky bottom-0 p-4 border-t border-blue-100 bg-white">
           <button
             onClick={onLogout}
             className="w-full inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white px-4 py-2 rounded-lg shadow-md hover:opacity-95 transition-all duration-150"
@@ -457,15 +460,15 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex">
-       <Sidebar
-      onLogout={handleLogout}
-      current={currentPage}
-      setCurrentPage={setCurrentPage}
-      isOpen={sidebarOpen}
-      onToggle={() => setSidebarOpen(!sidebarOpen)}
-    />
+      <Sidebar
+        onLogout={handleLogout}
+        current={currentPage}
+        setCurrentPage={setCurrentPage}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
 
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 ml-0 md:ml-64 p-8 overflow-y-auto h-screen">
         {/* Mobile Menu Button */}
         <button
           onClick={() => setSidebarOpen(true)}
@@ -607,6 +610,7 @@ export default function AdminDashboard() {
       {currentPage === "suggestions" && <Suggestions />}
       {/* {currentPage === "serviceInbox" && <ServiceInbox />} */}
       {currentPage === "masterData" && <MasterData />}
+      {currentPage === "eventsnotifications" && <EventsNotifications />}
       {currentPage === "contentControl" && <ContentControl />}
 
       </main>
