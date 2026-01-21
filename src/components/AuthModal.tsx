@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Eye, EyeOff } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../pages/contexts/AuthContext";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,14 @@ export default function AuthModal({
 }: AuthModalProps) {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  // If signup mode, navigate to the dedicated register page
+  useEffect(() => {
+    if (mode === "signup") {
+      onClose();
+      navigate("/register");
+    }
+  }, [mode, onClose, navigate]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -570,46 +578,47 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   try {
    if (mode === "signin") {
-  const authData = await withTimeout(
+  // 1 Sign in (AuthContext handles Supabase auth)
+  await withTimeout(
     signIn(formData.email, formData.password),
     15000
   );
 
-  const user = authData?.user;
+  //  Get logged-in user (Supabase v2 way)
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  if (!user) {
-    throw new Error("Login successful but user not available");
+  if (userError || !user) {
+    throw new Error("Unable to fetch user after login");
   }
 
-const { data: profile, error: profileError } = await supabase
-  .from("profiles")
-  .select("role")
-  .eq("id", user.id)
-  .single();
+  // 3 Fetch role from profiles (SAFE)
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle(); 
 
-if (profileError) throw profileError;
+  if (profileError) throw profileError;
 
-onClose();
+  onClose();
 
-if (profile?.role === "admin") {
-  localStorage.setItem("is_admin", "true"); // ✅ REQUIRED
-  navigate("/admin/dashboard");
-} else {
-  localStorage.removeItem("is_admin");
-  navigate("/dashboard");
-}
-
-
+  //  Role-based redirect
+  if (profile?.role === "admin") {
+    navigate("/admin/dashboard");
+  } else {
+    navigate("/dashboard");
+  }
 
   return;
 }
 
-
     /* ================= SIGN UP ================= */
     const profilePayload: Record<string, unknown> = {
       first_name: formData.first_name,
-      last_name: formData.last_name || formData.first_name,
-
+      last_name: formData.last_name,
       mobile_number: formData.mobile_number,
       whatsapp_number: formData.whatsapp_number,
       country_of_residence: formData.country_of_residence,
@@ -680,7 +689,10 @@ if (profile?.role === "admin") {
 
         toast.success("Password reset link sent to your email");
       } else {
-        toast.info("OTP reset method will be added soon");
+        // Send an OTP/magic-link via Supabase for authentication (user can use it to login and then reset password)
+        const { error } = await supabase.auth.signInWithOtp({ email: formData.email });
+        if (error) throw error;
+        toast.success("OTP/magic link sent to your email. Use it to sign in and reset your password.");
       }
     } catch (err: any) {
       setError(err.message || "Failed to send reset instructions");
@@ -1458,9 +1470,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-700 text-white py-3 rounded-lg font-semibold 
-hover:bg-blue-800 hover:shadow-md 
-transition disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-[#1E6BD6] to-[#1E6BD6] text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:shadow-lg transition disabled:opacity-60"
 
                 >
                   {loading

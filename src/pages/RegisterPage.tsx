@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 import { Eye, EyeOff, MapPin } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -113,6 +113,12 @@ export default function RegisterPage() {
   };
 
   const professions = ['Job', 'Business', 'Student'];
+
+  // Helper function to get country code from country name
+  const getCountryCodeFromCountryName = (countryName: string): string => {
+    const found = countryCodes.find(cc => cc.name === countryName);
+    return found ? found.code : '+91'; // default to India
+  };
 
   // Helper function to extract current country code from mobile number
   const getCurrentCountryCode = () => {
@@ -1198,6 +1204,18 @@ export default function RegisterPage() {
 
       await withTimeout(signUp(formData.email, formData.password, profilePayload), 20000);
 
+      // After sign-up, send an OTP/magic link to the user's email for verification/authentication
+      try {
+        const { error: otpError } = await (await import('../lib/supabase')).supabase.auth.signInWithOtp({ email: formData.email });
+        if (otpError) {
+          console.warn('Failed to send OTP after signup:', otpError.message || otpError);
+        } else {
+          toast.info('OTP/magic link sent to your email for verification.', { position: 'top-right', autoClose: 5000 });
+        }
+      } catch (e) {
+        console.warn('Error sending OTP after signup', e);
+      }
+
       if (isMounted.current) setLoading(false);
       toast.success('Registration successful! .', {
         position: 'top-right',
@@ -1312,12 +1330,15 @@ export default function RegisterPage() {
                       value={formData.country_of_residence}
                       onChange={(e) => {
                         const selectedCountry = e.target.value;
+                        const countryCode = getCountryCodeFromCountryName(selectedCountry);
                         setFormData({
                           ...formData,
                           country_of_residence: selectedCountry,
+                          mobile_number: countryCode,
                           state_abroad: '',
                           city_abroad: '',
                         });
+                        setPhoneError('');
                       }}
                       className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >

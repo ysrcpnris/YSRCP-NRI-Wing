@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { GraduationCap, Gavel, UsersRound, Briefcase, X } from "lucide-react";
 
 export default function Initiatives() {
+  const navigate = useNavigate();
   const [selectedService, setSelectedService] = useState<any | null>(null);
 
   const services = [
@@ -176,12 +178,15 @@ Your connection to the homeland is vital. We provide the platform to
             <p className="text-gray-700 mt-4 whitespace-pre-line text-sm leading-relaxed">
               {selectedService.long}
             </p>
-<button
-  onClick={() => setSelectedService(null)}
-  className="mt-6 w-full bg-blue-700 text-white py-2 rounded-xl font-semibold shadow-md hover:bg-blue-800 transition"
->
-  ⏳ Coming Soon
-</button>
+            <button
+              onClick={() => {
+                setSelectedService(null);
+                navigate('/register');
+              }}
+              className="mt-6 w-full bg-blue-700 text-white py-2 rounded-xl font-semibold shadow-md hover:bg-blue-800 transition"
+            >
+              Register Now
+            </button>
 
 
 
