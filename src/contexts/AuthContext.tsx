@@ -43,6 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     const p = await fetchProfile(user.id);
     setProfile(p);
+    // Update admin flag based on profile role
+    if (p?.role === 'admin') {
+      localStorage.setItem('is_admin', 'true');
+    } else {
+      localStorage.removeItem('is_admin');
+    }
   };
 
   /* ---------------- AUTH STATE ---------------- */
@@ -53,6 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           const p = await fetchProfile(session.user.id);
           setProfile(p);
+          // Update admin flag based on profile role
+          if (p?.role === 'admin') {
+            localStorage.setItem('is_admin', 'true');
+          } else {
+            localStorage.removeItem('is_admin');
+          }
         }
         setLoading(false);
       })();
@@ -66,8 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           const p = await fetchProfile(session.user.id);
           setProfile(p);
+          // Update admin flag based on profile role
+          if (p?.role === 'admin') {
+            localStorage.setItem('is_admin', 'true');
+          } else {
+            localStorage.removeItem('is_admin');
+          }
         } else {
           setProfile(null);
+          localStorage.removeItem('is_admin');
         }
       })();
     });
