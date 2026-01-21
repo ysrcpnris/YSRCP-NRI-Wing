@@ -1022,11 +1022,17 @@ if (!user) {
   const [expandedSection, setExpandedSection] =
     useState<SectionKey | null>("profile");
     const [eventsSeen, setEventsSeen] = useState(false);
+    
 
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [activeReferralCount, setActiveReferralCount] = useState<number>(0);
 
   const [submittingService, setSubmittingService] = useState(false);
+const [contributionTypes, setContributionTypes] = useState<
+  { id: number; name: string }[]
+>([]);
+
+const [selectedContributions, setSelectedContributions] = useState<number[]>([]);
 
   const [toast, setToast] = useState<{
     msg: string;
@@ -1068,6 +1074,84 @@ const normalizeAssembly = (value: string) => {
   return value.replace(/assembly constituency|ac/i, "").trim();
 };
 
+// ---------------- CONTRIBUTIONS ----------------
+const toggleContribution = async (
+  contributionTypeId: number,
+  checked: boolean
+) => {
+  if (!user) return;
+
+  if (checked) {
+    // Optimistic UI update
+    setSelectedContributions((prev) => [
+      ...prev,
+      contributionTypeId,
+    ]);
+
+    const { error } = await supabase
+      .from("user_contributions")
+      .insert({
+        user_id: user.id,
+        contribution_type_id: contributionTypeId,
+      });
+
+    if (error) {
+      console.error("Insert error:", error);
+      // rollback
+      setSelectedContributions((prev) =>
+        prev.filter((id) => id !== contributionTypeId)
+      );
+    }
+  } else {
+    // Optimistic UI update
+    setSelectedContributions((prev) =>
+      prev.filter((id) => id !== contributionTypeId)
+    );
+
+    const { error } = await supabase
+      .from("user_contributions")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("contribution_type_id", contributionTypeId);
+
+    if (error) {
+      console.error("Delete error:", error);
+      // rollback
+      setSelectedContributions((prev) => [
+        ...prev,
+        contributionTypeId,
+      ]);
+    }
+  }
+};
+
+const roleOptions: Record<string, string[]> = {
+  Job: [
+    "Software Engineer",
+    "Manager",
+    "Doctor",
+    "Teacher",
+    "Government Employee",
+    "Private Employee",
+    "Other",
+  ],
+  Business: [
+    "Founder",
+    "Co-Founder",
+    "Partner",
+    "Entrepreneur",
+    "Self Employed",
+    "Other",
+  ],
+  Student: [
+    "School Student",
+    "Undergraduate",
+    "Postgraduate",
+    "Research Scholar",
+    "Other",
+  ],
+};
+
 
   // ---------------- PHOTO UPLOAD STATE ----------------
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -1080,11 +1164,46 @@ const [mandal, setMandal] = useState("");
 const [profession, setProfession] = useState<string>(
   profile?.profession || ""
 );
+const [roleDesignation, setRoleDesignation] = useState<string>(
+  profile?.role_designation || ""
+);
+useEffect(() => {
+  if (profile?.role_designation) {
+    setRoleDesignation(profile.role_designation);
+  }
+}, [profile?.role_designation]);
+
 useEffect(() => {
   if (profile?.profession) {
     setProfession(profile.profession);
   }
 }, [profile?.profession]);
+useEffect(() => {
+  if (!user) return;
+  
+
+  const loadContributions = async () => {
+    // Load contribution options
+    const { data: types } = await supabase
+      .from("contribution_types")
+      .select("id, name")
+      .order("id");
+
+    setContributionTypes(types || []);
+
+    // Load user's selections
+    const { data: userContribs } = await supabase
+      .from("user_contributions")
+      .select("contribution_type_id")
+      .eq("user_id", user.id);
+
+    setSelectedContributions(
+      (userContribs || []).map((c) => c.contribution_type_id)
+    );
+  };
+
+  loadContributions();
+}, [user]);
 
 useEffect(() => {
   if (!profile) return;
@@ -1571,34 +1690,48 @@ const referralLink =
 
 
  // const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
-
-
-
+  // ---------------- PROFILE COMPLETION & MISSING FIELDS ----------------
   // 🔹 Profile completion calculation
 const profileCompletion = useMemo(() => {
   if (!profile) return 0;
 
-  const TOTAL_SECTIONS = 5;
+  const TOTAL_SECTIONS = 8;
   let completed = 0;
 
-  if (profile.first_name && profile.last_name) completed++; // Name
-  if (profile.mobile_number) completed++;                   // Mobile
-  if (profile.profile_photo) completed++;                   // Photo
+  // 1️⃣ Name
+  if (profile.first_name) completed++;
 
+  // 2️⃣ Mobile
+  if (profile.mobile_number) completed++;
+
+  // 3️⃣ DOB
+  if (profile.dob) completed++;
+
+  // 4️⃣ Photo
+  if (profile.profile_photo) completed++;
+
+  // 5️⃣ Address
   const country = profile.country_of_residence?.toLowerCase();
   const isIndia = !country || country === "india";
 
   if (
     !isIndia ||
-    (profile.indian_state &&
+    (
+      profile.indian_state &&
       profile.district &&
-      profile.mandal &&
-      profile.assembly_constituency)
+      profile.assembly_constituency &&
+      profile.mandal
+    )
   ) {
-    completed++; // Address
+    completed++;
   }
 
-  // ✅ FIXED SOCIAL LOGIC (ALL REQUIRED)
+  // 6️⃣ Profession + Role
+  if (profile.profession && profile.role_designation) {
+    completed++;
+  }
+
+  // 7️⃣ Socials (ALL REQUIRED)
   if (
     profile.facebook_id &&
     profile.twitter_id &&
@@ -1608,8 +1741,13 @@ const profileCompletion = useMemo(() => {
     completed++;
   }
 
+  // 8️⃣ Contribution (ONE required)
+  if (Array.isArray(selectedContributions) && selectedContributions.length > 0) {
+    completed++;
+  }
+
   return Math.round((completed / TOTAL_SECTIONS) * 100);
-}, [profile]);
+}, [profile, selectedContributions]);
 
 // 🔹 Missing profile fields detection
 
@@ -1623,41 +1761,52 @@ const missingProfileFields = useMemo(() => {
 
   if (!profile.mobile_number)
     missing.push({ key: "mobile", label: "Add Mobile Number" });
+if (!profile.dob) {
+  missing.push({
+    key: "dob",
+    label: "Add Date of Birth",
+  });
+}
 
   const country = profile.country_of_residence?.trim().toLowerCase();
   const isIndia = !country || country === "india";
 
-  if (
-    isIndia &&
-    (!profile.indian_state ||
-      !profile.district ||
-      !profile.mandal ||
-      !profile.assembly_constituency )
-  ) {
+  if (isIndia) {
+    if (!profile.indian_state)
+      missing.push({ key: "state", label: "Select State" });
+    if (!profile.district)
+      missing.push({ key: "district", label: "Select District" });
+    if (!profile.assembly_constituency)
+      missing.push({ key: "assembly", label: "Select Assembly" });
+    if (!profile.mandal)
+      missing.push({ key: "mandal", label: "Select Mandal" });
+  }
+
+  if (!profile.facebook_id)
+    missing.push({ key: "facebook", label: "Add Facebook" });
+  if (!profile.twitter_id)
+    missing.push({ key: "twitter", label: "Add Twitter" });
+  if (!profile.linkedin_id)
+    missing.push({ key: "linkedin", label: "Add LinkedIn" });
+  if (!profile.instagram_id)
+    missing.push({ key: "instagram", label: "Add Instagram" });
+
+  if (!profile.profession)
+    missing.push({ key: "profession", label: "Select Profession" });
+
+  if (!profile.role_designation)
+    missing.push({ key: "role", label: "Select Role / Designation" });
+
+  // ✅ CONTRIBUTION CHECK
+  if (!selectedContributions || selectedContributions.length === 0) {
     missing.push({
-      key: "address",
-      label: "Complete Indian Address",
+      key: "contribution",
+      label: "Select Contribution Area",
     });
   }
 
-  if (
-  !profile.facebook_id ||
-  !profile.twitter_id ||
-  !profile.linkedin_id ||
-  !profile.instagram_id
-) {
-  missing.push({
-    key: "socials",
-    label: "Complete Social Accounts",
-  });
-}
-
-
-  if (!profile.profession && !profile.role_designation)
-    missing.push({ key: "profession", label: "Add Profession" });
-
   return missing;
-}, [profile]);
+}, [profile, selectedContributions]);
 
 
   // --- ENRICHED SUMMARY RENDERERS (Visible when Collapsed) ---
@@ -1824,6 +1973,8 @@ const handleSaveProfile = async () => {
 
     const mobile_number =
       (document.getElementById("mobile_number") as HTMLInputElement)?.value || "";
+const dob =
+  (document.getElementById("dob") as HTMLInputElement)?.value || null;
 
     const facebook =
       (document.getElementById("facebook") as HTMLInputElement)?.value || "";
@@ -1849,7 +2000,9 @@ const last_name =
       first_name,
       last_name,
       mobile_number,
+      dob,
       profession, // ✅ FROM STATE
+       role_designation: roleDesignation,
       indian_state: indianState,
       district,
       mandal,
@@ -1941,6 +2094,7 @@ const handleSubmitSuggestion = async () => {
                 </div>
               )}
             </div>
+            
             <div className="flex items-center justify-center gap-2">
               <label className="px-3 py-1 bg-gray-100 border border-gray-200 rounded-lg cursor-pointer text-xs font-bold">
                 Select
@@ -2000,7 +2154,8 @@ const handleSubmitSuggestion = async () => {
                   />
                   <path
                     className="text-white"
-                    strokeDasharray={`${profileCompletion}, 100`}
+                    strokeDasharray={`${profileCompletion} ${100 - profileCompletion}`}
+
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
                     stroke="currentColor"
@@ -2013,15 +2168,15 @@ const handleSubmitSuggestion = async () => {
 
                 </div>
               </div>
-              <h3 className="text-base font-bold">
-  {profileCompletion === 100 ? "Platinum Member" : "Gold Member"}
+             <h3 className="text-base font-bold">
+  Profile Completion Status
 </h3>
 
-              <p className="text-indigo-200 text-xs mb-3">
-  {profileCompletion === 100
-    ? "Your profile is complete 🎉"
-    : "Complete profile to unlock Platinum"}
+<p className="text-indigo-200 text-xs mb-3">
+  Your profile is {profileCompletion}% complete
 </p>
+
+             
 
             </div>
           </div>
@@ -2096,6 +2251,21 @@ const handleSubmitSuggestion = async () => {
     className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700"
   />
 </div>
+<div>
+  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+    Date of Birth
+  </label>
+  <input
+    id="dob"
+    type="date"
+    defaultValue={profile?.dob || ""}
+    className="w-full p-3 bg-gray-50 border border-gray-200
+               rounded-lg text-sm font-bold text-gray-700
+               focus:bg-white focus:ring-2 focus:ring-indigo-500
+               outline-none transition-all"
+  />
+</div>
+
 {/* 🌍 Current Residency */}
 <div className="md:col-span-2 mt-4">
   <label className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
@@ -2359,65 +2529,73 @@ const handleSubmitSuggestion = async () => {
               Professional & Social
             </h4>
 
-  
-{/* Profession */}
 <div className="mb-4">
   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-    Profession
+    Professional Category
   </label>
-<Listbox
-  value={profession}
-  onChange={(value) => setProfession(value)}
->
-  <div className="relative">
-    <Listbox.Button
-      className="
-        w-full h-12 px-3
-        bg-gray-50 border border-gray-300 rounded-lg
-        flex items-center justify-between
-        text-base font-semibold text-gray-900
-        focus:ring-2 focus:ring-indigo-500
-        outline-none
-      "
-    >
-      <span className="truncate">
-        {profession || "Select Profession"}
-      </span>
-      <ChevronDown size={18} className="text-gray-500" />
-    </Listbox.Button>
 
-    <Listbox.Options
-      className="
-        absolute z-50 mt-1 w-full
-        max-h-60 overflow-auto
-        rounded-lg bg-white
-        border border-gray-300
-        shadow-lg
-        text-base
-      "
-    >
-      {["Job", "Business", "Student"].map((opt) => (
-        <Listbox.Option
-          key={opt}
-          value={opt}
-          className={({ active }) =>
-            `cursor-pointer px-4 py-3 ${
-              active
-                ? "bg-indigo-100 text-indigo-900"
-                : "text-gray-900"
-            }`
-          }
-        >
-          {opt}
-        </Listbox.Option>
-      ))}
-    </Listbox.Options>
-  </div>
-</Listbox>
+  <Listbox
+    value={profession}
+    onChange={(value) => {
+      setProfession(value);
+      setRoleDesignation(""); // reset role when category changes
+    }}
+  >
+    <div className="relative">
+      <Listbox.Button className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg flex items-center justify-between text-sm font-semibold">
+        <span>{profession || "Select Category"}</span>
+        <ChevronDown size={18} />
+      </Listbox.Button>
 
-
- 
+      <Listbox.Options className="absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg">
+        {["Job", "Business", "Student"].map((opt) => (
+          <Listbox.Option
+            key={opt}
+            value={opt}
+            className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+          >
+            {opt}
+          </Listbox.Option>
+        ))}
+      </Listbox.Options>
+    </div>
+  </Listbox>
 </div>
+<div className="mb-4">
+  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+    Role / Designation
+  </label>
+
+  <Listbox
+    value={roleDesignation}
+    onChange={setRoleDesignation}
+    disabled={!profession}
+  >
+    <div className="relative">
+      <Listbox.Button
+        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+                   flex items-center justify-between text-sm font-semibold
+                   disabled:opacity-50"
+      >
+        <span>{roleDesignation || "Select Role"}</span>
+        <ChevronDown size={18} />
+      </Listbox.Button>
+
+      <Listbox.Options className="absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg">
+        {(roleOptions[profession] || []).map((role) => (
+          <Listbox.Option
+            key={role}
+            value={role}
+            className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+          >
+            {role}
+          </Listbox.Option>
+        ))}
+      </Listbox.Options>
+    </div>
+  </Listbox>
+</div>
+
             {/* Social Media Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
@@ -2463,27 +2641,40 @@ const handleSubmitSuggestion = async () => {
             </div>
           </div>
 
-          <div>
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-              I want to contribute via:
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {['Podcast', 'Tech Team', 'ORM', 'Content', 'Ground Force'].map((opt) => (
-                <label
-                  key={opt}
-                  className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all bg-white group"
-                >
-                  <input
-                    type="checkbox"
-                    className="w-3.5 h-3.5 text-indigo-600 rounded focus:ring-indigo-500"
-                  />
-                  <span className="text-xs font-bold text-gray-600 group-hover:text-indigo-700">
-                    {opt}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
+<div className="mt-6">
+  <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
+    I want to contribute via:
+  </h4>
+
+  <div className="flex flex-wrap gap-2">
+    {contributionTypes.map((opt) => {
+      console.log(
+        "OPT ID:", opt.id,
+        "SELECTED:", selectedContributions
+      );
+
+      return (
+        <label
+          key={opt.id}
+          className="flex items-center gap-2 px-3 py-2
+                     border border-gray-200 rounded-lg cursor-pointer
+                     hover:border-indigo-500 hover:bg-indigo-50"
+        >
+          <input
+            type="checkbox"
+            checked={selectedContributions.includes(Number(opt.id))}
+            onChange={(e) =>
+              toggleContribution(Number(opt.id), e.target.checked)
+            }
+          />
+          <span className="text-xs font-bold">{opt.name}</span>
+        </label>
+      );
+    })}
+  </div>
+</div>
+
+
 
           <div className="flex justify-end pt-2">
             <button
@@ -3203,9 +3394,6 @@ const renderSuggestionsContent = () => (
   content={renderSuggestionsContent()}
   color="bg-indigo-600"
 />
-
-
-
         </div>
       </div>
     </div>
