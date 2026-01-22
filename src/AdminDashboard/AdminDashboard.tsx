@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { Settings } from "lucide-react";
 import { Globe } from "lucide-react";
+import * as XLSX from "xlsx";
 import Visited from "./Visited";
 import Assistance from "./Assistance";
 import Suggestions from "./Suggestions";
@@ -108,13 +109,24 @@ const CONTINENTS = [
 type Row = {
   id: string;
   first_name?: string | null;
+  full_name?: string | null;
   email?: string | null;
   mobile_number?: string | null;
   whatsapp_number?: string | null;
+  gender?: string | null;
+  dob?: string | null;
+  contribution?: string | null;
   profession?: string | null;
+  organization?: string | null;
+  designation?: string | null;
   country_of_residence: string | null;
   state_abroad: string | null;
   city_abroad: string | null;
+  indian_state?: string | null;
+  district?: string | null;
+  assembly_constituency?: string | null;
+  mandal?: string | null;
+  village?: string | null;
   created_at?: string | null;
 };
 
@@ -124,6 +136,57 @@ type Bucket = { name: string; count: number };
 const norm = (v: string | null | undefined) => (v || "").trim();
 const toContinent = (country: string) =>
   COUNTRY_TO_CONTINENT[country] || "Unknown";
+
+// Helper function to calculate age from date of birth
+const calculateAge = (dob: string | null | undefined): number | string => {
+  if (!dob) return "-";
+  try {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 0 ? age : "-";
+  } catch {
+    return "-";
+  }
+};
+
+// Helper function to export data to Excel
+const exportToExcel = (data: any[], filename: string = "registrations.xlsx") => {
+  const exportData = data.map((row: any) => ({
+    "Full Name": row.full_name || "-",
+    "Email": row.email || "-",
+    "Mobile Number": row.mobile_number || "-",
+    "WhatsApp Number": row.whatsapp_number || "-",
+    "Gender": row.gender || "-",
+    "Age": calculateAge(row.dob),
+    "Contribution": row.contribution || "-",
+    "Country of Residence": row.country_of_residence || "-",
+    "City Abroad": row.city_abroad || "-",
+    "Indian State": row.indian_state || "-",
+    "District": row.district || "-",
+    "Assembly Constituency": row.assembly_constituency || "-",
+    "Mandal": row.mandal || "-",
+    "Village": row.village || "-",
+    "Profession": row.profession || "-",
+    "Organization": row.organization || "-",
+    "Designation": row.designation || "-",
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
+  
+  // Auto-fit column widths
+  const colWidths = Object.keys(exportData[0] || {}).map(() => ({ wch: 20 }));
+  worksheet["!cols"] = colWidths;
+  
+  XLSX.writeFile(workbook, filename);
+};
+
 function group(rows: Row[], key: "continent" | "country" | "state"): Bucket[] {
   const map = new Map<string, number>();
   for (const r of rows) {
@@ -385,7 +448,7 @@ export default function AdminDashboard() {
           const { data, error } = await supabase
             .from(TABLE_NAME)
             .select(
-              "id, first_name, email, mobile_number, whatsapp_number, profession, country_of_residence, state_abroad, city_abroad, created_at"
+              "id, first_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, created_at"
             )
             .range(offset, offset + batchSize - 1);
 
@@ -478,12 +541,23 @@ export default function AdminDashboard() {
         </button>
         {currentPage === "dashboard" && (
     <>
-        <h1 className="text-3xl font-bold text-[#1368d6] mb-2">
-          Admin Dashboard
-        </h1>
-        <p className="text-gray-500 mb-6">
-          Registrations overview by continent, country, and state
-        </p>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-[#1368d6] mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-500">
+              Registrations overview by continent, country, and state
+            </p>
+          </div>
+          <button
+            onClick={() => exportToExcel(rows, `registrations_${new Date().toISOString().split('T')[0]}.xlsx`)}
+            disabled={loading || rows.length === 0}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 font-medium"
+          >
+            📥 Export Excel
+          </button>
+        </div>
 
      <p style={{ fontWeight: "bold" , fontSize: "22px", color:"green" }}>
               Total Registrations: {rows.length.toLocaleString()}</p> 
@@ -570,32 +644,48 @@ export default function AdminDashboard() {
                   <BarChart3 size={18} /> Statistics Overview
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="h-72">
+                  {/* Bar Chart */}
+                  <div className="h-96">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData}>
-                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                      <BarChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 50 }}>
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 11 }}
+                          angle={chartData.length > 8 ? -45 : 0}
+                          textAnchor={chartData.length > 8 ? "end" : "middle"}
+                          height={chartData.length > 8 ? 80 : 50}
+                        />
                         <YAxis />
                         <Tooltip />
                         <Bar dataKey="count" fill="#1368d6" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="h-72">
+
+                  {/* Pie Chart - Full width and height */}
+                  <div className="h-96 flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
+                      <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                         <Pie
                           data={chartData}
                           dataKey="count"
                           nameKey="name"
-                          outerRadius={100}
-                          label
+                          cx="50%"
+                          cy="45%"
+                          outerRadius={chartData.length > 15 ? 90 : 110}
+                          label={chartData.length <= 10}
+                          labelLine={false}
                         >
                           {chartData.map((_, i) => (
                             <Cell key={i} fill={COLORS[i % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip />
-                        <Legend />
+                        <Tooltip formatter={(value) => value.toLocaleString()} />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36}
+                          wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>

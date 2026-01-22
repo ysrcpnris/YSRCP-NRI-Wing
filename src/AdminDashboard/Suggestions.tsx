@@ -79,10 +79,60 @@ function StatCard({
   );
 }
 
+// Modal Component for displaying full suggestion
+function SuggestionModal({
+  suggestion,
+  onClose,
+}: {
+  suggestion: Suggestion | null;
+  onClose: () => void;
+}) {
+  if (!suggestion) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full mx-4 border-2 border-[#1368d6]">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-4 pb-3 border-b border-blue-100">
+          <div className="text-sm text-gray-600">
+            <span className="font-semibold text-[#1368d6]">
+              {suggestion.name}
+            </span>
+            <span className="text-gray-400 mx-2">·</span>
+            <span className="text-gray-600">{suggestion.country}</span>
+            <span className="text-gray-400 mx-2">·</span>
+            <span className="text-gray-600">{suggestion.date}</span>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-[#1368d6] text-2xl font-bold transition-colors"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Suggestion Body */}
+        <div className="max-h-[60vh] overflow-y-auto border-2 border-[#1368d6] rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white">
+          <p className="text-gray-800 leading-relaxed whitespace-pre-wrap text-base">
+            {suggestion.suggestion}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Suggestions() {
   const [showTable, setShowTable] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
   const { suggestions } = useFetchSuggestions();
   const totalSuggestions = suggestions.length;
+
+  // Truncate text to specified length
+  const truncateText = (text: string, maxLength: number = 80) => {
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
 
   return (
     <div className="p-6">
@@ -145,7 +195,12 @@ export default function Suggestions() {
                     <td className="px-4 py-2 text-sm">{s.name}</td>
                     <td className="px-4 py-2 text-sm">{s.country}</td>
                     <td className="px-4 py-2 text-sm">{s.date}</td>
-                    <td className="px-4 py-2 text-sm">{s.suggestion}</td>
+                    <td
+                      onClick={() => setSelectedSuggestion(s)}
+                      className="px-4 py-2 text-sm text-[#1368d6] cursor-pointer hover:underline font-medium"
+                    >
+                      {truncateText(s.suggestion, 80)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -153,6 +208,12 @@ export default function Suggestions() {
           </div>
         </div>
       )}
+
+      {/* Modal for full suggestion */}
+      <SuggestionModal
+        suggestion={selectedSuggestion}
+        onClose={() => setSelectedSuggestion(null)}
+      />
     </div>
   );
 }
