@@ -1,6 +1,98 @@
 
 import React, { useState, useEffect, useMemo ,useRef} from 'react';
 import { Listbox } from "@headlessui/react";
+//Coontry → States → Cities
+const countryData: Record<
+  string,
+  { name: string; cities: string[] }[]
+> = {
+  USA: [
+    { name: 'California', cities: ['Los Angeles', 'San Francisco', 'San Diego', 'Sacramento'] },
+    { name: 'Texas', cities: ['Houston', 'Dallas', 'Austin', 'San Antonio'] },
+  ],
+  UK: [
+    { name: 'England', cities: ['London', 'Manchester', 'Liverpool'] },
+    { name: 'Scotland', cities: ['Edinburgh', 'Glasgow'] },
+  ],
+  Canada: [
+    { name: 'Ontario', cities: ['Toronto', 'Ottawa'] },
+    { name: 'British Columbia', cities: ['Vancouver', 'Surrey'] },
+  ],
+  UAE: [
+    { name: 'Dubai', cities: ['Dubai City', 'Jumeirah', 'Deira'] },
+    { name: 'Abu Dhabi', cities: ['Abu Dhabi City', 'Al Ain'] },
+  ],
+Singapore: [
+  {
+    name: "Central Region",
+    cities: [
+      "Orchard",
+      "Marina Bay",
+      "CBD",
+      "Tiong Bahru",
+      "Bukit Timah",
+      "Novena",
+      "Bishan",
+      "Toa Payoh",
+    ],
+  },
+  {
+    name: "East Region",
+    cities: [
+      "Tampines",
+      "Pasir Ris",
+      "Bedok",
+      "Changi",
+      "Simei",
+    ],
+  },
+  {
+    name: "West Region",
+    cities: [
+      "Jurong East",
+      "Jurong West",
+      "Bukit Batok",
+      "Bukit Panjang",
+      "Clementi",
+    ],
+  },
+  {
+    name: "North Region",
+    cities: [
+      "Woodlands",
+      "Yishun",
+      "Sembawang",
+      "Admiralty",
+    ],
+  },
+  {
+    name: "North-East Region",
+    cities: [
+      "Hougang",
+      "Sengkang",
+      "Punggol",
+      "Serangoon",
+    ],
+  },
+],
+
+
+  Netherlands: [
+  {
+    name: "North Holland",
+    cities: ["Amsterdam", "Haarlem", "Zaandam"],
+  },
+  {
+    name: "South Holland",
+    cities: ["Rotterdam", "The Hague", "Leiden"],
+  },
+  {
+    name: "Utrecht",
+    cities: ["Utrecht", "Amersfoort"],
+  },
+],
+
+};
 
 // Indian States → Districts → Assembly Constituencies → Mandals
   const indianAddressData: Record<
@@ -1060,6 +1152,16 @@ useEffect(() => {
   fetchReferralCount();
 }, [profile?.id]);
 
+const normalizedCountry = profile?.country_of_residence
+  ?.trim()
+  .toLowerCase();
+const countryConfig = useMemo(() => {
+  if (!normalizedCountry) return undefined;
+
+  return Object.entries(countryData).find(
+    ([key]) => key.toLowerCase() === normalizedCountry
+  )?.[1];
+}, [normalizedCountry]);
 
 
 const normalizeDistrict = (value: string) => {
@@ -1157,6 +1259,10 @@ const roleOptions: Record<string, string[]> = {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [countryOfResidence, setCountryOfResidence] = useState("India");
+const [stateAbroad, setStateAbroad] = useState("");
+const [cityAbroad, setCityAbroad] = useState("");
+
   const [indianState, setIndianState] = useState("");
 const [district, setDistrict] = useState("");
 const [assembly, setAssembly] = useState("");
@@ -1180,7 +1286,8 @@ useEffect(() => {
 }, [profile?.profession]);
 useEffect(() => {
   if (!user) return;
-  
+ 
+
 
   const loadContributions = async () => {
     // Load contribution options
@@ -1204,6 +1311,20 @@ useEffect(() => {
 
   loadContributions();
 }, [user]);
+useEffect(() => {
+  if (!profile) return;
+
+  setCountryOfResidence(profile.country_of_residence || "India");
+
+  if (profile.country_of_residence !== "India") {
+    setStateAbroad(profile.state_abroad || "");
+    setCityAbroad(profile.city_abroad || "");
+  } else {
+    setStateAbroad("");
+    setCityAbroad("");
+  }
+}, [profile]);
+
 
 useEffect(() => {
   if (!profile) return;
@@ -1714,17 +1835,17 @@ const profileCompletion = useMemo(() => {
   const country = profile.country_of_residence?.toLowerCase();
   const isIndia = !country || country === "india";
 
-  if (
-    !isIndia ||
-    (
-      profile.indian_state &&
+ if (
+  isIndia
+    ? profile.indian_state &&
       profile.district &&
       profile.assembly_constituency &&
       profile.mandal
-    )
-  ) {
-    completed++;
-  }
+    : profile.state_abroad && profile.city_abroad
+) {
+  completed++;
+}
+
 
   // 6️⃣ Profession + Role
   if (profile.profession && profile.role_designation) {
@@ -1796,6 +1917,14 @@ if (!profile.dob) {
 
   if (!profile.role_designation)
     missing.push({ key: "role", label: "Select Role / Designation" });
+// 🌍 Abroad State & City (for NRIs)
+if (!isIndia) {
+  if (!profile.state_abroad)
+    missing.push({ key: "state_abroad", label: "Select Abroad State" });
+
+  if (!profile.city_abroad)
+    missing.push({ key: "city_abroad", label: "Select Abroad City" });
+}
 
   // ✅ CONTRIBUTION CHECK
   if (!selectedContributions || selectedContributions.length === 0) {
@@ -1917,6 +2046,9 @@ const renderConnectSummary = () => {
         <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded text-[10px] font-bold uppercase border border-amber-100">
           Career
         </span>
+          <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-[10px] font-bold uppercase border border-emerald-100">
+        Local Connector
+      </span>
       </div>
     </div>
   );
@@ -1996,23 +2128,31 @@ const last_name =
     : ""; 
 
    
-    const updates = {
-      first_name,
-      last_name,
-      mobile_number,
-      dob,
-      profession, // ✅ FROM STATE
-       role_designation: roleDesignation,
-      indian_state: indianState,
-      district,
-      mandal,
-      assembly_constituency: assembly,
-      facebook_id: facebook,
-      twitter_id: twitter,
-      linkedin_id: linkedin,
-      instagram_id: instagram,
-      updated_at: new Date().toISOString(),
-    };
+const updates = {
+  first_name,
+  last_name,
+  mobile_number,
+  dob,
+  profession,
+  role_designation: roleDesignation,
+  facebook_id: facebook,
+  twitter_id: twitter,
+  linkedin_id: linkedin,
+  instagram_id: instagram,
+  updated_at: new Date().toISOString(),
+
+  // 🌍 Abroad (current residence)
+  country_of_residence: profile?.country_of_residence || null,
+  state_abroad: stateAbroad || profile?.state_abroad || null,
+  city_abroad: cityAbroad || profile?.city_abroad || null,
+
+  // 🇮🇳 Indian (permanent address)
+  indian_state: indianState || profile?.indian_state || null,
+  district: district || profile?.district || null,
+  assembly_constituency: assembly || profile?.assembly_constituency || null,
+  mandal: mandal || profile?.mandal || null,
+};
+
 
     const { error } = await supabase
       .from("profiles")
@@ -2268,18 +2408,109 @@ const handleSubmitSuggestion = async () => {
 
 {/* 🌍 Current Residency */}
 <div className="md:col-span-2 mt-4">
-  <label className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
-    
-     Current Residency
-
+  <label className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2 block">
+    Current Residency
   </label>
 
+  {/* COUNTRY (read-only) */}
   <div
     className="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg
                text-sm font-bold text-gray-700 cursor-not-allowed"
   >
     {profile?.country_of_residence || "India"}
   </div>
+{/* 🌍 STATE + CITY (ONLY IF ABROAD) */}
+{profile?.country_of_residence !== "India" && (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+
+    {/* ===== STATE ===== */}
+    <div>
+      <label className="text-xs font-medium text-gray-600 mb-1 block">
+        State / Province
+      </label>
+
+      <Listbox
+        value={stateAbroad}
+        onChange={(value) => {
+          setStateAbroad(value);
+          setCityAbroad("");
+        }}
+      >
+        <div className="relative">
+          <Listbox.Button
+            className="w-full h-11 px-3 bg-gray-50 border border-gray-300
+                       rounded-lg flex justify-between items-center
+                       text-sm font-semibold"
+          >
+            <span>{stateAbroad || "Select State / Province"}</span>
+            <ChevronDown size={18} />
+          </Listbox.Button>
+
+          <Listbox.Options
+            className="absolute z-50 mt-1 w-full bg-white
+                       border border-gray-300 rounded-lg
+                       shadow-lg max-h-60 overflow-auto text-sm"
+          >
+            {countryConfig?.map((s) => (
+              <Listbox.Option
+                key={s.name}
+                value={s.name}
+                className="cursor-pointer px-3 py-2 hover:bg-gray-100"
+              >
+                {s.name}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </div>
+      </Listbox>
+    </div>
+
+    {/* ===== CITY ===== */}
+    <div>
+      <label className="text-xs font-medium text-gray-600 mb-1 block">
+        City
+      </label>
+
+      <Listbox
+        value={cityAbroad}
+        onChange={setCityAbroad}
+        disabled={!stateAbroad}
+      >
+        <div className="relative">
+          <Listbox.Button
+            className="w-full h-11 px-3 bg-gray-50 border border-gray-300
+                       rounded-lg flex justify-between items-center
+                       text-sm font-semibold disabled:bg-gray-100"
+          >
+            <span>{cityAbroad || "Select City"}</span>
+            <ChevronDown size={18} />
+          </Listbox.Button>
+
+          <Listbox.Options
+            className="absolute z-50 mt-1 w-full bg-white
+                       border border-gray-300 rounded-lg
+                       shadow-lg max-h-60 overflow-auto text-sm"
+          >
+            {countryConfig
+              ?.find((s) => s.name === stateAbroad)
+              ?.cities.map((city) => (
+                <Listbox.Option
+                  key={city}
+                  value={city}
+                  className="cursor-pointer px-3 py-2 hover:bg-gray-100"
+                >
+                  {city}
+                </Listbox.Option>
+              ))}
+          </Listbox.Options>
+        </div>
+      </Listbox>
+    </div>
+
+  </div>
+)}
+
+
 </div>
 
 {/* 📍 Address Details */}

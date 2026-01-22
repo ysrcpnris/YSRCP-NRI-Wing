@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, MapPin } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { countriesData } from '../lib/countryCodes';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('India');
   const isMounted = useRef(true);
 
   const [formData, setFormData] = useState({
@@ -44,50 +46,11 @@ export default function RegisterPage() {
     // referred_by: '',
   });
 
-  const countryCodes = [
-    { name: 'India', code: '+91' },
-    { name: 'United States', code: '+1' },
-    { name: 'United Kingdom', code: '+44' },
-    { name: 'Canada', code: '+1' },
-    { name: 'Australia', code: '+61' },
-    { name: 'Germany', code: '+49' },
-    { name: 'France', code: '+33' },
-    { name: 'Spain', code: '+34' },
-    { name: 'Italy', code: '+39' },
-    { name: 'Netherlands', code: '+31' },
-    { name: 'Belgium', code: '+32' },
-    { name: 'Switzerland', code: '+41' },
-    { name: 'Sweden', code: '+46' },
-    { name: 'Norway', code: '+47' },
-    { name: 'Denmark', code: '+45' },
-    { name: 'Finland', code: '+358' },
-    { name: 'Poland', code: '+48' },
-    { name: 'New Zealand', code: '+64' },
-    { name: 'Singapore', code: '+65' },
-    { name: 'Malaysia', code: '+60' },
-    { name: 'UAE', code: '+971' },
-    { name: 'Saudi Arabia', code: '+966' },
-    { name: 'Ireland', code: '+353' },
-    { name: 'Austria', code: '+43' },
-    { name: 'Portugal', code: '+351' },
-    { name: 'Greece', code: '+30' },
-    { name: 'Czech Republic', code: '+420' },
-    { name: 'Hungary', code: '+36' },
-    { name: 'Romania', code: '+40' },
-    { name: 'Bulgaria', code: '+359' },
-    { name: 'Thailand', code: '+66' },
-    { name: 'Philippines', code: '+63' },
-    { name: 'Vietnam', code: '+84' },
-    { name: 'Indonesia', code: '+62' },
-    { name: 'Japan', code: '+81' },
-    { name: 'South Korea', code: '+82' },
-    { name: 'Hong Kong', code: '+852' },
-    { name: 'Taiwan', code: '+886' },
-    { name: 'China', code: '+86' },
-    { name: 'Pakistan', code: '+92' },
-    { name: 'Bangladesh', code: '+880' },
-    { name: 'Sri Lanka', code: '+94' },
-  ];
+  // Helper function to get country code from country name
+  const getCountryCode = (countryName: string): string => {
+    const country = countriesData.find(c => c.name === countryName);
+    return country ? country.code : '91';
+  };
 
   // Expected national number lengths (approximate) for validation (digits after country code)
   const phoneLengths: Record<string, number> = {
@@ -116,20 +79,20 @@ export default function RegisterPage() {
 
   // Helper function to get country code from country name
   const getCountryCodeFromCountryName = (countryName: string): string => {
-    const found = countryCodes.find(cc => cc.name === countryName);
-    return found ? found.code : '+91'; // default to India
+    const found = countriesData.find((cc: { name: string; code: string }) => cc.name === countryName);
+    return found ? found.code : '91'; // default to India
   };
 
   // Helper function to extract current country code from mobile number
   const getCurrentCountryCode = () => {
-    // Sort by code length descending to match longer codes first (e.g., +880 before +1)
-    const sortedCodes = [...countryCodes].sort((a, b) => b.code.length - a.code.length);
+    // Sort by code length descending to match longer codes first (e.g., 880 before 1)
+    const sortedCodes = [...countriesData].sort((a, b) => b.code.length - a.code.length);
     for (const cc of sortedCodes) {
       if (formData.mobile_number.startsWith(cc.code)) {
         return cc.code;
       }
     }
-    return '+91'; // default
+    return '91'; // default
   };
 
   const [phoneError, setPhoneError] = useState('');
@@ -1204,17 +1167,9 @@ export default function RegisterPage() {
 
       await withTimeout(signUp(formData.email, formData.password, profilePayload), 20000);
 
-      // After sign-up, send an OTP/magic link to the user's email for verification/authentication
-      try {
-        const { error: otpError } = await (await import('../lib/supabase')).supabase.auth.signInWithOtp({ email: formData.email });
-        if (otpError) {
-          console.warn('Failed to send OTP after signup:', otpError.message || otpError);
-        } else {
-          toast.info('OTP/magic link sent to your email for verification.', { position: 'top-right', autoClose: 5000 });
-        }
-      } catch (e) {
-        console.warn('Error sending OTP after signup', e);
-      }
+      // Note: Removed automatic OTP sending after signup to avoid rate limiting issues.
+      // Users can request OTP/password reset from the login page if needed.
+      console.log('Signup successful for:', formData.email);
 
       if (isMounted.current) setLoading(false);
       toast.success('Registration successful! .', {
@@ -1338,14 +1293,15 @@ export default function RegisterPage() {
                           state_abroad: '',
                           city_abroad: '',
                         });
+                        setSelectedCountry(selectedCountry);
                         setPhoneError('');
                       }}
                       className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Select Country</option>
-                      {Object.keys(countryData).map((country) => (
-                        <option key={country} value={country}>
-                          {country}
+                      {countriesData.map((country) => (
+                        <option key={country.name} value={country.name}>
+                          {country.name} (+{country.code})
                         </option>
                       ))}
                     </select>
@@ -1353,73 +1309,49 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mt-3 sm:mt-4">
-                   <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Email ID <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                      Email ID <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+                    />
+                  </div>
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Mobile Number <span className="text-red-500">*</span>
                     </label>
-                    <div className="space-y-2">
-                      <div className="flex">
-                        <div className="flex items-center border border-gray-300 rounded-l-lg bg-gray-50 px-2">
-                          <select
-                            required
-                            value={getCurrentCountryCode()}
-                            onChange={(e) => {
-                              const newCode = e.target.value;
-                              const prevCode = getCurrentCountryCode();
-                              const numberOnly = formData.mobile_number.slice(prevCode.length);
-                              setFormData({ ...formData, mobile_number: newCode + numberOnly });
-                              // validate on code change
-                              const expected = phoneLengths[newCode];
-                              if (expected && numberOnly.length > 0 && numberOnly.length !== expected) {
-                                setPhoneError(`Mobile number must be ${expected} digits for ${newCode}`);
-                              } else {
-                                setPhoneError('');
-                              }
-                            }}
-                            className="bg-transparent text-sm sm:text-base outline-none px-2 py-2"
-                          >
-                            {countryCodes.map((country) => (
-                              <option key={country.code} value={country.code}>
-                                {country.code}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <input
-                          type="tel"
-                          required
-                          value={formData.mobile_number.slice(getCurrentCountryCode().length)}
-                          onChange={(e) => {
-                            const currentCode = getCurrentCountryCode();
-                            let digits = e.target.value.replace(/\D/g, '');
-                            const expected = phoneLengths[currentCode];
-                            if (expected) digits = digits.slice(0, expected);
-                            setFormData({ ...formData, mobile_number: currentCode + digits });
-                            if (expected && digits.length > 0 && digits.length !== expected) {
-                              setPhoneError(`Mobile number must be ${expected} digits for ${currentCode}`);
-                            } else {
-                              setPhoneError('');
-                            }
-                          }}
-                          className="flex-1 px-3 py-2.5 text-sm sm:text-base border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder=" "
-                        />
+                    <div className="flex">
+                      <div className="flex items-center border border-gray-300 rounded-l-lg bg-gray-50 px-3 py-2.5">
+                        <span className="text-sm sm:text-base font-medium text-gray-700">
+                          +{getCountryCode(selectedCountry)}
+                        </span>
                       </div>
-                      {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
+                      <input
+                        type="tel"
+                        required
+                        value={formData.mobile_number.slice(getCountryCode(selectedCountry).length)}
+                        onChange={(e) => {
+                          const code = getCountryCode(selectedCountry);
+                          let digits = e.target.value.replace(/\D/g, '');
+                          const expected = phoneLengths['+' + code];
+                          if (expected) digits = digits.slice(0, expected);
+                          setFormData({ ...formData, mobile_number: code + digits });
+                          if (expected && digits.length > 0 && digits.length !== expected) {
+                            setPhoneError(`Mobile number must be ${expected} digits`);
+                          } else {
+                            setPhoneError('');
+                          }
+                        }}
+                        className="flex-1 px-3 py-2.5 text-sm sm:text-base border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter mobile number"
+                      />
                     </div>
+                    {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
                   </div>
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
