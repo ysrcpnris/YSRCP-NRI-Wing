@@ -6,6 +6,8 @@ type AssistanceItem = {
   id: number;
   applicant_name: string;
   service_type: string;
+  service_category: string;
+  service_option: string;
   current_location: string;
   description: string;
   created_at: string;
@@ -28,13 +30,18 @@ const TeamsByLocation: Record<string, string[]> = {
 /* ---------------- COMPONENT ---------------- */
 export default function Assistance() {
   const [data, setData] = useState<AssistanceItem[]>([]);
-  const [selected, setSelected] = useState<"total" | "pending" | "resolved" | null>(null);
+  const [selected, setSelected] =
+    useState<"total" | "pending" | "resolved" | null>(null);
 
   const [loading, setLoading] = useState(false);
 
-  /* -------- Modal State -------- */
+  /* -------- Modals -------- */
   const [allocateModalOpen, setAllocateModalOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<AssistanceItem | null>(null);
+  const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
+
+  const [selectedRequest, setSelectedRequest] =
+    useState<AssistanceItem | null>(null);
+  const [descriptionText, setDescriptionText] = useState("");
 
   const [assignedTo, setAssignedTo] = useState("");
   const [actionTaken, setActionTaken] = useState("");
@@ -43,9 +50,25 @@ export default function Assistance() {
   /* ---------------- FETCH DATA ---------------- */
   const fetchRequests = async () => {
     setLoading(true);
+
     const { data, error } = await supabase
       .from("service_requests")
-      .select("*")
+      .select(
+        `
+        id,
+        applicant_name,
+        service_type,
+        service_category,
+        service_option,
+        current_location,
+        description,
+        status,
+        assigned_to,
+        action_taken,
+        admin_comments,
+        created_at
+      `
+      )
       .order("created_at", { ascending: false });
 
     if (!error && data) setData(data as AssistanceItem[]);
@@ -81,7 +104,8 @@ export default function Assistance() {
 
   const handleResolve = async () => {
     if (!selectedRequest) return;
-    const { data: updated, error } = await supabase
+
+    const { error } = await supabase
       .from("service_requests")
       .update({
         status: "resolved",
@@ -89,37 +113,24 @@ export default function Assistance() {
         action_taken: actionTaken,
         admin_comments: comments,
       })
-      .eq("id", selectedRequest.id)
-      .select()
-      .single();
+      .eq("id", selectedRequest.id);
 
-    if (error) {
-      console.error("Failed to update request:", error);
-      // minimal user feedback
-      alert("Failed to update request: " + error.message);
-      return;
+    if (!error) {
+      fetchRequests();
+      setAllocateModalOpen(false);
+      setSelectedRequest(null);
     }
-
-    // update local state to reflect the change immediately
-    setData((prev) => prev.map((it) => (it.id === updated.id ? (updated as AssistanceItem) : it)));
-
-    setAllocateModalOpen(false);
-    setSelectedRequest(null);
-    setAssignedTo("");
-    setActionTaken("");
-    setComments("");
   };
 
   /* ---------------- UI ---------------- */
   return (
     <div className="p-6">
-
       {/* HEADER */}
       <h1 className="text-2xl font-bold text-[#1368d6] mb-1">
         Assistance Requests Overview
       </h1>
       <p className="text-gray-500 mb-6">
-        Allocate and resolve NRI service requests based on location & service type.
+        Allocate and resolve NRI service requests efficiently.
       </p>
 
       {/* STATS */}
@@ -138,56 +149,74 @@ export default function Assistance() {
             </h2>
             <button
               onClick={() => setSelected(null)}
-              className="text-sm px-3 py-1 border rounded hover:bg-blue-50"
+              className="text-sm px-3 py-1 border rounded"
             >
               Close
             </button>
           </div>
 
-          <div className="overflow-x-auto relative">
-            <table className="min-w-full border rounded-lg">
+          <div className="overflow-x-auto">
+            <table className="min-w-full border rounded-lg text-sm">
               <thead className="bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white">
                 <tr>
-                  <th className="px-4 py-2 text-left">Name</th>
-                  <th className="px-4 py-2 text-left">Service</th>
-                  <th className="px-4 py-2 text-left">Location</th>
-                  <th className="px-4 py-2 text-left">Date</th>
-                  <th className="px-4 py-2 text-left">Status</th>
-                  <th className="px-4 py-2 text-left">Description</th>
-                  <th className="px-4 py-2 text-left">Action</th>
+                  <th className="px-3 py-2 text-left">Name</th>
+                  <th className="px-3 py-2 text-left">Service</th>
+                  <th className="px-3 py-2 text-left">Category</th>
+                  <th className="px-3 py-2 text-left">Option</th>
+                  <th className="px-3 py-2 text-left">Location</th>
+                  <th className="px-3 py-2 text-left">Date</th>
+                  <th className="px-3 py-2 text-left">Status</th>
+                  <th className="px-3 py-2 text-left">Description</th>
+                  <th className="px-3 py-2 text-left">Action</th>
                 </tr>
               </thead>
 
               <tbody>
                 {tableData.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-blue-50">
-                    <td className="px-4 py-2">{item.applicant_name}</td>
-                    <td className="px-4 py-2">{item.service_type}</td>
-                    <td className="px-4 py-2">{item.current_location}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">{item.applicant_name}</td>
+                    <td className="px-3 py-2">{item.service_type}</td>
+                    <td className="px-3 py-2">{item.service_category}</td>
+                    <td className="px-3 py-2">{item.service_option}</td>
+                    <td className="px-3 py-2">{item.current_location}</td>
+                    <td className="px-3 py-2">
                       {new Date(item.created_at).toLocaleDateString()}
                     </td>
-                    <td className={`px-4 py-2 font-medium ${
-                      item.status === "pending" ? "text-yellow-600" : "text-green-600"
-                    }`}>
+                    <td
+                      className={`px-3 py-2 font-medium ${
+                        item.status === "pending"
+                          ? "text-yellow-600"
+                          : "text-green-600"
+                      }`}
+                    >
                       {item.status}
                     </td>
-                    <td className="px-4 py-2">{item.description}</td>
-                    <td className="px-4 py-2">
+
+                    {/* DESCRIPTION VIEW */}
+                    <td className="px-3 py-2">
+                      <button
+                        className="text-blue-600 underline"
+                        onClick={() => {
+                          setDescriptionText(item.description);
+                          setDescriptionModalOpen(true);
+                        }}
+                      >
+                        View
+                      </button>
+                    </td>
+
+                    {/* ACTION */}
+                    <td className="px-3 py-2">
                       {item.status === "pending" ? (
                         <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openAllocationForm(item);
-                          }}
-                          className="bg-[#1368d6] text-white px-3 py-1 rounded hover:bg-green-600 z-10 relative"
+                          onClick={() => openAllocationForm(item)}
+                          className="bg-[#1368d6] text-white px-3 py-1 rounded"
                         >
-                          Resolve / Allocate
+                          Resolve
                         </button>
                       ) : (
-                        <span className="text-green-600 text-sm">
-                          Assigned to: {item.assigned_to}
+                        <span className="text-green-600 text-xs">
+                          {item.assigned_to}
                         </span>
                       )}
                     </td>
@@ -195,83 +224,136 @@ export default function Assistance() {
                 ))}
               </tbody>
             </table>
-          </div>
 
-          {loading && <p className="text-center mt-4 text-gray-500">Loading...</p>}
+            {loading && (
+              <p className="text-center mt-4 text-gray-500">Loading...</p>
+            )}
+          </div>
         </div>
       )}
 
-      {/* MODAL */}
+      {/* DESCRIPTION MODAL */}
+      {descriptionModalOpen && (
+        <Modal title="Request Description" onClose={() => setDescriptionModalOpen(false)}>
+          <div className="bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-200 rounded-lg p-5">
+            <p className="text-gray-800 whitespace-pre-wrap leading-7 text-base font-medium">{descriptionText}</p>
+          </div>
+        </Modal>
+      )}
+
+      {/* ALLOCATION MODAL */}
       {allocateModalOpen && selectedRequest && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
-          <div className="bg-white w-full max-w-lg rounded-xl shadow-xl p-6">
-            <h3 className="text-xl font-semibold text-[#1368d6] mb-4">
-              Resolve Request – {selectedRequest.applicant_name}
-            </h3>
-
-            <div className="space-y-4">
-              <select
-                className="w-full border p-2 rounded"
-                value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-              >
-                <option value="">Assign to Team</option>
-                {(TeamsByLocation[selectedRequest.current_location] || ["General Support Team"]).map(
-                  (t) => (
-                    <option key={t} value={t}>{t}</option>
-                  )
-                )}
-              </select>
-
-              <input
-                placeholder="Action Taken"
-                className="w-full border p-2 rounded"
-                value={actionTaken}
-                onChange={(e) => setActionTaken(e.target.value)}
-              />
-
-              <textarea
-                placeholder="Comments"
-                className="w-full border p-2 rounded"
-                rows={3}
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-              />
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-lg rounded-xl p-6 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-[#1368d6]">{`Resolve – ${selectedRequest.applicant_name}`}</h3>
+              <button onClick={() => setAllocateModalOpen(false)} className="text-xl font-bold">×</button>
             </div>
+            <select
+              className="w-full border p-2 rounded mb-3"
+              value={assignedTo}
+              onChange={(e) => setAssignedTo(e.target.value)}
+            >
+              <option value="">Assign Team</option>
+              {(TeamsByLocation[selectedRequest.current_location] || ["General Support Team"]).map(
+                (t) => (
+                  <option key={t}>{t}</option>
+                )
+              )}
+            </select>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <input
+              className="w-full border p-2 rounded mb-3"
+              placeholder="Action Taken"
+              value={actionTaken}
+              onChange={(e) => setActionTaken(e.target.value)}
+            />
+
+            <textarea
+              className="w-full border p-2 rounded mb-4"
+              rows={3}
+              placeholder="Admin Comments"
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+            />
+
+            <div className="flex justify-end gap-3">
               <button
-                onClick={() => setAllocateModalOpen(false)}
                 className="px-4 py-2 bg-gray-300 rounded"
+                onClick={() => setAllocateModalOpen(false)}
               >
                 Cancel
               </button>
               <button
+                className="px-4 py-2 bg-[#1368d6] text-white rounded"
                 onClick={handleResolve}
-                className="px-4 py-2 bg-[#1368d6] text-white rounded hover:bg-green-600"
               >
-                Submit & Resolve
+                Submit
               </button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ---------------- REUSABLE MODAL ---------------- */
+function Modal({
+  title,
+  children,
+  onClose,
+}: {
+  title: string;
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+      <div className="bg-white w-full max-w-2xl rounded-2xl p-7 shadow-2xl border border-gray-200 transform transition-all animate-slideUp max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+          <h3 className="text-xl font-bold bg-gradient-to-r from-[#1368d6] to-[#00a86b] bg-clip-text text-transparent">{title}</h3>
+          <button 
+            onClick={onClose} 
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-colors duration-200"
+            aria-label="Close modal"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="text-gray-700">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
 
 /* ---------------- CARD ---------------- */
-function StatCard({ title, value, onClick }: any) {
+function StatCard({
+  title,
+  value,
+  onClick,
+  active,
+}: {
+  title: string;
+  value: number;
+  onClick: () => void;
+  active: boolean;
+}) {
   return (
-    <div className="bg-white border rounded-xl p-6 text-center shadow hover:shadow-md max-w-60 mx-px">
-      <h3 className="text-gray-600 text-lg font-bold">{title}</h3>
-      <p className="text-3xl font-bold text-green-600 my-3">{value}</p>
+     <div className="bg-white border rounded-xl p-6 text-center shadow hover:shadow-md max-w-60 mx-px">
+      <div className="text-lg font-bold">{title}</div>
+      <div className="text-3xl text-green-600">{value}</div>
       <button
         onClick={onClick}
-        className="bg-[#1368d6] text-white px-4 py-2 rounded hover:bg-green-600"
+        className="mt-3 bg-[#1368d6] text-white px-4 py-2 rounded"
       >
-        View More
+        {active ? "Hide" : "View More"}
       </button>
     </div>
   );
 }
+

@@ -16,7 +16,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
-const CHANNEL_ID = "UCxGLOR0FC_Ix8_gFLaGSsGg";
+const CHANNEL_ID = "UCM3xJZTzQzYO35-_JlYQQCw";
 const MAX_VIDEOS = 12;
 const REFRESH_INTERVAL = 30 * 60 * 1000;
 
@@ -132,29 +132,83 @@ export default function PressMeetsAndSocial() {
   const paused = useRef(false);
 
   const [videos, setVideos] = useState<any[]>([]);
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchVideos = async () => {
+      setLoading(true);
+      setError("");
       const key = import.meta.env.VITE_YOUTUBE_API_KEY;
-      if (!key) return;
+      if (!key) {
+        console.error("YouTube API key not found");
+        setError("API Key not configured");
+        setLoading(false);
+        return;
+      }
 
-      const res = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&order=date&maxResults=${MAX_VIDEOS}&type=video&key=${key}`
-      );
+      try {
+        // Search for the official YS Jagan Mohan Reddy channel
+        const channelRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&q=YS%20Jagan%20Mohan%20Reddy%20Official&type=channel&maxResults=1&key=${key}`
+        );
 
-      const json = await res.json();
-      if (!json.items) return;
+        const channelJson = await channelRes.json();
+        console.log("Channel search response:", channelJson);
+        
+        if (channelJson.error) {
+          setError(`API Error: ${channelJson.error.message}`);
+          setLoading(false);
+          return;
+        }
+        
+        if (!channelJson.items || channelJson.items.length === 0) {
+          setError("Official channel not found");
+          setLoading(false);
+          return;
+        }
 
-      setVideos(
-        json.items.map((v: any) => ({
-          title: v.snippet.title,
-          url: `https://www.youtube.com/watch?v=${v.id.videoId}`,
-          image: v.snippet.thumbnails.medium.url,
-          time: formatRelativeTime(v.snippet.publishedAt),
-          views: "—",
-          isLive: v.snippet.liveBroadcastContent === "live",
-        }))
-      );
+        const foundChannelId = channelJson.items[0].id.channelId;
+        console.log("Found official channel ID:", foundChannelId);
+        
+        // Now fetch videos from this channel
+        const res = await fetch(
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${foundChannelId}&order=date&maxResults=${MAX_VIDEOS}&type=video&key=${key}`
+        );
+
+        const json = await res.json();
+        console.log("YouTube API Response:", json);
+        
+        if (json.error) {
+          console.error("API Error:", json.error);
+          setError(`API Error: ${json.error.message}`);
+          setLoading(false);
+          return;
+        }
+        
+        if (!json.items || json.items.length === 0) {
+          console.warn("No items in response");
+          setError("No videos found in this channel");
+          setLoading(false);
+          return;
+        }
+
+        setVideos(
+          json.items.map((v: any) => ({
+            title: v.snippet.title,
+            url: `https://www.youtube.com/watch?v=${v.id.videoId}`,
+            image: v.snippet.thumbnails.medium.url,
+            time: formatRelativeTime(v.snippet.publishedAt),
+            views: "—",
+            isLive: v.snippet.liveBroadcastContent === "live",
+          }))
+        );
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching videos:", error);
+        setError(`Error: ${error}`);
+        setLoading(false);
+      }
     };
 
     fetchVideos();
@@ -209,6 +263,19 @@ export default function PressMeetsAndSocial() {
         <h2 className="text-white font-black text-xl text-center mb-6 flex justify-center gap-2">
           <Video /> Jagan Anna On Air
         </h2>
+
+        {error && (
+          <div className="bg-red-500 text-white p-4 rounded-lg mb-6">
+            <p>Error: {error}</p>
+            <p className="text-sm mt-2">Channel ID: {CHANNEL_ID}</p>
+          </div>
+        )}
+
+        {loading && !videos.length && (
+          <div className="text-white text-center py-8">
+            <p>Loading videos...</p>
+          </div>
+        )}
 
         <div ref={row1Ref} onMouseEnter={() => paused.current = true} onMouseLeave={() => paused.current = false}
              className="flex gap-4 overflow-x-auto mb-6">
