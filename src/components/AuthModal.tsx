@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import ResetPassword from "./ResetPassword";
 
 type AuthModalProps = {
   mode: "signin" | "signup";
@@ -34,7 +35,6 @@ export default function AuthModal({
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [forgotPassword, setForgotPassword] = useState(false);
-  const [resetMethod, setResetMethod] = useState<"email" | "otp">("email");
 
   const [formData, setFormData] = useState({
     // Personal Information
@@ -668,38 +668,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      if (!formData.email) {
-        setError("Please enter your email.");
-        setLoading(false);
-        return;
-      }
-
-      if (resetMethod === "email") {
-        const { error } = await supabase.auth.resetPasswordForEmail(
-          formData.email
-        );
-
-        if (error) throw error;
-
-        toast.success("Password reset link sent to your email");
-      } else {
-        // Send an OTP/magic-link via Supabase for authentication (user can use it to login and then reset password)
-        const { error } = await supabase.auth.signInWithOtp({ email: formData.email });
-        if (error) throw error;
-        toast.success("OTP/magic link sent to your email. Use it to sign in and reset your password.");
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to send reset instructions");
-    } finally {
-      setLoading(false);
-    }
-  };
 
 
   return (
@@ -758,62 +726,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             )}
 
             {forgotPassword ? (
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setResetMethod("email")}
-                    className={`flex-1 py-2 px-4 rounded-lg ${
-                      resetMethod === "email"
-                        ? "bg-[#0B4DA2] text-white"
-                        : "bg-gray-200 text-gray-700"
-                    }`}
-                  >
-                    Reset Link
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setResetMethod("otp")}
-                    className={`flex-1 py-2 px-4 rounded-lg ${
-                      resetMethod === "otp"
-                        ? "bg-[#0B4DA2] text-white"
-                        : "bg-gray-200 text-gray-700"
-                    }`}
-                  >
-                    OTP
-                  </button>
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50"
-                >
-                  {loading
-                    ? "Sending..."
-                    : `Send ${resetMethod === "email" ? "Reset Link" : "OTP"}`}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setForgotPassword(false)}
-                  className="w-full text-[#0B4DA2] hover:text-[#0B4DA2] font-medium transition"
-                >
-                  Back to Login
-                </button>
-              </form>
+              <ResetPassword onBack={() => setForgotPassword(false)} />
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === "signup" && (
