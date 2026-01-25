@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, MapPin } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { countriesData } from '../lib/countryCodes';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -45,50 +46,10 @@ export default function RegisterPage() {
     // referred_by: '',
   });
 
-  const countryCodes = [
-    { name: 'India', code: '+91' },
-    { name: 'United States', code: '+1' },
-    { name: 'United Kingdom', code: '+44' },
-    { name: 'Canada', code: '+1' },
-    { name: 'Australia', code: '+61' },
-    { name: 'Germany', code: '+49' },
-    { name: 'France', code: '+33' },
-    { name: 'Spain', code: '+34' },
-    { name: 'Italy', code: '+39' },
-    { name: 'Netherlands', code: '+31' },
-    { name: 'Belgium', code: '+32' },
-    { name: 'Switzerland', code: '+41' },
-    { name: 'Sweden', code: '+46' },
-    { name: 'Norway', code: '+47' },
-    { name: 'Denmark', code: '+45' },
-    { name: 'Finland', code: '+358' },
-    { name: 'Poland', code: '+48' },
-    { name: 'New Zealand', code: '+64' },
-    { name: 'Singapore', code: '+65' },
-    { name: 'Malaysia', code: '+60' },
-    { name: 'UAE', code: '+971' },
-    { name: 'Saudi Arabia', code: '+966' },
-    { name: 'Ireland', code: '+353' },
-    { name: 'Austria', code: '+43' },
-    { name: 'Portugal', code: '+351' },
-    { name: 'Greece', code: '+30' },
-    { name: 'Czech Republic', code: '+420' },
-    { name: 'Hungary', code: '+36' },
-    { name: 'Romania', code: '+40' },
-    { name: 'Bulgaria', code: '+359' },
-    { name: 'Thailand', code: '+66' },
-    { name: 'Philippines', code: '+63' },
-    { name: 'Vietnam', code: '+84' },
-    { name: 'Indonesia', code: '+62' },
-    { name: 'Japan', code: '+81' },
-    { name: 'South Korea', code: '+82' },
-    { name: 'Hong Kong', code: '+852' },
-    { name: 'Taiwan', code: '+886' },
-    { name: 'China', code: '+86' },
-    { name: 'Pakistan', code: '+92' },
-    { name: 'Bangladesh', code: '+880' },
-    { name: 'Sri Lanka', code: '+94' },
-  ];
+  const countryCodes = countriesData.map(country => ({
+    name: country.name,
+    code: '+' + country.code
+  }));
 
   // Expected national number lengths (approximate) for validation (digits after country code)
   const phoneLengths: Record<string, number> = {
@@ -116,6 +77,12 @@ export default function RegisterPage() {
   const professions = ['Job', 'Business', 'Student'];
 
   // Helper function to get country code from country name
+  // Helper function to get country code from country name
+  const getCountryCode = (countryName: string): string => {
+    const found = countryCodes.find(cc => cc.name === countryName);
+    return found ? found.code.replace('+', '') : '91'; // default to India, return without +
+  };
+
   const getCountryCodeFromCountryName = (countryName: string): string => {
     const found = countryCodes.find(cc => cc.name === countryName);
     return found ? found.code : '+91'; // default to India
@@ -1340,9 +1307,9 @@ export default function RegisterPage() {
                       className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Select Country</option>
-                      {Object.keys(countryData).map((country) => (
-                        <option key={country} value={country}>
-                          {country}
+                      {countryCodes.map((country) => (
+                        <option key={country.name} value={country.name}>
+                          {country.name} (+{country.code.replace('+', '')})
                         </option>
                       ))}
                     </select>
