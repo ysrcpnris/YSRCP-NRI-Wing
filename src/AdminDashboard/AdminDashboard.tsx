@@ -7,6 +7,8 @@ import { Globe } from "lucide-react";
 import * as XLSX from "xlsx";
 import Visited from "./Visited";
 import Assistance from "./Assistance";
+import ChangePassword from "./ChangePassword";
+
 import Suggestions from "./Suggestions";
 // import ServiceInbox from "./ServiceInbox";
 import MasterData from "./MasterData";
@@ -263,6 +265,8 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Settings} label="Master Data" page="masterData" />
             <Item icon={Newspaper} label="Events & Notifications" page="eventsnotifications" />
             <Item icon={Globe} label="Content Control" page="contentControl" />
+            <Item icon={Settings} label="Change Password" page="changePassword" />
+
 
           </nav>
         </div>
@@ -551,6 +555,13 @@ export default function AdminDashboard() {
             </p>
           </div>
           <button
+  onClick={() => setCurrentPage("changePassword")}
+  className="ml-3 px-4 py-2 bg-[#1368d6] text-white rounded-lg hover:bg-green-600 transition"
+>
+  🔐 Change Password
+</button>
+
+          <button
             onClick={() => exportToExcel(rows, `registrations_${new Date().toISOString().split('T')[0]}.xlsx`)}
             disabled={loading || rows.length === 0}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 font-medium"
@@ -702,6 +713,8 @@ export default function AdminDashboard() {
       {currentPage === "masterData" && <MasterData />}
       {currentPage === "eventsnotifications" && <EventsNotifications />}
       {currentPage === "contentControl" && <ContentControl />}
+      {currentPage === "changePassword" && <ChangePassword />}
+
 
       </main>
     </div>

@@ -1,52 +1,49 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import About from './components/About';
-import Mission from './components/Mission';
-import Initiatives from './components/Initiatives';
-import TenPillars from './components/TenPillar';
-import PillarPage from './components/PillarPage';
-// import PillarDetailpage from './components/PillarDetailpage';
-import PillarDetailWrapper from './components/PillarDetailWrapper';
-import Events from './components/Events';
-import News from './components/News';
-import Contact from './components/Contact';
-import ImpactMap from './components/ImpactMap';
-import Testimonials from './components/Testimonials';
-import Glimpse from './components/Glimpse';
-import Footer from './components/Footer';
-import AuthModal from './components/AuthModal';
-import SocialMedia from './components/SocialMedia';
-// import JaganMark from './components/JaganMark';
-import PoliticalJourney from './components/PoliticalJourney';
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { supabase } from "./lib/supabase";
 
-import Health from './pages/Health';
-import Agriculture from './pages/Agriculture';
-import Education from './pages/Education';
-import Women from './pages/Women';
-import StudentYouth from './pages/Studentyouth';
+import Header from "./components/Header";
+import Hero from "./components/Hero";
+import About from "./components/About";
+import Mission from "./components/Mission";
+import Initiatives from "./components/Initiatives";
+import TenPillars from "./components/TenPillar";
+import PillarPage from "./components/PillarPage";
+import PillarDetailWrapper from "./components/PillarDetailWrapper";
+import Events from "./components/Events";
+import News from "./components/News";
+import Contact from "./components/Contact";
+import ImpactMap from "./components/ImpactMap";
+import Testimonials from "./components/Testimonials";
+import Glimpse from "./components/Glimpse";
+import Footer from "./components/Footer";
+import AuthModal from "./components/AuthModal";
+import SocialMedia from "./components/SocialMedia";
+import PoliticalJourney from "./components/PoliticalJourney";
+
+import Health from "./pages/Health";
+import Agriculture from "./pages/Agriculture";
+import Education from "./pages/Education";
+import Women from "./pages/Women";
+import StudentYouth from "./pages/Studentyouth";
 import ReferralRedirect from "./pages/ReferralRedirect";
 
-import AmmaVodi from './pages/AmmaVodi';
-import VidyaDeevena from './pages/VidyaDeevena';
-import VasathiDeevena from './pages/VasathiDeevena';
-import NriConnect from './pages/NriConnect';
-import Gorumudda from './pages/Gorumudda';
-import Cheyutha from './pages/Cheyutha';
-import Yuvanestham from './pages/Yuvanestham';
-import LiveStreamPage from './pages/LiveStream';
-import RegisterPage from './pages/RegisterPage';
+import AmmaVodi from "./pages/AmmaVodi";
+import VidyaDeevena from "./pages/VidyaDeevena";
+import VasathiDeevena from "./pages/VasathiDeevena";
+import NriConnect from "./pages/NriConnect";
+import Gorumudda from "./pages/Gorumudda";
+import Cheyutha from "./pages/Cheyutha";
+import Yuvanestham from "./pages/Yuvanestham";
+import LiveStreamPage from "./pages/LiveStream";
+import RegisterPage from "./pages/RegisterPage";
+import ResetPasswordConfirmPage from "./pages/ResetPasswordConfirmPage";
 
-// ✅ ADMIN
-// import AdminLogin from './AdminDashboard/AdminLogin';
-import AdminDashboard from './AdminDashboard/AdminDashboard';
-import AdminRoute from './routes/AdminRoute';
+import AdminDashboard from "./AdminDashboard/AdminDashboard";
+import AdminRoute from "./routes/AdminRoute";
 
-// ✅ PROFESSION DASHBOARDS
 import JobDashboard from "./components/dashboard/JobDashboard";
 import BusinessDashboard from "./components/dashboard/BusinessDashboard";
 import StudentDashboard from "./components/dashboard/StudentDashboard";
@@ -56,23 +53,23 @@ function MainLandingPage({
   setShowAuthModal,
   showAuthModal,
   authMode,
-}) {
+}: any) {
   return (
     <div className="min-h-screen bg-white">
       <Header
         onSignIn={() => {
-          setAuthMode('signin');
+          setAuthMode("signin");
           setShowAuthModal(true);
         }}
         onSignUp={() => {
-          setAuthMode('signup');
+          setAuthMode("signup");
           setShowAuthModal(true);
         }}
       />
 
       <Hero
         onJoinNow={() => {
-          setAuthMode('signup');
+          setAuthMode("signup");
           setShowAuthModal(true);
         }}
       />
@@ -82,7 +79,6 @@ function MainLandingPage({
       <PoliticalJourney />
       <Initiatives />
       <TenPillars />
-      {/* <Development /> */}
       <Events />
       <News />
       <Contact setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />
@@ -97,35 +93,46 @@ function MainLandingPage({
           mode={authMode}
           onClose={() => setShowAuthModal(false)}
           onSwitchMode={() =>
-            setAuthMode(authMode === 'signin' ? 'signup' : 'signin')
+            setAuthMode(authMode === "signin" ? "signup" : "signin")
           }
         />
       )}
     </div>
   );
 }
+
 function AppContent() {
   const { loading } = useAuth();
-  const location = useLocation(); // ✅ ADD
+  const location = useLocation();
+  const navigate = useNavigate();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("signin");
 
   useEffect(() => {
-  if (location.state?.openLogin) {
-    setAuthMode("signin");
-    setShowAuthModal(true);
+    if (location.state?.openLogin) {
+      setAuthMode("signin");
+      setShowAuthModal(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
-    // prevent modal reopening on refresh
-    window.history.replaceState({}, document.title);
-  }
-}, [location.state]);
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" && session) {
+        navigate("/reset-password-confirm", { replace: true });
+      }
+    });
 
+    return () => {
+      data.subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -135,7 +142,6 @@ function AppContent() {
   return (
     <>
       <Routes>
-        {/* MAIN SITE */}
         <Route
           path="/"
           element={
@@ -154,53 +160,29 @@ function AppContent() {
         <Route path="/agriculture" element={<Agriculture setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
         <Route path="/women" element={<Women setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
         <Route path="/students" element={<StudentYouth setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
-
-        {/* WELFARE */}
-        <Route path="/welfare/amma-vodi" element={<AmmaVodi setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
-        <Route path="/welfare/vidya-deevena" element={<VidyaDeevena setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
-        <Route path="/welfare/vasathi-deevena" element={<VasathiDeevena setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
-        <Route path="/welfare/nri-connect" element={<NriConnect setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
-        <Route path="/welfare/gorumudda" element={<Gorumudda setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
-        <Route path="/welfare/cheyutha" element={<Cheyutha setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
-        <Route path="/welfare/yuvanestham" element={<Yuvanestham setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
-
-        <Route
-          path="/contact"
-          element={
-            <Contact
-              setAuthMode={setAuthMode}
-              setShowAuthModal={setShowAuthModal}
-            />
-          }
-        />
-
-        {/* Redirect old suggestions path to new Glimpse (Gallery) */}
+         <Route
+  path="/reset-password-confirm"
+  element={<ResetPasswordConfirmPage />}
+/>
+ 
         <Route path="/suggestions" element={<Navigate to="/glimpse" replace />} />
         <Route path="/glimpse" element={<Glimpse />} />
         <Route path="/ref/:name/:code" element={<ReferralRedirect />} />
 
-
-        {/* Services page mapping to Initiatives */}
         <Route path="/services" element={<Initiatives />} />
-
-        {/* Pillars Page */}
         <Route path="/pillars" element={<PillarPage onBack={() => window.history.back()} onPillarSelect={() => {}} />} />
-        
-        {/* Pillar Detail Page (from direct navigation) */}
         <Route path="/pillars/:id" element={<PillarDetailWrapper />} />
 
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* ADMIN */}
-        
         <Route
-  path="/admin/dashboard"
-  element={
-    <AdminRoute>
-      <AdminDashboard />
-    </AdminRoute>
-  }
-/>
+          path="/admin/dashboard"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
 
         <Route
           path="/admin"
@@ -211,15 +193,7 @@ function AppContent() {
           }
         />
 
-{/* MAIN DASHBOARD ENTRY */}
-<Route
-  path="/dashboard"
-  element={<Navigate to="/dashboard/job" replace />}
-/>
-
-
-
-        {/* ✅ PROFESSION DASHBOARDS */}
+        <Route path="/dashboard" element={<Navigate to="/dashboard/job" replace />} />
         <Route path="/dashboard/job" element={<JobDashboard />} />
         <Route path="/dashboard/business" element={<BusinessDashboard />} />
         <Route path="/dashboard/student" element={<StudentDashboard />} />
@@ -237,8 +211,6 @@ function AppContent() {
     </>
   );
 }
-
-
 
 export default function App() {
   return (
