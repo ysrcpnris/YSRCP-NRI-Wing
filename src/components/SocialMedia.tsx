@@ -15,6 +15,7 @@ import {
   Code,
   ArrowUpRight,
 } from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
 
 const CHANNEL_ID = "UCM3xJZTzQzYO35-_JlYQQCw";
 const MAX_VIDEOS = 12;
@@ -132,87 +133,106 @@ export default function PressMeetsAndSocial() {
   const paused = useRef(false);
 
   const [videos, setVideos] = useState<any[]>([]);
-  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchVideos = async () => {
       setLoading(true);
-      setError("");
       const key = import.meta.env.VITE_YOUTUBE_API_KEY;
-      if (!key) {
-        console.error("YouTube API key not found");
-        setError("API Key not configured");
-        setLoading(false);
-        return;
-      }
+      
+      // Try YouTube API first
+      if (key) {
+        try {
+          // Search for the official YS Jagan Mohan Reddy channel
+          const channelRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&q=YS%20Jagan%20Mohan%20Reddy%20Official&type=channel&maxResults=1&key=${key}`
+          );
 
-      try {
-        // Search for the official YS Jagan Mohan Reddy channel
-        const channelRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&q=YS%20Jagan%20Mohan%20Reddy%20Official&type=channel&maxResults=1&key=${key}`
-        );
+          const channelJson = await channelRes.json();
+          console.log("Channel search response:", channelJson);
+          
+          if (channelJson.error) {
+            throw new Error(channelJson.error.message || "Channel API Error");
+          }
+          
+          if (!channelJson.items || channelJson.items.length === 0) {
+            throw new Error("Official channel not found");
+          }
 
-        const channelJson = await channelRes.json();
-        console.log("Channel search response:", channelJson);
-        
-        if (channelJson.error) {
-          setError(`API Error: ${channelJson.error.message}`);
-          setLoading(false);
-          return;
-        }
-        
-        if (!channelJson.items || channelJson.items.length === 0) {
-          setError("Official channel not found");
-          setLoading(false);
-          return;
-        }
+          const foundChannelId = channelJson.items[0].id.channelId;
+          console.log("Found official channel ID:", foundChannelId);
+          
+          // Now fetch videos from this channel
+          const res = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${foundChannelId}&order=date&maxResults=${MAX_VIDEOS}&type=video&key=${key}`
+          );
 
-        const foundChannelId = channelJson.items[0].id.channelId;
-        console.log("Found official channel ID:", foundChannelId);
-        
-        // Now fetch videos from this channel
-        const res = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${foundChannelId}&order=date&maxResults=${MAX_VIDEOS}&type=video&key=${key}`
-        );
+          const json = await res.json();
+          console.log("YouTube API Response:", json);
+          
+          if (json.error) {
+            throw new Error(json.error.message || "Video API Error");
+          }
+          
+          if (!json.items || json.items.length === 0) {
+            throw new Error("No items in response");
+          }
 
-        const json = await res.json();
-        console.log("YouTube API Response:", json);
-        
-        if (json.error) {
-          console.error("API Error:", json.error);
-          setError(`API Error: ${json.error.message}`);
-          setLoading(false);
-          return;
-        }
-        
-        if (!json.items || json.items.length === 0) {
-          console.warn("No items in response");
-          setError("No videos found in this channel");
-          setLoading(false);
-          return;
-        }
-
-        setVideos(
-          json.items.map((v: any) => ({
+          const videoData = json.items.map((v: any) => ({
             title: v.snippet.title,
             url: `https://www.youtube.com/watch?v=${v.id.videoId}`,
             image: v.snippet.thumbnails.medium.url,
             time: formatRelativeTime(v.snippet.publishedAt),
             views: "—",
             isLive: v.snippet.liveBroadcastContent === "live",
-          }))
-        );
+          }));
+
+          setVideos(videoData);
+          setLoading(false);
+          return;
+        } catch (error) {
+          console.error("YouTube API Error, falling back to Supabase:", error);
+        }
+      } else {
+        console.warn("YouTube API key not configured, using Supabase fallback");
+      }
+
+      // Fallback: Fetch from Supabase
+      try {
+        const { data, error } = await supabase
+          .from('youtube_videos')
+          .select('*')
+          .order('published_at', { ascending: false })
+          .limit(MAX_VIDEOS);
+
+        if (error) {
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          console.log("Videos fetched from Supabase:", data);
+          const videoData = data.map((v: any) => ({
+            title: v.title,
+            url: v.video_url,
+            image: v.thumbnail,
+            time: formatRelativeTime(v.published_at),
+            views: "—",
+            isLive: false,
+          }));
+          setVideos(videoData);
+        } else {
+          console.warn("No videos found in Supabase");
+        }
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching videos:", error);
-        setError(`Error: ${error}`);
+        console.error("Supabase fallback error:", error);
         setLoading(false);
       }
     };
 
     fetchVideos();
-    const i = setInterval(fetchVideos, REFRESH_INTERVAL);
+    // Increase refresh interval to 1 hour to avoid quota issues
+    const i = setInterval(fetchVideos, 60 * 60 * 1000);
     return () => clearInterval(i);
   }, []);
 
@@ -264,16 +284,30 @@ export default function PressMeetsAndSocial() {
           <Video /> Jagan Anna On Air
         </h2>
 
-        {error && (
-          <div className="bg-red-500 text-white p-4 rounded-lg mb-6">
-            <p>Error: {error}</p>
-            <p className="text-sm mt-2">Channel ID: {CHANNEL_ID}</p>
+        {loading && !videos.length && (
+          <div className="text-white text-center py-12">
+            <div className="inline-block">
+              <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p>Loading videos...</p>
+            </div>
           </div>
         )}
 
-        {loading && !videos.length && (
-          <div className="text-white text-center py-8">
-            <p>Loading videos...</p>
+        {!loading && videos.length === 0 && (
+          <div className="text-white text-center py-12">
+            <div className="mb-4">
+              <Video size={48} className="mx-auto opacity-50 mb-4" />
+            </div>
+            <p className="text-lg font-semibold">Videos coming soon</p>
+            <p className="text-sm text-blue-200 mt-2">Subscribe to our YouTube channel for the latest updates</p>
+            <a 
+              href="https://www.youtube.com/@YSJaganMohanReddy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+            >
+              Visit YouTube Channel
+            </a>
           </div>
         )}
 
