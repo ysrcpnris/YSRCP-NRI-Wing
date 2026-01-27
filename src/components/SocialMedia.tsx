@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
-const CHANNEL_ID = "UCM3xJZTzQzYO35-_JlYQQCw";
+const CHANNEL_ID = "UCM3lYQQxJZTzQzYO35-_JCw";
 const MAX_VIDEOS = 12;
 const REFRESH_INTERVAL = 30 * 60 * 1000;
 
@@ -181,7 +181,7 @@ export default function PressMeetsAndSocial() {
           const videoData = json.items.map((v: any) => ({
             title: v.snippet.title,
             url: `https://www.youtube.com/watch?v=${v.id.videoId}`,
-            image: v.snippet.thumbnails.medium.url,
+            image: v.snippet.thumbnail_url.medium.url,
             time: formatRelativeTime(v.snippet.publishedAt),
             views: "—",
             isLive: v.snippet.liveBroadcastContent === "live",
@@ -214,7 +214,7 @@ export default function PressMeetsAndSocial() {
           const videoData = data.map((v: any) => ({
             title: v.title,
             url: v.video_url,
-            image: v.thumbnail,
+            image: v.thumbnail_url,
             time: formatRelativeTime(v.published_at),
             views: "—",
             isLive: false,

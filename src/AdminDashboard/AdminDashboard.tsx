@@ -7,14 +7,13 @@ import { Globe } from "lucide-react";
 import * as XLSX from "xlsx";
 import Visited from "./Visited";
 import Assistance from "./Assistance";
-import ChangePassword from "./ChangePassword";
-
 import Suggestions from "./Suggestions";
 // import ServiceInbox from "./ServiceInbox";
 import MasterData from "./MasterData";
 import EventsNotifications from "./EventsNotifications";
 
 import ContentControl from "./ContentControl";
+import AdminProfileMenu from "./AdminProfileMenu";
 import ysrLogo from "../components/nrilogo.png";
 
 
@@ -248,7 +247,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
                 className="w-10 h-10 rounded-full border-2 border-green-600 shadow-sm"
               />
               <div>
-                <div className="font-semibold text-[#1368d6]">YSRCP Admin</div>
+                <div className="font-semibold text-[#1368d6]">NRI Convenor</div>
                 <div className="text-xs text-green-600">NRI Wing</div>
               </div>
             </div>
@@ -265,13 +264,11 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Settings} label="Master Data" page="masterData" />
             <Item icon={Newspaper} label="Events & Notifications" page="eventsnotifications" />
             <Item icon={Globe} label="Content Control" page="contentControl" />
-            <Item icon={Settings} label="Change Password" page="changePassword" />
-
 
           </nav>
         </div>
 
-        <div className="sticky bottom-0 p-4 border-t border-blue-100 bg-white">
+        {/* <div className="sticky bottom-0 p-4 border-t border-blue-100 bg-white">
           <button
             onClick={onLogout}
             className="w-full inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white px-4 py-2 rounded-lg shadow-md hover:opacity-95 transition-all duration-150"
@@ -279,7 +276,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <LogOut size={16} />
             <span className="font-medium">Logout</span>
           </button>
-        </div>
+        </div> */}
       </aside>
     </>
   );
@@ -548,19 +545,12 @@ export default function AdminDashboard() {
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-3xl font-bold text-[#1368d6] mb-2">
-              Admin Dashboard
+              Coordinator Dashboard
             </h1>
             <p className="text-gray-500">
               Registrations overview by continent, country, and state
             </p>
           </div>
-          <button
-  onClick={() => setCurrentPage("changePassword")}
-  className="ml-3 px-4 py-2 bg-[#1368d6] text-white rounded-lg hover:bg-green-600 transition"
->
-  🔐 Change Password
-</button>
-
           <button
             onClick={() => exportToExcel(rows, `registrations_${new Date().toISOString().split('T')[0]}.xlsx`)}
             disabled={loading || rows.length === 0}
@@ -568,6 +558,7 @@ export default function AdminDashboard() {
           >
             📥 Export Excel
           </button>
+          <AdminProfileMenu />
         </div>
 
      <p style={{ fontWeight: "bold" , fontSize: "22px", color:"green" }}>
@@ -713,8 +704,6 @@ export default function AdminDashboard() {
       {currentPage === "masterData" && <MasterData />}
       {currentPage === "eventsnotifications" && <EventsNotifications />}
       {currentPage === "contentControl" && <ContentControl />}
-      {currentPage === "changePassword" && <ChangePassword />}
-
 
       </main>
     </div>

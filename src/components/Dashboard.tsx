@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useMemo ,useRef} from 'react';
 import { Listbox } from "@headlessui/react";
+import { ProfileDropdown } from './ProfileDropdown';
+import nriLogo from './nrilogo.png';
 //Coontry → States → Cities
 const countryData: Record<
   string,
@@ -1194,6 +1196,13 @@ const [selectedContributions, setSelectedContributions] = useState<number[]>([])
     type: "success" | "info";
   } | null>(null);
 
+  // Log profile updates for debugging
+  useEffect(() => {
+    if (profile?.profile_photo) {
+      console.log('Profile photo URL:', profile.profile_photo);
+    }
+  }, [profile?.profile_photo]);
+
 // ✅ FIXED: ACTIVE REFERRAL COUNT (USES profile.id)
 useEffect(() => {
   if (!profile?.id) return;
@@ -1427,6 +1436,12 @@ useEffect(() => {
   >
 >({});
 
+  const [nriCoordinator, setNriCoordinator] = useState<{
+    id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+  } | null>(null);
 
   const [events, setEvents] = useState<EventItem[]>([]);
   //const [notifications, setNotifications] =
@@ -1613,6 +1628,8 @@ const { data: publicUrlData } = supabase.storage
 
 const publicUrl = publicUrlData.publicUrl;
 
+console.log('Generated Public URL:', publicUrl);
+
 // Save public URL in DB
 const { error: updateError } = await supabase
   .from('profiles')
@@ -1625,6 +1642,8 @@ const { error: updateError } = await supabase
         throw updateError;
       }
 
+      // Wait a moment for the database to sync, then refresh
+      await new Promise(resolve => setTimeout(resolve, 500));
       await refreshProfile();
       showToast('Profile photo updated', 'success');
 
@@ -1779,6 +1798,25 @@ const grouped = (data as LeaderAssignmentRow[]).reduce(
 );
 
 setLeadersByRole(grouped);
+
+
+
+
+      // =======================
+      // 2.5 NRI COORDINATOR
+      // =======================
+      const { data: nriData, error: nriError } = await supabase
+        .from("coordinators")
+        .select("id, name, phone, email")
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+
+      if (nriError && nriError.code !== 'PGRST116') {
+        console.error("NRI Coordinator fetch error:", nriError);
+      } else if (nriData) {
+        setNriCoordinator(nriData);
+      }
 
 
 
@@ -3106,36 +3144,76 @@ const handleSubmitSuggestion = async () => {
   );
 
 const renderConnectContent = () => {
-  // 🔹 Flatten leadersByRole → single array with role included
-  const flatLeaders = Object.entries(leadersByRole).flatMap(
-    ([role, leaders]) =>
-      leaders.map((leader) => ({
-        ...leader,
-        role,
-      }))
-  );
+  // 🔹 Define the desired order of roles
+  const roleOrder = [
+    "Regional Coordinator",
+    "District President",
+    "Assembly Coordinator",
+  ];
+
+  // 🔹 Create ordered array of leaders based on roleOrder
+  const orderedLeaders: Array<{
+    id: string;
+    name: string;
+    whatsapp_number: string | null;
+    role: string;
+    phone?: string | null;
+    email?: string | null;
+  }> = [];
+
+  roleOrder.forEach((role) => {
+    if (role === "Regional Coordinator" && leadersByRole[role]) {
+      // Add Regional Coordinator
+      leadersByRole[role].forEach((leader) => {
+        orderedLeaders.push({
+          ...leader,
+          role,
+        });
+      });
+
+      // Add NRI Coordinator after Regional Coordinator
+      if (nriCoordinator) {
+        orderedLeaders.push({
+          id: nriCoordinator.id,
+          name: nriCoordinator.name,
+          whatsapp_number: nriCoordinator.phone,
+          role: "NRI Coordinator",
+          phone: nriCoordinator.phone,
+          email: nriCoordinator.email,
+        });
+      }
+    } else if (leadersByRole[role]) {
+      // Add other roles (District President, Assembly Coordinator)
+      leadersByRole[role].forEach((leader) => {
+        orderedLeaders.push({
+          ...leader,
+          role,
+        });
+      });
+    }
+  });
 
   const colorClasses = [
-    { text: "text-purple-600", border: "border-purple-200" },
-    { text: "text-blue-600", border: "border-blue-200" },
     { text: "text-emerald-600", border: "border-emerald-200" },
-    { text: "text-orange-600", border: "border-orange-200" },
+    { text: "text-teal-600", border: "border-teal-200" },
+    { text: "text-blue-600", border: "border-blue-200" },
+    { text: "text-purple-600", border: "border-purple-200" },
   ];
 
   return (
     <div className="pt-4">
-      {flatLeaders.length === 0 ? (
+      {orderedLeaders.length === 0 ? (
         <div className="text-xs text-gray-500">
           No leadership contacts configured yet.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {flatLeaders.map((leader, idx) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {orderedLeaders.map((leader, idx) => {
             const colors = colorClasses[idx % colorClasses.length];
 
             return (
               <div
-                key={leader.id}
+                key={`${leader.id}-${leader.role}`}
                 className={`bg-white border ${colors.border}
                 rounded-xl p-4 flex flex-col items-center text-center
                 shadow-sm hover:shadow-md transition-all`}
@@ -3656,9 +3734,11 @@ const renderSuggestionsContent = () => (
       {/* Header */}
       <div className="px-6 py-4 flex justify-between items-center shrink-0 bg-white border-b border-gray-200 shadow-sm relative z-20">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-ysrcp-blue rounded-lg flex items-center justify-center text-white font-black text-xs shadow-md">
-            YSRC
-          </div>
+          <img 
+            src={nriLogo} 
+            alt="NRI Logo" 
+            className="h-10 w-auto"
+          />
           <div>
       <h1 className="font-black text-lg text-gray-900 tracking-tight leading-none">
   {profile?.profession
@@ -3671,38 +3751,7 @@ const renderSuggestionsContent = () => (
           </div>
         </div>
        <div className="flex items-center gap-2">
- {/* Logout - MOBILE */}
-<button
-  onClick={async () => {
-    await signOut();
-    window.location.href = "/";
-  }}
-  title="Logout"
-  className="flex sm:hidden w-9 h-9 items-center justify-center
-             text-red-600 bg-white border border-red-200 rounded-full
-             hover:bg-red-50 hover:border-red-300 hover:text-red-700
-             transition-all shadow-sm"
->
-  <LogOut size={16} />
-</button>
-
-{/* Logout - DESKTOP */}
-<button
-  onClick={async () => {
-    await signOut();
-    window.location.href = "/";
-  }}
-  className="hidden sm:flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wide
-             text-red-600 bg-white border border-red-200 rounded-lg
-             hover:bg-red-50 hover:border-red-300 hover:text-red-700
-             transition-all shadow-sm"
->
-  <LogOut size={14} />
-  Logout
-</button>
-
-
- 
+ <ProfileDropdown profile={profile ? { id: profile.id, first_name: profile.first_name || '', last_name: profile.last_name || '', email: profile.email, profile_photo: profile.profile_photo } : undefined} />
 </div>
       </div>
 

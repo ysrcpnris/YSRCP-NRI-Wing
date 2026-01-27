@@ -15,7 +15,7 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const isMounted = useRef(true);
-
+const APP_URL = import.meta.env.VITE_APP_URL;
   useEffect(() => {
     return () => {
       isMounted.current = false;
@@ -57,8 +57,9 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
       if (resetMethod === "email") {
         const { error: resetError } =
           await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/reset-password-confirm`,
-          });
+  redirectTo: `${APP_URL}/reset-password-confirm`,
+});
+
 
         if (resetError) {
           // Don't reveal if email exists (security best practice)

@@ -43,6 +43,7 @@ import ResetPasswordConfirmPage from "./pages/ResetPasswordConfirmPage";
 
 import AdminDashboard from "./AdminDashboard/AdminDashboard";
 import AdminRoute from "./routes/AdminRoute";
+import ChangePassword from "./AdminDashboard/ChangePassword";
 
 import JobDashboard from "./components/dashboard/JobDashboard";
 import BusinessDashboard from "./components/dashboard/BusinessDashboard";
@@ -189,6 +190,15 @@ function AppContent() {
           element={
             <AdminRoute>
               <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/change-password"
+          element={
+            <AdminRoute>
+              <ChangePassword />
             </AdminRoute>
           }
         />
