@@ -15,7 +15,7 @@ import {
   Code,
   ArrowUpRight,
 } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabase";
 
 const CHANNEL_ID = "UCM3lYQQxJZTzQzYO35-_JCw";
 const MAX_VIDEOS = 12;
@@ -179,12 +179,12 @@ export default function PressMeetsAndSocial() {
           }
 
           const videoData = json.items.map((v: any) => ({
-            title: v.snippet.title,
-            url: `https://www.youtube.com/watch?v=${v.id.videoId}`,
-            image: v.snippet.thumbnail_url.medium.url,
-            time: formatRelativeTime(v.snippet.publishedAt),
+            title: v.snippet?.title || 'Untitled',
+            url: `https://www.youtube.com/watch?v=${v.id?.videoId || ''}`,
+            image: v.snippet?.thumbnails?.medium?.url || v.snippet?.thumbnails?.high?.url || v.snippet?.thumbnails?.default?.url || '',
+            time: formatRelativeTime(v.snippet?.publishedAt || new Date().toISOString()),
             views: "—",
-            isLive: v.snippet.liveBroadcastContent === "live",
+            isLive: v.snippet?.liveBroadcastContent === "live",
           }));
 
           setVideos(videoData);
@@ -214,7 +214,7 @@ export default function PressMeetsAndSocial() {
           const videoData = data.map((v: any) => ({
             title: v.title,
             url: v.video_url,
-            image: v.thumbnail_url,
+            image: v.thumbnail,
             time: formatRelativeTime(v.published_at),
             views: "—",
             isLive: false,

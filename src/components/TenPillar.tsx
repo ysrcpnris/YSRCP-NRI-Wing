@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Globe, Leaf, GraduationCap, HeartHandshake, Landmark, Construction, Factory, Users, Scale, Map, Activity, Heart, TrendingUp } from 'lucide-react';
+import { Globe, Leaf, GraduationCap, HeartHandshake, Landmark, Construction, Factory, Users, Scale, Map, Heart, TrendingUp } from 'lucide-react';
 
 const PILLARS = [
   {
@@ -89,14 +89,42 @@ const PILLARS = [
   }
 ];
 
-interface TenPillarsProps {
-  onPillarSelect?: (pillar: any) => void;
+interface Pillar {
+  id: number;
+  title: string;
+  info: string;
+  image: string;
+  icon: React.ReactNode;
 }
+
+interface TenPillarsProps {
+  onPillarSelect?: (pillar: Pillar) => void;
+} 
 
 const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
   const navigate = useNavigate();
 
-  const handlePillarClick = (pillar: any) => {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const cardRefs = useRef<Array<HTMLElement | null>>([]);
+
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const idx = cardRefs.current.findIndex(el => el === entry.target);
+          if (idx >= 0) setCurrentIdx(idx);
+        }
+      });
+    }, { root, threshold: 0.6 });
+
+    cardRefs.current.forEach(el => el && observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  const handlePillarClick = (pillar: Pillar) => {
     onPillarSelect?.(pillar);
     // Navigate to the pillar details page with the pillar ID
     navigate(`/pillars/${pillar.id}`);
@@ -110,7 +138,62 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
           <div className="w-24 h-2 bg-ysrcp-green mx-auto rounded-full"></div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Mobile horizontal carousel (snap-x) - fully visible cards on small screens */}
+        <div className="sm:hidden">
+          <div className="relative">
+            <div ref={containerRef} className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 px-4 py-6">
+              {PILLARS.map((pillar, idx) => (
+                <div key={pillar.id} ref={el => (cardRefs.current[idx] = el)} className="snap-start min-w-[80vw] h-[340px] rounded-2xl overflow-hidden relative">
+                  <img src={pillar.image} alt={pillar.title} className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                  <div className="relative z-10 p-6 text-white flex flex-col justify-end h-full">
+                    <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md p-3 rounded-lg shadow-sm">
+                      {pillar.icon}
+                    </div>
+                    <div className="pt-10">
+                      <h3 className="text-xl font-black uppercase">{pillar.title}</h3>
+                      <p className="mt-2 text-sm text-white/90 line-clamp-3">{pillar.info}</p>
+                      <div className="mt-4">
+                        <button onClick={() => handlePillarClick(pillar)} className="bg-ysrcp-green text-white px-4 py-2 rounded-full font-bold">View Details</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Carousel controls */}
+            <button
+              onClick={() => { if (containerRef.current) containerRef.current.scrollBy({ left: -Math.round(window.innerWidth * 0.8), behavior: 'smooth' }); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-40 bg-black/40 text-white p-2 rounded-full shadow-md"
+              aria-label="Previous"
+            >
+              ‹
+            </button>
+
+            <button
+              onClick={() => { if (containerRef.current) containerRef.current.scrollBy({ left: Math.round(window.innerWidth * 0.8), behavior: 'smooth' }); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-40 bg-black/40 text-white p-2 rounded-full shadow-md"
+              aria-label="Next"
+            >
+              ›
+            </button>
+
+            {/* Dots */}
+            <div className="flex items-center gap-2 justify-center mt-4">
+              {PILLARS.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => { if (cardRefs.current[i] && containerRef.current) { containerRef.current.scrollTo({ left: (cardRefs.current[i] as HTMLElement).offsetLeft, behavior: 'smooth' }); } }}
+                  className={`w-2 h-2 rounded-full transition ${i === currentIdx ? 'bg-ysrcp-green' : 'bg-white/40'}`}
+                  aria-label={`Go to pillar ${i+1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {PILLARS.map((pillar, idx) => {
             return (
               <div 

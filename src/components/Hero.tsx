@@ -13,6 +13,7 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
   ];
 
   const [current, setCurrent] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -21,11 +22,19 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   return (
     <section
       id="hero"
       className="relative w-full flex items-end justify-center text-center text-white pb-20 px-4 overflow-hidden"
-      style={{ height: 'calc(110vh - 72px)' }}
+      style={{ height: isMobile ? 'calc(140vh - 72px)' : 'calc(110vh - 72px)' }}
     >
 
       {/* Background Slider */}
@@ -34,7 +43,7 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
           <img
             key={index}
             src={s.img}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-[1200ms] ${
+            className={`absolute ${isMobile ? 'left-1/2 top-0 transform -translate-x-1/2 w-auto h-full' : 'inset-0 w-full h-full'} object-cover transition-all duration-[1200ms] ${
               current === index ? "opacity-100 scale-100" : "opacity-0 scale-110"
             }`}
           />

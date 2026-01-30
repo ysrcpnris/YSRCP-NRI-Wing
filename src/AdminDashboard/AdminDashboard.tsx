@@ -44,59 +44,7 @@ import {
 
 /* ---------- CONFIG ---------- */
 const TABLE_NAME = "profiles";
-const COUNTRY_TO_CONTINENT: Record<string, string> = {
-  India: "Asia",
-  UAE: "Asia",
-  Singapore: "Asia",
-  Malaysia: "Asia",
-  Japan: "Asia",
-  China: "Asia",
-  Philippines: "Asia",
-  Thailand: "Asia",
-  USA: "North America",
-  Canada: "North America",
-  Mexico: "North America",
-  UK: "Europe",
-  Germany: "Europe",
-  France: "Europe",
-  Italy: "Europe",
-  Spain: "Europe",
-  Netherlands: "Europe",
-  Australia: "Australia",
-  NewZealand: "Australia",
-  Brazil: "South America",
-  Argentina: "South America",
-  Chile: "South America",
-  Nigeria: "Africa",
-  SouthAfrica: "Africa",
-  Egypt: "Africa",
-  Kenya: "Africa",
-Kuwait: "Asia",
-NA: "Africa",
-Uganda: "Africa",
-Qatar: "Asia",
-Ireland: "Europe",
-Saudi_Arabia: "Asia",
-Zambia: "Africa",
-Zimbabwe: "Africa",
-Democratic_Republic_of_the_Congo: "Africa",
-Switzerland: "Europe",
-Tanzania: "Africa",
-Denmark: "Europe",
-Bahrain: "Asia",
-Malawi: "Africa",
-Oman: "Asia",
-Belgium: "Europe",
-Dubai: "Asia",
-Israel: "Asia",
-Poland: "Europe",
-Côte_dIvoire: "Africa",
-Virgin_Islands: "North America",
-Rwanda: "Africa",
-Finland: "Europe",
-Burundi: "Africa"
 
-};
 const CONTINENTS = [
   "Asia",
   "Africa",
@@ -134,9 +82,7 @@ type Row = {
 type Bucket = { name: string; count: number };
 
 /* ---------- Helpers ---------- */
-const norm = (v: string | null | undefined) => (v || "").trim();
-const toContinent = (country: string) =>
-  COUNTRY_TO_CONTINENT[country] || "Unknown";
+// Moved inside component
 
 // Helper function to calculate age from date of birth
 const calculateAge = (dob: string | null | undefined): number | string => {
@@ -187,26 +133,6 @@ const exportToExcel = (data: any[], filename: string = "registrations.xlsx") => 
   
   XLSX.writeFile(workbook, filename);
 };
-
-function group(rows: Row[], key: "continent" | "country" | "state"): Bucket[] {
-  const map = new Map<string, number>();
-  for (const r of rows) {
-    const country = norm(r.country_of_residence);
-    const state = norm(r.state_abroad);
-    const k =
-      key === "continent"
-        ? toContinent(country)
-        : key === "country"
-        ? country
-        : state;
-    if (!k) continue;
-    map.set(k, (map.get(k) || 0) + 1);
-  }
-  return Array.from(map.entries())
-    .map(([name, count]) => ({ name, count }))
-    .filter((b) => b.count > 0)
-    .sort((a, b) => b.count - a.count);
-}
 
 /* ---------- Sidebar ---------- */
 function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLogout: () => void; current: string; setCurrentPage: (p: string) => void; isOpen: boolean; onToggle: () => void }) {
@@ -429,8 +355,77 @@ export default function AdminDashboard() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+const [countryContinentMap, setCountryContinentMap] = useState<Record<string, string>>({});
+
+  const norm = (v: string | null | undefined) => (v || "").trim();
+ const toContinent = (country: string) =>
+  countryContinentMap[normalizeCountry(country)] || "Unknown";
+
+  const normalizeCountry = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+
+  function group(rows: Row[], key: "continent" | "country" | "state"): Bucket[] {
+    const map = new Map<string, number>();
+    for (const r of rows) {
+      const country = norm(r.country_of_residence);
+      const state = norm(r.state_abroad);
+      const k =
+        key === "continent"
+          ? toContinent(country)
+          : key === "country"
+          ? country
+          : state;
+      if (!k) continue;
+      map.set(k, (map.get(k) || 0) + 1);
+    }
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .filter((b) => b.count > 0)
+      .sort((a, b) => b.count - a.count);
+  }
 
   const navigate = useNavigate();
+  useEffect(() => {
+  let active = true;
+
+  (async () => {
+    const { data, error } = await supabase
+      .from("countries")
+      .select(`
+        name,
+        continents (
+          name
+        )
+      `);
+
+    if (!active) return;
+
+    if (error) {
+      console.error("Failed to fetch countries:", error.message);
+      return;
+    }
+
+    const map: Record<string, string> = {};
+    (data || []).forEach((c: any) => {
+      if (c.name && c.continents?.name) {
+        map[normalizeCountry(c.name)] = c.continents.name;
+
+      }
+    });
+
+    setCountryContinentMap(map);
+  })();
+
+  return () => {
+    active = false;
+  };
+}, []);
+
 
   useEffect(() => {
     let active = true;
