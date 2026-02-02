@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { User, Lock, LogOut, ChevronLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from "react-router-dom";
+
 
 interface ProfileDropdownProps {
   profile?: {
@@ -15,6 +17,9 @@ interface ProfileDropdownProps {
 
 export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+
   const [isOpen, setIsOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -139,10 +144,19 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
 
           {/* Menu */}
           <div className="py-2">
-            <button className="w-full px-6 py-4 flex items-center gap-4 text-gray-800 hover:bg-blue-50 transition font-semibold">
-              <User size={20} className="text-blue-700" />
-              My Profile
-            </button>
+       <button
+  onClick={() => {
+    setIsOpen(false);
+    navigate("/dashboard", {
+      state: { openProfile: true },
+    });
+  }}
+  className="w-full px-6 py-4 flex items-center gap-4 text-gray-800 hover:bg-blue-50 transition font-semibold"
+>
+  <User size={20} className="text-blue-700" />
+  My Profile
+</button>
+
 
             <button
               onClick={() => {

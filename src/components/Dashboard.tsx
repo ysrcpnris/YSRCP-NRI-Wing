@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo ,useRef} from 'react';
 import { Listbox } from "@headlessui/react";
 import { ProfileDropdown } from './ProfileDropdown';
 import nriLogo from './nrilogo.png';
+import { useLocation } from "react-router-dom";
+
 //Coontry → States → Cities
 const countryData: Record<
   string,
@@ -1165,6 +1167,112 @@ type EventItem = {
 //   is_read: boolean;
 // };
 
+// Reusable Accordion Item
+const AccordionItem = ({
+  id,
+  title,
+  icon,
+  content,
+  summary,
+  color,
+  expandedSection,
+  toggleSection,
+}: {
+  id: SectionKey;
+  title: React.ReactNode;
+  icon: React.ReactNode;
+  content: React.ReactNode;
+  summary?: React.ReactNode;
+  color: string;
+  expandedSection: SectionKey | null;
+  toggleSection: (id: SectionKey) => void;
+}) => {
+  const isOpen = expandedSection === id;
+
+  return (
+    <div
+      className={`
+    mb-3 rounded-xl border overflow-hidden group
+    ${
+      isOpen
+        ? "bg-white border-gray-300 shadow-xl ring-1 ring-black/5 z-10"
+        : "bg-white border-gray-200 shadow-sm hover:border-gray-300"
+    }
+  `}
+    >
+      {/* Header Bar */}
+      <button
+        onClick={() => toggleSection(id)}
+        className="w-full flex items-center justify-between p-4 outline-none transition-colors relative overflow-hidden"
+      >
+        {/* Background highlighting on hover/active */}
+        <div
+          className={`absolute inset-0 transition-opacity duration-300 ${
+            isOpen ? "bg-gray-50/80" : "bg-white group-hover:bg-gray-50"
+          }`}
+        ></div>
+
+        <div className="flex items-center gap-4 flex-1 min-w-0 relative z-10">
+          {/* Icon Box */}
+          <div
+            className={`
+                w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 shrink-0
+                ${
+                  isOpen
+                    ? color + " text-white shadow-md"
+                    : "bg-gray-100 text-gray-500 group-hover:bg-white group-hover:shadow-sm"
+                }
+            `}
+          >
+            {icon}
+          </div>
+
+          {/* Title & Summary Container */}
+          <div className="flex flex-col items-start flex-1 min-w-0">
+            <span
+              className={`text-sm font-black tracking-tight transition-colors ${
+                isOpen ? "text-gray-900 text-base" : "text-gray-700"
+              }`}
+            >
+              {title}
+            </span>
+
+            {/* Summary (Fade out when open, Fade in when closed) */}
+            <div
+              className={`transition-all duration-300 origin-top w-full ${
+                isOpen
+                  ? "h-0 opacity-0 scale-y-0 hidden"
+                  : "h-auto opacity-100 scale-y-100 block"
+              }`}
+            >
+              {summary}
+            </div>
+          </div>
+        </div>
+
+        {/* Chevron */}
+        <div
+          className={`
+            w-6 h-6 rounded-full flex items-center justify-center ml-3 transition-all duration-300 shrink-0 relative z-10
+            ${isOpen ? "bg-gray-200 text-gray-800 rotate-180" : "text-gray-400"}
+          `}
+        >
+          <ChevronDown size={16} />
+        </div>
+      </button>
+
+      {/* Expanded Content Body */}
+      <div
+        className={`px-4 pb-6 sm:px-6 border-t border-gray-100 bg-white
+    ${isOpen ? "block" : "hidden"}
+  `}
+      >
+        {content}
+      </div>
+    </div>
+  );
+};
+
 const Dashboard: React.FC = () => {
   const { user, refreshProfile, profile, signOut } = useAuth();
 // ---------------- AUTH GUARD (AFTER HOOKS) ----------------
@@ -1174,7 +1282,6 @@ if (!user) {
 }
   const [expandedSection, setExpandedSection] =
     useState<SectionKey | null>("profile");
-    const [eventsSeen, setEventsSeen] = useState(false);
  const [selectedService, setSelectedService] = useState<string | null>(null);
 const [selectedSub, setSelectedSub] = useState<string | null>(null);
 const [selectedInner, setSelectedInner] = useState<string | null>(null);
@@ -1188,9 +1295,43 @@ const [selectedInner, setSelectedInner] = useState<string | null>(null);
 const [contributionTypes, setContributionTypes] = useState<
   { id: number; name: string }[]
 >([]);
+const [unseenEventsCount, setUnseenEventsCount] = useState(0);
+useEffect(() => {
+  if (!user || !profile?.id) return;
+
+  const loadUnseenEvents = async () => {
+    // 1️⃣ get last seen timestamp
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("events_last_seen_at")
+      .eq("id", profile.id)
+      .single();
+
+    const lastSeenAt =
+      profileData?.events_last_seen_at || "1970-01-01";
+
+    // 2️⃣ count unseen events
+    const { count, error } = await supabase
+      .from("events")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "Sent")
+      .gt("created_at", lastSeenAt);
+
+    if (!error) {
+      setUnseenEventsCount(count ?? 0);
+    }
+  };
+
+  loadUnseenEvents();
+}, [user, profile?.id]);
 
 const [selectedContributions, setSelectedContributions] = useState<number[]>([]);
-
+const location = useLocation();
+useEffect(() => {
+  if (location.state?.openProfile) {
+    setExpandedSection("profile");
+  }
+}, [location.state]);
   const [toast, setToast] = useState<{
     msg: string;
     type: "success" | "info";
@@ -1345,20 +1486,24 @@ const [profession, setProfession] = useState<string>(
 const [roleDesignation, setRoleDesignation] = useState<string>(
   profile?.role_designation || ""
 );
-useEffect(() => {
-  if (profile?.role_designation) {
-    setRoleDesignation(profile.role_designation);
-  }
-}, [profile?.role_designation]);
+const [organization, setOrganization] = useState<string>(
+  profile?.organization || ""
+);
+
+
 
 useEffect(() => {
-  if (profile?.profession) {
-    setProfession(profile.profession);
+  if (profile && !profession && !roleDesignation && !organization) {
+    setProfession(profile.profession || "");
+    setRoleDesignation(profile.role_designation || "");
+    setOrganization(profile.organization || "");
   }
-}, [profile?.profession]);
+}, [profile]);
+
 useEffect(() => {
   if (!user) return;
  
+
 
 
   const loadContributions = async () => {
@@ -1396,31 +1541,21 @@ useEffect(() => {
     setCityAbroad("");
   }
 }, [profile]);
-
-
 useEffect(() => {
   if (!profile) return;
 
+  // load address ONLY once (initial mount)
   setIndianState(profile.indian_state?.trim() || "");
-
-  setDistrict(
-    profile.district
-      ? normalizeDistrict(profile.district)
-      : ""
-  );
-
+  setDistrict(profile.district ? normalizeDistrict(profile.district) : "");
   setAssembly(
     profile.assembly_constituency
       ? normalizeAssembly(profile.assembly_constituency)
       : ""
   );
+  setMandal(profile.mandal ? normalizeMandal(profile.mandal) : "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
-  setMandal(
-    profile.mandal
-      ? normalizeMandal(profile.mandal)
-      : ""
-  );
-}, [profile]);
 
   // ---------------- DYNAMIC DATA ----------------
   const [activeReferrals, setActiveReferrals] = useState<Referral[]>([]);
@@ -1485,16 +1620,19 @@ useEffect(() => {
   ) => {
     setToast({ msg, type });
   };
-const toggleSection = (section: SectionKey) => {
-  setExpandedSection((prev) => {
-    const next = prev === section ? null : section;
+const toggleSection = async (section: SectionKey) => {
+  setExpandedSection((prev) => (prev === section ? null : section));
 
-    if (section === "events") {
-      setEventsSeen(true); // 👁 user opened Events
-    }
+  if (section === "events" && user && profile?.id) {
+    await supabase
+      .from("profiles")
+      .update({
+        events_last_seen_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
 
-    return next;
-  });
+    setUnseenEventsCount(0); // UI instant update
+  }
 };
 
 const handleSubmitService = async () => {
@@ -1856,18 +1994,6 @@ if (eventsError) {
   loadDashboard();
 }, [user, profile,district, assembly]);
 
-const isNewEvent = (createdAt: string) => {
-  const now = new Date();
-  const created = new Date(createdAt);
-
-  const diffHours =
-    (now.getTime() - created.getTime()) / (1000 * 60 * 60);
-
-  return diffHours <= 24; // new if within 24 hours
-};
-const hasNewEvents = events.some(
-  (e) => isNewEvent(e.created_at)
-);
 
   // Helper to format dates like "Jan 12, 2025"
   const formatDate = (iso: string) => {
@@ -1915,7 +2041,7 @@ const referralLink =
 const profileCompletion = useMemo(() => {
   if (!profile) return 0;
 
-  const TOTAL_SECTIONS = 8;
+  const TOTAL_SECTIONS = 11;
   let completed = 0;
 
   // 1️⃣ Name
@@ -1930,28 +2056,28 @@ const profileCompletion = useMemo(() => {
   // 4️⃣ Photo
   if (profile.profile_photo) completed++;
 
-  // 5️⃣ Address
-  const country = profile.country_of_residence?.toLowerCase();
-  const isIndia = !country || country === "india";
+  // 5️⃣ Indian State
+  if (indianState) completed++;
 
- if (
-  isIndia
-    ? profile.indian_state &&
-      profile.district &&
-      profile.assembly_constituency &&
-      profile.mandal
-    : profile.state_abroad && profile.city_abroad
-) {
-  completed++;
-}
+  // 6️⃣ District
+  if (!indianState || district) completed++;
 
+  // 7️⃣ Assembly
+  if (!district || assembly) completed++;
 
-  // 6️⃣ Profession + Role
-  if (profile.profession && profile.role_designation) {
+  // 8️⃣ Mandal
+  if (!assembly || mandal) completed++;
+
+  // 9️⃣ Profession + Role + Company
+  if (
+    profile.profession &&
+    profile.role_designation &&
+    profile.organization
+  ) {
     completed++;
   }
 
-  // 7️⃣ Socials (ALL REQUIRED)
+  // 🔟 Socials
   if (
     profile.facebook_id &&
     profile.twitter_id &&
@@ -1961,13 +2087,23 @@ const profileCompletion = useMemo(() => {
     completed++;
   }
 
-  // 8️⃣ Contribution (ONE required)
-  if (Array.isArray(selectedContributions) && selectedContributions.length > 0) {
+  // 1️⃣1️⃣ Contribution
+  if (
+    Array.isArray(selectedContributions) &&
+    selectedContributions.length > 0
+  ) {
     completed++;
   }
 
   return Math.round((completed / TOTAL_SECTIONS) * 100);
-}, [profile, selectedContributions]);
+}, [
+  profile,
+  selectedContributions,
+  indianState,
+  district,
+  assembly,
+  mandal,
+]);
 
 // 🔹 Missing profile fields detection
 
@@ -1989,18 +2125,19 @@ if (!profile.dob) {
 }
 
   const country = profile.country_of_residence?.trim().toLowerCase();
-  const isIndia = !country || country === "india";
+const isIndia = true;
 
-  if (isIndia) {
-    if (!profile.indian_state)
-      missing.push({ key: "state", label: "Select State" });
-    if (!profile.district)
-      missing.push({ key: "district", label: "Select District" });
-    if (!profile.assembly_constituency)
-      missing.push({ key: "assembly", label: "Select Assembly" });
-    if (!profile.mandal)
-      missing.push({ key: "mandal", label: "Select Mandal" });
-  }
+if (indianState) {
+  if (!district)
+    missing.push({ key: "district", label: "Select District" });
+
+  if (!assembly)
+    missing.push({ key: "assembly", label: "Select Assembly" });
+
+  if (!mandal)
+    missing.push({ key: "mandal", label: "Select Mandal" });
+}
+
 
   if (!profile.facebook_id)
     missing.push({ key: "facebook", label: "Add Facebook" });
@@ -2014,8 +2151,12 @@ if (!profile.dob) {
   if (!profile.profession)
     missing.push({ key: "profession", label: "Select Profession" });
 
-  if (!profile.role_designation)
-    missing.push({ key: "role", label: "Select Role / Designation" });
+ if (!profile.role_designation)
+  missing.push({ key: "role", label: "Add Role / Course" });
+
+if (!profile.organization)
+  missing.push({ key: "company", label: "Add Company / University" });
+
 // 🌍 Abroad State & City (for NRIs)
 if (!isIndia) {
   if (!profile.state_abroad)
@@ -2034,40 +2175,64 @@ if (!isIndia) {
   }
 
   return missing;
-}, [profile, selectedContributions]);
+}, [
+  profile,
+  selectedContributions,
+  indianState,
+  district,
+  assembly,
+  mandal,
+]);
+
 
 
   // --- ENRICHED SUMMARY RENDERERS (Visible when Collapsed) ---
 
  const renderProfileSummary = () => (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full mt-1 opacity-90">
-      <div className="flex-1 min-w-[200px]">
-        <div className="flex justify-between text-xs font-bold text-gray-500 mb-1.5">
-          <span>Profile Completion</span>
-          {/* still static for now, you can compute this later from filled fields */}
-          <span className="text-indigo-600">{profileCompletion}%</span>
-
-        </div>
-        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-       <div
-  className="h-full bg-indigo-600 rounded-full shadow-sm"
-  style={{ width: `${profileCompletion}%` }}
-></div>
-
-        </div>
+  <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full mt-1 opacity-90">
+    {/* LEFT: Progress bar */}
+    <div className="flex-1 min-w-[200px]">
+      <div className="flex justify-between text-xs font-bold text-gray-500 mb-1.5">
+        <span>Profile Completion</span>
+        <span className="text-indigo-600">{profileCompletion}%</span>
       </div>
-      <div className="flex items-center gap-4 text-xs font-medium text-gray-500 sm:border-l sm:border-gray-200 sm:pl-4">
-        <div className="flex items-center gap-1.5">
+
+      <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full shadow-sm transition-all duration-500 ${
+            profileCompletion === 100
+              ? "bg-green-500"
+              : "bg-indigo-600"
+          }`}
+          style={{ width: `${profileCompletion}%` }}
+        />
+      </div>
+    </div>
+
+    {/* RIGHT: Status */}
+    <div className="flex items-center gap-4 text-xs font-medium text-gray-500 sm:border-l sm:border-gray-200 sm:pl-4">
+      {profileCompletion === 100 ? (
+        // ✅ VERIFIED
+        <div className="flex items-center gap-1.5 text-green-600">
           <CheckCircle size={14} className="text-green-500" />
           <span>Verified</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <AlertCircle size={14} className="text-amber-500" />
-          <span>Socials Pending</span>
+      ) : (
+        // ⚠️ PENDING
+        <div className="flex items-center gap-1.5 text-red-600">
+          <AlertCircle
+            size={14}
+            className="text-red-500 animate-pulse"
+          />
+          <span>
+            {missingProfileFields.length} Pending
+          </span>
         </div>
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
+
 
   const renderReferralsSummary = () => (
     <div className="flex flex-wrap items-center gap-6 w-full mt-1 opacity-90">
@@ -2232,8 +2397,10 @@ const updates = {
   last_name,
   mobile_number,
   dob,
-  profession,
-  role_designation: roleDesignation,
+ profession,
+role_designation: roleDesignation,
+  organization: organization,
+
   facebook_id: facebook,
   twitter_id: twitter,
   linkedin_id: linkedin,
@@ -2246,10 +2413,13 @@ const updates = {
   city_abroad: cityAbroad || profile?.city_abroad || null,
 
   // 🇮🇳 Indian (permanent address)
-  indian_state: indianState || profile?.indian_state || null,
-  district: district || profile?.district || null,
-  assembly_constituency: assembly || profile?.assembly_constituency || null,
-  mandal: mandal || profile?.mandal || null,
+indian_state: indianState || null,
+district: indianState ? district || null : null,
+assembly_constituency:
+  indianState && district ? assembly || null : null,
+mandal:
+  indianState && district && assembly ? mandal || null : null,
+
 };
 
 
@@ -2311,7 +2481,7 @@ const handleSubmitSuggestion = async () => {
 
  
   const renderProfileContent = () => (
-    <div className="pt-4 ">
+    <div className="pt-4 " style={{ overflowAnchor: "none" }}>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Progress & Stats */}
@@ -2425,27 +2595,27 @@ const handleSubmitSuggestion = async () => {
               Missing Info
             </h4>
            <div className="space-y-2">
- {profileCompletion === 100 ? (
+ {missingProfileFields.length === 0 ? (
   <div className="text-xs text-green-600 font-bold">
     🎉 Profile fully completed
   </div>
 ) : (
+  missingProfileFields.map((item) => (
+    <div
+      key={item.key}
+      onClick={() => setExpandedSection("profile")}
+      className="flex items-center justify-between p-2 bg-white
+                 border border-gray-200 rounded hover:border-indigo-300
+                 cursor-pointer transition-all"
+    >
+      <span className="text-xs font-bold text-gray-600">
+        {item.label}
+      </span>
+      <ArrowRight size={12} className="text-indigo-500" />
+    </div>
+  ))
+)}
 
-    missingProfileFields.map((item) => (
-      <div
-        key={item.key}
-        onClick={() => setExpandedSection("profile")}
-        className="flex items-center justify-between p-2 bg-white
-                   border border-gray-200 rounded hover:border-indigo-300
-                   cursor-pointer transition-all"
-      >
-        <span className="text-xs font-bold text-gray-600">
-          {item.label}
-        </span>
-        <ArrowRight size={12} className="text-indigo-500" />
-      </div>
-    ))
-  )}
 </div>
 
           </div>
@@ -2864,13 +3034,16 @@ const handleSubmitSuggestion = async () => {
     Professional Category
   </label>
 
-  <Listbox
-    value={profession}
-    onChange={(value) => {
-      setProfession(value);
-      setRoleDesignation(""); // reset role when category changes
-    }}
-  >
+ <Listbox
+  value={profession}
+onChange={(value) => {
+  setProfession(value);
+  setRoleDesignation("");
+  setOrganization("");
+}}
+
+>
+
     <div className="relative">
       <Listbox.Button className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg flex items-center justify-between text-sm font-semibold">
         <span>{profession || "Select Category"}</span>
@@ -2891,39 +3064,55 @@ const handleSubmitSuggestion = async () => {
     </div>
   </Listbox>
 </div>
-<div className="mb-4">
-  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-    Role / Designation
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div className="mb-4">
+   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+    {profession === "Student"
+      ? "Course / Field of Study"
+      : profession === "Business"
+      ? "Role / Business Domain"
+      : "Role / Designation"}
   </label>
-
-  <Listbox
+  <input
+    id="role_designation"
+    type="text"
     value={roleDesignation}
-    onChange={setRoleDesignation}
+    onChange={(e) => setRoleDesignation(e.target.value)}
     disabled={!profession}
-  >
-    <div className="relative">
-      <Listbox.Button
-        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
-                   flex items-center justify-between text-sm font-semibold
-                   disabled:opacity-50"
-      >
-        <span>{roleDesignation || "Select Role"}</span>
-        <ChevronDown size={18} />
-      </Listbox.Button>
+    placeholder={
+      profession === "Student"
+        ? "e.g. B.Tech Computer Science"
+        : profession === "Business"
+        ? "e.g. Founder, Manufacturing"
+        : "e.g. Software Engineer"
+    }
+    className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+               text-sm font-semibold disabled:opacity-50
+               focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+  />
+  </div>
 
-      <Listbox.Options className="absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg">
-        {(roleOptions[profession] || []).map((role) => (
-          <Listbox.Option
-            key={role}
-            value={role}
-            className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-          >
-            {role}
-          </Listbox.Option>
-        ))}
-      </Listbox.Options>
-    </div>
-  </Listbox>
+  <div className="mb-4">
+    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+      {profession === "Student"
+        ? "College / University"
+        : "Company Name"}
+    </label>
+  <input
+    id="organization"
+    type="text"
+    value={organization}
+    onChange={(e) => setOrganization(e.target.value)}
+    disabled={!profession}
+    placeholder={
+      profession === "Student"
+        ? "e.g. IIT Delhi"
+        : "e.g. Infosys"
+    }
+    className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+               text-sm font-semibold disabled:opacity-50"
+  />
+  </div>
 </div>
 
             {/* Social Media Inputs */}
@@ -3619,103 +3808,6 @@ const renderSuggestionsContent = () => (
 //   </div>
 // );
 
-  // Reusable Accordion Item
-  const AccordionItem = ({
-    id,
-    title,
-    icon,
-    content,
-    summary,
-    color,
-  }: {
-    id: SectionKey;
-    title: string;
-    icon: React.ReactNode;
-    content: React.ReactNode;
-    summary?: React.ReactNode;
-    color: string;
-  }) => {
-    const isOpen = expandedSection === id;
-
-    return (
-    <div
-  className={`
-    mb-3 rounded-xl border overflow-hidden group
-    ${isOpen
-      ? 'bg-white border-gray-300 shadow-xl ring-1 ring-black/5 z-10'
-      : 'bg-white border-gray-200 shadow-sm hover:border-gray-300'}
-  `}
->
-
-
-        {/* Header Bar */}
-        <button
-          onClick={() => toggleSection(id)}
-          className="w-full flex items-center justify-between p-4 outline-none transition-colors relative overflow-hidden"
-        >
-          {/* Background highlighting on hover/active */}
-          <div
-            className={`absolute inset-0 transition-opacity duration-300 ${
-              isOpen ? 'bg-gray-50/80' : 'bg-white group-hover:bg-gray-50'
-            }`}
-          ></div>
-
-          <div className="flex items-center gap-4 flex-1 min-w-0 relative z-10">
-            {/* Icon Box */}
-            <div
-              className={`
-                w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 shrink-0
-                ${isOpen ? color + ' text-white shadow-md' : 'bg-gray-100 text-gray-500 group-hover:bg-white group-hover:shadow-sm'}
-            `}
-            >
-              {icon}
-            </div>
-
-            {/* Title & Summary Container */}
-            <div className="flex flex-col items-start flex-1 min-w-0">
-              <span
-                className={`text-sm font-black tracking-tight transition-colors ${
-                  isOpen ? 'text-gray-900 text-base' : 'text-gray-700'
-                }`}
-              >
-                {title}
-              </span>
-
-              {/* Summary (Fade out when open, Fade in when closed) */}
-              <div
-                className={`transition-all duration-300 origin-top w-full ${
-                  isOpen ? 'h-0 opacity-0 scale-y-0 hidden' : 'h-auto opacity-100 scale-y-100 block'
-                }`}
-              >
-                {summary}
-              </div>
-            </div>
-          </div>
-
-          {/* Chevron */}
-          <div
-            className={`
-            w-6 h-6 rounded-full flex items-center justify-center ml-3 transition-all duration-300 shrink-0 relative z-10
-            ${isOpen ? 'bg-gray-200 text-gray-800 rotate-180' : 'text-gray-400'}
-          `}
-          >
-            <ChevronDown size={16} />
-          </div>
-        </button>
-
-        
-        {/* Expanded Content Body */}
-<div
-  className={`px-4 pb-6 sm:px-6 border-t border-gray-100 bg-white
-    ${isOpen ? "block" : "hidden"}
-  `}
->
-  {content}
-</div>
-      </div>
-    );
-  };
-
   return (
     <div className="fixed inset-0 z-[100] flex flex-col font-sans bg-gray-100/95 backdrop-blur-sm">
 
@@ -3766,6 +3858,8 @@ const renderSuggestionsContent = () => (
             icon={<User size={20} />}
             content={renderProfileContent()}
             color="bg-indigo-600"
+            expandedSection={expandedSection}
+            toggleSection={toggleSection}
           />
 
           <AccordionItem
@@ -3775,6 +3869,8 @@ const renderSuggestionsContent = () => (
             icon={<Users size={20} />}
             content={renderReferralsContent()}
             color="bg-emerald-600"
+            expandedSection={expandedSection}
+            toggleSection={toggleSection}
           />
 
           <AccordionItem
@@ -3784,6 +3880,8 @@ const renderSuggestionsContent = () => (
             icon={<MessageSquare size={20} />}
             content={renderConnectContent()}
             color="bg-blue-600"
+            expandedSection={expandedSection}
+            toggleSection={toggleSection}
           />
 
           <AccordionItem
@@ -3793,15 +3891,30 @@ const renderSuggestionsContent = () => (
             icon={<Briefcase size={20} />}
             content={renderServicesContent()}
             color="bg-amber-500"
+            expandedSection={expandedSection}
+            toggleSection={toggleSection}
           />
 <AccordionItem
   id="events"
   title={
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex items-center gap-3">
       <span>Events & Notifications</span>
 
-      {hasNewEvents && !eventsSeen && (
-        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+      {unseenEventsCount > 0 && (
+        <span
+          className="
+            bg-red-50
+            text-red-700
+            border border-red-200
+            px-3 py-1
+            rounded-full
+            text-xs
+            font-bold
+            whitespace-nowrap
+          "
+        >
+             +{unseenEventsCount}
+        </span>
       )}
     </span>
   }
@@ -3809,7 +3922,11 @@ const renderSuggestionsContent = () => (
   icon={<Calendar size={20} />}
   content={renderEventsContent()}
   color="bg-pink-600"
+  expandedSection={expandedSection}
+  toggleSection={toggleSection}
 />
+
+
 
 
 
@@ -3821,6 +3938,8 @@ const renderSuggestionsContent = () => (
   icon={<Bell size={20} />}
   content={renderNotificationsContent()}
   color="bg-red-500"
+  expandedSection={expandedSection}
+  toggleSection={toggleSection}
 />
 */}
 
@@ -3830,6 +3949,8 @@ const renderSuggestionsContent = () => (
   icon={<MessageSquare size={20} />}
   content={renderSuggestionsContent()}
   color="bg-indigo-600"
+  expandedSection={expandedSection}
+  toggleSection={toggleSection}
 />
         </div>
       </div>

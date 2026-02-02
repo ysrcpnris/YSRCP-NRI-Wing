@@ -6,6 +6,8 @@ import { supabase } from "./lib/supabase";
 
 import Header from "./components/Header";
 import Hero from "./components/Hero";
+import ProtectedRoute from "./routes/ProtectedRoute";
+
 import About from "./components/About";
 import Mission from "./components/Mission";
 import Initiatives from "./components/Initiatives";
@@ -14,6 +16,8 @@ import PillarPage from "./components/PillarPage";
 import PillarDetailWrapper from "./components/PillarDetailWrapper";
 import Events from "./components/Events";
 import News from "./components/News";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
+import EmailVerifiedPage from "./pages/EmailVerifiedPage";
 import Contact from "./components/Contact";
 import ImpactMap from "./components/ImpactMap";
 import Testimonials from "./components/Testimonials";
@@ -109,13 +113,19 @@ function AppContent() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("signin");
 
-  useEffect(() => {
-    if (location.state?.openLogin) {
-      setAuthMode("signin");
-      setShowAuthModal(true);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
+useEffect(() => {
+  const blockedRoutes = ["/verify-email", "/email-verified"];
+
+  if (
+    location.state?.openLogin &&
+    !blockedRoutes.includes(location.pathname)
+  ) {
+    setAuthMode("signin");
+    setShowAuthModal(true);
+    window.history.replaceState({}, document.title);
+  }
+}, [location.state, location.pathname]);
+
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
@@ -165,6 +175,8 @@ function AppContent() {
   path="/reset-password-confirm"
   element={<ResetPasswordConfirmPage />}
 />
+<Route path="/verify-email" element={<VerifyEmailPage />} />
+<Route path="/email-verified" element={<EmailVerifiedPage />} />
  
         <Route path="/suggestions" element={<Navigate to="/glimpse" replace />} />
         <Route path="/glimpse" element={<Glimpse />} />
@@ -202,11 +214,15 @@ function AppContent() {
             </AdminRoute>
           }
         />
+        <Route element={<ProtectedRoute />}>
+  <Route path="/dashboard" element={<Navigate to="/dashboard/job" replace />} />
+  <Route path="/dashboard/job" element={<JobDashboard />} />
+  <Route path="/dashboard/business" element={<BusinessDashboard />} />
+  <Route path="/dashboard/student" element={<StudentDashboard />} />
+</Route>
 
-        <Route path="/dashboard" element={<Navigate to="/dashboard/job" replace />} />
-        <Route path="/dashboard/job" element={<JobDashboard />} />
-        <Route path="/dashboard/business" element={<BusinessDashboard />} />
-        <Route path="/dashboard/student" element={<StudentDashboard />} />
+
+       
       </Routes>
 
       {showAuthModal && (

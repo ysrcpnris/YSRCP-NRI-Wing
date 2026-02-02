@@ -1,18 +1,25 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User } from "@supabase/supabase-js";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  ReactNode,
+} from "react";
+import { User, Session } from "@supabase/supabase-js";
 import { supabase, Profile } from "../lib/supabase";
 
 type AuthContextType = {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  isVerified: boolean;
   signUp: (
     email: string,
     password: string,
     profileData: Partial<Profile>
   ) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<any>;
-
+  signIn: (email: string, password: string) => Promise<Session | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
@@ -23,8 +30,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
 
-  /* ---------------- PROFILE FETCH ---------------- */
+  const initializingRef = useRef(true);
+  const killingSessionRef = useRef(false);
+
+  const clearAdminFlag = () => {
+    localStorage.removeItem("is_admin");
+  };
+
+  const setAdminFlag = (p: Profile | null) => {
+    if (p?.role === "admin") {
+      localStorage.setItem("is_admin", "true");
+    } else {
+      localStorage.removeItem("is_admin");
+    }
+  };
+
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from("profiles")
@@ -33,154 +55,185 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (error) {
-      console.error("Error fetching profile:", error);
       return null;
     }
+
     return data;
   };
+
+  const hardResetState = () => {
+    setUser(null);
+    setProfile(null);
+    setIsVerified(false);
+    clearAdminFlag();
+  };
+
+  const killUnverifiedSession = async () => {
+    if (killingSessionRef.current) return;
+    killingSessionRef.current = true;
+    try {
+      await supabase.auth.signOut();
+    } catch (_) {
+    } finally {
+      hardResetState();
+      killingSessionRef.current = false;
+    }
+  };
+
+  const applyVerifiedSession = async (session: Session) => {
+    setUser(session.user);
+    setIsVerified(true);
+    const p = await fetchProfile(session.user.id);
+    setProfile(p);
+    setAdminFlag(p);
+  };
+
+  const handleSession = async (session: Session | null) => {
+    if (!session?.user) {
+      hardResetState();
+      return;
+    }
+
+    if (!session.user.email_confirmed_at) {
+      await killUnverifiedSession();
+      return;
+    }
+
+    await applyVerifiedSession(session);
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const init = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!mounted) return;
+
+      await handleSession(session);
+
+      if (mounted) {
+        setLoading(false);
+        initializingRef.current = false;
+      }
+    };
+
+    init();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (initializingRef.current) return;
+      if (!mounted) return;
+      setLoading(true);
+      await handleSession(session);
+      if (mounted) {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const refreshProfile = async () => {
     if (!user) return;
     const p = await fetchProfile(user.id);
     setProfile(p);
-    // Update admin flag based on profile role
-    if (p?.role === 'admin') {
-      localStorage.setItem('is_admin', 'true');
-    } else {
-      localStorage.removeItem('is_admin');
+    setAdminFlag(p);
+  };
+
+  const signUp = async (
+    email: string,
+    password: string,
+    profileData: Partial<Profile>
+  ) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/email-verified`,
+      },
+    });
+
+    if (error) {
+      throw error;
     }
-  };
 
-  /* ---------------- AUTH STATE ---------------- */
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      (async () => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          const p = await fetchProfile(session.user.id);
-          setProfile(p);
-          // Update admin flag based on profile role
-          if (p?.role === 'admin') {
-            localStorage.setItem('is_admin', 'true');
-          } else {
-            localStorage.removeItem('is_admin');
-          }
-        }
-        setLoading(false);
-      })();
-    });
+    if (!data.user) {
+      throw new Error("Signup failed");
+    }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      (async () => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          const p = await fetchProfile(session.user.id);
-          setProfile(p);
-          // Update admin flag based on profile role
-          if (p?.role === 'admin') {
-            localStorage.setItem('is_admin', 'true');
-          } else {
-            localStorage.removeItem('is_admin');
-          }
-        } else {
-          setProfile(null);
-          localStorage.removeItem('is_admin');
-        }
-      })();
-    });
+    const sanitizedProfile: Record<string, unknown> = Object.fromEntries(
+      Object.entries(profileData || {}).filter(([, v]) => {
+        if (v === undefined || v === null) return false;
+        if (typeof v === "string") return v.trim() !== "";
+        return true;
+      })
+    );
 
-    return () => subscription.unsubscribe();
-  }, []);
+    const profilePayload = {
+      id: data.user.id,
+      email,
+      ...sanitizedProfile,
+    };
 
-const signUp = async (
-  email: string,
-  password: string,
-  profileData: Partial<Profile>
-) => {
-  /* STEP 1: Create auth user */
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
-
-  if (error) throw error;
-  if (!data.user) throw new Error("User creation failed");
-
-  /* STEP 2: Sanitize profile payload */
-  const sanitizedProfile: Record<string, unknown> = Object.fromEntries(
-    Object.entries(profileData || {}).filter(([, v]) => {
-      if (v === undefined || v === null) return false;
-      if (typeof v === "string") return v.trim() !== "";
-      return true;
-    })
-  );
-
-  /* STEP 3: Insert profile */
-  const profilePayload = {
-    id: data.user.id,
-    email,
-    ...sanitizedProfile,
-  };
-
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .insert(profilePayload);
-
-  if (profileError) {
-    await supabase.auth.admin.deleteUser(data.user.id);
-    throw profileError;
-  }
-
-  /* ===============================
-     REFERRAL LOGIC (ACTIVE + PASSIVE)
-     =============================== */
-
-  const referralCode = localStorage.getItem("referral_code");
-
-  if (referralCode) {
-    // 1️⃣ Find DIRECT referrer
-    const { data: referrerProfile } = await supabase
+    const { error: profileError } = await supabase
       .from("profiles")
-      .select("id")
-      .eq("referral_code", referralCode)
-      .single();
+      .insert(profilePayload);
 
-    if (referrerProfile) {
-      const directReferrerId = referrerProfile.id;
+    if (profileError) {
+      try {
+        await supabase.auth.admin.deleteUser(data.user.id);
+      } catch (_) {
+      }
+      throw profileError;
+    }
 
-      // 2️⃣ ACTIVE referral
-      await supabase.from("referrals").insert({
-        referrer_id: directReferrerId,
-        referred_id: data.user.id,
-        source: "active",
-      });
+    const referralCode = localStorage.getItem("referral_code");
 
-      // 3️⃣ Find parent of referrer (for PASSIVE)
-      const { data: parentReferral } = await supabase
-        .from("referrals")
-        .select("referrer_id")
-        .eq("referred_id", directReferrerId)
-        .limit(1)
+    if (referralCode) {
+      const { data: referrerProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("referral_code", referralCode)
         .single();
 
-      // 4️⃣ PASSIVE referral
-      if (parentReferral?.referrer_id) {
+      if (referrerProfile?.id) {
+        const directReferrerId = referrerProfile.id;
+
         await supabase.from("referrals").insert({
-          referrer_id: parentReferral.referrer_id,
+          referrer_id: directReferrerId,
           referred_id: data.user.id,
-          source: "passive",
+          source: "active",
         });
+
+        const { data: parentReferral } = await supabase
+          .from("referrals")
+          .select("referrer_id")
+          .eq("referred_id", directReferrerId)
+          .limit(1)
+          .single();
+
+        if (parentReferral?.referrer_id) {
+          await supabase.from("referrals").insert({
+            referrer_id: parentReferral.referrer_id,
+            referred_id: data.user.id,
+            source: "passive",
+          });
+        }
       }
+
+      localStorage.removeItem("referral_code");
     }
 
-    // cleanup
-    localStorage.removeItem("referral_code");
-  }
-};
+    await killUnverifiedSession();
+  };
 
- /* ---------------- SIGN IN ---------------- */
 const signIn = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -189,28 +242,45 @@ const signIn = async (email: string, password: string) => {
 
   if (error) throw error;
 
-  return data; // ✅ VERY IMPORTANT
-};
+  const user = data.user;
 
- /* ---------------- SIGN OUT ---------------- */
-const signOut = async () => {
-  try {
-    await supabase.auth.signOut();
-  } catch (err: any) {
-    // Ignore error if session is already missing
-    if (err?.name !== "AuthSessionMissingError") {
-      throw err;
-    }
-  } finally {
-    setUser(null);
-    setProfile(null);
+  if (!user) {
+    throw new Error("Login failed");
   }
+
+  if (!user.email_confirmed_at) {
+    await supabase.auth.signOut();
+    throw new Error("Please verify your email before logging in");
+  }
+
+  return data;
 };
 
+
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err: any) {
+      if (err?.name !== "AuthSessionMissingError") {
+        throw err;
+      }
+    } finally {
+      hardResetState();
+    }
+  };
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signUp, signIn, signOut, refreshProfile }}
+      value={{
+        user,
+        profile,
+        loading,
+        isVerified,
+        signUp,
+        signIn,
+        signOut,
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>
@@ -218,9 +288,9 @@ const signOut = async () => {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
     throw new Error("useAuth must be used within AuthProvider");
   }
-  return context;
+  return ctx;
 }

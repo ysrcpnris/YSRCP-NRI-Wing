@@ -4,11 +4,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, MapPin } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+
 import { countriesData } from '../lib/countryCodes';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
+ 
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -1097,123 +1101,57 @@ export default function RegisterPage() {
     ],
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    if (!formData.password || formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
+  try {
+    // validations
+    if (formData.password.length < 6) {
+      throw new Error('Password must be at least 6 characters');
     }
-    // Validate mobile number length for selected country code
+
     const currentCode = getCurrentCountryCode();
     const numberOnly = formData.mobile_number.slice(currentCode.length);
     const expected = phoneLengths[currentCode];
     if (expected && numberOnly.length !== expected) {
-      setError(`Mobile number must be ${expected} digits for ${currentCode}`);
-      return;
+      throw new Error(`Mobile number must be ${expected} digits`);
     }
-    // if (formData.password !== confirmPassword) {
-    //   setError('Passwords do not match');
-    //   return;
-    // }
 
-    setLoading(true);
+    const profilePayload = {
+      first_name: formData.first_name,
+      last_name: formData.last_name || formData.first_name,
+      mobile_number: formData.mobile_number,
+      country_of_residence: formData.country_of_residence,
+      indian_state: formData.indian_state,
+      district: formData.district,
+      assembly_constituency: formData.assembly_constituency,
+      mandal: formData.mandal,
+    };
 
-    const withTimeout = <T,>(p: Promise<T>, ms = 15000): Promise<T> =>
-      new Promise<T>((resolve, reject) => {
-        const id = setTimeout(() => reject(new Error('Request timed out')), ms);
-        p.then((res) => {
-          clearTimeout(id);
-          resolve(res);
-        }).catch((err) => {
-          clearTimeout(id);
-          reject(err);
-        });
-      });
+    // SIGN UP
+await signUp(
+  formData.email,
+  formData.password,
+  profilePayload
+);
 
-    try {
-      const profilePayload: Record<string, unknown> = {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        mobile_number: formData.mobile_number,
-        whatsapp_number: formData.whatsapp_number,
-        country_of_residence: formData.country_of_residence,
-        state_abroad: formData.state_abroad,
-        indian_state: formData.indian_state,
-        district: formData.district,
-        assembly_constituency: formData.assembly_constituency,
-        mandal: formData.mandal,
-        village: formData.village,
-        gender: formData.gender,
-        dob: formData.dob,
-        profession: formData.profession,
-        organization: formData.organization,
-        role_designation: formData.role_designation,
-        contribution: formData.contribution,
-        participate_campaign: formData.participate_campaign,
-        suggestions: formData.suggestions,
-        instagram_id: formData.instagram_id,
-        facebook_id: formData.facebook_id,
-        twitter_id: formData.twitter_id,
-        linkedin_id: formData.linkedin_id,
-      };
+navigate("/verify-email", {
+  state: { email: formData.email },
+});
 
-      // Ensure last_name is not null/empty to satisfy DB NOT NULL constraint
-      if (!profilePayload.last_name || (typeof profilePayload.last_name === 'string' && profilePayload.last_name.trim() === '')) {
-        profilePayload.last_name = formData.first_name || '';
-      }
+return;
 
-      // referred_by is optional
+  } catch (err: any) {
+    console.error(err);
+    setError(err.message || 'Signup failed');
+  } finally {
+    setLoading(false);
+  }
+};
 
-      await withTimeout(signUp(formData.email, formData.password, profilePayload), 20000);
 
-      // After sign-up, send an OTP/magic link to the user's email for verification/authentication
-      try {
-        const { error: otpError } = await (await import('../lib/supabase')).supabase.auth.signInWithOtp({ email: formData.email });
-        if (otpError) {
-          console.warn('Failed to send OTP after signup:', otpError.message || otpError);
-        } else {
-          toast.info('OTP/magic link sent to your email for verification.', { position: 'top-right', autoClose: 5000 });
-        }
-      } catch (e) {
-        console.warn('Error sending OTP after signup', e);
-      }
-
-      if (isMounted.current) setLoading(false);
-      toast.success('Registration successful! .', {
-        position: 'top-right',
-        autoClose: 5000,
-      });
-      setFormData((f) => ({ ...f, password: '' }));
-      setConfirmPassword('');
-      setTimeout(() => navigate('/', { state: { openLogin: true } }), 2000);
-      return;
-    } catch (err: unknown) {
-      const getErrorMessage = (e: unknown): string => {
-        if (e instanceof Error) return e.message;
-        if (typeof e === 'string') return e;
-        if (typeof e === 'object' && e !== null) {
-          const maybe = e as Record<string, unknown>;
-          if (typeof maybe.message === 'string') return maybe.message;
-        }
-        return 'An error occurred';
-      };
-
-      const msg = getErrorMessage(err);
-      if (/rate|too many|exceed|429/i.test(msg)) {
-        toast.error('Verification email rate limit exceeded. Please wait a few minutes before trying again.', {
-          position: 'top-right',
-          autoClose: 7000,
-        });
-      } else {
-        toast.error(msg, { position: 'top-right', autoClose: 5000 });
-      }
-      setError(msg);
-    } finally {
-      if (isMounted.current) setLoading(false);
-    }
-  };
 
   useEffect(() => {
     return () => {
@@ -1251,8 +1189,11 @@ export default function RegisterPage() {
                 {error}
               </div>
             )}
-
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+
+
+           
+
               {/* Personal Information */}
               <div className="border-b pb-3 sm:pb-4">
                 <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white mb-2 sm:mb-3 p-2 sm:p-2.5 rounded bg-blue-600">
@@ -1328,6 +1269,7 @@ export default function RegisterPage() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
+                  
                 </div>
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
@@ -1816,6 +1758,9 @@ export default function RegisterPage() {
                 {loading ? 'Creating account...' : 'Register'}
               </button>
             </form>
+
+            
+
 
             <div className="mt-4 sm:mt-6 text-center">
               <p className="text-sm sm:text-base text-gray-600">
