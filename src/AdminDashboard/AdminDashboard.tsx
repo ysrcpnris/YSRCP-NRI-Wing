@@ -15,6 +15,8 @@ import EventsNotifications from "./EventsNotifications";
 import ContentControl from "./ContentControl";
 import AdminProfileMenu from "./AdminProfileMenu";
 import ysrLogo from "../components/nrilogo.png";
+import { useAuth } from "../contexts/AuthContext";
+import { toast } from "react-toastify";
 
 
 
@@ -28,6 +30,12 @@ import {
   Newspaper,
   Menu,
   X,
+  User,
+  Lock,
+  Save,
+  Phone,
+  Mail,
+  Loader2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -136,6 +144,21 @@ const exportToExcel = (data: any[], filename: string = "registrations.xlsx") => 
 
 /* ---------- Sidebar ---------- */
 function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLogout: () => void; current: string; setCurrentPage: (p: string) => void; isOpen: boolean; onToggle: () => void }) {
+  const navigate = useNavigate();
+  const [showProfileMenu, setShowProfileMenu] = React.useState(false);
+  const [showProfile, setShowProfile] = React.useState(false);
+  const profileMenuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const Item = ({ icon: Icon, label, page }: { icon: React.ComponentType<any>; label: string; page: string }) => (
     <div
       onClick={() => {
@@ -165,21 +188,65 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
         isOpen ? "translate-x-0" : "-translate-x-full"
       } md:translate-x-0`}>
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between mb-6 relative" ref={profileMenuRef}>
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="flex items-center gap-3 flex-1 hover:opacity-80 transition"
+            >
               <img
                 src={ysrLogo}
                 alt="YSRCP Logo"
                 className="w-10 h-10 rounded-full border-2 border-green-600 shadow-sm"
               />
-              <div>
+              <div className="text-left">
                 <div className="font-semibold text-[#1368d6]">NRI Convenor</div>
                 <div className="text-xs text-green-600">NRI Wing</div>
               </div>
-            </div>
+            </button>
             <button onClick={onToggle} className="md:hidden text-gray-700">
               <X size={20} />
             </button>
+
+            {/* Profile Dropdown Menu */}
+            {showProfileMenu && (
+              <div className="absolute left-4 top-20 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                <div className="px-4 py-3 bg-gradient-to-br from-blue-50 to-white border-b border-gray-100">
+                  <p className="text-sm font-bold text-[#1368d6]">Admin Menu</p>
+                </div>
+                <div className="p-2">
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      setShowProfile(true);
+                    }}
+                    className="w-full px-3 py-2 text-sm font-medium flex items-center gap-2 text-gray-700 hover:bg-blue-50 hover:text-[#1368d6] rounded-lg transition-all"
+                  >
+                    <User size={16} />
+                    My Profile
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      navigate("/change-password");
+                    }}
+                    className="w-full px-3 py-2 text-sm font-medium flex items-center gap-2 text-gray-700 hover:bg-blue-50 hover:text-[#1368d6] rounded-lg transition-all"
+                  >
+                    <Lock size={16} />
+                    Change Password
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      onLogout();
+                    }}
+                    className="w-full px-3 py-2 text-sm font-medium flex items-center gap-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           <nav className="space-y-2">
             <Item icon={Home} label="Dashboard" page="dashboard" />
@@ -204,6 +271,9 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
           </button>
         </div> */}
       </aside>
+
+      {/* Profile Modal */}
+      {showProfile && <AdminProfileModal onClose={() => setShowProfile(false)} />}
     </>
   );
 }
@@ -355,19 +425,69 @@ export default function AdminDashboard() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-const [countryContinentMap, setCountryContinentMap] = useState<Record<string, string>>({});
+  const [countryContinentMap, setCountryContinentMap] = useState<Record<string, string>>({});
+  
+  // Idle session timeout state
+  const idleTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const warningTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [showIdleWarning, setShowIdleWarning] = useState(false);
+  const IDLE_TIME_LIMIT = 2 * 60 * 1000; // 2 minutes in milliseconds
+  const WARNING_TIME = 1.5 * 60 * 1000; // Show warning at 1.5 minutes
 
   const norm = (v: string | null | undefined) => (v || "").trim();
- const toContinent = (country: string) =>
-  countryContinentMap[normalizeCountry(country)] || "Unknown";
+  const toContinent = (country: string) =>
+    countryContinentMap[normalizeCountry(country)] || "Unknown";
 
   const normalizeCountry = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+    value
+      .toLowerCase()
+      .replace(/_/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
 
+  // Reset idle timer on user activity
+  const resetIdleTimer = () => {
+    // Clear previous timers
+    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+    if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+    setShowIdleWarning(false);
+
+    // Set warning timeout at 1.5 minutes
+    warningTimeoutRef.current = setTimeout(() => {
+      setShowIdleWarning(true);
+    }, WARNING_TIME);
+
+    // Set logout timeout at 2 minutes
+    idleTimeoutRef.current = setTimeout(() => {
+      handleLogout();
+    }, IDLE_TIME_LIMIT);
+  };
+
+  // Setup activity listeners on mount
+  useEffect(() => {
+    const events = ["mousedown", "keydown", "scroll", "touchstart", "click"];
+
+    const handleActivity = () => {
+      resetIdleTimer();
+    };
+
+    // Add event listeners
+    events.forEach((event) => {
+      document.addEventListener(event, handleActivity);
+    });
+
+    // Initialize timer on component mount
+    resetIdleTimer();
+
+    // Cleanup on unmount
+    return () => {
+      events.forEach((event) => {
+        document.removeEventListener(event, handleActivity);
+      });
+      if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+      if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+    };
+  }, []);
 
   function group(rows: Row[], key: "continent" | "country" | "state"): Bucket[] {
     const map = new Map<string, number>();
@@ -495,7 +615,12 @@ const [countryContinentMap, setCountryContinentMap] = useState<Record<string, st
   // No more state-level grouping: we directly show members for a country
 
   const handleLogout = () => {
+    // Clear all timers
+    if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+    if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+    
     localStorage.removeItem("is_admin");
+    localStorage.removeItem("adminLoginTime");
     navigate("/", { replace: true });
   };
 
@@ -519,6 +644,29 @@ const [countryContinentMap, setCountryContinentMap] = useState<Record<string, st
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex">
+      {/* Idle Warning Modal */}
+      {showIdleWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 shadow-xl max-w-sm mx-4 border-2 border-red-400">
+            <h3 className="text-lg font-bold text-red-600 mb-2">Session Expiring Soon</h3>
+            <p className="text-gray-700 mb-4">
+              Your session will expire in 30 seconds due to inactivity. Click below to continue working or you will be logged out.
+            </p>
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  setShowIdleWarning(false);
+                  resetIdleTimer();
+                }}
+                className="bg-[#1368d6] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+              >
+                Continue Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Sidebar
         onLogout={handleLogout}
         current={currentPage}
@@ -553,7 +701,6 @@ const [countryContinentMap, setCountryContinentMap] = useState<Record<string, st
           >
             📥 Export Excel
           </button>
-          <AdminProfileMenu />
         </div>
 
      <p style={{ fontWeight: "bold" , fontSize: "22px", color:"green" }}>
@@ -701,6 +848,157 @@ const [countryContinentMap, setCountryContinentMap] = useState<Record<string, st
       {currentPage === "contentControl" && <ContentControl />}
 
       </main>
+    </div>
+  );
+}
+
+/* ===============================
+   ADMIN PROFILE MODAL
+================================ */
+function AdminProfileModal({ onClose }: { onClose: () => void }) {
+  const { profile, refreshProfile } = useAuth();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    first_name: "",
+    email: "",
+    mobile_number: "",
+    whatsapp_number: "",
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setForm({
+        first_name: profile.first_name || "",
+        email: profile.email || "",
+        mobile_number: profile.mobile_number || "",
+        whatsapp_number: profile.whatsapp_number || "",
+      });
+    }
+  }, [profile]);
+
+  const updateProfile = async () => {
+    if (!profile?.id) return;
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          first_name: form.first_name,
+          mobile_number: form.mobile_number,
+          whatsapp_number: form.whatsapp_number,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", profile.id);
+
+      if (error) throw error;
+
+      await refreshProfile();
+      // @ts-ignore
+      toast.success("Profile updated successfully!");
+      onClose();
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      // @ts-ignore
+      toast.error(error.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative animate-scaleUp">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#1368d6] to-[#00a86b] px-8 py-6 text-white relative">
+          <button
+            onClick={onClose}
+            className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors"
+          >
+            <X size={24} />
+          </button>
+          <h2 className="text-2xl font-bold">Edit Profile</h2>
+          <p className="text-blue-100 text-sm mt-1">Update your personal information</p>
+        </div>
+
+        <div className="p-8 space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Name</label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <User size={16} />
+              </div>
+              <input
+                value={form.first_name}
+                onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                placeholder="Name"
+                className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email Address</label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <Mail size={16} />
+              </div>
+              <input
+                value={form.email}
+                disabled
+                className="w-full border border-gray-100 bg-gray-50 rounded-xl pl-10 pr-4 py-2.5 text-gray-500 cursor-not-allowed outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Mobile Number</label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <Phone size={16} />
+              </div>
+              <input
+                value={form.mobile_number}
+                onChange={(e) => setForm({ ...form, mobile_number: e.target.value })}
+                placeholder="Mobile Number"
+                className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">WhatsApp Number</label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <Phone size={16} className="text-green-500" />
+              </div>
+              <input
+                value={form.whatsapp_number}
+                onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })}
+                placeholder="WhatsApp Number"
+                className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={updateProfile}
+              disabled={saving}
+              className="px-8 py-2.5 bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

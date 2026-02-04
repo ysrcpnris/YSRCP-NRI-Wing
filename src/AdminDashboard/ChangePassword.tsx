@@ -1,5 +1,6 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import {
   Eye,
@@ -11,6 +12,7 @@ import {
   CheckCircle2,
   XCircle,
   LogOut,
+  ArrowLeft,
 } from "lucide-react";
 
 /* =============================================================================
@@ -285,6 +287,7 @@ function StrengthMeter({ password }: { password: string }) {
 ============================================================================= */
 
 export default function ChangePassword() {
+  const navigate = useNavigate();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -423,7 +426,15 @@ export default function ChangePassword() {
   --------------------------------------------------------------------------- */
 
   return (
-    <div className="max-w-2xl mx-auto mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+    <div className="max-w-2xl mx-auto mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm p-8 relative">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/admin/dashboard")}
+        className="absolute top-6 right-6 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
+      >
+        <ArrowLeft size={20} />
+      </button>
+
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-6">
         <Lock size={26} className="text-[#1368d6]" />
