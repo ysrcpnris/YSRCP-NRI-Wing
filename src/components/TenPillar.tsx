@@ -130,9 +130,9 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
     navigate(`/pillars/${pillar.id}`);
   };
   return (
-    <section id="section-pillars" className="pt-0 pb-24 px-6 bg-white relative overflow-hidden">
+    <section id="section-pillars" className="pt-0 pb-3 px-6 bg-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
+        <div className="text-center mb-3">
           <span className="px-6 py-2 bg-gradient-to-r from-ysrcp-blue to-ysrcp-green text-black rounded-full text-sm font-black uppercase tracking-widest mb-4 inline-block">Vision & Strategy</span>
           <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 uppercase tracking-tight">The Pillars of Progress</h2>
           <div className="w-24 h-2 bg-ysrcp-green mx-auto rounded-full"></div>

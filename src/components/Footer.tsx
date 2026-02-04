@@ -155,11 +155,11 @@ const Footer: React.FC = () => {
         <div className="mt-4 pt-3 border-t border-gray-800 flex flex-col sm:flex-row gap-3 text-xs">
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4 text-blue-400" />
-            nri@ysrcp.in
+            globalcoordinator@ysrcpnriwing.org
           </div>
           <div className="flex items-center gap-2">
             <Phone className="w-4 h-4 text-blue-400" />
-            +91-40-1234-5678
+            9515511111
           </div>
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4 text-blue-400" />
