@@ -8,74 +8,88 @@ const journeyData: Record<
   { title: string; points: string[]; image: string }
 > = {
   2011: {
-    title: "2011: The Inception",
+    title: "2011: The Birth of a People's Revolution",
     points: [
-      "Founded on March 12 by Y.S. Jagan Mohan Reddy, inspired by Y.S. Rajasekhara Reddy’s welfare governance.",
-      "Formed to uphold YSR’s legacy and give people a strong voice.",
-      "Focused on pro-poor policies and governance reforms amid AP bifurcation debates.",
+      "On March 12, Jagan anna ignited a historic flame by founding YSRCP, rising from the ashes of betrayal to carry forward the sacred legacy of YSR.",
+      "A fearless break from the old order, born to champion the oppressed, the farmer, the youth, and the worker.",
+      "Jagan's triumphant Kadapa Lok Sabha victory in May became the first thunderous roar of the awakening.",
+      "The party emerged as the unbreakable shield for the voiceless and the sword against corruption.",
+      "A new era of justice, welfare, and hope dawned for Andhra Pradesh."
     ],
     image: "/images/jagan1.jpg.jpg",
   },
   2012: {
-    title: "2012: Electoral Breakthrough",
+    title: "2012: Unstoppable Rise Against All Odds",
     points: [
-      "Won Nellore Lok Sabha seat and 15 of 18 Assembly by-elections.",
-      "Established YSRCP as a major opposition force.",
-      "Captured strong grassroots support challenging major political parties.",
+      "In a blaze of glory, YSRCP stormed by-elections—conquering 15 of 18 assembly seats and Nellore Lok Sabha in June, defying every storm.",
+      "Even as their leader was unjustly imprisoned, the people's unbreakable faith turned adversity into triumph.",
+      "YSRCP stood tall as the fearless champion of the poor, proving no force could silence the roar of the awakened people."
     ],
     image: "/images/jagan2.jpg.jpg",
   },
   2014: {
-    title: "2014: Pro-Poor Voice",
+    title: "2014: The Dawn of a Mighty Opposition",
     points: [
-      "Contested elections and won 70 Assembly & 9 Lok Sabha seats.",
-      "Positioned as a strong pro-poor alternative.",
-      "Highlighted welfare, social justice, and anti-corruption as key agenda.",
+      "In the crucible of post-bifurcation elections, YSRCP forged an iron opposition—securing 67 seats and nearly 40% vote share.",
+      "YS Jagan rose as the indomitable Leader of Opposition, a beacon of resistance against injustice.",
+      "The mandate echoed the people's hunger for true welfare and dignity.",
+      "A heroic stand that planted the seeds for an epic comeback.",
+      "The lion roared, promising to reclaim the throne for the masses."
     ],
     image: "/images/jagan3.jpg.jpg",
   },
   2017: {
-    title: "2017: Strategic Partnership",
+    title: "2017: The Legendary March That Shook the State",
     points: [
-      "Partnered with strategist Prashant Kishor to strengthen organization.",
-      "Executed data-driven voter outreach and booth-level planning.",
-      "Deepened grassroots engagement statewide.",
+      "November 6: YS Jagan embarked on the monumental Praja Sankalpa Padayatra from Idupulapaya—the longest, most heroic foot march in history.",
+      "Walking over 3,600 km, he became one with the people, absorbing their pain and igniting hope.",
+      "Lakhs poured out their hearts, turning villages into fortresses of support.",
+      "A divine vow to end farmer suicides, unemployment, and betrayal.",
+      "The yatra became the heartbeat of a revolution."
     ],
     image: "/images/jagan4.jpg.jpg",
   },
   2018: {
-    title: "2018: Praja Sankalpa Yatra",
+    title: "2018: The Unyielding Flame of the Yatra",
     points: [
-      "YS Jagan launched a massive statewide padayatra covering thousands of kilometers.",
-      "Millions participated, voicing local issues and aspirations.",
-      "Communicated welfare promises and anti-corruption agenda.",
+      "The epic Praja Sankalpa Yatra blazed on, covering vast lands and touching crores of souls.",
+      "Even in temporary pause, the fire never dimmed—cadre galvanized, public fury against TDP mounted.",
+      "Jagan exposed every injustice with unyielding courage.",
+      "The longest padayatra in memory became legend, forging an unbreakable bond with the people.",
+      "Victory was no longer a dream—it was destiny."
     ],
     image: "/images/jagan1.jpg.jpg",
   },
   2019: {
-    title: "2019: Landslide Victory",
+    title: "2019: Triumph of the People's Will",
     points: [
-      "Won 151/175 Assembly seats and 22 Lok Sabha seats.",
-      "Introduced historic welfare schemes like Amma Vodi and enhanced pensions.",
-      "Proved commitment to social justice and development.",
+      "May 2019: A historic tsunami—151 of 175 assembly seats and 22 of 25 Lok Sabha seats swept in divine mandate.",
+      "YS Jagan ascended as Chief Minister on May 30, fulfilling the sacred promise made on dusty village paths.",
+      "Navaratnalu welfare schemes rose like pillars of light for every household.",
+      "The padayatra's vows transformed into reality—power returned to the poor.",
+      "YSRCP became the invincible guardian of Andhra's destiny."
     ],
     image: "/images/jagan2.jpg.jpg",
   },
   2021: {
-    title: "2021: Local Dominance",
+    title: "2021: Conquest of Hearts in Urban Battlegrounds",
     points: [
-      "Won 80%+ ZPTC and MPTC seats, sweeping rural elections.",
-      "Grassroots network strengthened public trust.",
-      "Reinforced governance reforms and welfare delivery.",
+      "March 2021: An unstoppable wave—YSRCP captured 73 of 75 municipalities and 11 of 12 municipal corporations.",
+      "Mid-tenure dominance proved the unbreakable trust of the people.",
+      "Amma Vodi, Rythu Bharosa, and Aarogyasri shone as beacons of hope across cities and towns.",
+      "Local governance became a fortress of welfare and justice.",
+      "The heroic legacy grew stronger, defying every challenge."
     ],
     image: "/images/jagan3.jpg.jpg",
   },
-  2024: {
-    title: "2024: Committed Opposition",
+  2025: {
+    title: "2025: The Rebirth – YSRCP 2.0 Rises Again",
     points: [
-      "Secured 11 Assembly & 4 Lok Sabha seats as opposition.",
-      "Continued advocacy for welfare-based governance.",
-      "Maintained influence with 15 MPs, ensuring national representation.",
+      "From the ashes of 2024, the phoenix awakens—YSRCP stands as the fierce sentinel of truth in opposition.",
+      "YS Jagan declares the sacred statewide padayatra to reclaim justice for 2029.",
+      "Relentless fight against farmer betrayal, healthcare collapse, and lawlessness.",
+      "The legacy of Navaratnalu roars back—welfare shall rise again.",
+      "A new chapter of heroism begins; the people's champion returns stronger."
     ],
     image: "/images/jagan4.jpg.jpg",
   },
