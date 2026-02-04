@@ -130,10 +130,10 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
     navigate(`/pillars/${pillar.id}`);
   };
   return (
-    <section id="section-pillars" className="py-24 px-6 bg-white relative overflow-hidden">
+    <section id="section-pillars" className="pt-0 pb-24 px-6 bg-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <span className="px-4 py-1.5 bg-ysrcp-blue/10 text-ysrcp-blue rounded-full text-xs font-black uppercase tracking-widest mb-4 inline-block">Vision & Strategy</span>
+          <span className="px-6 py-2 bg-gradient-to-r from-ysrcp-blue to-ysrcp-green text-black rounded-full text-sm font-black uppercase tracking-widest mb-4 inline-block">Vision & Strategy</span>
           <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 uppercase tracking-tight">The Pillars of Progress</h2>
           <div className="w-24 h-2 bg-ysrcp-green mx-auto rounded-full"></div>
         </div>
@@ -141,12 +141,12 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
         {/* Mobile horizontal carousel (snap-x) - fully visible cards on small screens */}
         <div className="sm:hidden">
           <div className="relative">
-            <div ref={containerRef} className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 px-4 py-6">
+            <div ref={containerRef} className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 px-4 py-4">
               {PILLARS.map((pillar, idx) => (
-                <div key={pillar.id} ref={el => (cardRefs.current[idx] = el)} className="snap-start min-w-[80vw] h-[340px] rounded-2xl overflow-hidden relative">
+                <div key={pillar.id} ref={el => (cardRefs.current[idx] = el)} className="snap-start min-w-[80vw] h-[320px] rounded-2xl overflow-hidden relative">
                   <img src={pillar.image} alt={pillar.title} className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                  <div className="relative z-10 p-6 text-white flex flex-col justify-end h-full">
+                  <div className="relative z-10 p-4 text-white flex flex-col justify-end h-full">
                     <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md p-3 rounded-lg shadow-sm">
                       {pillar.icon}
                     </div>

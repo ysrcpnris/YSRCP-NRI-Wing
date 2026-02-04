@@ -35,7 +35,7 @@ const PillarDetailWrapper: React.FC = () => {
   }, [id]);
 
   const handleBack = () => {
-    navigate('/pillars');
+    navigate('/');
   };
 
   return <PillarDetailPage pillar={pillar} onBack={handleBack} />;

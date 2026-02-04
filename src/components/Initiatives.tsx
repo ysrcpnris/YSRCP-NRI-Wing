@@ -4,7 +4,7 @@ import { GraduationCap, Gavel, UsersRound, Briefcase, X } from "lucide-react";
 
 export default function Initiatives() {
   const navigate = useNavigate();
-  const [selectedService, setSelectedService] = useState<any | null>(null);
+  const [selectedService, setSelectedService] = useState<{ icon: React.ReactNode; title: string; long: string } | null>(null);
 
   const services = [
     {

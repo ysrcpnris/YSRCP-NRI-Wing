@@ -99,14 +99,26 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
     window.location.href = '/';
   };
 
-  const fullName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
-  const initials =
-    fullName
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase() || 'U';
+const fullName = (() => {
+  const first = profile?.first_name?.trim() || '';
+  const last = profile?.last_name?.trim() || '';
+
+  // Prevent ""
+  if (!last || first.toLowerCase() === last.toLowerCase()) {
+    return first;
+  }
+
+  return `${first} ${last}`;
+})();
+const initials =
+  fullName
+    .split(' ')
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'U';
+
 
   return (
     <div ref={dropdownRef} className="relative">

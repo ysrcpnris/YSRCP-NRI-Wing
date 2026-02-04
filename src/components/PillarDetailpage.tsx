@@ -58,35 +58,35 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
       {
         title: "Marine Vision",
         icon: <Ship size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/blue economy.png",
         points: ["Welfare of coastal families", "Sustainable coastal development", "Marine livelihood protection"],
         description: `YS Jagan Mohan Reddy, popularly known as Jagan Anna, during his tenure as Chief Minister of Andhra Pradesh (2019–2024), envisioned the state as a major driver of India's Blue Economy. With the second-longest coastline in the country spanning 974 km, he positioned Andhra Pradesh to capitalize on its vast maritime potential for sustainable economic growth, employment generation, and industrial transformation. His vision revolved around port-led development as the engine of progress. Andhra Pradesh had one major port (Visakhapatnam), five operational state ports, and several notified ports handling over 170 million tonnes of cargo annually, ranking second only to Gujarat. Jagan Anna aimed to significantly expand this infrastructure by developing four new ports and ten modern fishing harbors, with planned investments of approximately ₹16,000 crore. The overarching goal was to elevate the state's share of national exports from around 4% to 10% by 2030. The Blue Economy vision extended beyond mere trade volumes to encompass a holistic ecosystem. Key sectors included fisheries and aquaculture, shipbuilding, coastal tourism, petrochemical industries, and marine biotechnology. He emphasized sustainable and inclusive growth, ensuring eco-friendly practices while creating direct and indirect jobs for coastal communities. Under his leadership, Andhra Pradesh achieved the top rank in the Ease of Doing Business index in 2020, largely credited to streamlined port policies and infrastructure reforms. Even after the 2024 elections, the YSR Congress Party continues to highlight this legacy, arguing that Jagan Anna's focused push on the Blue Economy laid a strong foundation for unlocking Andhra Pradesh's coastal economic potential and positioning it as a maritime powerhouse in India.`
       },
       {
         title: "Greenfield Ports",
         icon: <Anchor size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/blue economy.png",
         points: ["Ramayapatnam Port", "Machilipatnam Port", "Mulapeta/Bhavanapadu", "Kakinada Gateway/SEZ"],
         description: `Jagan Anna spearheaded the ambitious development of four new greenfield ports to unlock the state's Blue Economy potential. With Andhra Pradesh's 974 km coastline, he aimed to drive port-led growth, boost maritime trade, exports, and sectors like fisheries, aquaculture, shipbuilding, and coastal industries. The four ports—Machilipatnam (Krishna district), Ramayapatnam (Prakasam/Nellore), Mulapeta/Bhavanapadu (Srikakulam), and Kakinada Gateway/SEZ (East Godavari)—were planned with investments of ₹16,000–17,000 crore. These projects targeted an additional 100–145 million tonnes per annum cargo capacity, creating lakhs of direct and indirect jobs while decongesting ports like Visakhapatnam. Jagan Anna personally laid the foundation stones and initiated land acquisition, environmental clearances, and early construction works, aligning these projects with national initiatives like Sagarmala for sustainable inclusive development.`
       },
       {
         title: "Fishing Harbours",
         icon: <Target size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/blue economy.png",
         points: ["10 modern harbours", "Fish landing centres", "Support for fisher folk"],
         description: `Jagan Anna spearheaded the development of 10 new fishing harbours as part of his Blue Economy vision. Leveraging the state's 974 km coastline, he aimed to boost fisheries, prevent migration of fishermen, create jobs, and enhance livelihoods in coastal communities. The initiative targeted modern, world-class harbours and fish landing centres at a cost of ₹3,700–3,800 crore, with six additional fish landing centres. Key projects included Juvvaladinne (Nellore), Nizampatnam (Bapatla), Machilipatnam (Krishna), Uppada (East Godavari), Vodarevu (Bapatla), and others like Budagatlapalem, Pudimadaka, Biyyaputippa, and Kottapatnam. These harbours were designed to accommodate thousands of boats, increase fish production, and align with national schemes like Blue Revolution and Sagarmala.`
       },
       {
         title: "Coastal Industrial Corridors",
         icon: <Globe size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/blue economy.png",
         points: ["VCIC acceleration", "VK-PCPIR revival", "Coastal economic zones"],
         description: `Jagan Anna prioritized sea-based industrial corridors and related coastal initiatives as core elements of his Blue Economy vision. He accelerated the Visakhapatnam-Chennai Industrial Corridor (VCIC) and pushed rapid infrastructure development in coastal nodes like Nakkapalli, Atchutapuram, and Kakinada, focusing on petrochemicals, pharma, food processing, and logistics parks. He revived the VK-PCPIR project and promoted coastal economic zones around new ports, integrating industries with maritime infrastructure for export-oriented growth and job creation.`
       },
       {
         title: "Aquaculture & Fisheries Support",
         icon: <Ship size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/blue economy.png",
         points: ["YSR Matsyakara Bharosa", "Diesel subsidy", "Aqua labs & hubs"],
         description: `Jagan Anna strongly supported fishermen and aquaculture farmers as part of his Blue Economy vision. Key initiatives included the YSR Matsyakara Bharosa scheme providing ₹10,000 annual assistance to fishermen families, diesel subsidy, low-cost power for aqua farmers, enhanced ex-gratia and compensation schemes, and establishment of the Andhra Pradesh Aquaculture Development Authority, aqua labs, and aqua hubs to boost exports and production. These measures prevented migration and drove fisheries growth, making Andhra Pradesh a leading marine exports state.`
       }
@@ -105,13 +105,13 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
         id: 'Overview',
         title: 'Vision',
         icon: <Leaf size={18} />,
-        image: "/pillar-images/120845568_3486235731396869_3213998884289559140_n.jpg",
+        image: "/pillar-images/rskb.jpeg",
         points: ["Agriculture as top priority", "₹1.5 lakh crore spending", "Middlemen-free delivery"],
         description: `Jagan Anna, during his tenure as Chief Minister of Andhra Pradesh (2019–2024), placed agriculture at the core of his vision for rural prosperity, aiming to make farming profitable, sustainable, and dignified for small and marginal farmers who constitute over 70% of the state's cultivators. His flagship YSR Rythu Bharosa scheme provided direct annual financial assistance of ₹13,500 per farmer family, disbursing more than ₹34,000 crore to over 53 lakh beneficiaries and covering approximately 80% of cultivation costs. This was complemented by YSR Sunna Vaddi for zero-interest crop loans, government-funded crop insurance premiums (making AP a national leader), and free borewells for irrigation. Rythu Bharosa Kendras, established in every village, acted as one-stop centers offering quality inputs, seeds, fertilizers, soil testing, expert advisory services, and direct procurement to eliminate middlemen exploitation. Under his leadership, agricultural growth accelerated, foodgrain production increased from 154 lakh tonnes to over 166 lakh tonnes, and allied sectors like dairy, poultry, and fisheries saw significant expansion. Initiatives also promoted natural farming (ZBNF) through subsidies and training, strengthened Rythu Bazars, and integrated e-NAM for better market access. Aligned with Navaratnalu welfare promises, these efforts ensured income security, reduced risks from natural disasters, and empowered farmers. Post-2024, YSRCP continues to champion these reforms as Jagan Anna's enduring legacy for a self-reliant, farmer-friendly Andhra Pradesh.`
       },
-      { id: 'Support', title: 'Rythu Bharosa', icon: <Coins size={18} />, image: "/pillar-images/120845568_3486235731396869_3213998884289559140_n.jpg", description: `Jagan Anna launched the YSR Rythu Bharosa Scheme on October 15, 2019, to deliver direct financial support to Andhra Pradesh farmers, providing ₹13,500 annually per eligible family in three installments (₹5,500 for Kharif, ₹4,000 for Rabi, and ₹2,000 for Zaid/Sankranti), integrating central PM-KISAN's ₹6,000 with an additional ₹7,500 from the state, totaling ₹67,500 over five years. Over 53 lakh farmers, including tenants and RoFR holders, received more than ₹34,000 crore through transparent DBT transfers to Aadhaar-linked accounts. The scheme was supported by Rythu Bharosa Kendras, which supplied quality inputs, soil testing, advisory services, and direct MSP procurement. Under his leadership, the government also paid full crop insurance premiums under PMFBY, making AP a national leader in coverage, while YSR Sunna Vaddi offered zero-interest loans to reduce debt traps. Free borewells and input subsidies for calamity losses further bolstered financial security. These measures ensured income stability, boosted foodgrain production from 154 lakh tonnes to over 166 lakh tonnes, and improved the state's agricultural ranking significantly.`, metrics: [{label: "Annual Aid", value: "₹13,500"}, {label: "Total DBT", value: "₹34K Cr"}], points: ["Annual financial support", "Free 9-hour power supply", "Zero interest crop loans"] },
-      { id: 'RBKs', title: 'RBK Network', icon: <ShieldCheck size={18} />, image: "/pillar-images/120845568_3486235731396869_3213998884289559140_n.jpg", description: `Jagan Anna launched the YSR Rythu Bharosa Scheme on October 15, 2019, as a landmark initiative to empower Andhra Pradesh's farmers by providing direct financial support of ₹13,500 annually per eligible family, disbursed in three installments (₹5,500 for Kharif, ₹4,000 for Rabi, and ₹2,000 for Zaid/Sankranti), integrating the central PM-KISAN's ₹6,000 with an additional ₹7,500 from the state, totaling ₹67,500 over five years to cover cultivation costs without repayment obligations. Over 53 lakh farmers, including small and marginal landholders, tenant farmers, and RoFR pattadar holders from marginalized communities, benefited from more than ₹34,000 crore in direct cash transfers via Aadhaar-linked DBT accounts, ensuring transparency and eliminating intermediaries. The scheme was bolstered by Rythu Bharosa Kendras (over 10,778 village-level centers) that offered quality inputs, seeds, fertilizers, soil testing, expert advisory services, e-crop registration, and direct procurement at MSP, significantly reducing middlemen exploitation while promoting modern and sustainable farming practices. Under its impact, agricultural growth turned positive, foodgrain production rose from 154 lakh tonnes to over 166 lakh tonnes, and the state improved its national agriculture ranking, alongside reduced debt burdens and rural migration. Aligned with Navaratnalu promises, it emphasized farmer dignity, income security, and inclusive growth, though discontinued post-2024 by the new government, it remains a celebrated legacy of Jagan Anna's commitment to transforming agriculture and rural prosperity in Andhra Pradesh.`, metrics: [{label: "RBKs", value: "10,700+"}, {label: "MSP Crops", value: "24 Items"}], points: ["Village level support hubs", "Free crop insurance premium", "Price stabilization fund"] },
-      { id: 'Markets', title: 'Market Reforms', icon: <Briefcase size={18} />, image: "/pillar-images/120845568_3486235731396869_3213998884289559140_n.jpg", description: `Jagan Anna, during his tenure as Chief Minister (2019–2024), introduced key market reforms to empower farmers by ensuring fair prices, reducing middlemen exploitation, and providing direct market access. The Rythu Bharosa Kendras (RBKs), over 10,778 village-level centers, served as procurement hubs for crops like paddy, maize, and pulses at Minimum Support Price (MSP), enabling direct government purchases and timely payments. These Kendras integrated with e-NAM for online trading, connecting farmers to wider markets and better rates while eliminating intermediaries. Rythu Bazars were modernized with improved infrastructure, cold storage, and quality testing facilities to facilitate direct sales to consumers. The government implemented price stabilization measures, including buffer stocks and intervention purchases during market crashes, protecting farmers from volatility. Contract farming was encouraged for crops like chillies, tobacco, and horticulture to secure assured buyers. These reforms strengthened the APMC system with transparency and farmer-centric mechanisms, aligned with Navaratnalu promises. Under his leadership, Andhra Pradesh saw improved farmer incomes, reduced post-harvest losses, and stronger market linkages. Even post-2024, YSRCP advocates for these as a vital part of Jagan Anna's legacy for fair, efficient, and profitable agricultural marketing in the state.`, points: ["RBK procurement", "Market access", "Price stabilization"] },
+      { id: 'Support', title: 'Rythu Bharosa', icon: <Coins size={18} />, image: "/pillar-images/rskb.jpeg", description: `Jagan Anna launched the YSR Rythu Bharosa Scheme on October 15, 2019, to deliver direct financial support to Andhra Pradesh farmers, providing ₹13,500 annually per eligible family in three installments (₹5,500 for Kharif, ₹4,000 for Rabi, and ₹2,000 for Zaid/Sankranti), integrating central PM-KISAN's ₹6,000 with an additional ₹7,500 from the state, totaling ₹67,500 over five years. Over 53 lakh farmers, including tenants and RoFR holders, received more than ₹34,000 crore through transparent DBT transfers to Aadhaar-linked accounts. The scheme was supported by Rythu Bharosa Kendras, which supplied quality inputs, soil testing, advisory services, and direct MSP procurement. Under his leadership, the government also paid full crop insurance premiums under PMFBY, making AP a national leader in coverage, while YSR Sunna Vaddi offered zero-interest loans to reduce debt traps. Free borewells and input subsidies for calamity losses further bolstered financial security. These measures ensured income stability, boosted foodgrain production from 154 lakh tonnes to over 166 lakh tonnes, and improved the state's agricultural ranking significantly.`, points: ["Annual financial support", "Free 9-hour power supply", "Zero interest crop loans"] },
+      { id: 'RBKs', title: 'RBK Network', icon: <ShieldCheck size={18} />, image: "/pillar-images/rskb.jpeg", description: `Jagan Anna launched the YSR Rythu Bharosa Scheme on October 15, 2019, as a landmark initiative to empower Andhra Pradesh's farmers by providing direct financial support of ₹13,500 annually per eligible family, disbursed in three installments (₹5,500 for Kharif, ₹4,000 for Rabi, and ₹2,000 for Zaid/Sankranti), integrating the central PM-KISAN's ₹6,000 with an additional ₹7,500 from the state, totaling ₹67,500 over five years to cover cultivation costs without repayment obligations. Over 53 lakh farmers, including small and marginal landholders, tenant farmers, and RoFR pattadar holders from marginalized communities, benefited from more than ₹34,000 crore in direct cash transfers via Aadhaar-linked DBT accounts, ensuring transparency and eliminating intermediaries. The scheme was bolstered by Rythu Bharosa Kendras (over 10,778 village-level centers) that offered quality inputs, seeds, fertilizers, soil testing, expert advisory services, e-crop registration, and direct procurement at MSP, significantly reducing middlemen exploitation while promoting modern and sustainable farming practices. Under its impact, agricultural growth turned positive, foodgrain production rose from 154 lakh tonnes to over 166 lakh tonnes, and the state improved its national agriculture ranking, alongside reduced debt burdens and rural migration. Aligned with Navaratnalu promises, it emphasized farmer dignity, income security, and inclusive growth, though discontinued post-2024 by the new government, it remains a celebrated legacy of Jagan Anna's commitment to transforming agriculture and rural prosperity in Andhra Pradesh.`, points: ["Village level support hubs", "Free crop insurance premium", "Price stabilization fund"] },
+      { id: 'Markets', title: 'Market Reforms', icon: <Briefcase size={18} />, image: "/pillar-images/rskb.jpeg", description: `Jagan Anna, during his tenure as Chief Minister (2019–2024), introduced key market reforms to empower farmers by ensuring fair prices, reducing middlemen exploitation, and providing direct market access. The Rythu Bharosa Kendras (RBKs), over 10,778 village-level centers, served as procurement hubs for crops like paddy, maize, and pulses at Minimum Support Price (MSP), enabling direct government purchases and timely payments. These Kendras integrated with e-NAM for online trading, connecting farmers to wider markets and better rates while eliminating intermediaries. Rythu Bazars were modernized with improved infrastructure, cold storage, and quality testing facilities to facilitate direct sales to consumers. The government implemented price stabilization measures, including buffer stocks and intervention purchases during market crashes, protecting farmers from volatility. Contract farming was encouraged for crops like chillies, tobacco, and horticulture to secure assured buyers. These reforms strengthened the APMC system with transparency and farmer-centric mechanisms, aligned with Navaratnalu promises. Under his leadership, Andhra Pradesh saw improved farmer incomes, reduced post-harvest losses, and stronger market linkages. Even post-2024, YSRCP advocates for these as a vital part of Jagan Anna's legacy for fair, efficient, and profitable agricultural marketing in the state.`, points: ["RBK procurement", "Market access", "Price stabilization"] },
       
      
     ]
@@ -129,7 +129,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
         id: 'Overview',
         title: 'Overview',
         icon: <GraduationCap size={18} />,
-        image: "/pillar-images/121991841_3521006071253168_1513702069054059060_n.jpg",
+        image: "/pillar-images/education.png",
         points: ["English medium transformation", "Nadu-Nedu school revamp", "Digital boards in villages"],
         description: `Jagan Anna envisioned education and skill development in Andhra Pradesh not just as local empowerment but as a pathway to producing global citizens—youth who are knowledgeable, skilled, multilingual, culturally aware, and competitive on the world stage. During his tenure as Chief Minister (2019–2024), he aimed to transform the state's education system into a modern, inclusive, and world-class model that prepares students to thrive in a globalized economy, embrace diversity, and contribute meaningfully beyond borders. Through Navaratnalu initiatives, he introduced English-medium education from Class 1 in government schools, supported by bilingual textbooks, extensive teacher training, and digital classrooms to build strong English proficiency alongside mother tongue fluency. Schemes like Jagananna Amma Vodi (₹15,000 annual incentive to mothers) and Jagananna Vidya Deevena (full fee reimbursement for higher education) ensured access for marginalized students, fostering equity and global readiness. Jagananna Vidya Kanuka provided free kits, while infrastructure upgrades brought smart labs and technology to rural classrooms. For skills, the YSR Skill Development Scheme trained over 10 lakh youth in IT, technical trades, soft skills, and industry-aligned programs through partnerships with global companies. Jagananna Kaushala Vidyalayam in polytechnics and ITIs, along with plans for a YSR Skill University, focused on international standards, innovation, and employability. These efforts aimed to create confident, adaptable individuals capable of working in global industries, starting businesses, or contributing to international knowledge economies.`
       },
@@ -137,7 +137,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
         id: 'Support',
         title: 'Direct Aid',
         icon: <Coins size={18} />,
-        image: "/pillar-images/121991841_3521006071253168_1513702069054059060_n.jpg",
+        image: "/pillar-images/education.png",
       
        
         points: ["Amma Vodi annual support", "Vidya Deevena fee reimbursement", "Vasathi Deevena lodging aid"],
@@ -147,7 +147,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
         id: 'Kit',
         title: 'Vidya Kanuka',
         icon: <Briefcase size={18} />,
-        image: "/pillar-images/121991841_3521006071253168_1513702069054059060_n.jpg",
+        image: "/pillar-images/education.png",
        
         points: ["Bags, Shoes, Uniforms, Books", "Nutritious Mid-day meals", "Free tabs for 8th graders"],
         description: `Jagan Anna, during his tenure as Chief Minister (2019–2024), introduced comprehensive reforms in higher education to make it more accessible, industry-aligned, flexible, and skill-oriented, ensuring students from all backgrounds could pursue quality degrees and become globally competitive. The flagship Jagananna Vidya Deevena provided full fee reimbursement—including tuition, hostel, mess, books, and other expenses—for students from SC/ST/BC/Minorities and economically backward classes pursuing degree, PG, and professional courses, benefiting over 20 lakh students by removing financial barriers. He implemented curriculum reforms with the Choice-Based Credit System (CBCS), allowing multiple entry/exit options, interdisciplinary learning, and flexible credits to modernize academic programs. The single-minor system was introduced, enabling students to pursue one minor subject alongside their major (e.g., a science student taking management or data analytics as a minor) for broader knowledge and enhanced employability. Mandatory internships were mandated for all UG and PG students, with academic credits awarded and strong industry tie-ups to provide real-world exposure and bridge the academia-industry gap. Industry-oriented courses were promoted in emerging fields like AI, data science, biotechnology, and renewable energy through collaborations with companies, ensuring job-ready graduates. Additionally, Vasthu Deevena (part of Vidya Deevena) offered dedicated support for hostel and mess fees, helping rural and poor students afford residential education without stress. These Navaratnalu-aligned reforms aimed to boost enrollment, reduce dropouts, improve employability, and position Andhra Pradesh’s higher education as globally competitive.`
@@ -156,7 +156,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
         id: 'Skills',
         title: 'Employability',
         icon: <TrendingUp size={18} />,
-        image: "/pillar-images/121991841_3521006071253168_1513702069054059060_n.jpg",
+        image: "/pillar-images/education.png",
       
 
         points: ["Curriculum mapping with industry", "Skill development hubs", "Microsoft certification aid"],
@@ -177,96 +177,96 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
       {
         title: "Vision",
         icon: <Heart size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
+        image: "/pillar-images/Welfare.png",
         points: ["People-first governance", "Inclusive development"],
         description: `The vision of the Jagananna welfare architecture revolves around a “people-first” governance model inherited from our Mahanetha Dr. YS Rajasekhara Reddy garu. It emphasizes inclusive development, social justice, and the empowerment of marginalized communities through the Navaratnalu framework, treating welfare as a fundamental right rather than charity. The approach focuses on citizen-centric reforms, decentralization through Village and Ward Secretariats, and a saturation model to ensure no eligible beneficiary is excluded, irrespective of caste, creed, or political affiliation. Direct state–citizen engagement is enabled through over 2.6 lakh volunteers delivering doorstep services, supported by data-driven governance and sustained investment in human capital. The overarching objective is to build an equitable welfare state by reducing poverty, enhancing dignity, and ensuring economic security for vulnerable groups such as SC/ST/BCs, minorities, the elderly, persons with disabilities, and women, with technology-driven transparency and efficiency.`
       },
       {
         title: "DBT",
         icon: <Coins size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
+        image: "/pillar-images/Welfare.png",
         points: ["₹2.5–2.7 Lakh Cr disbursed", "Aadhaar-linked DBT"],
         description: `The Jagananna welfare architecture, implemented by the YSRCP government in Andhra Pradesh from 2019 to 2024, disbursed approximately ₹2.5–2.7 lakh crore through Direct Benefit Transfer (DBT) under the Navaratnalu and allied schemes, benefiting nearly 1.4–2 crore households with saturation coverage. Major allocations included ₹90,602 crore for YSR Pension Kanuka, ₹34,378 crore for YSR Rythu Bharosa, ₹26,000 crore for Jagananna Amma Vodi, ₹12,609 crore for Jagananna Vidya Deevena, and ₹19,189 crore for YSR Cheyutha, along with support for housing, health, and livelihood programs. Funds were credited directly into Aadhaar-linked bank accounts, largely in women’s names, ensuring transparency, reducing leakages, and promoting financial inclusion.`
       },
       {
         title: "Saturation",
         icon: <Users size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
+        image: "/pillar-images/Welfare.png",
         points: ["Universal coverage", "No eligible beneficiary excluded"],
         description: `The saturation approach in the Jagananna welfare architecture ensures universal coverage by reaching every eligible beneficiary without caps or exclusions, reflecting the principle of “no one left behind.” Implemented across Navaratnalu, it uses Aadhaar-linked data, household surveys, and digital platforms to cover education, health, agriculture, housing, and social security. Amma Vodi supports all mothers with school-going children; Rythu Bharosa assists small, marginal, and tenant farmers; Vidya and Vasathi Deevena remove fee burdens for backward and EBC students; Pension Kanuka covers eligible elderly, widows, and persons with disabilities; Cheyutha and Asara empower qualifying women and SHGs; Arogyasri provides health cover to low-income families; and Pedalandariki Illu targets over 25 lakh houses, mostly in women’s names.`
       },
       {
         title: "Digital Governance",
         icon: <Globe size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
+        image: "/pillar-images/Welfare.png",
         points: ["Spandana, e-Pragati, JnanaBhumi", "AP State FibreNet"],
         description: `Digital governance under the Jagananna architecture transformed administration by leveraging technology for efficiency, transparency, and last-mile accessibility. Core platforms such as Spandana for grievance redressal, the CM Dashboard for real-time scheme monitoring, JnanaBhumi for education DBTs, and e-Pragati for AI/ML-driven e-governance enabled data-based decision-making. Over 15,000 Village/Ward Secretariats delivered 500+ services, while RBKs supported farmers through kiosks, e-Crop registration, advisories, and procurement tracking.`
       },
       {
         title: "Grievance Redressal",
         icon: <Info size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
+        image: "/pillar-images/Welfare.png",
         points: ["Spandana Portal", "1902 CM Call Centre"],
         description: `Under the Jagananna architecture grievance redressal was streamlined through the Spandana Portal and integrated digital systems to ensure transparent and time-bound resolution. Citizens could lodge complaints via multiple channels—online, Village/Ward Secretariats, police stations, or the 24/7 toll-free 1902 CM Call Centre—each assigned a unique ID with fixed timelines, escalations, and monthly collector reviews. Jagananna Suraksha camps reached about 1.6 crore families at the village level to resolve issues related to documents and scheme access. Supported by 2.6 lakh volunteers and digital feedback loops, the system resolved millions of grievances, reduced delays, improved trust, and enabled faster DBT disbursals.`
       }
     ],
     tabs: [
-      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg", points: ["Navaratnalu core foundation", "₹2.55 lakh crore DBT", "Saturation-based delivery"] },
-      { id: 'Pensions', title: 'Social Security', icon: <Users size={18} />, image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg", detailStatement: "Support for the vulnerable.", metrics: [{label: "Monthly Pension", value: "₹3,000"}, {label: "Beneficiaries", value: "66 Lakh"}], points: ["Old age and widow support", "Disabled pension increase", "Doorstep pension on day one"] },
-      { id: 'Housing', title: 'Mega Housing', icon: <Landmark size={18} />, image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg", detailStatement: "Dignity through ownership.", metrics: [{label: "House Sites", value: "31 Lakh"}, {label: "Townships", value: "17,000"}], points: ["Free house sites for poor", "Basic infra in new layouts", "Registry in name of women"] },
-      { id: 'Finance', title: 'Livelihoods', icon: <Coins size={18} />, image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg", detailStatement: "Empowering specific sectors.", metrics: [{label: "Cheyutha", value: "₹75,000"}, {label: "Asara", value: "Loan Waiver"}], points: ["YSR Cheyutha for women", "YSR Asara for SHG groups", "Nethanna Nestham for weavers"] }
+      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/pillar-images/Welfare.png", points: ["Navaratnalu core foundation", "₹2.55 lakh crore DBT", "Saturation-based delivery"] },
+      { id: 'Pensions', title: 'Social Security', icon: <Users size={18} />, image: "/pillar-images/Welfare.png", detailStatement: "Support for the vulnerable." },
+      { id: 'Housing', title: 'Mega Housing', icon: <Landmark size={18} />, image: "/pillar-images/Welfare.png", detailStatement: "Dignity through ownership.", metrics: [{label: "House Sites", value: "31 Lakh"}, {label: "Townships", value: "17,000"}], points: ["Free house sites for poor", "Basic infra in new layouts", "Registry in name of women"] },
+      { id: 'Finance', title: 'Livelihoods', icon: <Coins size={18} />, image: "/pillar-images/Welfare.png", detailStatement: "Empowering specific sectors.", metrics: [{label: "Cheyutha", value: "₹75,000"}, {label: "Asara", value: "Loan Waiver"}], points: ["YSR Cheyutha for women", "YSR Asara for SHG groups", "Nethanna Nestham for weavers"] }
     ]
   },
   5: {
-    fullTitle: "Healthcare & Aarogya Andhra Pradesh",
-    subTitle: "Aarogya Andhra Pradesh — Universal, Accessible Care",
-    vision: "Creating an 'Aarogya Andhra Pradesh' where every citizen, especially the poor and marginalised, receives accessible, affordable and high-quality health services without financial hardship.",
-    themeColor: "from-rose-800 to-rose-600",
-    accentColor: "rose-600",
-    accentHex: "#e11d48",
-    impactPoints: ["Universal Health Coverage", "YSR Arogyasri ₹25L", "Village Clinics", "Family Doctor", "Digital Telehealth", "17 New Med Colleges", "Last-mile Services", "COVID Resilience"],
+    fullTitle: "Governance Reforms",
+    subTitle: "Transparent, Accountable, Citizen-Centric Administration",
+    themeColor: "from-blue-800 to-blue-600",
+    accentColor: "blue-600",
+    accentHex: "#2563eb",
+    impactPoints: ["Citizen-Centric Delivery", "Transparency & Accountability", "Decentralized Administration", "Technology-Driven Governance", "15,714 Village Secretariats", "Direct Benefit Transfers", "Volunteer System", "Real-Time Monitoring"],
     sections: [
       {
         title: "Vision",
         icon: <Heart size={18} />,
-        image: "/pillar-images/159622322_3921148761238895_2124063265924097094_n.jpg",
-        points: ["Aarogya Andhra Pradesh", "Health as a right, not charity"],
-        description: `The health care vision under the YSRCP government (2019–2024) centered on creating an "Aarogya Andhra Pradesh" — a state where every citizen, especially the poor and marginalized, receives accessible, affordable, and high-quality health services without financial hardship. Drawing from Dr. YS Rajasekhara Reddy's legacy, it emphasized preventive, curative, and rehabilitative care with saturation coverage, zero out-of-pocket expenses for serious illnesses, and seamless integration of primary, secondary, and tertiary levels. Core principles included universal health coverage, social justice, women-centric delivery, and rural empowerment. Flagship initiatives included expanding YSR Arogyasri to ₹25 lakh cashless coverage, launching YSR Village Clinics, the Family Doctor system, YSR Kanti Velugu, and Jagananna Arogya Suraksha camps. The model treated health as a right, seeking to reduce infant/maternal mortality, control NCDs, and set a national benchmark for inclusive healthcare.`
+        image: "/pillar-images/governce .png",
+        points: ["Transparent, accountable governance", "Citizen-centric delivery", "Decentralized power"],
+        description: `The core idea was to shift from office-centric, bureaucratic systems to people-centric delivery, where services reach citizens at their doorstep without delay, discrimination, or corruption. By decentralizing power, leveraging technology, and strengthening last-mile institutions like village/ward secretariats, his government aimed to restore public trust in the system. Over 15,714 village and ward secretariats were established, bringing services closer to people. Real-time monitoring, digital dashboards, and direct benefit transfers ensured benefits reached the right person. Jagan's guiding principle was simple: "Government should serve, not rule." This vision made governance responsive, efficient, and inclusive, ensuring every citizen—especially the poor and marginalized—experienced a corruption-free, time-bound administration that works for them.`
       },
       {
-        title: "Arogyasri",
-        icon: <ShieldCheck size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
-        points: ["₹25 Lakh cashless cover", "2,500+ network hospitals", "Covers 4.25 crore beneficiaries"],
-        description: `YSR Arogyasri, revamped and expanded under YSRCP (2019–2024), was the cornerstone of health insurance in Andhra Pradesh, providing cashless treatment for serious illnesses to over 4.25 crore beneficiaries. It covered families with incomes below ₹5 lakh, including pre-existing conditions, with an annual limit of ₹25 lakh for thousands of procedures across multiple specialities. Implemented through public–private partnerships with 2,500+ network hospitals, Arogyasri ensured end-to-end cashless services, pre-authorizations, follow-ups, and post-hospitalization care, reducing financial ruin for poor families and markedly improving health equity.`
-      },
-      {
-        title: "Strengthening Health Infrastructure",
-        icon: <Landmark size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
-        points: ["17 new medical colleges", "Nadu-Nedu upgrades", "10,000+ village clinics"],
-        description: `From 2019 to 2024, the YSRCP government invested heavily to modernize health infrastructure, spending over ₹10,000 crore annually. Major milestones included sanctioning 17 new medical colleges, upgrading 16,000+ facilities under the Nadu-Nedu model, establishing YSR Village Clinics and Family Doctor coverage, and strengthening emergency services including bike ambulances for remote areas. The focus was on bridging rural–urban gaps, improving emergency response, and creating health jobs to build a resilient health ecosystem.`
-      },
-      {
-        title: "Last Mile Health Services",
+        title: "Citizen-Centric Service Delivery",
         icon: <Users size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
-        points: ["YSR Village Clinics 24x7", "Family Doctor household care", "Jagananna Arogya Suraksha camps"],
-        description: `Last-mile delivery focused on bringing services to rural and underserved communities. Key elements included YSR Village Clinics (one per village offering 24x7 primary care), the Family Doctor system for household monitoring, and Jagananna Arogya Suraksha camps for doorstep surveys, NCD screening, maternal/child health checks, and referrals. Enhanced ambulance systems and a large volunteer force ensured continuity of care and effective referrals, reducing hospital overload and improving preventive care.`
+        image: "/pillar-images/governce .png",
+        points: ["15,714 village and ward secretariats", "1.3 lakh volunteers", "Direct benefit transfers"],
+        description: `Citizen-centric service delivery was the heart of Jagananna's governance reforms, bringing essential government services directly to people's doorsteps. The establishment of 15,714 village and ward secretariats, along with 3,000+ mandal-level offices, made administration accessible at the local level. Over 1.3 lakh village and ward volunteers were deployed to deliver services like pensions, housing pattas, ration cards, birth/death certificates, and welfare applications without intermediaries. This eliminated the need for people to visit distant offices or pay bribes. Direct benefit transfers ensured funds reached beneficiaries' bank accounts instantly. The model reduced dependence on middlemen, saved time and money for citizens, and made government services fast, fair, and hassle-free. By placing the citizen at the center, Jagananna transformed governance into a tool for empowerment and convenience.`
       },
       {
-        title: "Digital Health Care",
+        title: "Transparency & Accountability",
+        icon: <ShieldCheck size={18} />,
+        image: "/pillar-images/governce .png",
+        points: ["Digital platforms and dashboards", "Direct benefit transfers ₹2.5 lakh crore", "Grievance redressal systems"],
+        description: `Transparency and accountability were non-negotiable pillars of Jagananna's governance reforms. Digital platforms, real-time dashboards, and online monitoring systems tracked every scheme, expenditure, and performance metric. Direct benefit transfers worth over ₹2.5 lakh crore bypassed middlemen, ensuring zero leakages. Public dashboards displayed scheme progress, fund utilization, and beneficiary lists openly. Grievance redressal was streamlined through apps and helplines, with time-bound resolutions. Village secretariats and volunteers enabled community monitoring and feedback. Strict anti-corruption measures, including digital audits and paperless processes, minimized opportunities for malpractices. These reforms restored public trust, made officials accountable, and ensured every rupee reached the intended beneficiary. Transparency became the foundation of a clean, responsive administration.`
+      },
+      {
+        title: "Decentralized Administration",
+        icon: <Map size={18} />,
+        image: "/pillar-images/governce .png",
+        points: ["Empowered districts and mandals", "Direct funds to local bodies", "Multi-capital concept"],
+        description: `Decentralized administration empowered districts, mandals, and village-level institutions to make faster, locally relevant decisions. Village and ward secretariats were given financial and administrative powers to implement schemes directly. Mandal-level officers were empowered to approve applications on the spot. Funds were transferred directly to local bodies, reducing delays from higher offices. The multi-capital concept and regional focus further strengthened decentralization. Over 1.3 lakh volunteers acted as local facilitators, ensuring decisions reflected ground realities. This model addressed unique regional needs, reduced bureaucratic red tape, and improved efficiency. By devolving power downward, Jagananna made governance more responsive, inclusive, and effective, ensuring development reached every corner of Andhra Pradesh without centralized bottlenecks.`
+      },
+      {
+        title: "Technology-Driven Governance",
         icon: <Globe size={18} />,
-        image: "/pillar-images/159622322_3921148761238895_2124063265924097094_n.jpg",
-        points: ["Telemedicine hubs", "Arogyasri app integration", "EHR & CM Dashboard"],
-        description: `Digital initiatives transformed service delivery through telehealth (YSR Telemedicine), the Arogyasri app for authorizations and locators, CM Dashboards for monitoring, and digitized records in Village Secretariats. Over 1,000 telemedicine hubs connected rural patients to specialists for real-time consultations, reducing travel costs and hospital crowding while enabling e-prescriptions and follow-ups. Integration with national systems enhanced continuity of care.`
+        image: "/pillar-images/governce .png",
+        points: ["Digital tools and apps", "Paperless processes", "Real-time monitoring"],
+        description: `Technology-driven governance revolutionized service delivery under Jagananna. Digital tools, data analytics, and paperless systems made administration efficient, fast, and fair. The village/ward secretariat app enabled real-time application processing, tracking, and approvals. Direct benefit transfers used digital banking for instant, transparent disbursals. Online dashboards monitored scheme progress, while apps facilitated grievance redressal and feedback. Paperless processes eliminated corruption and delays. Skill hubs and digital classrooms enhanced education delivery. Fiber optic networks improved rural connectivity. These innovations ensured services were time-bound, corruption-free, and accessible. Technology bridged the gap between government and citizens, making governance inclusive, accountable, and future-ready for every section of society.`
       }
     ],
     tabs: [
-      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/health.png", points: ["Universal care focus", "Prevention & advanced treatment", "Family Doctor system"] },
-      { id: 'Arogyasri', title: 'YSR Arogyasri', icon: <ShieldCheck size={18} />, image: "/aro.png", detailStatement: 'Cashless cover up to ₹25 Lakh for serious illnesses.', metrics: [{label: 'Coverage', value: '4.25 Cr+'}, {label: 'Hospitals', value: '2,500+'}], points: ['Cashless high-cost care', 'Post-hospital follow-up'] },
-      { id: 'Infrastructure', title: 'Health Infra', icon: <Landmark size={18} />, image: "/pillar-images/185793409_4116145448405891_1422686474075524799_n.jpg", detailStatement: 'New colleges & Nadu-Nedu upgrades.', metrics: [{label: 'Colleges', value: '17+'}, {label: 'Clinics', value: '10,000+'}], points: ['Medical colleges', 'Village Clinics & upgrades'] },
-      { id: 'Digital', title: 'Telehealth', icon: <Globe size={18} />, image: "/pillar-images/185793409_4116145448405891_1422686474075524799_n.jpg", detailStatement: 'Telemedicine & integrated apps.', metrics: [{label: 'Hubs', value: '1,000+'}, {label: 'Consults', value: 'Lakhs/yr'}], points: ['Telemedicine for specialty care', 'Arogyasri app integration'] }
+      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/pillar-images/governce.png", points: ["Citizen-centric transformation", "Decentralized power", "Technology integration"] },
+      { id: 'Citizen', title: 'Citizen-Centric', icon: <Users size={18} />, image: "/pillar-images/governce.png", detailStatement: 'Services at doorstep via secretariats and volunteers.', metrics: [{label: 'Secretariats', value: '15,714'}, {label: 'Volunteers', value: '1.3 Lakh'}], points: ['Local administration access', 'Direct benefit transfers'] },
+      { id: 'Transparency', title: 'Transparency', icon: <ShieldCheck size={18} />, image: "/pillar-images/governce.png", detailStatement: 'Digital monitoring and zero-leakage systems.', metrics: [{label: 'DBT Amount', value: '₹2.5 Lakh Cr'}, {label: 'Dashboards', value: 'Real-Time'}], points: ['Public scheme tracking', 'Grievance redressal'] },
+      { id: 'Decentralized', title: 'Decentralized', icon: <Map size={18} />, image: "/pillar-images/governce.png", detailStatement: 'Power to local institutions for faster decisions.', metrics: [{label: 'Mandal Offices', value: '3,000+'}, {label: 'Funds Direct', value: 'Local Bodies'}], points: ['Empowered districts', 'Regional focus'] },
+      { id: 'Technology', title: 'Technology', icon: <Globe size={18} />, image: "/pillar-images/governce.png", detailStatement: 'Digital apps and paperless governance.', metrics: [{label: 'Apps', value: 'Multiple'}, {label: 'Connectivity', value: 'Fiber Optic'}], points: ['Real-time processing', 'Corruption-free systems'] }
     ]
   },
   6: {
@@ -281,35 +281,35 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
       {
         title: "Vision",
         icon: <Landmark size={18} />,
-        image: "/pillar-images/128702759_3643024099051364_7728079183867142972_n.jpg",
+        image: "/pillar-images/Industries.png",
         points: ["Modern, Inclusive Andhra Pradesh", "Saturation & sustainability"],
         description: `The infrastructure development vision under the Jagan Anna tenure aimed at creating a "Modern, Inclusive Andhra Pradesh" by prioritizing rapid, high-quality, and people-centric infrastructure to drive economic growth, generate employment, and enhance quality of life for rural and urban populations. Inspired by Dr. YS Rajasekhara Reddy’s legacy, it focused on saturation coverage, sustainable practices, women-owned assets, and convergence with welfare schemes. Investments emphasized roads, ports, housing, water supply, urban renewal, industrial corridors, digital connectivity, and social facilities with an aim for balanced regional development and equitable growth.`
       },
       {
         title: "Roads, Ports & Connectivity",
         icon: <TrendingUp size={18} />,
-        image: "/pillar-images/128702759_3643024099051364_7728079183867142972_n.jpg",
+        image: "/pillar-images/Industries.png",
         points: ["1.2 lakh km roads", "5,000+ km 4-lane", "Port modernisation"],
         description: `During the Jagananna era, Andhra Pradesh saw unprecedented infrastructure growth in roads, ports, and connectivity. The government constructed over 1.2 lakh km of roads, including more than 5,000 km of new four-lane highways, 10,000+ km of black-topped village roads, and 2,000+ km of coastal highways. Ports were modernized with investments exceeding ₹20,000 crore, boosting combined cargo capacity and export potential. Projects advanced under Bharatmala and Sagarmala, airport upgrades, and strengthened rural connectivity through Village Secretariats, significantly cutting travel times and creating large numbers of construction and logistics jobs.`
       },
       {
         title: "Housing, Water & Urban Infrastructure",
         icon: <Map size={18} />,
-        image: "/pillar-images/128702759_3643024099051364_7728079183867142972_n.jpg",
+        image: "/pillar-images/Industries.png",
         points: ["Pedalandariki Illu: 25 Lakh target", "Mission Bhagiratha: piped water", "Smart Townships & AMRUT"],
         description: `The administration delivered transformative projects for housing, water, and urban infrastructure. Under Pedalandariki Illu it targeted 25 lakh free houses and completed over 18 lakh by 2024, mostly registered in women's names. Mission Bhagiratha extended piped drinking water to nearly 1.5 crore households. Urban renewal via Smart Cities, AMRUT, PMAY and slum redevelopment improved sanitation, reduced waterborne diseases, and elevated urban living standards across major cities and towns.`
       },
       {
         title: "Industrial & Economic Infrastructure",
         icon: <Factory size={18} />,
-        image: "/pillar-images/128702759_3643024099051364_7728079183867142972_n.jpg",
+        image: "/pillar-images/Industries.png",
         points: ["Three industrial corridors", "50+ industrial clusters", "₹15 Lakh Cr MoUs"],
         description: `The government pursued industrial growth by establishing major corridors and over 50 industrial clusters and mega parks focused on electronics, pharma, textiles, food processing, and defense. It attracted large MoUs, set up SEZs, logistics parks and renewable energy plants, and supported MSMEs through targeted schemes. These efforts created hundreds of thousands of direct jobs, boosted exports, diversified the economy, and built an industrial ecosystem linked to ports and connectivity.`
       },
       {
         title: "Digital & Social Infrastructure",
         icon: <Globe size={18} />,
-        image: "/pillar-images/128702759_3643024099051364_7728079183867142972_n.jpg",
+        image: "/pillar-images/Industries.png",
         points: ["AP State FibreNet", "Nadu-Nedu digital schools", "Village Secretariats services"],
         description: `The era built a strong foundation for digital and social infrastructure: AP State FibreNet connected thousands of villages, SDWAN linked mandals, Village Secretariats delivered 500+ services, and Nadu-Nedu upgraded schools with digital classrooms. Health and social assets—including new medical colleges, village clinics, sports complexes and community halls—expanded access and bridged the digital divide, improving governance transparency and inclusive service delivery.`
       }
@@ -334,35 +334,35 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
       {
         title: "Industries",
         icon: <Factory size={18} />,
-        image: "/pillar-images/129776776_3661070970580010_1067747446361922249_n.jpg",
+        image: "/pillar-images/Industries.png",
         points: ["Manufacturing expansion", "IT & knowledge industries", "Renewables & green energy"],
         description: `Jagan Anna envisioned transforming Andhra Pradesh into a vibrant industrial hub through welfare-linked economic growth. His administration prioritized creating a business-friendly environment with top-tier infrastructure to attract investments in manufacturing, IT, renewables, and more. Key initiatives included industrial corridors, skill development programs, and incentives for sustainable industries. RBI data confirms strong industrial growth (2019-2024), with AP leading South India in manufacturing GVA. Jagan emphasized decentralized industrial hubs for balanced regional progress. His 2019 US visit laid out a roadmap for trade and investments with USIBC. Vision Visakha positioned Visakhapatnam as a growth engine with projects in ports, tourism, and urban development. Overall, his strategy integrated social welfare with economic reforms, registering over 2 lakh new MSMEs and fostering job-oriented industries. This holistic approach aimed to make AP a global knowledge and industrial powerhouse, focusing on equitable and inclusive growth over centralized models.`
       },
       {
         title: "Decentralized Industries",
         icon: <Map size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/Industries.png",
         points: ["Regional industrial clusters", "Green decentralized energy", "Local value chains"],
         description: `During Jagan Anna tenure, decentralized industries were a core policy for balanced regional development in Andhra Pradesh. He firmly stated that decentralization was the only way forward, rejecting single-capital models in favor of multi-hub strategies. This included specialized clusters: Rayalaseema as an electronics and automobile hub, Prakasam with major paper mills, and distributed projects such as pumped storage units, cement factories in Anantapur and Kurnool, and electronics ecosystems in Kopparthi and Sri City. RBI data highlights diversified industrial growth, with AP leading South India in manufacturing. Initiatives like Reliance CBG plants exemplified green, decentralized energy projects. His government promoted infrastructure in backward areas, establishing 311 major industries and creating over 1.3 lakh jobs through dispersed investments. This approach focused on equitable wealth distribution and administrative decentralization, including potential multi-capital setups, fostering inclusive growth across new industrial clusters.`
       },
       {
         title: "MoUs & GIS Vizag",
         icon: <Globe size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/Industries.png",
         points: ["Large MoUs at GIS 2023", "Cross-sector investments", "Follow-through and implementation"],
         description: `The Global Investors Summit (GIS) 2023 in Visakhapatnam, under YS Jagan Mohan Reddy, attracted massive investments through MoUs. On day one alone, 92 MoUs worth ₹11.87 lakh crore were signed, projecting 6 million jobs across 20 sectors. Key deals involved NTPC, JSW Group, and others in energy, manufacturing, and infrastructure. By mid-2023, 352 total MoUs were signed, with 100 under implementation, yielding ₹2,739 crore in investments and 6,858 jobs. The IT sector secured 88 MoUs worth ₹44,963 crore. Jagan positioned GIS as a platform for global partnerships, highlighting Andhra Pradesh’s second national ranking in ease of doing business. Post-summit, 38 firms planned operations starting January 2024, boosting renewables, pharma, and more. While not all MoUs materialize, the administration demonstrated strong follow-through, setting a benchmark for subsequent summits.`
       },
       {
         title: "MSME & Local Entrepreneurs",
         icon: <Briefcase size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/Industries.png",
         points: ["ReSTART relief package", "2 lakh new MSMEs", "Local supply chain development"],
         description: `Under Jagan Anna, Andhra Pradesh strongly supported MSMEs and local entrepreneurs. The ReSTART package provided ₹1,110 crore in incentives, benefiting 97,428 units and over 10 lakh employees during COVID. In 2021, ₹1,124 crore was disbursed to MSMEs and spinning mills. Between 2019-2023, over 2 lakh new MSMEs were registered, generating 12.62 lakh jobs. Total MSME units reached 1 lakh, employing 10 lakh people. Initiatives included ₹450 crore initial aid, cluster parks, and integration with larger investments via GIS MoUs. The government promoted local supply chains in textiles, food processing, and more, while encouraging youth entrepreneurship under the “one family, one entrepreneur” vision. These efforts positioned Andhra Pradesh high in ease of doing business for small enterprises, fostering grassroots innovation and economic empowerment.`
       },
       {
         title: "Job Creation",
         icon: <BarChart3 size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/.Industries.png",
         points: ["6.16 lakh jobs (2019-2024)", "2.06 lakh permanent govt jobs", "1.3 lakh industrial jobs"],
         description: `During YS Jagan Mohan Reddy's tenure (2019-2024), Andhra Pradesh witnessed significant job creation totaling over 6.16 lakh opportunities. This included 2.06 lakh permanent government jobs, 37,908 contract roles, and 3.71 lakh outsourcing positions. Industrial growth from 311 major units added 1.3 lakh jobs. RBI data confirms robust manufacturing expansion, with AP leading South India. GIS 2023 MoUs projected 6 million jobs, while MSMEs contributed 12.62 lakh employments through 2 lakh new registrations. Government jobs increased to 2.39 lakh, far surpassing the 34,000 added under the previous regime. Welfare-linked schemes, including 17 new medical colleges, boosted employment in health and infrastructure. The focus on decentralized opportunities ensured diversified job growth across sectors, prioritizing youth employment and inclusive development.`
       }
@@ -386,35 +386,35 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
       {
         title: "Vision",
         icon: <Users size={18} />,
-        image: "/pillar-images/120476277_3461056323914810_8311003136894606010_n.jpg",
+        image: "/pillar-images/Woman.png",
         points: ["Women-centric governance", "Navaratnalu welfare focus", "Leadership & inclusion"],
         description: `Jagan Anna made women empowerment the cornerstone of his governance in Andhra Pradesh (2019-2024). He believed that empowering women leads to stronger families and a prosperous society. Under the Navaratnalu framework, over 90% of welfare benefits were directed towards women through innovative schemes like YSR Cheyutha, YSR Aasara, YSR Sunna Vaddi, and Amma Vodi. His administration implemented more than 32 dedicated schemes for women’s progress, including zero-interest loans for Self-Help Groups (SHGs), direct cash transfers, skill training, and entrepreneurship support. Jagan pioneered 50% reservation for women in nominated posts, ensuring their presence in leadership roles across local bodies, corporations, and party structures. This vision focused on economic independence, political inclusion, education, and asset ownership, aiming to create self-reliant, secure, and empowered women across all castes and regions.`
       },
       {
         title: "Economic Independence",
         icon: <Coins size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
+        image: "/pillar-images/Woman.png",
         points: ["YSR Aasara & Cheyutha", "Zero-interest SHG loans", "Market linkages & MoUs"],
         description: `YS Jagan’s government placed economic empowerment at the forefront, enabling lakhs of women to earn, save, and control their finances. The flagship YSR Aasara scheme waived outstanding SHG loans with very high recovery rates, freeing women from debt traps. YSR Cheyutha provided ₹75,000 over four years to 23 lakh women, supporting self-employment through MoUs with companies like ITC, Amul, and HUL for training and market access. YSR Sunna Vaddi offered zero-interest loans to SHGs, while other targeted schemes extended support for business ventures. More than ₹1.18 lakh crore in direct financial assistance reached women, transforming them into entrepreneurs and household decision-makers.`
       },
       {
         title: "Reservation & Leadership",
         icon: <ShieldCheck size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
+        image: "/pillar-images/Woman.png",
         points: ["50% reservation in nominated posts", "Women in high offices", "Party & institutional inclusion"],
         description: `YS Jagan Mohan Reddy took bold steps to ensure women’s political and institutional representation. His government legislated 50% reservation for women in nominated posts—a pioneering move that surpassed national norms. Women were encouraged to lead in panchayats, municipalities, corporations, and party structures, breaking traditional barriers and ensuring active participation in decision-making at every level.`
       },
       {
         title: "Education & Skills",
         icon: <GraduationCap size={18} />,
-        image: "/pillar-images/151325803_3847299201957185_2939687180828012790_n.jpg",
+        image: "/pillar-images/Woman.png",
         points: ["Amma Vodi support", "Vidya & Vasathi Deevena", "Skill hubs & Bhavita programs"],
         description: `Education and skill development formed a critical pillar of Jagan’s women empowerment vision. Amma Vodi provided ₹15,000 annually to mothers of school-going children, reducing dropout rates. Vidya Deevena and Vasathi Deevena reimbursed tuition and hostel fees to mothers' accounts, enabling higher education access. Skill initiatives like Bhavita programs and constituency skill hubs prepared women and girls for employment and entrepreneurship, linking training to industry partnerships.`
       },
       {
         title: "Housing Ownership",
         icon: <Map size={18} />,
-        image: "/pillar-images/123612893_3558817750805333_7054388378066863652_n.jpg",
+        image: "/pillar-images/Woman.png",
         points: ["House pattas in women’s name", "Pucca houses for poor women", "Generational asset creation"],
         description: `Under Pedalandariki Illu, YS Jagan’s government distributed house-site pattas and constructed pucca houses registered in women’s names across the state. Over 25 lakh houses and 31.19 lakh house-site pattas were given in women’s names, creating generational wealth, security, and dignity. This measure ensured legal ownership and provided a strong safety net for millions of marginalized women.`
       }
@@ -438,35 +438,35 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
       {
         title: "Vision",
         icon: <Users size={18} />,
-        image: "/pillar-images/616827092_1443499287144335_5964224249188115272_n.jpg",
+        image: "/pillar-images/Socialjustic.png",
         points: ["Inclusive governance", "Navaratnalu uplift", "Service to the last person"],
         description: `Jagan Anna envisioned social justice as the bedrock of governance during his tenure (2019-2024). His philosophy was to build a society where every citizen enjoys dignity, security, and equal opportunity, irrespective of caste, class, gender, religion, or region. Through the Navaratnalu framework, the government acted as an active enabler to rectify historical injustices, uplift marginalized communities, and ensure development is truly inclusive, equitable, and people-centric. Special focus was given to the poor, backward classes, SCs, STs, minorities, women, and other vulnerable sections. Over 30 welfare schemes delivered direct, transparent benefits to crores of people, bypassing middlemen and corruption. The vision transformed welfare into a powerful tool for social transformation, creating an empathetic, just society where no one is left behind and progress is shared by all.`
       },
       {
         title: "Equality of Opportunity",
         icon: <GraduationCap size={18} />,
-        image: "/pillar-images/616827092_1443499287144335_5964224249188115272_n.jpg",
+        image: "/pillar-images/Socialjustic.png",
         points: ["Universal education support", "Merit-based recruitment", "Uniform public services"],
         description: `Jagananna’s vision ensured genuine equality of opportunity by removing barriers so birth or background never decides a person’s future. Key initiatives included Amma Vodi providing ₹15,000 annually to mothers of school-going children, Vidya Deevena and Vasathi Deevena reimbursing tuition and hostel fees directly to mothers’ accounts, and transparent recruitments that filled over 2.06 lakh permanent government jobs with adherence to reservations. Healthcare access expanded with 17 new medical colleges and strengthened YSR Arogyasri, while housing pattas and pensions were delivered directly and uniformly. These measures dismantled systemic inequalities and empowered the underprivileged.`
       },
       {
         title: "Economic Inclusion",
         icon: <Coins size={18} />,
-        image: "/pillar-images/616827092_1443499287144335_5964224249188115272_n.jpg",
+        image: "/pillar-images/Socialjustic.png",
         points: ["Direct benefit transfers", "Livelihood support", "MSME & skilling push"],
         description: `Economic inclusion was a cornerstone of Jagananna’s social justice vision, integrating the poor and marginalized into the mainstream economy. Direct benefit transfers totaling over ₹2.5 lakh crore reached beneficiaries through schemes like YSR Cheyutha, YSR Aasara, and YSR Sunna Vaddi. Programs like EBC Nestham and Kapu Nestham extended livelihood support, while over 2 lakh new MSMEs were registered generating 12.62 lakh jobs. Skill hubs and entrepreneurship programs targeted youth from backward communities, promoting self-reliance and financial stability.`
       },
       {
         title: "Inclusive Development",
         icon: <Map size={18} />,
-        image: "/pillar-images/616827092_1443499287144335_5964224249188115272_n.jpg",
+        image: "/pillar-images/Socialjustic.png",
         points: ["Decentralized industrialization", "Regional infrastructure", "Equitable MoU distribution"],
         description: `Jagananna prioritized inclusive development to ensure growth benefited every region and community, balancing urban-rural and forward-backward areas. Decentralized industrialization created specialized clusters in backward regions, infrastructure was prioritized in neglected districts, and initiatives like the Global Investors Summit sought equitable investments. Multi-capital concepts and regional universities addressed historical disparities, reducing migration and preventing regional imbalances.`
       },
       {
         title: "Dignity & Social Security",
         icon: <Heart size={18} />,
-        image: "/pillar-images/616827092_1443499287144335_5964224249188115272_n.jpg",
+        image: "/pillar-images/Socialjustic.png",
         points: ["Enhanced pensions", "Housing pattas in women’s name", "Universal health coverage"],
         description: `Jagananna guaranteed dignity and social security for the elderly, women, disabled, and vulnerable groups through comprehensive support systems. Pensions were enhanced benefiting millions, Pedalandariki Illu distributed house-site pattas in women’s names creating generational wealth, and YSR Arogyasri expanded health coverage. These measures ensured safety, stability, and respect for vulnerable sections and reinforced the social security net.`
       }
@@ -499,7 +499,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Decentralization Vision",
       icon: <Globe size={18} />,
-      image: "/pillar-images/480737493_9446382862048763_929632864761132216_n.jpg",
+      image: "/pillar-images/Decentrilization.png",
       points: [
         "Equitable regional development",
         "Development closer to people",
@@ -510,7 +510,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Administrative Decentralization",
       icon: <Building size={18} />,
-      image: "/pillar-images/480737493_9446382862048763_929632864761132216_n.jpg",
+      image: "/pillar-images/Decentrilization.png",
       points: [
         "Village/Ward Secretariats",
         "Volunteer-driven governance",
@@ -521,7 +521,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Regional Economic Hubs",
       icon: <Factory size={18} />,
-      image: "/pillar-images/616827092_1443499287144335_5964224249188115272_n.jpg",
+      image: "/pillar-images/Decentrilization.png",
       points: [
         "Multi-region industrial clusters",
         "Local employment creation",
@@ -532,7 +532,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Infrastructure Closer to People",
       icon: <Building2 size={18} />,
-      image: "/pillar-images/480737493_9446382862048763_929632864761132216_n.jpg",
+      image: "/pillar-images/Decentrilization.png",
       points: [
         "Healthcare in every district",
         "Housing and irrigation",
@@ -543,7 +543,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Local Participation & Accountability",
       icon: <Users size={18} />,
-      image: "/pillar-images/616827092_1443499287144335_5964224249188115272_n.jpg",
+      image: "/pillar-images/Decentrilization.png",
       points: [
         "Empowered local bodies",
         "Community monitoring",
@@ -555,19 +555,56 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
 },
 
 
-  11: {
-    fullTitle: "Healthcare Reforms",
-    subTitle: "Free Treatment & Preventive Public Health",
-    vision: "Transforming healthcare into a basic right through free advanced treatment and village-level diagnostic support.",
+  11:  {
+    fullTitle: "Healthcare & Aarogya Andhra Pradesh",
+    subTitle: "Aarogya Andhra Pradesh — Universal, Accessible Care",
+    vision: "Creating an 'Aarogya Andhra Pradesh' where every citizen, especially the poor and marginalised, receives accessible, affordable and high-quality health services without financial hardship.",
     themeColor: "from-rose-800 to-rose-600",
     accentColor: "rose-600",
     accentHex: "#e11d48",
-    impactPoints: ["Zero Med-Debt", "New Med Colleges", "Family Doctor", "Free Eye Care", "Modern Hospitals", "Emergency 108", "Doorstep Tests", "Chronic Support"],
+    impactPoints: ["Universal Health Coverage", "YSR Arogyasri ₹25L", "Village Clinics", "Family Doctor", "Digital Telehealth", "17 New Med Colleges", "Last-mile Services", "COVID Resilience"],
+    sections: [
+      {
+        title: "Vision",
+        icon: <Heart size={18} />,
+        image: "/pillar-images/Healthcare.png",
+        points: ["Aarogya Andhra Pradesh", "Health as a right, not charity"],
+        description: `The health care vision under the YSRCP government (2019–2024) centered on creating an "Aarogya Andhra Pradesh" — a state where every citizen, especially the poor and marginalized, receives accessible, affordable, and high-quality health services without financial hardship. Drawing from Dr. YS Rajasekhara Reddy's legacy, it emphasized preventive, curative, and rehabilitative care with saturation coverage, zero out-of-pocket expenses for serious illnesses, and seamless integration of primary, secondary, and tertiary levels. Core principles included universal health coverage, social justice, women-centric delivery, and rural empowerment. Flagship initiatives included expanding YSR Arogyasri to ₹25 lakh cashless coverage, launching YSR Village Clinics, the Family Doctor system, YSR Kanti Velugu, and Jagananna Arogya Suraksha camps. The model treated health as a right, seeking to reduce infant/maternal mortality, control NCDs, and set a national benchmark for inclusive healthcare.`
+      },
+      {
+        title: "Arogyasri",
+        icon: <ShieldCheck size={18} />,
+        image: "/pillar-images/Healthcare.png",
+        points: ["₹25 Lakh cashless cover", "2,500+ network hospitals", "Covers 4.25 crore beneficiaries"],
+        description: `YSR Arogyasri, revamped and expanded under YSRCP (2019–2024), was the cornerstone of health insurance in Andhra Pradesh, providing cashless treatment for serious illnesses to over 4.25 crore beneficiaries. It covered families with incomes below ₹5 lakh, including pre-existing conditions, with an annual limit of ₹25 lakh for thousands of procedures across multiple specialities. Implemented through public–private partnerships with 2,500+ network hospitals, Arogyasri ensured end-to-end cashless services, pre-authorizations, follow-ups, and post-hospitalization care, reducing financial ruin for poor families and markedly improving health equity.`
+      },
+      {
+        title: "Strengthening Health Infrastructure",
+        icon: <Landmark size={18} />,
+        image: "/pillar-images/Healthcare.png",
+        points: ["17 new medical colleges", "Nadu-Nedu upgrades", "10,000+ village clinics"],
+        description: `From 2019 to 2024, the YSRCP government invested heavily to modernize health infrastructure, spending over ₹10,000 crore annually. Major milestones included sanctioning 17 new medical colleges, upgrading 16,000+ facilities under the Nadu-Nedu model, establishing YSR Village Clinics and Family Doctor coverage, and strengthening emergency services including bike ambulances for remote areas. The focus was on bridging rural–urban gaps, improving emergency response, and creating health jobs to build a resilient health ecosystem.`
+      },
+      {
+        title: "Last Mile Health Services",
+        icon: <Users size={18} />,
+        image: "/pillar-images/Healthcare.png",
+        points: ["YSR Village Clinics 24x7", "Family Doctor household care", "Jagananna Arogya Suraksha camps"],
+        description: `Last-mile delivery focused on bringing services to rural and underserved communities. Key elements included YSR Village Clinics (one per village offering 24x7 primary care), the Family Doctor system for household monitoring, and Jagananna Arogya Suraksha camps for doorstep surveys, NCD screening, maternal/child health checks, and referrals. Enhanced ambulance systems and a large volunteer force ensured continuity of care and effective referrals, reducing hospital overload and improving preventive care.`
+      },
+      {
+        title: "Digital Health Care",
+        icon: <Globe size={18} />,
+        image: "/pillar-images/Healthcare.png",
+        points: ["Telemedicine hubs", "Arogyasri app integration", "EHR & CM Dashboard"],
+        description: `Digital initiatives transformed service delivery through telehealth (YSR Telemedicine), the Arogyasri app for authorizations and locators, CM Dashboards for monitoring, and digitized records in Village Secretariats. Over 1,000 telemedicine hubs connected rural patients to specialists for real-time consultations, reducing travel costs and hospital crowding while enabling e-prescriptions and follow-ups. Integration with national systems enhanced continuity of care.`
+      }
+    ],
     tabs: [
-      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/pillar-images/482100581_9488420077845041_2943274274254903894_n.jpg", points: ["Free treatment for poor", "Modernizing Govt hospitals", "Emphasis on prevention"] },
-      { id: 'Arogyasri', title: 'YSR Arogyasri', icon: <ShieldCheck size={18} />, image: "/pillar-images/482100581_9488420077845041_2943274274254903894_n.jpg", detailStatement: "Free till ₹25 Lakh.", metrics: [{label: "Diseases", value: "3,000+"}, {label: "Coverage", value: "90% Pop"}], points: ["Free care in Pvt hospitals", "Cancer & Heart surgeries", "Includes COVID & Black Fungus"] },
-      { id: 'Clinics', title: 'Village Clinics', icon: <Activity size={18} />, image: "/pillar-images/482100581_9488420077845041_2943274274254903894_n.jpg", detailStatement: "The Family Doctor.", metrics: [{label: "Clinics", value: "10,000+"}, {label: "Tests", value: "Free Local"}], points: ["Family Dr village visits", "NCD tracking (BP, Sugar)", "Free essential medicines"] },
-      { id: 'Medical', title: 'Med Education', icon: <GraduationCap size={18} />, image: "/pillar-images/482100581_9488420077845041_2943274274254903894_n.jpg", detailStatement: "Colleges for All.", metrics: [{label: "New Colleges", value: "17 Nodes"}, {label: "Seats", value: "Double"}], points: ["One college per MP seat", "Infrastructure under Nadu-Nedu", "MBBS for rural students"] }
+      { id: 'Overview', title: 'Overview', icon: <Heart size={18} />, image: "/health.png", points: ["Universal care focus", "Prevention & advanced treatment", "Family Doctor system"] },
+      { id: 'Arogyasri', title: 'YSR Arogyasri', icon: <ShieldCheck size={18} />, image: "/aro.png", detailStatement: 'Cashless cover up to ₹25 Lakh for serious illnesses.', metrics: [{label: 'Coverage', value: '4.25 Cr+'}, {label: 'Hospitals', value: '2,500+'}], points: ['Cashless high-cost care', 'Post-hospital follow-up'] },
+      { id: 'Infrastructure', title: 'Health Infra', icon: <Landmark size={18} />, image: "/pillar-images/185793409_4116145448405891_1422686474075524799_n.jpg", detailStatement: 'New colleges & Nadu-Nedu upgrades.', metrics: [{label: 'Colleges', value: '17+'}, {label: 'Clinics', value: '10,000+'}], points: ['Medical colleges', 'Village Clinics & upgrades'] },
+      { id: 'Digital', title: 'Telehealth', icon: <Globe size={18} />, image: "/pillar-images/Healthcare.png", detailStatement: 'Telemedicine & integrated apps.', metrics: [{label: 'Hubs', value: '1,000+'}, {label: 'Consults', value: 'Lakhs/yr'}], points: ['Telemedicine for specialty care', 'Arogyasri app integration'] }
     ]
   },
   12: {
@@ -591,7 +628,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Vision",
       icon: <TrendingUp size={18} />,
-      image: "/pillar-images/487072673_9604201229600258_7691177371061798975_n.jpg",
+      image: "/pillar-images/economic .png",
       points: [
         "Inclusive, job-led prosperity",
         "Welfare as economic investment",
@@ -602,7 +639,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Job-Led Growth",
       icon: <Briefcase size={18} />,
-      image: "/pillar-images/487072673_9604201229600258_7691177371061798975_n.jpg",
+      image: "/pillar-images/economic .png",
       points: [
         "Focus on employment across sectors",
         "Skill hubs and MSME growth",
@@ -613,7 +650,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Investment & Industrial Development",
       icon: <Globe size={18} />,
-      image: "/pillar-images/487072673_9604201229600258_7691177371061798975_n.jpg",
+      image: "/pillar-images/economic .png",
       points: [
         "Large-scale MoUs and industrial hubs",
         "Single-window clearances and incentives",
@@ -624,7 +661,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Strengthening Agriculture & Rural Economy",
       icon: <Leaf size={18} />,
-      image: "/pillar-images/487072673_9604201229600258_7691177371061798975_n.jpg",
+      image: "/pillar-images/economic .png",
       points: [
         "Direct farmer support and irrigation",
         "Value addition and market access",
@@ -635,7 +672,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
     {
       title: "Inclusive & Balanced Growth",
       icon: <Users size={18} />,
-      image: "/pillar-images/487072673_9604201229600258_7691177371061798975_n.jpg",
+      image: "/pillar-images/economic .png",
       points: [
         "Decentralized development and regional equity",
         "Welfare targeted to vulnerable groups",
@@ -703,7 +740,7 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                 onClick={onBack}
                 className="flex items-center gap-2 text-white/90 hover:text-white font-black mb-6 transition-all uppercase text-[10px] tracking-widest bg-white/10 backdrop-blur-md px-4 py-2 rounded-full w-fit border border-white/20"
               >
-                <ArrowLeft size={14} /> Back to Pillars
+                <ArrowLeft size={14} /> ← Back to Home
               </button>
               
               <h1 className="text-3xl md:text-5xl lg:text-[3.5rem] font-black text-white uppercase tracking-tighter leading-[0.9] mb-2 drop-shadow-2xl">
