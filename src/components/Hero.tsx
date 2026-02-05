@@ -5,7 +5,7 @@ type HeroProps = {
 };
 
 const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
-  const slides = [
+  const desktopSlides = [
     { img: "/Slider/simg1.jpg" },
     { img: "/Slider/simg2.jpg" },
     { img: "/Slider/simg3.jpg" },
@@ -13,38 +13,49 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
     { img: "/Slider/simg5.jpg" },
   ];
 
+  const mobileSlides = [{ img: "/Slider/simg6.jpg" }];
+
   const [current, setCurrent] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Determine if mobile
   useEffect(() => {
-    const id = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, 4500);
-    return () => clearInterval(id);
+    const mq = window.matchMedia("(max-width: 640px)");
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) =>
+      setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  // Slider interval (only if desktop)
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 640px)');
-    const onChange = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
-    setIsMobile(mq.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
+    if (isMobile) return; // no autoplay for mobile (only one slide)
+    const id = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % desktopSlides.length);
+    }, 4500);
+    return () => clearInterval(id);
+  }, [isMobile]);
+
+  const slides = isMobile ? mobileSlides : desktopSlides;
 
   return (
     <section
       id="hero"
       className="relative w-full flex items-end justify-center text-center text-white pb-20 px-4 overflow-hidden"
-      style={{ height: isMobile ? 'calc(140vh - 72px)' : 'calc(110vh - 72px)' }}
+      style={{ height: isMobile ? "calc(140vh - 72px)" : "calc(110vh - 72px)" }}
     >
-
       {/* Background Slider */}
       <div className="absolute inset-0 bg-fixed bg-center bg-cover bg-no-repeat transition-all duration-[1200ms]">
         {slides.map((s, index) => (
           <img
             key={index}
             src={s.img}
-            className={`absolute ${isMobile ? 'left-1/2 top-0 transform -translate-x-1/2 w-auto h-full' : 'inset-0 w-full h-full'} object-cover transition-all duration-[1200ms] ${
+            className={`absolute ${
+              isMobile
+                ? "left-1/2 top-0 transform -translate-x-1/2 w-auto h-full"
+                : "inset-0 w-full h-full"
+            } object-cover transition-all duration-[1200ms] ${
               current === index ? "opacity-100 scale-100" : "opacity-0 scale-110"
             }`}
           />
@@ -64,17 +75,21 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
       </div>
 
       {/* Indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
-        {slides.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => setCurrent(idx)}
-            className={`w-3 h-3 rounded-full transition-all ${
-              idx === current ? "bg-white scale-150 shadow" : "bg-white/40 hover:bg-white/80"
-            }`}
-          />
-        ))}
-      </div>
+      {!isMobile && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrent(idx)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                idx === current
+                  ? "bg-white scale-150 shadow"
+                  : "bg-white/40 hover:bg-white/80"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 };
