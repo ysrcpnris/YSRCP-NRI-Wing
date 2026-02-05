@@ -13,7 +13,7 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
     { img: "/Slider/simg5.jpg" },
   ];
 
-  const mobileSlides = [{ img: "/Slider/simg6.png" }];
+  const mobileSlides = [{ img: "/Slider/msimg6.png" }];
 
   const [current, setCurrent] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
