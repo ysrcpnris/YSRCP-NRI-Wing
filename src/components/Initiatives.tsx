@@ -9,7 +9,7 @@ export default function Initiatives() {
   const services = [
     {
       title: "Student Support",
-      icon: <GraduationCap className="w-10 h-10 text-[#E7A95B]" />,
+      icon: <GraduationCap className="w-10 h-10 text-[#E7A95B] mx-auto block" />,
       short: "Guidance for academic & growth",
       long: `
         • Assistance with foreign education guidance  
@@ -20,7 +20,7 @@ export default function Initiatives() {
     },
     {
       title: "Legal Advisor",
-      icon: <Gavel className="w-10 h-10 text-[#D97C54]" />,
+      icon: <Gavel className="w-10 h-10 text-[#D97C54] mx-auto block" />,
       short: "Professional legal assistance",
       long: `
         • Visa / immigration documentation help  
@@ -31,7 +31,7 @@ export default function Initiatives() {
     },
     {
       title: "Career Coach",
-      icon: <Briefcase className="w-10 h-10 text-[#F4A261]" />,
+      icon: <Briefcase className="w-10 h-10 text-[#F4A261] mx-auto block" />,
       short: "Career planning & opportunities",
       long: `
         • Resume building & portfolio improvement  
@@ -44,7 +44,7 @@ Your connection to the homeland is vital. We provide the platform to
     },
     {
       title: "Local Connector",
-      icon: <UsersRound className="w-10 h-10 text-[#D97706]" />,
+      icon: <UsersRound className="w-10 h-10 text-[#D97706] mx-auto block" />,
       short: "Connecting with community",
       long: `
         • Connect with local NRI groups  
@@ -128,7 +128,7 @@ Your connection to the homeland is vital. We provide the platform to
         </div>
 
         {/* RIGHT SECTION */}
-        <div className="bg-[#FFF6EE] rounded-2xl p-6 sm:p-10 relative overflow-hidden">
+        <div className="bg-[#FFF6EE] rounded-2xl p-6 sm:p-10 relative overflow-hidden text-center">
           <h2 className="text-2xl md:text-3xl font-extrabold text-[#5B3E2B]">
             Our Services
           </h2>
