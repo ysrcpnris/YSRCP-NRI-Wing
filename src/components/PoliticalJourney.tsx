@@ -16,7 +16,7 @@ const journeyData: Record<
       "The party emerged as the unbreakable shield for the voiceless and the sword against corruption.",
       "A new era of justice, welfare, and hope dawned for Andhra Pradesh."
     ],
-    image: "/images/jagan1.jpg.jpg",
+    image: "/1y.jpg",
   },
   2012: {
     title: "2012: Unstoppable Rise Against All Odds",
@@ -25,7 +25,7 @@ const journeyData: Record<
       "Even as their leader was unjustly imprisoned, the people's unbreakable faith turned adversity into triumph.",
       "YSRCP stood tall as the fearless champion of the poor, proving no force could silence the roar of the awakened people."
     ],
-    image: "/images/jagan2.jpg.jpg",
+    image: "/2y.jpg",
   },
   2014: {
     title: "2014: The Dawn of a Mighty Opposition",
@@ -36,7 +36,7 @@ const journeyData: Record<
       "A heroic stand that planted the seeds for an epic comeback.",
       "The lion roared, promising to reclaim the throne for the masses."
     ],
-    image: "/images/jagan3.jpg.jpg",
+    image: "/3y.jpg",
   },
   2017: {
     title: "2017: The Legendary March That Shook the State",
@@ -47,7 +47,7 @@ const journeyData: Record<
       "A divine vow to end farmer suicides, unemployment, and betrayal.",
       "The yatra became the heartbeat of a revolution."
     ],
-    image: "/images/jagan4.jpg.jpg",
+    image: "/4y.jpg",
   },
   2018: {
     title: "2018: The Unyielding Flame of the Yatra",
@@ -58,7 +58,7 @@ const journeyData: Record<
       "The longest padayatra in memory became legend, forging an unbreakable bond with the people.",
       "Victory was no longer a dream—it was destiny."
     ],
-    image: "/images/jagan1.jpg.jpg",
+    image: "/5y.jpg",
   },
   2019: {
     title: "2019: Triumph of the People's Will",
@@ -69,7 +69,7 @@ const journeyData: Record<
       "The padayatra's vows transformed into reality—power returned to the poor.",
       "YSRCP became the invincible guardian of Andhra's destiny."
     ],
-    image: "/images/jagan2.jpg.jpg",
+    image: "/6y.jpg",
   },
   2021: {
     title: "2021: Conquest of Hearts in Urban Battlegrounds",
@@ -80,7 +80,7 @@ const journeyData: Record<
       "Local governance became a fortress of welfare and justice.",
       "The heroic legacy grew stronger, defying every challenge."
     ],
-    image: "/images/jagan3.jpg.jpg",
+    image: "/7y.jpg",
   },
   2025: {
     title: "2025: The Rebirth – YSRCP 2.0 Rises Again",
@@ -91,7 +91,7 @@ const journeyData: Record<
       "The legacy of Navaratnalu roars back—welfare shall rise again.",
       "A new chapter of heroism begins; the people's champion returns stronger."
     ],
-    image: "/images/jagan4.jpg.jpg",
+    image: "/8y.jpg",
   },
 };
 
@@ -143,13 +143,13 @@ export default function PoliticalJourney() {
         {/* TEXT SECTION */}
         <div className="w-full md:w-2/5">
           <h3
-            className="text-xl sm:text-2xl md:text-3xl font-bold text-[#063A7A] mb-3 underline underline-offset-4 decoration-[#00C853]"
+            className="text-xl sm:text-2xl md:text-3xl font-bold text-[#063A7A] mb-3 underline underline-offset-4 decoration-[#00C853] text-justify"
             style={{ fontFamily: 'Times New Roman, serif' }}
           >
             {selected.title}
           </h3>
 
-          <ul className="list-disc ml-4 space-y-2 text-gray-800 text-sm sm:text-base leading-relaxed">
+          <ul className="list-disc ml-4 space-y-2 text-gray-800 text-sm sm:text-base leading-relaxed text-justify">
             {selected.points.map((point, idx) => (
               <li key={idx}>{point}</li>
             ))}

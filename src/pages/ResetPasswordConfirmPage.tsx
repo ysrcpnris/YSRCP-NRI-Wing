@@ -22,22 +22,10 @@ export default function ResetPasswordConfirmPage() {
     };
   }, []);
 
-  // Check if user is authenticated (has valid session)
-  useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+useEffect(() => {
+  supabase.auth.getSession();
+}, []);
 
-      if (sessionError || !session) {
-        toast.error("Session expired. Please request a new reset link.");
-        setTimeout(() => navigate("/"), 2000);
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
@@ -58,65 +46,62 @@ export default function ResetPasswordConfirmPage() {
     return null;
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+const handleResetPassword = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      // Validate inputs
-      if (!newPassword || !confirmPassword) {
-        setError("Please enter and confirm your new password");
-        setLoading(false);
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        setError("Passwords do not match");
-        setLoading(false);
-        return;
-      }
-
-      // Validate password strength
-      const passwordError = validatePassword(newPassword);
-      if (passwordError) {
-        setError(passwordError);
-        setLoading(false);
-        return;
-      }
-
-      // Update password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      if (isMounted.current) {
-        setSuccess(true);
-        toast.success("Password reset successfully!");
-
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          if (isMounted.current) {
-            navigate("/");
-          }
-        }, 2000);
-      }
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to reset password";
-      if (isMounted.current) {
-        setError(msg);
-      }
-    } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+  try {
+    // 1️⃣ Basic validation
+    if (!newPassword || !confirmPassword) {
+      throw new Error("Please enter and confirm your new password");
     }
-  };
+
+    if (newPassword !== confirmPassword) {
+      throw new Error("Passwords do not match");
+    }
+
+    // 2️⃣ Password strength validation
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      throw new Error(passwordError);
+    }
+
+    // 3️⃣ Update password (recovery session)
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) throw error;
+
+    // 4️⃣ IMPORTANT: kill recovery session
+    await supabase.auth.signOut();
+
+    if (!isMounted.current) return;
+
+    // 5️⃣ Success + redirect
+   toast.success("Password reset successfully! Redirecting to login...");
+
+// 🔥 hard redirect — no React, no AuthContext interference
+setTimeout(() => {
+  window.location.replace("/");
+}, 1500);
+
+
+  } catch (err: unknown) {
+    if (!isMounted.current) return;
+
+    const msg =
+      err instanceof Error ? err.message : "Failed to reset password";
+    setError(msg);
+
+  } finally {
+    if (isMounted.current) {
+      setLoading(false);
+    }
+  }
+};
+
 
   if (success) {
     return (

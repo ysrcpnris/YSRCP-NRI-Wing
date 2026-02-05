@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (error) {
+      console.error("fetchProfile error:", error);
       return null;
     }
 
@@ -80,12 +81,95 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * This runs after we've verified the session and fetched the profile.
+   * We also attempt referral processing here (idempotent check).
+   */
+  const processReferralIfNeeded = async (currentUserId: string, p: Profile | null) => {
+    try {
+      const referralCode = localStorage.getItem("referral_code");
+      if (!referralCode) return;
+
+      // Check if a referral already exists for this user (prevent duplicates)
+      const { data: existingReferral, error: existingErr } = await supabase
+        .from("referrals")
+        .select("id")
+        .eq("referred_id", currentUserId)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingErr) {
+        console.error("error checking existing referral:", existingErr);
+        return;
+      }
+      if (existingReferral) {
+        // referral already exists, clean up and return
+        localStorage.removeItem("referral_code");
+        return;
+      }
+
+      // find direct referrer by referral_code
+      const { data: referrerProfile, error: referrerErr } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("referral_code", referralCode)
+        .single();
+
+      if (referrerErr || !referrerProfile?.id) {
+        // no valid referrer found, just clear and return
+        localStorage.removeItem("referral_code");
+        return;
+      }
+
+      const directReferrerId = referrerProfile.id;
+
+      // insert direct referral (active)
+      const { error: insertDirectErr } = await supabase.from("referrals").insert({
+        referrer_id: directReferrerId,
+        referred_id: currentUserId,
+        source: "active",
+      });
+
+      if (insertDirectErr) {
+        console.error("error inserting direct referral:", insertDirectErr);
+      }
+
+      // attempt to find parent referral (one level up) and insert passive
+      const { data: parentReferral, error: parentErr } = await supabase
+        .from("referrals")
+        .select("referrer_id")
+        .eq("referred_id", directReferrerId)
+        .limit(1)
+        .maybeSingle();
+
+      if (!parentErr && parentReferral?.referrer_id) {
+        const { error: insertPassiveErr } = await supabase.from("referrals").insert({
+          referrer_id: parentReferral.referrer_id,
+          referred_id: currentUserId,
+          source: "passive",
+        });
+
+        if (insertPassiveErr) {
+          console.error("error inserting passive referral:", insertPassiveErr);
+        }
+      }
+
+      // cleanup localstorage
+      localStorage.removeItem("referral_code");
+    } catch (err) {
+      console.error("processReferralIfNeeded error:", err);
+    }
+  };
+
   const applyVerifiedSession = async (session: Session) => {
     setUser(session.user);
     setIsVerified(true);
     const p = await fetchProfile(session.user.id);
     setProfile(p);
     setAdminFlag(p);
+
+    // After profile exists, try processing referral (idempotent)
+    await processReferralIfNeeded(session.user.id, p);
   };
 
   const handleSession = async (session: Session | null) => {
@@ -94,7 +178,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!session.user.email_confirmed_at) {
+    const isRecovery =
+      session.user.recovery_sent_at ||
+      session.user.user_metadata?.recovery === true;
+
+    if (!session.user.email_confirmed_at && !isRecovery) {
       await killUnverifiedSession();
       return;
     }
@@ -145,18 +233,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const p = await fetchProfile(user.id);
     setProfile(p);
     setAdminFlag(p);
+
+    // After refreshing profile, ensure referral processed (idempotent)
+    await processReferralIfNeeded(user.id, p);
   };
 
+  /**
+   * UPDATED signUp:
+   * - Do NOT insert into `profiles` from the frontend.
+   * - Send collected form/profile data as `options.data` (raw_user_meta_data).
+   * - Let the DB trigger read raw_user_meta_data and create profiles atomically.
+   */
   const signUp = async (
     email: string,
     password: string,
     profileData: Partial<Profile>
   ) => {
+    // Build the metadata payload with only relevant keys (sanitized)
+    const meta: Record<string, unknown> = {};
+    if (profileData.full_name) meta.full_name = profileData.full_name;
+    if (profileData.country_of_residence) meta.country_of_residence = profileData.country_of_residence;
+    if (profileData.mobile_number) meta.mobile_number = profileData.mobile_number;
+    if (profileData.indian_state) meta.state = profileData.indian_state;
+    if (profileData.district) meta.district = profileData.district;
+    if (profileData.assembly_constituency) meta.assembly_constituency = profileData.assembly_constituency;
+    if (profileData.mandal) meta.mandal = profileData.mandal;
+    if (profileData.referral_code) meta.referral_code = profileData.referral_code;
+    // add any other fields you collect that your trigger expects
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/email-verified`,
+        data: meta,
       },
     });
 
@@ -168,94 +278,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Signup failed");
     }
 
-    const sanitizedProfile: Record<string, unknown> = Object.fromEntries(
-      Object.entries(profileData || {}).filter(([, v]) => {
-        if (v === undefined || v === null) return false;
-        if (typeof v === "string") return v.trim() !== "";
-        return true;
-      })
-    );
-
-    const profilePayload = {
-      id: data.user.id,
-      email,
-      ...sanitizedProfile,
-    };
-
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .insert(profilePayload);
-
-    if (profileError) {
-      try {
-        await supabase.auth.admin.deleteUser(data.user.id);
-      } catch (_) {
-      }
-      throw profileError;
-    }
-
-    const referralCode = localStorage.getItem("referral_code");
-
-    if (referralCode) {
-      const { data: referrerProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("referral_code", referralCode)
-        .single();
-
-      if (referrerProfile?.id) {
-        const directReferrerId = referrerProfile.id;
-
-        await supabase.from("referrals").insert({
-          referrer_id: directReferrerId,
-          referred_id: data.user.id,
-          source: "active",
-        });
-
-        const { data: parentReferral } = await supabase
-          .from("referrals")
-          .select("referrer_id")
-          .eq("referred_id", directReferrerId)
-          .limit(1)
-          .single();
-
-        if (parentReferral?.referrer_id) {
-          await supabase.from("referrals").insert({
-            referrer_id: parentReferral.referrer_id,
-            referred_id: data.user.id,
-            source: "passive",
-          });
-        }
-      }
-
-      localStorage.removeItem("referral_code");
-    }
-
+    // IMPORTANT: do NOT attempt profile insert or delete auth here.
+    // The DB trigger will create the profile and ensure atomicity.
+    // We still sign the user out here to force email verification flow (existing behavior).
     await killUnverifiedSession();
   };
 
-const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  const user = data.user;
+    const user = data.user;
 
-  if (!user) {
-    throw new Error("Login failed");
-  }
+    if (!user) {
+      throw new Error("Login failed");
+    }
 
-  if (!user.email_confirmed_at) {
-    await supabase.auth.signOut();
-    throw new Error("Please verify your email before logging in");
-  }
+    if (!user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      throw new Error("Please verify your email before logging in");
+    }
 
-  return data;
-};
-
+    return data;
+  };
 
   const signOut = async () => {
     try {

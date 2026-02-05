@@ -6,10 +6,11 @@ type HeroProps = {
 
 const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
   const slides = [
-    { img: "/ECOd9I9UYAAkV4h.jpg" },
-    { img: "/ECOe4WuUIAAFYiH.jpg" },
-    { img: "/ECVhnUTVUAAin44.jpg" },
-    { img: "/GcUMiSybkAMyZCL.jpg" },
+    { img: "/Slider/simg1.jpg" },
+    { img: "/Slider/simg2.jpg" },
+    { img: "/Slider/simg3.jpg" },
+    { img: "/Slider/simg4.jpg" },
+    { img: "/Slider/simg5.jpg" },
   ];
 
   const [current, setCurrent] = useState(0);
