@@ -215,11 +215,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (initializingRef.current) return;
       if (!mounted) return;
-      setLoading(true);
-      await handleSession(session);
-      if (mounted) {
-        setLoading(false);
-      }
+
+      // Handle auth changes in background without toggling the global
+      // loading state — avoid showing the full-page loader when the
+      // tab regains focus or the token refreshes.
+      void handleSession(session);
     });
 
     return () => {

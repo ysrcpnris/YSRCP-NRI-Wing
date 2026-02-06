@@ -11,6 +11,7 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
     { img: "/Slider/simg3.jpg" },
     { img: "/Slider/simg4.jpg" },
     { img: "/Slider/simg5.jpg" },
+    { img: "/Slider/simg6.jpeg" },
   ];
 
   const mobileSlides = [{ img: "/Slider/msimg1.png" }];
