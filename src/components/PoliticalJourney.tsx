@@ -69,7 +69,7 @@ const journeyData: Record<
       "The padayatra's vows transformed into reality—power returned to the poor.",
       "YSRCP became the invincible guardian of Andhra's destiny."
     ],
-    image: "/Political_Journey/6y.jpg",
+    image: "/Political_Journey/2019.jpeg",
   },
   2021: {
     title: "2021: Conquest of Hearts in Urban Battlegrounds",
