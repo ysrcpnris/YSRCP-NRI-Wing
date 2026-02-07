@@ -5,6 +5,17 @@ import { ProfileDropdown } from './ProfileDropdown';
 import nriLogo from './nrilogo.png';
 import { useLocation } from "react-router-dom";
 
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * GEOGRAPHIC DATA STRUCTURES
+ * ═══════════════════════════════════════════════════════════════
+ * Why it's used:
+ * - Populates country, state, and city dropdowns for foreign addresses
+ * - Enables NRIs and overseas users to select their current location
+ * - Provides hierarchical data structure (Country → States → Cities)
+ * - Used in profile completion for non-Indian residents
+ */
+
 //Coontry → States → Cities
 const countryData: Record<
   string,
@@ -97,6 +108,19 @@ Singapore: [
 ],
 
 };
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * INDIAN ADDRESS HIERARCHY DATA
+ * ═══════════════════════════════════════════════════════════════
+ * Why it's used:
+ * - Organizes all Indian states, districts, assembly constituencies, and mandals
+ * - Enables 4-level hierarchical location selection for Indian permanent address
+ * - Populates cascading dropdowns: State → District → Assembly → Mandal
+ * - Helps target content and leadership based on user's constituency
+ * - Essential for mapping users to local coordinators and assembly leaders
+ * - Used in profile completion to capture detailed address information
+ */
 
 // Indian States → Districts → Assembly Constituencies → Mandals
   const indianAddressData: Record<
@@ -1277,6 +1301,18 @@ const Dashboard: React.FC = () => {
   const { user, refreshProfile, profile, signOut } = useAuth();
   const [expandedSection, setExpandedSection] =
     useState<SectionKey | null>("profile");
+
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * STATE VARIABLES - SECTION MANAGEMENT
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - Track which accordion section is currently opened/expanded
+   * - Manage service request form state (selected service, category, option)
+   * - Maintain UI state for cascading form inputs
+   * - Improve UX by persisting user's section preference
+   */
+  
  const [selectedService, setSelectedService] = useState<string | null>(null);
 const [selectedSub, setSelectedSub] = useState<string | null>(null);
 const [selectedInner, setSelectedInner] = useState<string | null>(null);
@@ -1284,6 +1320,19 @@ const [selectedInner, setSelectedInner] = useState<string | null>(null);
     setSelectedSub(null);
     setSelectedInner(null);
   }, [selectedService]);
+
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * STATE VARIABLES - DATA & COUNTERS
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - Track active referral count for network statistics display
+   * - Store submission states for async operations (service, suggestion, photo)
+   * - Maintain contribution types fetched from database
+   * - Track unseen events count for badge notifications
+   * - Store selected contribution areas for profile completion
+   */
+  
   const [activeReferralCount, setActiveReferralCount] = useState<number>(0);
 
   const [submittingService, setSubmittingService] = useState(false);
@@ -1291,11 +1340,24 @@ const [contributionTypes, setContributionTypes] = useState<
   { id: number; name: string }[]
 >([]);
 const [unseenEventsCount, setUnseenEventsCount] = useState(0);
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * UNSEEN EVENTS TRACKING
+ * ═══════════════════════════════════════════════════════════════
+ * Why this effect is used:
+ * - Fetches last seen event timestamp from user's profile
+ * - Counts new events created after the last seen time
+ * - Displays badge on "Events & Notifications" section with unread count
+ * - Helps users know when there are new notifications to review
+ * - Improves engagement by highlighting new content
+ */
+
 useEffect(() => {
   if (!user || !profile?.id) return;
 
   const loadUnseenEvents = async () => {
-    // 1️⃣ get last seen timestamp
+    // 1️⃣ Get last seen event timestamp from profile
     const { data: profileData } = await supabase
       .from("profiles")
       .select("events_last_seen_at")
@@ -1305,7 +1367,7 @@ useEffect(() => {
     const lastSeenAt =
       profileData?.events_last_seen_at || "1970-01-01";
 
-    // 2️⃣ count unseen events
+    // 2️⃣ Count unseen events created after last seen timestamp
     const { count, error } = await supabase
       .from("events")
       .select("*", { count: "exact", head: true })
@@ -1320,8 +1382,30 @@ useEffect(() => {
   loadUnseenEvents();
 }, [user, profile?.id]);
 
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * STATE VARIABLES - PROFILE CONTRIBUTIONS
+ * ═══════════════════════════════════════════════════════════════
+ * Why these are used:
+ * - Store user's selected contribution areas (e.g., Student Support, Legal Aid)
+ * - Allow users to specify how they want to contribute to the organization
+ * - Enable filtering members by contribution interests
+ * - Help match volunteers with appropriate opportunities
+ */
+
 const [selectedContributions, setSelectedContributions] = useState<number[]>([]);
 const location = useLocation();
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * NAVIGATION STATE MANAGEMENT
+ * ═══════════════════════════════════════════════════════════════
+ * Why this is used:
+ * - Detects when user is navigated to Dashboard with openProfile flag
+ * - Auto-expands the Profile section when user clicks "Complete Profile" from other pages
+ * - Improves UX by showing relevant section immediately after navigation
+ */
+
 useEffect(() => {
   if (location.state?.openProfile) {
     setExpandedSection("profile");
@@ -1332,6 +1416,22 @@ useEffect(() => {
     type: "success" | "info";
   } | null>(null);
 
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * TOAST NOTIFICATION HELPER
+   * ═══════════════════════════════════════════════════════════════
+   * Why showToast is used:
+   * - Displays temporary feedback messages to user actions (success/info)
+   * - Auto-hides after 3 seconds for non-intrusive UX
+   * - Provides confirmation for profile saves, uploads, submissions
+   * - Improves user experience with clear feedback
+   */
+
+  const showToast = (msg: string, type: "success" | "info" = "info") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   // Log profile updates for debugging
   useEffect(() => {
     if (profile?.profile_photo) {
@@ -1340,6 +1440,17 @@ useEffect(() => {
   }, [profile?.profile_photo]);
 
 // ✅ FIXED: ACTIVE REFERRAL COUNT (USES profile.id)
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * ACTIVE REFERRAL COUNT TRACKING
+ * ═══════════════════════════════════════════════════════════════
+ * Why this effect is used:
+ * - Fetches total count of referrals made by current user
+ * - Used for displaying referral statistics on dashboard
+ * - Helps user track their network growth and contributions
+ * - Motivates users to refer more members
+ */
+
 useEffect(() => {
   if (!profile?.id) return;
 
@@ -1371,6 +1482,17 @@ const countryConfig = useMemo(() => {
   )?.[1];
 }, [normalizedCountry]);
 
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * LOCATION DATA NORMALIZATION HELPERS
+ * ═══════════════════════════════════════════════════════════════
+ * Why these functions are used:
+ * - Normalize district names by removing "District" suffix for display consistency
+ * - Normalize mandal names by removing "Mandal" suffix for cleaner UI
+ * - Normalize assembly constituency names by removing "Assembly Constituency" or "AC" suffix
+ * - Enable consistent data matching across database and UI
+ * - Improve data consistency in dropdowns and form submissions
+ */
 
 const normalizeDistrict = (value: string) => {
   return value.replace(/district/i, "").trim();
@@ -1385,6 +1507,18 @@ const normalizeAssembly = (value: string) => {
 };
 
 // ---------------- CONTRIBUTIONS ----------------
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * CONTRIBUTION TOGGLE HANDLER
+ * ═══════════════════════════════════════════════════════════════
+ * Why this function is used:
+ * - Allows users to add/remove their contribution areas with checkboxes
+ * - Implements optimistic UI updates for better responsiveness
+ * - Syncs selections with database (user_contributions table)
+ * - Rolls back UI changes if database operations fail
+ * - Tracks user interests for volunteer matching and engagement
+ */
+
 const toggleContribution = async (
   contributionTypeId: number,
   checked: boolean
@@ -1435,6 +1569,19 @@ const toggleContribution = async (
   }
 };
 
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * PROFESSIONAL ROLE OPTIONS
+ * ═══════════════════════════════════════════════════════════════
+ * Why these are used:
+ * - Provide contextual role/designation options based on profession selected
+ * - For "Job": Software Engineer, Manager, Doctor, Teacher, etc.
+ * - For "Business": Founder, Co-Founder, Partner, Entrepreneur, etc.
+ * - For "Student": School, Undergraduate, Postgraduate, Research Scholar, etc.
+ * - Enables better categorization of users for targeted engagement
+ * - Helps in professional networking and skill-based matching
+ */
+
 const roleOptions: Record<string, string[]> = {
   Job: [
     "Software Engineer",
@@ -1463,18 +1610,74 @@ const roleOptions: Record<string, string[]> = {
 };
 
 
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * PHOTO UPLOAD STATE MANAGEMENT
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - photoFile: Stores selected image file from file input
+   * - photoPreview: Displays selected image preview before upload
+   * - uploading: Tracks upload progress to disable button during upload
+   * - Allows users to select, preview, and upload profile pictures
+   * - Improves UX with instant preview before committing
+   */
+
   // ---------------- PHOTO UPLOAD STATE ----------------
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * COUNTRY & FOREIGN RESIDENCE STATE
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - countryOfResidence: Current country of residence (for NRI tracking)
+   * - stateAbroad: State/Province for non-India residents
+   * - cityAbroad: City for non-India residents
+   * - Captures current location of NRI members
+   * - Used for location-based content and event targeting
+   * - Enables communication with overseas members in their timezone
+   */
+
   const [countryOfResidence, setCountryOfResidence] = useState("India");
 const [stateAbroad, setStateAbroad] = useState("");
 const [cityAbroad, setCityAbroad] = useState("");
+
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * INDIAN ADDRESS STATE VARIABLES
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - indianState: User's permanent state in India (e.g., Andhra Pradesh)
+   * - district: User's district for local governance mapping
+   * - assembly: User's assembly constituency for political representation
+   * - mandal: User's mandal (subdivision) for granular targeting
+   * - Forms 4-level hierarchy for precise location identification
+   * - Used to assign local coordinators and leadership contacts
+   * - Enables district/constituency-specific events and communications
+   * - Crucial for political engagement at different levels
+   */
 
   const [indianState, setIndianState] = useState("");
 const [district, setDistrict] = useState("");
 const [assembly, setAssembly] = useState("");
 const [mandal, setMandal] = useState("");
+
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * PROFESSIONAL DETAILS STATE
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - profession: Category of work (Job, Business, Student)
+   * - roleDesignation: Specific role (e.g., Software Engineer, Founder)
+   * - organization: Company/University name
+   * - Helps build professional profile and network
+   * - Enables skill-based matching and volunteer recruitment
+   * - Used for targeted job/business opportunities
+   * - Facilitates professional mentorship programs
+   */
+
 const [profession, setProfession] = useState<string>(
   profile?.profession || ""
 );
@@ -1487,6 +1690,16 @@ const [organization, setOrganization] = useState<string>(
 
 
 
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * PROFESSIONAL DETAILS INITIALIZATION
+ * ═══════════════════════════════════════════════════════════════
+ * Why this effect is used:
+ * - Initializes profession, role, and organization from profile data when available
+ * - Prevents reset of values after form is submitted
+ * - Syncs local state with database profile updates
+ */
+
 useEffect(() => {
   if (profile && !profession && !roleDesignation && !organization) {
     setProfession(profile.profession || "");
@@ -1495,11 +1708,21 @@ useEffect(() => {
   }
 }, [profile]);
 
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * CONTRIBUTION TYPES & USER SELECTIONS LOADER
+ * ═══════════════════════════════════════════════════════════════
+ * Why this effect is used:
+ * - Fetches available contribution types from database (Student Support, Legal Aid, etc.)
+ * - Loads user's previously selected contributions
+ * - Populates contribution checkboxes with user's choices
+ * - Allows users to see and modify their contribution preferences
+ * - Essential for initial page load and profile updates
+ */
+
 useEffect(() => {
   if (!user) return;
  
-
-
 
   const loadContributions = async () => {
     // Load contribution options
@@ -1523,6 +1746,18 @@ useEffect(() => {
 
   loadContributions();
 }, [user]);
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * FOREIGN RESIDENCY STATE INITIALIZATION
+ * ═══════════════════════════════════════════════════════════════
+ * Why this effect is used:
+ * - Initializes state and city fields for non-India residents
+ * - Clears abroad fields if user is India-based
+ * - Syncs location UI with current residence country
+ * - Enables/disables foreign location fields based on country
+ */
+
 useEffect(() => {
   if (!profile) return;
 
@@ -1536,6 +1771,18 @@ useEffect(() => {
     setCityAbroad("");
   }
 }, [profile]);
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * INDIAN ADDRESS STATE INITIALIZATION
+ * ═══════════════════════════════════════════════════════════════
+ * Why this effect is used:
+ * - Initializes Indian state, district, assembly, mandal from profile
+ * - Applies normalization to remove suffixes from stored data
+ * - Runs only on component mount to avoid frequent resets
+ * - Enables proper cascading dropdown initialization
+ */
+
 useEffect(() => {
   if (!profile) return;
 
@@ -1553,8 +1800,32 @@ useEffect(() => {
 
 
   // ---------------- DYNAMIC DATA ----------------
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * REFERRAL DATA STATE
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - activeReferrals: Direct referrals made by the user
+   * - passiveReferrals: Referrals from user's referral tree (passive network)
+   * - Displays all referred members in "My Network" section
+   * - Tracks network growth and engagement
+   * - Shows member names, locations, and join dates
+   */
+
   const [activeReferrals, setActiveReferrals] = useState<Referral[]>([]);
   const [passiveReferrals, setPassiveReferrals] = useState<Referral[]>([]);
+
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * LEADERSHIP CONTACTS STATE
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - leadersByRole: Leaders organized by role (Regional Coordinator, District President, Assembly Coordinator)
+   * - Enables direct WhatsApp communication with local leadership
+   * - Displays leader names, phone numbers, and roles
+   * - Facilitates community organization and networking
+   */
+
   const [leadersByRole, setLeadersByRole] = useState<
   Record<
     string,
@@ -1566,6 +1837,18 @@ useEffect(() => {
   >
 >({});
 
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * NRI COORDINATOR STATE
+   * ═══════════════════════════════════════════════════════════════
+   * Why this is used:
+   * - Stores primary NRI (Non-Resident Indian) coordinator contact
+   * - Provides dedicated support point for overseas members
+   * - Stores name, phone, and email for direct communication
+   * - Essential for NRI-specific programs and engagement
+   * - Displayed in "Leadership Connect" section with other leaders
+   */
+
   const [nriCoordinator, setNriCoordinator] = useState<{
     id: string;
     name: string;
@@ -1573,17 +1856,67 @@ useEffect(() => {
     email: string | null;
   } | null>(null);
 
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * EVENTS & NOTIFICATIONS STATE
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - events: Broadcasts and important announcements for all members
+   * - Displays latest events first (reverse chronological order)
+   * - Shows event title, description, and creation date
+   * - Integrated with unseen event count for notification badge
+   *
+   * Note: notifications state is currently disabled
+   * (previously tracked user-specific notifications)
+   */
+
   const [events, setEvents] = useState<EventItem[]>([]);
   //const [notifications, setNotifications] =
     //useState<NotificationItem[]>([]);
 
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * FORM SUBMISSION TRACKING
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - submittingSuggestion: Tracks suggestion form submission state
+   * - loadingDashboard: Tracks initial data loading for all sections
+   * - Disables buttons during async operations to prevent double-submit
+   * - Shows loading indicators to user
+   * - Improves UX with visual feedback
+   */
+
   const [submittingSuggestion, setSubmittingSuggestion] = useState(false);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
+
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * FORM REFERENCES
+   * ═══════════════════════════════════════════════════════════════
+   * Why these are used:
+   * - serviceMessageRef: Accesses textarea for service request message
+   * - suggestionRef: Accesses textarea for user suggestions/feedback
+   * - Allows programmatic access to form values
+   * - Used to clear form after submission
+   */
 
   const serviceMessageRef = useRef<HTMLTextAreaElement | null>(null);
   const suggestionRef = useRef<HTMLTextAreaElement | null>(null);
 
  // ---------------- REFERRAL STATS ----------------
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * REFERRAL STATISTICS CALCULATION
+   * ═══════════════════════════════════════════════════════════════
+   * Why this memo is used:
+   * - Calculates active referral count (direct referrals)
+   * - Calculates passive referral count (tree network)
+   * - Counts new referrals from the past 7 days
+   * - Used to display network growth statistics
+   * - Motivates users with achievement metrics
+   * - Memoized to prevent unnecessary recalculations
+   */
+
   const referralStats = useMemo(() => {
     const active = activeReferrals.length;
     const passive = passiveReferrals.length;
@@ -1603,18 +1936,23 @@ useEffect(() => {
   }, [activeReferrals, passiveReferrals]);
 
   // ---------------- TOAST ----------------
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * TOAST NOTIFICATION AUTO-DISMISS
+   * ═══════════════════════════════════════════════════════════════
+   * Why this effect is used:
+   * - Automatically dismisses toast notification after 3 seconds
+   * - Cleans up timer on unmount to prevent memory leaks
+   * - Provides non-intrusive feedback without user action required
+   * - Improves UX by avoiding permanent UI clutter
+   */
+
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const showToast = (
-    msg: string,
-    type: "success" | "info" = "success"
-  ) => {
-    setToast({ msg, type });
-  };
 const toggleSection = async (section: SectionKey) => {
   setExpandedSection((prev) => (prev === section ? null : section));
 
@@ -2264,27 +2602,7 @@ const renderConnectSummary = () => {
   return (
     <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
       <div className="flex items-center gap-3">
-        <div className="flex -space-x-2">
-          {allLeaders.slice(0, 4).map((leader) => (
-            <div
-              key={leader.id}
-              className="w-7 h-7 rounded-full border-2 border-white bg-gray-100 overflow-hidden"
-            >
-              <img
-                src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
-                  leader.name || "Leader"
-                )}`}
-                alt={leader.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ))}
-        </div>
-
-        <span className="text-xs font-bold text-gray-600">
-          {firstRole || "Leadership Contacts"}{" "}
-          {allLeaders.length > 1 ? `& ${allLeaders.length - 1} Others` : ""}
-        </span>
+        <span className="text-xs font-bold text-gray-600">Leadership Contacts</span>
       </div>
     </div>
   );
@@ -3141,8 +3459,6 @@ onChange={(value) => {
   </div>
 </div>
 
-
-
           <div className="flex justify-end pt-2">
             <button
   onClick={handleSaveProfile}
@@ -3299,17 +3615,22 @@ const renderConnectContent = () => {
   }> = [];
 
   roleOrder.forEach((role) => {
-    if (role === "Regional Coordinator" && leadersByRole[role]) {
-      // Add Regional Coordinator
+    // Add any leaders for this role if they exist
+    if (leadersByRole[role] && leadersByRole[role].length > 0) {
       leadersByRole[role].forEach((leader) => {
         orderedLeaders.push({
           ...leader,
           role,
         });
       });
+    }
 
-      // Add NRI Coordinator after Regional Coordinator
-      if (nriCoordinator) {
+    // Always insert the NRI Coordinator immediately after the Regional Coordinator
+    // if present, even when there are no Regional Coordinators assigned.
+    if (role === "Regional Coordinator" && nriCoordinator) {
+      // avoid duplicate if somehow already present
+      const already = orderedLeaders.find((l) => l.id === nriCoordinator.id && l.role === "NRI Coordinator");
+      if (!already) {
         orderedLeaders.push({
           id: nriCoordinator.id,
           name: nriCoordinator.name,
@@ -3319,14 +3640,6 @@ const renderConnectContent = () => {
           email: nriCoordinator.email,
         });
       }
-    } else if (leadersByRole[role]) {
-      // Add other roles (District President, Assembly Coordinator)
-      leadersByRole[role].forEach((leader) => {
-        orderedLeaders.push({
-          ...leader,
-          role,
-        });
-      });
     }
   });
 
@@ -3629,8 +3942,6 @@ const renderServicesContent = () => (
     )}
   </div>
 );
-
-
   
 const renderEventsContent = () => (
   <div className="pt-4">
@@ -3739,7 +4050,6 @@ const renderSuggestionsContent = () => (
     </div>
   </div>
 );
-
 
   //  NOTIFICATIONS DISABLED
 // const renderNotificationsContent = () => (
@@ -3873,10 +4183,6 @@ const renderSuggestionsContent = () => (
   expandedSection={expandedSection}
   toggleSection={toggleSection}
 />
-
-
-
-
 
 {/*  NOTIFICATIONS DISABLED
 <AccordionItem
