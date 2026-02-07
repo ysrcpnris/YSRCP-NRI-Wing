@@ -149,7 +149,6 @@ export default function PressMeetsAndSocial() {
           );
 
           const channelJson = await channelRes.json();
-          console.log("Channel search response:", channelJson);
           
           if (channelJson.error) {
             throw new Error(channelJson.error.message || "Channel API Error");
@@ -160,7 +159,6 @@ export default function PressMeetsAndSocial() {
           }
 
           const foundChannelId = channelJson.items[0].id.channelId;
-          console.log("Found official channel ID:", foundChannelId);
           
           // Now fetch videos from this channel
           const res = await fetch(
@@ -168,7 +166,6 @@ export default function PressMeetsAndSocial() {
           );
 
           const json = await res.json();
-          console.log("YouTube API Response:", json);
           
           if (json.error) {
             throw new Error(json.error.message || "Video API Error");
@@ -191,10 +188,8 @@ export default function PressMeetsAndSocial() {
           setLoading(false);
           return;
         } catch (error) {
-          console.error("YouTube API Error, falling back to Supabase:", error);
+          // YouTube API failed, will use Supabase fallback
         }
-      } else {
-        console.warn("YouTube API key not configured, using Supabase fallback");
       }
 
       // Fallback: Fetch from Supabase
@@ -210,7 +205,6 @@ export default function PressMeetsAndSocial() {
         }
 
         if (data && data.length > 0) {
-          console.log("Videos fetched from Supabase:", data);
           const videoData = data.map((v: any) => ({
             title: v.title,
             url: v.video_url,
@@ -220,12 +214,9 @@ export default function PressMeetsAndSocial() {
             isLive: false,
           }));
           setVideos(videoData);
-        } else {
-          console.warn("No videos found in Supabase");
         }
         setLoading(false);
       } catch (error) {
-        console.error("Supabase fallback error:", error);
         setLoading(false);
       }
     };

@@ -1,7 +1,7 @@
 // src/pages/AdminDashboard.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabase";
 import { Settings } from "lucide-react";
 import { Globe } from "lucide-react";
 import * as XLSX from "xlsx";

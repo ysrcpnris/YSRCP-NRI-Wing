@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Edit3, Trash2 } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../lib/supabase";
 
 type NotificationItem = {
   id: string;

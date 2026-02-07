@@ -164,7 +164,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const applyVerifiedSession = async (session: Session) => {
     setUser(session.user);
     setIsVerified(true);
-    const p = await fetchProfile(session.user.id);
+    let p = await fetchProfile(session.user.id);
+
+    // If profile not found, try to create it from auth user metadata (populated during signup)
+    if (!p) {
+      try {
+        const meta: any = session.user.user_metadata || {};
+
+        const insertPayload: any = {
+          id: session.user.id,
+          email: session.user.email,
+          first_name: meta.first_name || meta.full_name || "",
+          last_name: meta.last_name || "",
+          full_name: meta.full_name || `${meta.first_name || ""} ${meta.last_name || ""}`.trim() || null,
+          mobile_number: meta.mobile_number || null,
+          whatsapp_number: meta.whatsapp_number || null,
+          country_of_residence: meta.country_of_residence || null,
+          indian_state: meta.indian_state || null,
+          district: meta.district || null,
+          assembly_constituency: meta.assembly_constituency || null,
+          mandal: meta.mandal || null,
+          city_abroad: meta.city_abroad || null,
+          state_abroad: meta.state_abroad || null,
+          profession: meta.profession || null,
+          organization: meta.organization || null,
+          designation: meta.designation || null,
+          contribution: meta.contribution || null,
+          referral_code: meta.referral_code || null,
+          role: meta.role || 'user',
+          auth_user_id: session.user.id,
+        };
+
+        const { error: insertErr } = await supabase.from('profiles').insert(insertPayload);
+        if (insertErr) {
+          // Log and continue — insertion may fail due to unique constraints or triggers
+          console.error('Failed to insert profile after verification:', insertErr);
+        } else {
+          // Refresh fetched profile
+          p = await fetchProfile(session.user.id);
+        }
+      } catch (e) {
+        console.error('Error creating profile after verification:', e);
+      }
+    }
+
     setProfile(p);
     setAdminFlag(p);
 
@@ -251,15 +294,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     // Build the metadata payload with only relevant keys (sanitized)
     const meta: Record<string, unknown> = {};
-    if (profileData.full_name) meta.full_name = profileData.full_name;
-    if (profileData.country_of_residence) meta.country_of_residence = profileData.country_of_residence;
-    if (profileData.mobile_number) meta.mobile_number = profileData.mobile_number;
-    if (profileData.indian_state) meta.state = profileData.indian_state;
-    if (profileData.district) meta.district = profileData.district;
-    if (profileData.assembly_constituency) meta.assembly_constituency = profileData.assembly_constituency;
-    if (profileData.mandal) meta.mandal = profileData.mandal;
-    if (profileData.referral_code) meta.referral_code = profileData.referral_code;
-    // add any other fields you collect that your trigger expects
+    // Include common profile fields so DB trigger can create profiles after verification
+    const keys: (keyof typeof profileData)[] = [
+      'first_name',
+      'last_name',
+      'full_name',
+      'mobile_number',
+      'whatsapp_number',
+      'country_of_residence',
+      'state_abroad',
+      'city_abroad',
+      'indian_state',
+      'district',
+      'assembly_constituency',
+      'mandal',
+      'village',
+      'profession',
+      'organization',
+      'designation',
+      'contribution',
+      'participate_campaign',
+      'instagram_id',
+      'facebook_id',
+      'twitter_id',
+      'linkedin_id',
+      'referral_code',
+    ];
+
+    for (const k of keys) {
+      const v = profileData[k];
+      if (v !== undefined && v !== null && v !== '') meta[k as string] = v;
+    }
 
     const { data, error } = await supabase.auth.signUp({
       email,
