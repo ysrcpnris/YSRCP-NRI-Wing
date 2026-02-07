@@ -49,9 +49,7 @@ import AdminDashboard from "./AdminDashboard/AdminDashboard";
 import AdminRoute from "./routes/AdminRoute";
 import ChangePassword from "./AdminDashboard/ChangePassword";
 
-import JobDashboard from "./components/dashboard/JobDashboard";
-import BusinessDashboard from "./components/dashboard/BusinessDashboard";
-import StudentDashboard from "./components/dashboard/StudentDashboard";
+import Dashboard from "./components/Dashboard";
 
 function MainLandingPage({
   setAuthMode,
@@ -215,11 +213,8 @@ useEffect(() => {
           }
         />
         <Route element={<ProtectedRoute />}>
-  <Route path="/dashboard" element={<Navigate to="/dashboard/job" replace />} />
-  <Route path="/dashboard/job" element={<JobDashboard />} />
-  <Route path="/dashboard/business" element={<BusinessDashboard />} />
-  <Route path="/dashboard/student" element={<StudentDashboard />} />
-</Route>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
 
 
        

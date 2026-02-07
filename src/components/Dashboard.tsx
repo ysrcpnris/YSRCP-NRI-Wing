@@ -1275,11 +1275,6 @@ const AccordionItem = ({
 
 const Dashboard: React.FC = () => {
   const { user, refreshProfile, profile, signOut } = useAuth();
-// ---------------- AUTH GUARD (AFTER HOOKS) ----------------
-if (!user) {
-  window.location.replace("/");
-  return null;
-}
   const [expandedSection, setExpandedSection] =
     useState<SectionKey | null>("profile");
  const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -1801,7 +1796,7 @@ const { error: updateError } = await supabase
 
   /// Fetch dashboard data from Supabase
 useEffect(() => {
-  if (!user) return;
+  if (!user || !profile?.id) return;
 
   const loadDashboard = async () => {
     setLoadingDashboard(true);
@@ -1881,61 +1876,59 @@ setPassiveReferrals(
 );
 
      // 2. Leaders (NEW NORMALIZED LOGIC)
-    // 🔒 Clear leaders if district or assembly missing
+    // 🔒 Clear leaders if district or assembly missing - do NOT return early
 if (!district || !assembly) {
-
   setLeadersByRole({});
-  return;
-}
+} else {
 // ✅ ADD THIS LOG HERE
-console.log("LEADERS QUERY FILTERS", {
-  district: normalizeDistrict(district),
-  constituency: normalizeAssembly(assembly),
-});
-const { data, error } = await supabase
-  .from("leader_assignments")
-  .select(`
-    role,
-    sort_order,
-    leaders_master (
-      id,
-      name,
-      whatsapp_number,
-      is_active
-    )
-  `)
-  
-  .eq("district", normalizeDistrict(district))
-  .eq("constituency", normalizeAssembly(assembly))
-  .eq("is_active", true) // leader_assignments.is_active
-  .order("sort_order", { ascending: true });
+  console.log("LEADERS QUERY FILTERS", {
+    district: normalizeDistrict(district),
+    constituency: normalizeAssembly(assembly),
+  });
+  const { data, error } = await supabase
+    .from("leader_assignments")
+    .select(`
+      role,
+      sort_order,
+      leaders_master (
+        id,
+        name,
+        whatsapp_number,
+        is_active
+      )
+    `)
+    
+    .eq("district", normalizeDistrict(district))
+    .eq("constituency", normalizeAssembly(assembly))
+    .eq("is_active", true) // leader_assignments.is_active
+    .order("sort_order", { ascending: true });
 
-if (error) {
-  console.error("Leaders fetch error:", error);
-  return;
+  if (error) {
+    console.error("Leaders fetch error:", error);
+  } else {
+    const grouped = (data as LeaderAssignmentRow[]).reduce(
+      (acc, item) => {
+        if (!item.leaders_master?.is_active) return acc;
+
+        if (!acc[item.role]) acc[item.role] = [];
+
+        acc[item.role].push({
+          id: item.leaders_master.id,
+          name: item.leaders_master.name,
+          whatsapp_number: item.leaders_master.whatsapp_number,
+        });
+
+        return acc;
+      },
+      {} as Record<
+        string,
+        { id: string; name: string; whatsapp_number: string | null }[]
+      >
+    );
+
+    setLeadersByRole(grouped);
+  }
 }
-
-const grouped = (data as LeaderAssignmentRow[]).reduce(
-  (acc, item) => {
-    if (!item.leaders_master?.is_active) return acc;
-
-    if (!acc[item.role]) acc[item.role] = [];
-
-    acc[item.role].push({
-      id: item.leaders_master.id,
-      name: item.leaders_master.name,
-      whatsapp_number: item.leaders_master.whatsapp_number,
-    });
-
-    return acc;
-  },
-  {} as Record<
-    string,
-    { id: string; name: string; whatsapp_number: string | null }[]
-  >
-);
-
-setLeadersByRole(grouped);
 
 
 
@@ -1992,7 +1985,7 @@ if (eventsError) {
   };
 
   loadDashboard();
-}, [user, profile,district, assembly]);
+}, [user, profile?.id, district, assembly]);
 
 
   // Helper to format dates like "Jan 12, 2025"
@@ -2698,40 +2691,19 @@ const handleSubmitSuggestion = async () => {
         State / Province
       </label>
 
-      <Listbox
+      <input
+        type="text"
         value={stateAbroad}
-        onChange={(value) => {
-          setStateAbroad(value);
+        onChange={(e) => {
+          setStateAbroad(e.target.value);
           setCityAbroad("");
         }}
-      >
-        <div className="relative">
-          <Listbox.Button
-            className="w-full h-11 px-3 bg-gray-50 border border-gray-300
-                       rounded-lg flex justify-between items-center
-                       text-sm font-semibold"
-          >
-            <span>{stateAbroad || "Select State / Province"}</span>
-            <ChevronDown size={18} />
-          </Listbox.Button>
-
-          <Listbox.Options
-            className="absolute z-50 mt-1 w-full bg-white
-                       border border-gray-300 rounded-lg
-                       shadow-lg max-h-60 overflow-auto text-sm"
-          >
-            {countryConfig?.map((s) => (
-              <Listbox.Option
-                key={s.name}
-                value={s.name}
-                className="cursor-pointer px-3 py-2 hover:bg-gray-100"
-              >
-                {s.name}
-              </Listbox.Option>
-            ))}
-          </Listbox.Options>
-        </div>
-      </Listbox>
+        placeholder="Enter State / Province"
+        className="w-full h-11 px-3 bg-gray-50 border border-gray-300
+                   rounded-lg text-sm font-semibold text-gray-700
+                   focus:bg-white focus:ring-2 focus:ring-indigo-500
+                   outline-none"
+      />
     </div>
 
     {/* ===== CITY ===== */}
@@ -2740,40 +2712,16 @@ const handleSubmitSuggestion = async () => {
         City
       </label>
 
-      <Listbox
+      <input
+        type="text"
         value={cityAbroad}
-        onChange={setCityAbroad}
-        disabled={!stateAbroad}
-      >
-        <div className="relative">
-          <Listbox.Button
-            className="w-full h-11 px-3 bg-gray-50 border border-gray-300
-                       rounded-lg flex justify-between items-center
-                       text-sm font-semibold disabled:bg-gray-100"
-          >
-            <span>{cityAbroad || "Select City"}</span>
-            <ChevronDown size={18} />
-          </Listbox.Button>
-
-          <Listbox.Options
-            className="absolute z-50 mt-1 w-full bg-white
-                       border border-gray-300 rounded-lg
-                       shadow-lg max-h-60 overflow-auto text-sm"
-          >
-            {countryConfig
-              ?.find((s) => s.name === stateAbroad)
-              ?.cities.map((city) => (
-                <Listbox.Option
-                  key={city}
-                  value={city}
-                  className="cursor-pointer px-3 py-2 hover:bg-gray-100"
-                >
-                  {city}
-                </Listbox.Option>
-              ))}
-          </Listbox.Options>
-        </div>
-      </Listbox>
+        onChange={(e) => setCityAbroad(e.target.value)}
+        placeholder="Enter City"
+        className="w-full h-11 px-3 bg-gray-50 border border-gray-300
+                   rounded-lg text-sm font-semibold text-gray-700
+                   focus:bg-white focus:ring-2 focus:ring-indigo-500
+                   outline-none"
+      />
     </div>
 
   </div>
