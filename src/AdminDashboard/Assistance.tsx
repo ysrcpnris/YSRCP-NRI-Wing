@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 /* ---------------- TYPES ---------------- */
+// Service request data structure from database
 type AssistanceItem = {
   id: number;
   applicant_name: string;
@@ -18,6 +19,7 @@ type AssistanceItem = {
 };
 
 /* ---------------- TEAM MAP ---------------- */
+// Maps locations to assigned support teams for request allocation
 const TeamsByLocation: Record<string, string[]> = {
   India: ["Education Cell AP", "Health Cell AP", "Legal Cell AP"],
   USA: ["NRI USA Education Team", "Legal Advisors USA"],
@@ -28,7 +30,9 @@ const TeamsByLocation: Record<string, string[]> = {
 };
 
 /* ---------------- COMPONENT ---------------- */
+// Admin dashboard for managing assistance/service requests: allocate teams, track status, resolve tickets
 export default function Assistance() {
+  // Service request data and filtering state
   const [data, setData] = useState<AssistanceItem[]>([]);
   const [selected, setSelected] =
     useState<"total" | "pending" | "resolved" | null>(null);
@@ -36,18 +40,22 @@ export default function Assistance() {
   const [loading, setLoading] = useState(false);
 
   /* -------- Modals -------- */
+  // Modal states for allocation form and description viewer
   const [allocateModalOpen, setAllocateModalOpen] = useState(false);
   const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
 
+  // Currently selected request and form fields for allocation
   const [selectedRequest, setSelectedRequest] =
     useState<AssistanceItem | null>(null);
   const [descriptionText, setDescriptionText] = useState("");
 
+  // Form fields for resolving requests
   const [assignedTo, setAssignedTo] = useState("");
   const [actionTaken, setActionTaken] = useState("");
   const [comments, setComments] = useState("");
 
   /* ---------------- FETCH DATA ---------------- */
+  // Fetches all service requests from database, ordered by most recent first
   const fetchRequests = async () => {
     setLoading(true);
 
@@ -80,10 +88,12 @@ export default function Assistance() {
   }, []);
 
   /* ---------------- COUNTS ---------------- */
+  // Calculate request counts by status
   const total = data.length;
   const pending = data.filter((d) => d.status === "pending").length;
   const resolved = data.filter((d) => d.status === "resolved").length;
 
+  // Filter table data based on selected status
   const tableData =
     selected === "pending"
       ? data.filter((d) => d.status === "pending")
@@ -94,6 +104,7 @@ export default function Assistance() {
       : [];
 
   /* ---------------- HANDLERS ---------------- */
+  // Opens allocation form with current request details
   const openAllocationForm = (req: AssistanceItem) => {
     setSelectedRequest(req);
     setAllocateModalOpen(true);
@@ -102,6 +113,7 @@ export default function Assistance() {
     setComments(req.admin_comments || "");
   };
 
+  // Updates request status to resolved with team assignment and comments
   const handleResolve = async () => {
     if (!selectedRequest) return;
 
@@ -125,7 +137,7 @@ export default function Assistance() {
   /* ---------------- UI ---------------- */
   return (
     <div className="p-6">
-      {/* HEADER */}
+      {/* HEADER - Page title and description */}
       <h1 className="text-2xl font-bold text-[#1368d6] mb-1">
         Assistance Requests Overview
       </h1>
@@ -133,20 +145,21 @@ export default function Assistance() {
         Allocate and resolve NRI service requests efficiently.
       </p>
 
-      {/* STATS */}
+      {/* STATS CARDS - Total, Pending, and Resolved counts */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <StatCard title="Total Requests" value={total} onClick={() => setSelected("total")} />
         <StatCard title="Pending Requests" value={pending} onClick={() => setSelected("pending")} />
         <StatCard title="Resolved Requests" value={resolved} onClick={() => setSelected("resolved")} />
       </div>
 
-      {/* TABLE */}
+      {/* TABLE - Displays requests based on selected status filter */}
       {selected && (
         <div className="bg-white rounded-xl border shadow-sm p-6">
           <div className="flex justify-between mb-4">
             <h2 className="text-lg font-semibold text-[#1368d6] capitalize">
               {selected} Requests
             </h2>
+            {/* Close table view button */}
             <button
               onClick={() => setSelected(null)}
               className="text-sm px-3 py-1 border rounded"
@@ -157,6 +170,7 @@ export default function Assistance() {
 
           <div className="overflow-x-auto">
             <table className="min-w-full border rounded-lg text-sm">
+              {/* Table header with status columns */}
               <thead className="bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white">
                 <tr>
                   <th className="px-3 py-2 text-left">Name</th>
@@ -171,6 +185,7 @@ export default function Assistance() {
                 </tr>
               </thead>
 
+              {/* Table rows with request details */}
               <tbody>
                 {tableData.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-blue-50">
@@ -182,6 +197,7 @@ export default function Assistance() {
                     <td className="px-3 py-2">
                       {new Date(item.created_at).toLocaleDateString()}
                     </td>
+                    {/* Status with color coding: yellow for pending, green for resolved */}
                     <td
                       className={`px-3 py-2 font-medium ${
                         item.status === "pending"
@@ -192,7 +208,7 @@ export default function Assistance() {
                       {item.status}
                     </td>
 
-                    {/* DESCRIPTION VIEW */}
+                    {/* View request description in modal */}
                     <td className="px-3 py-2">
                       <button
                         className="text-blue-600 underline"
@@ -205,7 +221,7 @@ export default function Assistance() {
                       </button>
                     </td>
 
-                    {/* ACTION */}
+                    {/* Resolve button for pending requests or show assigned team */}
                     <td className="px-3 py-2">
                       {item.status === "pending" ? (
                         <button
@@ -225,6 +241,7 @@ export default function Assistance() {
               </tbody>
             </table>
 
+            {/* Loading indicator */}
             {loading && (
               <p className="text-center mt-4 text-gray-500">Loading...</p>
             )}
@@ -241,7 +258,7 @@ export default function Assistance() {
         </Modal>
       )}
 
-      {/* ALLOCATION MODAL */}
+      {/* ALLOCATION MODAL - Resolve and assign request to team */}
       {allocateModalOpen && selectedRequest && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-lg rounded-xl p-6 shadow-xl">
@@ -249,6 +266,7 @@ export default function Assistance() {
               <h3 className="text-lg font-semibold text-[#1368d6]">{`Resolve – ${selectedRequest.applicant_name}`}</h3>
               <button onClick={() => setAllocateModalOpen(false)} className="text-xl font-bold">×</button>
             </div>
+            {/* Team assignment dropdown */}
             <select
               className="w-full border p-2 rounded mb-3"
               value={assignedTo}
@@ -262,6 +280,7 @@ export default function Assistance() {
               )}
             </select>
 
+            {/* Action taken by team */}
             <input
               className="w-full border p-2 rounded mb-3"
               placeholder="Action Taken"
@@ -269,6 +288,7 @@ export default function Assistance() {
               onChange={(e) => setActionTaken(e.target.value)}
             />
 
+            {/* Admin notes and comments */}
             <textarea
               className="w-full border p-2 rounded mb-4"
               rows={3}
@@ -299,6 +319,7 @@ export default function Assistance() {
 }
 
 /* ---------------- REUSABLE MODAL ---------------- */
+// Generic modal component for displaying content with title and close button
 function Modal({
   title,
   children,
@@ -332,6 +353,7 @@ function Modal({
 }
 
 /* ---------------- CARD ---------------- */
+// Stat card component displaying request count with view/hide toggle button
 function StatCard({
   title,
   value,

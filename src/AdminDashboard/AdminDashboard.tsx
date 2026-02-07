@@ -51,6 +51,7 @@ import {
 } from "recharts";
 
 /* ---------- CONFIG ---------- */
+// Supabase table storing member profile data
 const TABLE_NAME = "profiles";
 
 const CONTINENTS = [
@@ -87,12 +88,11 @@ type Row = {
   created_at?: string | null;
 };
 
+// Type for grouping geographic data with counts
 type Bucket = { name: string; count: number };
 
 /* ---------- Helpers ---------- */
-// Moved inside component
-
-// Helper function to calculate age from date of birth
+// Calculates age from DOB, returns "-" if invalid
 const calculateAge = (dob: string | null | undefined): number | string => {
   if (!dob) return "-";
   try {
@@ -109,7 +109,7 @@ const calculateAge = (dob: string | null | undefined): number | string => {
   }
 };
 
-// Helper function to export data to Excel
+// Exports member data to Excel with formatted columns and auto-fit widths
 const exportToExcel = (data: any[], filename: string = "registrations.xlsx") => {
   const exportData = data.map((row: any) => ({
     "Full Name": row.full_name || "-",
@@ -143,12 +143,15 @@ const exportToExcel = (data: any[], filename: string = "registrations.xlsx") => 
 };
 
 /* ---------- Sidebar ---------- */
+// Navigation sidebar with admin menu (Profile, Logout) and page links
 function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLogout: () => void; current: string; setCurrentPage: (p: string) => void; isOpen: boolean; onToggle: () => void }) {
   const navigate = useNavigate();
+  // State for dropdown menus
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
   const [showProfile, setShowProfile] = React.useState(false);
   const profileMenuRef = React.useRef<HTMLDivElement>(null);
 
+  // Close profile menu when clicking outside
   React.useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
@@ -159,6 +162,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Reusable sidebar menu item component
   const Item = ({ icon: Icon, label, page }: { icon: React.ComponentType<any>; label: string; page: string }) => (
     <div
       onClick={() => {
@@ -261,15 +265,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
           </nav>
         </div>
 
-        {/* <div className="sticky bottom-0 p-4 border-t border-blue-100 bg-white">
-          <button
-            onClick={onLogout}
-            className="w-full inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white px-4 py-2 rounded-lg shadow-md hover:opacity-95 transition-all duration-150"
-          >
-            <LogOut size={16} />
-            <span className="font-medium">Logout</span>
-          </button>
-        </div> */}
+        
       </aside>
 
       {/* Profile Modal */}
@@ -280,6 +276,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
 
 
 /* ---------- Cards ---------- */
+// Card component displaying registration count with drill-down capability
 function StatCard({
   title,
   value,
@@ -306,16 +303,8 @@ function StatCard({
     </div>
   );
 }
-/* ---------- State Members Table ---------- */
-/* ---------- State Members Table (with Pagination) ---------- */
-function StateMembersTable({ country, onBack }: { country: string; onBack: () => void }) {
-  // This component was previously querying supabase directly. To simplify
-  // rendering and avoid nested imports/parse issues, the dashboard will pass
-  // the members list to display. Keep this component as a presentational
-  // pagination table that expects `members` to be provided by the parent.
-  return null;
-}
-
+/* ---------- Paginated Members Table ---------- */
+// Displays paginated list of members (8 per page) with drill-down navigation
 function MembersList({
   title,
   members,
@@ -325,6 +314,7 @@ function MembersList({
   members: Row[];
   onBack: () => void;
 }) {
+  // Pagination state: 8 members per page
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const start = (page - 1) * pageSize;
@@ -414,30 +404,32 @@ function MembersList({
 }
 
 
-/* ---------- Main ---------- */
+/* ---------- Main Dashboard ---------- */
+// Main admin dashboard with geographic drill-down, charts, and session timeout protection
 export default function AdminDashboard() {
+  // Dashboard state
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string>("");
-  const [selectedContinent, setSelectedContinent] = useState<string | null>(
-    null
-  );
+  const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [countryContinentMap, setCountryContinentMap] = useState<Record<string, string>>({});
   
-  // Idle session timeout state
+  // Auto-logout after 2 minutes inactivity (shows warning at 1.5 min)
   const idleTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const warningTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [showIdleWarning, setShowIdleWarning] = useState(false);
   const IDLE_TIME_LIMIT = 2 * 60 * 1000; // 2 minutes in milliseconds
   const WARNING_TIME = 1.5 * 60 * 1000; // Show warning at 1.5 minutes
 
+  // String normalization helpers
   const norm = (v: string | null | undefined) => (v || "").trim();
   const toContinent = (country: string) =>
     countryContinentMap[normalizeCountry(country)] || "Unknown";
 
+  // Normalize country names for consistent lookup
   const normalizeCountry = (value: string) =>
     value
       .toLowerCase()
@@ -445,7 +437,7 @@ export default function AdminDashboard() {
       .replace(/\s+/g, " ")
       .trim();
 
-  // Reset idle timer on user activity
+  // Reset session timeout on user activity
   const resetIdleTimer = () => {
     // Clear previous timers
     if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
@@ -463,7 +455,7 @@ export default function AdminDashboard() {
     }, IDLE_TIME_LIMIT);
   };
 
-  // Setup activity listeners on mount
+  // Track user activity to auto-logout after 2 minutes of inactivity
   useEffect(() => {
     const events = ["mousedown", "keydown", "scroll", "touchstart", "click"];
 
@@ -489,6 +481,7 @@ export default function AdminDashboard() {
     };
   }, []);
 
+  // Groups member records by continent/country/state with counts
   function group(rows: Row[], key: "continent" | "country" | "state"): Bucket[] {
     const map = new Map<string, number>();
     for (const r of rows) {
@@ -510,6 +503,7 @@ export default function AdminDashboard() {
   }
 
   const navigate = useNavigate();
+  // Fetch country-to-continent mapping for geographic grouping
   useEffect(() => {
   let active = true;
 
@@ -547,14 +541,14 @@ export default function AdminDashboard() {
 }, []);
 
 
+  // Fetch all member profiles using pagination (1000 rows per batch)
   useEffect(() => {
     let active = true;
     (async () => {
       setLoading(true);
       setErr("");
 
-      // Supabase/PostgREST commonly caps single requests (often at 1000 rows).
-      // To reliably fetch large datasets we page using `.range()` in batches.
+      // Batch fetch: Supabase caps requests at ~1000 rows, so paginate through dataset
       const batchSize = 1000;
       let offset = 0;
       const allRows: Row[] = [];
@@ -596,6 +590,7 @@ export default function AdminDashboard() {
     };
   }, []);
 
+  // Memoized continent buckets for initial dashboard view
   const continentBuckets = useMemo(() => {
     const g = group(rows, "continent");
     const map = new Map(g.map((b) => [b.name, b.count]));
@@ -604,6 +599,7 @@ export default function AdminDashboard() {
     );
   }, [rows]);
 
+  // Memoized country buckets filtered by selected continent
   const countryBuckets = useMemo(() => {
     if (!selectedContinent) return [];
     const filtered = rows.filter(
@@ -614,6 +610,7 @@ export default function AdminDashboard() {
 
   // No more state-level grouping: we directly show members for a country
 
+  // Logout handler: clears session and redirects to home
   const handleLogout = () => {
     // Clear all timers
     if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
@@ -624,12 +621,14 @@ export default function AdminDashboard() {
     navigate("/", { replace: true });
   };
 
+  // Determine chart data based on current drill-down level
   const chartData = selectedContinent
     ? selectedCountry
       ? []
       : countryBuckets
     : continentBuckets;
 
+  // Color palette for charts
   const COLORS = [
     "#1368d6",
     "#16a34a",
@@ -855,7 +854,9 @@ export default function AdminDashboard() {
 /* ===============================
    ADMIN PROFILE MODAL
 ================================ */
+// Modal for editing admin profile (Name, Mobile, WhatsApp)
 function AdminProfileModal({ onClose }: { onClose: () => void }) {
+  // Get admin profile from auth context
   const { profile, refreshProfile } = useAuth();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -865,6 +866,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
     whatsapp_number: "",
   });
 
+  // Populate form with current profile data
   useEffect(() => {
     if (profile) {
       setForm({
@@ -876,6 +878,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
     }
   }, [profile]);
 
+  // Save profile changes to database
   const updateProfile = async () => {
     if (!profile?.id) return;
     setSaving(true);

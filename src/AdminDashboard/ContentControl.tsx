@@ -29,10 +29,12 @@ type BannerItem = {
 /* =====================================================
    COMPONENT
 ===================================================== */
+// Admin interface for managing live links, gallery images, and homepage banners
 export default function ContentControl() {
   /* =====================================================
      ADMIN AUTO AUTH (🔥 VERY IMPORTANT)
   ===================================================== */
+  // Ensure admin authentication, auto-login if session missing
   useEffect(() => {
     const ensureAdminAuth = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -62,8 +64,10 @@ export default function ContentControl() {
   /* =====================================================
      LIVE LINK
   ===================================================== */
+  // Store and manage press meet live broadcast URL
   const [liveLink, setLiveLink] = useState("");
 
+  // Fetch active live link from database on component mount
   useEffect(() => {
     const fetchLiveLink = async () => {
       const { data, error } = await supabase
@@ -83,6 +87,7 @@ export default function ContentControl() {
     fetchLiveLink();
   }, []);
 
+  // Update live link in database
   const saveLiveLink = async () => {
     if (!liveLink.trim()) {
       alert("Live link cannot be empty");
@@ -109,9 +114,11 @@ export default function ContentControl() {
   /* =====================================================
      GALLERY
   ===================================================== */
+  // Store gallery images with visibility state
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Fetch all gallery images from database
   const fetchGallery = async () => {
     const { data, error } = await supabase
       .from("gallery_images")
@@ -132,6 +139,7 @@ export default function ContentControl() {
     );
   };
 
+  // Load gallery on component mount
   useEffect(() => {
     fetchGallery();
   }, []);
@@ -181,6 +189,7 @@ export default function ContentControl() {
     fetchGallery();
   };
 
+  // Toggle image visibility without deleting
   const toggleGalleryVisibility = async (id: string, current: boolean) => {
     await supabase
       .from("gallery_images")
@@ -194,6 +203,7 @@ export default function ContentControl() {
     );
   };
 
+  // Remove gallery image from database
   const deleteGalleryItem = async (id: string) => {
     await supabase.from("gallery_images").delete().eq("id", id);
     setGallery((prev) => prev.filter((g) => g.id !== id));
@@ -202,9 +212,11 @@ export default function ContentControl() {
   /* =====================================================
      BANNERS
   ===================================================== */
+  // Store homepage banners with title and visibility state
   const [banners, setBanners] = useState<BannerItem[]>([]);
   const bannerInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Fetch all homepage banners from database
   const fetchBanners = async () => {
     const { data, error } = await supabase
       .from("homepage_banners")
@@ -226,6 +238,7 @@ export default function ContentControl() {
     );
   };
 
+  // Load banners on component mount
   useEffect(() => {
     fetchBanners();
   }, []);
@@ -267,6 +280,7 @@ export default function ContentControl() {
     fetchBanners();
   };
 
+  // Toggle banner visibility without deleting
   const toggleBannerVisibility = async (id: string, current: boolean) => {
     await supabase
       .from("homepage_banners")
@@ -280,6 +294,7 @@ export default function ContentControl() {
     );
   };
 
+  // Remove banner from database
   const deleteBanner = async (id: string) => {
     await supabase.from("homepage_banners").delete().eq("id", id);
     setBanners((prev) => prev.filter((b) => b.id !== id));
@@ -288,12 +303,14 @@ export default function ContentControl() {
   /* =====================================================
      EDIT BANNER MODAL
   ===================================================== */
+  // Modal state for editing banner title
   const [editModal, setEditModal] = useState<{
     open: boolean;
     id: string | null;
     title: string;
   }>({ open: false, id: null, title: "" });
 
+  // Update banner title in database
   const saveBannerTitle = async () => {
     if (!editModal.id) return;
 
@@ -309,6 +326,7 @@ export default function ContentControl() {
   /* =====================================================
      UI
   ===================================================== */
+  // Interface with sections for live link, gallery, and banners management
   return (
     <div className="p-4 sm:p-8">
       <h1 className="text-3xl font-bold text-[#1368d6] mb-6">

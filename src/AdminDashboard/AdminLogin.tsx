@@ -2,17 +2,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// Hardcoded admin credentials for development (replace with secure auth in production)
 const adminUser = {
   email: 'admin@example.com',
   password: 'Admin@123', // hardcoded for development
 };
 
+// Admin login form component with email and password validation
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  // const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+// Validates credentials and sets admin session on successful login
 const handleSubmit = (e: React.FormEvent) => {
   e.preventDefault();
   setError('');

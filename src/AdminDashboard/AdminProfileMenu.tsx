@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 /* ===============================
    ADMIN PROFILE MENU (TOP RIGHT)
 ================================ */
+// Dropdown menu component for admin profile, password change, and logout
 export default function AdminProfileMenu() {
   const [open, setOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -15,6 +16,7 @@ export default function AdminProfileMenu() {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
 
+  // Close menu when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -25,6 +27,7 @@ export default function AdminProfileMenu() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Clears admin session and redirects to home
   const handleLogout = async () => {
     try {
       await signOut();
@@ -38,7 +41,7 @@ export default function AdminProfileMenu() {
   return (
     <>
       <div className="relative" ref={ref}>
-        {/* Profile Icon */}
+        {/* Profile Icon Button */}
         <button
           onClick={() => setOpen(!open)}
           className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-gray-100 transition-all duration-200"
@@ -47,16 +50,11 @@ export default function AdminProfileMenu() {
             <User size={20} />
           </div>
           <div className="hidden md:block text-left pr-2">
-            {/* <p className="text-sm font-bold text-gray-800 leading-tight">
-              {profile?.first_name || "Admin"}
-            </p> */}
-            {/* <p className="text-[10px] text-green-600 font-semibold uppercase tracking-wider">
-              {profile?.role || "Administrator"}
-            </p> */}
+            
           </div>
         </button>
 
-        {/* Dropdown */}
+        {/* Dropdown Menu with options */}
         {open && (
           <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-fadeIn">
             <div className="px-5 py-4 bg-gradient-to-br from-blue-50 to-white border-b border-gray-100">
@@ -67,6 +65,7 @@ export default function AdminProfileMenu() {
             </div>
 
             <div className="p-2">
+              {/* My Profile button */}
               <button
                 onClick={() => {
                   setOpen(false);
@@ -80,6 +79,7 @@ export default function AdminProfileMenu() {
                 My Profile
               </button>
 
+              {/* Change Password button */}
               <button
                 onClick={() => navigate("/change-password")}
                 className="w-full px-4 py-2.5 text-sm font-medium flex items-center gap-3 text-gray-700 hover:bg-blue-50 hover:text-[#1368d6] rounded-xl transition-all"
@@ -92,6 +92,7 @@ export default function AdminProfileMenu() {
 
               <div className="my-1 border-t border-gray-100"></div>
 
+              {/* Logout button */}
               <button
                 onClick={handleLogout}
                 className="w-full px-4 py-2.5 text-sm font-medium flex items-center gap-3 text-red-600 hover:bg-red-50 rounded-xl transition-all"
@@ -115,9 +116,11 @@ export default function AdminProfileMenu() {
 /* ===============================
    ADMIN PROFILE MODAL
 ================================ */
+// Modal form for editing admin profile (Name, Mobile, WhatsApp)
 function AdminProfileModal({ onClose }: { onClose: () => void }) {
   const { profile, refreshProfile } = useAuth();
   const [saving, setSaving] = useState(false);
+  // Form state for editable profile fields
   const [form, setForm] = useState({
     first_name: "",
     email: "",
@@ -125,6 +128,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
     whatsapp_number: "",
   });
 
+  // Populate form with current profile data on modal open
   useEffect(() => {
     if (profile) {
       setForm({
@@ -136,6 +140,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
     }
   }, [profile]);
 
+  // Saves profile changes to database
   const updateProfile = async () => {
     if (!profile?.id) return;
     setSaving(true);
@@ -180,6 +185,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="p-8 space-y-5">
+          {/* Name field */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Name</label>
             <div className="relative">
@@ -195,6 +201,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
+          {/* Email field (read-only) */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email Address</label>
             <div className="relative">
@@ -209,6 +216,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
+          {/* Mobile Number field */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Mobile Number</label>
             <div className="relative">
@@ -224,6 +232,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
+          {/* WhatsApp Number field */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">WhatsApp Number</label>
             <div className="relative">
@@ -239,13 +248,16 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
+          {/* Cancel and Save buttons */}
           <div className="flex justify-end gap-3 pt-4">
+            {/* Cancel button */}
             <button
               onClick={onClose}
               className="px-6 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all"
             >
               Cancel
             </button>
+            {/* Save button with loading state */}
             <button
               onClick={updateProfile}
               disabled={saving}

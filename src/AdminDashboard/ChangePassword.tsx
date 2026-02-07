@@ -19,6 +19,7 @@ import {
    TYPES
 ============================================================================= */
 
+// Password strength levels: empty, very-weak, weak, medium, strong, very-strong
 type StrengthLevel =
   | "empty"
   | "very-weak"
@@ -27,19 +28,23 @@ type StrengthLevel =
   | "strong"
   | "very-strong";
 
+// Banner notification types: success, error, info, or hidden
 type BannerType = "success" | "error" | "info" | null;
 
+// Banner state with type and message
 type BannerState = {
   type: BannerType;
   message: string;
 };
 
+// Visibility toggle state for old, new, and confirm password fields
 type VisibilityState = {
   old: boolean;
   next: boolean;
   confirm: boolean;
 };
 
+// Password validation result with status and failure reasons
 type ValidationResult = {
   ok: boolean;
   reasons: string[];
@@ -49,8 +54,10 @@ type ValidationResult = {
    CONSTANTS
 ============================================================================= */
 
+// Minimum password length requirement
 const MIN_PASSWORD_LENGTH = 8;
 
+// Color mapping for password strength levels
 const STRENGTH_COLORS: Record<StrengthLevel, string> = {
   "empty": "bg-gray-200",
   "very-weak": "bg-red-500",
@@ -60,6 +67,7 @@ const STRENGTH_COLORS: Record<StrengthLevel, string> = {
   "very-strong": "bg-emerald-600",
 };
 
+// Readable labels for each strength level
 const STRENGTH_LABELS: Record<StrengthLevel, string> = {
   "empty": "Enter a password",
   "very-weak": "Very weak",
@@ -69,6 +77,7 @@ const STRENGTH_LABELS: Record<StrengthLevel, string> = {
   "very-strong": "Very strong",
 };
 
+// Common passwords to block (discourage weak/predictable choices)
 const COMMON_PASSWORDS = new Set<string>([
   "password",
   "password123",
@@ -83,22 +92,27 @@ const COMMON_PASSWORDS = new Set<string>([
    HELPER FUNCTIONS
 ============================================================================= */
 
+// Checks if password contains at least one uppercase letter
 function hasUppercase(v: string) {
   return /[A-Z]/.test(v);
 }
 
+// Checks if password contains at least one lowercase letter
 function hasLowercase(v: string) {
   return /[a-z]/.test(v);
 }
 
+// Checks if password contains at least one number
 function hasNumber(v: string) {
   return /\d/.test(v);
 }
 
+// Checks if password contains at least one special character
 function hasSpecial(v: string) {
   return /[^A-Za-z0-9]/.test(v);
 }
 
+// Calculates password strength based on length, character variety, and common passwords
 function calculateStrength(password: string): StrengthLevel {
   if (!password) return "empty";
 
@@ -122,6 +136,7 @@ function calculateStrength(password: string): StrengthLevel {
   return "very-strong";
 }
 
+// Validates new password against requirements: length, character types, match, common passwords
 function validateNewPassword(
   next: string,
   confirm: string
@@ -170,6 +185,7 @@ function validateNewPassword(
    SMALL PRESENTATIONAL COMPONENTS
 ============================================================================= */
 
+// Displays notification banner with icon (success/error/info)
 function Banner({ state }: { state: BannerState }) {
   if (!state.type) return null;
 
@@ -202,6 +218,7 @@ function Banner({ state }: { state: BannerState }) {
   );
 }
 
+// Password input field with show/hide toggle and custom styling
 function PasswordInput({
   label,
   value,
@@ -246,6 +263,7 @@ function PasswordInput({
   );
 }
 
+// Visual strength indicator showing password quality via colored bar segments
 function StrengthMeter({ password }: { password: string }) {
   const strength = calculateStrength(password);
 
@@ -286,6 +304,7 @@ function StrengthMeter({ password }: { password: string }) {
    MAIN COMPONENT
 ============================================================================= */
 
+// Admin password change form with validation, strength meter, and re-authentication
 export default function ChangePassword() {
   const navigate = useNavigate();
   const [oldPassword, setOldPassword] = useState("");
@@ -340,6 +359,7 @@ export default function ChangePassword() {
      HANDLERS
   --------------------------------------------------------------------------- */
 
+  // Toggle visibility for password fields (show/hide text)
   const toggleVisibility = useCallback(
     (key: keyof VisibilityState) => {
       setVisibility((v) => ({ ...v, [key]: !v[key] }));
@@ -354,11 +374,15 @@ export default function ChangePassword() {
     setVisibility({ old: false, next: false, confirm: false });
   };
 
+
+
+  // Sign out user and redirect to home page
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = "/";
   };
 
+  // Validate old password, update with new password, then reset form or show error
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
@@ -425,6 +449,7 @@ export default function ChangePassword() {
      RENDER
   --------------------------------------------------------------------------- */
 
+  // UI with password fields, strength meter, validation feedback, and submit/cancel buttons
   return (
     <div className="max-w-2xl mx-auto mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm p-8 relative">
       {/* Back Button */}

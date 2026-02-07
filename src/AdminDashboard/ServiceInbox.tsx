@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
+// Service request structure with applicant details and status
 type ServiceRequest = {
   id: number;
   user_id: string;
@@ -22,6 +23,7 @@ type ServiceRequest = {
   created_at: string;
 };
 
+// Return appropriate icon based on service type
 const serviceIcon = (type: string) => {
   switch (type.toLowerCase()) {
     case "student":
@@ -35,12 +37,17 @@ const serviceIcon = (type: string) => {
   }
 };
 
+// Admin interface for viewing and managing service requests
 export default function ServiceInbox() {
+  // List of service requests
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  // Data loading state
   const [loading, setLoading] = useState(true);
+  // Active filter (all, pending, approved, rejected)
   const [filter, setFilter] = useState<string>("all");
 
   /* ================= FETCH REQUESTS ================= */
+  // Load all service requests from database
   const fetchRequests = async () => {
     setLoading(true);
 
@@ -58,11 +65,13 @@ export default function ServiceInbox() {
     setLoading(false);
   };
 
+  // Load requests on component mount
   useEffect(() => {
     fetchRequests();
   }, []);
 
   /* ================= UPDATE STATUS ================= */
+  // Update request status and refresh list
   const updateStatus = async (id: number, status: string) => {
     const { error } = await supabase
       .from("service_requests")
@@ -78,12 +87,14 @@ export default function ServiceInbox() {
   };
 
   /* ================= FILTER ================= */
+  // Filter requests by selected status
   const filteredRequests =
     filter === "all"
       ? requests
       : requests.filter((r) => r.status === filter);
 
   /* ================= UI ================= */
+  // Display requests with filter dropdown and action buttons on pending items
   return (
     <div className="bg-white rounded-xl border shadow-sm p-6">
       <div className="flex justify-between items-center mb-6">

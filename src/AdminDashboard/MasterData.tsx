@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 /* ======================================================
    TYPES
 ====================================================== */
+// Master leader information with name, contact, and active status
 type LeaderMaster = {
   id: string;
   name: string;
@@ -12,6 +13,7 @@ type LeaderMaster = {
   is_active: boolean;
 };
 
+// Leader role assignment to specific district and constituency
 type LeaderAssignment = {
   id: string;
   leader_id: string;
@@ -25,22 +27,27 @@ type LeaderAssignment = {
 /* ======================================================
    COMPONENT
 ====================================================== */
+// Admin interface for managing local leaders and their role assignments
 export default function MasterData() {
   /* ---------------- FILTERS ---------------- */
+  // selected district, constituency, and role filters
   const [district, setDistrict] = useState("");
   const [constituency, setConstituency] = useState("");
   const [role, setRole] = useState("");
 
   /* ---------------- DATA ---------------- */
+  // Available districts, constituencies, and filtered leader assignments
   const [districts, setDistricts] = useState<string[]>([]);
   const [constituencies, setConstituencies] = useState<string[]>([]);
   const [assignments, setAssignments] = useState<LeaderAssignment[]>([]);
 
   /* ---------------- MODAL ---------------- */
+  // Modal visibility and item being edited
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<LeaderAssignment | null>(null);
 
   /* ---------------- FORM ---------------- */
+  // Form fields for leader name, contact, role, and location
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [formRole, setFormRole] = useState("");
@@ -50,14 +57,17 @@ export default function MasterData() {
   /* ======================================================
      INITIAL LOAD
   ====================================================== */
+  // Load districts on component mount
   useEffect(() => {
     fetchDistricts();
   }, []);
 
+  // Fetch constituencies when district changes
   useEffect(() => {
     if (district) fetchConstituencies(district);
   }, [district]);
 
+  // Fetch assignments when district, constituency, or role changes
   useEffect(() => {
     if (district && constituency) fetchAssignments();
   }, [district, constituency, role]);
@@ -65,6 +75,7 @@ export default function MasterData() {
   /* ======================================================
      FETCH HELPERS
   ====================================================== */
+  // Get unique districts from database
   const fetchDistricts = async () => {
     const { data } = await supabase
       .from("leader_assignments")
@@ -75,6 +86,7 @@ export default function MasterData() {
     setDistricts([...new Set(data?.map((d) => d.district))]);
   };
 
+  // Get constituencies for selected district
   const fetchConstituencies = async (district: string) => {
     const { data } = await supabase
       .from("leader_assignments")
@@ -85,6 +97,7 @@ export default function MasterData() {
     setConstituencies([...new Set(data?.map((c) => c.constituency))]);
   };
 
+  // Fetch leader assignments filtered by district, constituency, and role
   const fetchAssignments = async () => {
     let query = supabase
       .from("leader_assignments")
@@ -117,6 +130,7 @@ export default function MasterData() {
   /* ======================================================
      MODAL OPEN
   ====================================================== */
+  // Initialize form for creating new leader assignment
   const openAddModal = () => {
     setEditItem(null);
     setName("");
@@ -127,6 +141,7 @@ export default function MasterData() {
     setShowModal(true);
   };
 
+  // Load form with existing leader data for editing
   const openEditModal = (item: LeaderAssignment) => {
     setEditItem(item);
     setName(item.leader.name);
@@ -140,6 +155,7 @@ export default function MasterData() {
   /* ======================================================
      SAVE
   ====================================================== */
+  // Create or update leader and assignment record in database
   const saveLeader = async () => {
     let leaderId = editItem?.leader.id;
 
@@ -184,6 +200,7 @@ export default function MasterData() {
   /* ======================================================
      DELETE (SAFE)
   ====================================================== */
+  // Mark assignment as inactive instead of permanent deletion
   const deleteAssignment = async (id: string) => {
     await supabase
       .from("leader_assignments")
@@ -196,6 +213,7 @@ export default function MasterData() {
   /* ======================================================
      UI
   ====================================================== */
+  // Interface with filters, table, and modal for leader management
   return (
     <div className="p-4 md:p-6">
       <h1 className="text-2xl md:text-3xl font-bold text-[#1368d6] mb-4 md:mb-6">
@@ -203,6 +221,7 @@ export default function MasterData() {
       </h1>
 
       {/* FILTERS */}
+     
      {/* FILTERS */}
 <div className="bg-white p-3 md:p-5 rounded-2xl border shadow-sm mb-6 overflow-visible">
   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 items-end overflow-visible">
@@ -275,6 +294,7 @@ export default function MasterData() {
 </div>
 
 
+      
       {/* TABLE */}
       {!district || !constituency ? (
         <div className="text-gray-500 text-center py-10">
@@ -353,6 +373,7 @@ export default function MasterData() {
       )}
 
       {/* MODAL */}
+     { /* Form for creating new leader or editing existing assignment*/}
       {showModal && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-2xl p-4 md:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">

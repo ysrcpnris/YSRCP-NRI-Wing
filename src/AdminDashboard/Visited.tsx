@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 /* =======================
    TYPES
 ======================= */
+// NRI visit record with visitor details and visit information
 type Visit = {
   id: string;
   visitor_name: string;
@@ -18,17 +19,25 @@ type Visit = {
 /* =======================
    MAIN COMPONENT
 ======================= */
+// Admin interface for managing NRI visits with CM
 export default function Visited() {
+  // List of all visits
   const [visits, setVisits] = useState<Visit[]>([]);
+  // Data loading state
   const [loading, setLoading] = useState(true);
 
+  // Current view mode (none, all visitors, today only)
   const [view, setView] = useState<"none" | "all" | "today">("none");
+  // Current page number for pagination
   const [page, setPage] = useState(1);
 
+  // Form modal state and visit being edited
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
+  // Purposes view modal for showing all visits of a person
   const [purposesModalOpen, setPurposesModalOpen] = useState(false);
   const [selectedPersonVisits, setSelectedPersonVisits] = useState<Visit[]>([]);
+  // Edit/delete purposes modal states
   const [editingPurposesEmail, setEditingPurposesEmail] = useState<string | null>(null);
   const [deletingPurposesEmail, setDeletingPurposesEmail] = useState<string | null>(null);
 
@@ -37,6 +46,7 @@ export default function Visited() {
   /* =======================
      FETCH VISITS
   ======================= */
+  // Load all visits from database
   const fetchVisits = async () => {
     setLoading(true);
 
@@ -51,6 +61,7 @@ export default function Visited() {
     setLoading(false);
   };
 
+  // Load visits on component mount
   useEffect(() => {
     fetchVisits();
   }, []);
@@ -58,6 +69,7 @@ export default function Visited() {
   /* =======================
      VISIT COUNT (EMAIL)
   ======================= */
+  // Count visits per email
   const visitCountByEmail = visits.reduce<Record<string, number>>(
     (acc, visit) => {
       if (!visit.email) return acc;
@@ -70,6 +82,7 @@ export default function Visited() {
   /* =======================
      GROUP VISITS BY EMAIL
   ======================= */
+  // Group visits by visitor email
   const groupedByEmail = visits.reduce<Record<string, Visit[]>>((acc, visit) => {
     if (!visit.email) return acc;
     if (!acc[visit.email]) acc[visit.email] = [];
@@ -77,6 +90,7 @@ export default function Visited() {
     return acc;
   }, {});
 
+  // Unique persons with aggregated visit data
   const uniquePersons = Object.entries(groupedByEmail).map(([email, visitsForPerson]) => {
     const latestVisit = visitsForPerson[0]; // First one (ordered by desc date)
     const purposes = visitsForPerson.map(v => v.purpose).filter(Boolean);
@@ -95,8 +109,10 @@ export default function Visited() {
   /* =======================
      DERIVED DATA
   ======================= */
+  // Today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0];
   const todayVisits = visits.filter(v => v.visit_date === today);
+  // Today's unique visitors
   const todayPersons = Object.entries(groupedByEmail).reduce<typeof uniquePersons>((acc, [email, visitsForPerson]) => {
     if (visitsForPerson.some(v => v.visit_date === today)) {
       const latestVisit = visitsForPerson[0];
@@ -115,11 +131,15 @@ export default function Visited() {
     return acc;
   }, []);
 
+  // Determine which persons to display based on view mode
   const personsToShow = view === "today" ? todayPersons : uniquePersons;
+  // Paginate persons list
   const start = (page - 1) * pageSize;
   const paginated = personsToShow.slice(start, start + pageSize);
+  // Total pages for pagination
   const totalPages = Math.ceil(personsToShow.length / pageSize);
 
+  // Switch view and reset pagination
   const handleViewChange = (v: "none" | "all" | "today") => {
     setView(v);
     setPage(1);
@@ -128,6 +148,7 @@ export default function Visited() {
   /* =======================
      DELETE ALL VISITS FOR EMAIL
   ======================= */
+  // Trigger delete modal for all purposes/visits of a person
   const handleDeleteAll = async (email: string) => {
     setDeletingPurposesEmail(email);
   };
@@ -135,6 +156,7 @@ export default function Visited() {
   /* =======================
      SAVE PURPOSES
   ======================= */
+  // Update purposes for a visitor (combine and save to first visit)
   const handleSavePurposes = async (email: string, newPurposes: string[]) => {
     // Get all visits for this email
     const visitsForEmail = groupedByEmail[email] || [];
@@ -158,6 +180,7 @@ export default function Visited() {
   /* =======================
      SAVE
   ======================= */
+  // Create or update visit record in database
   const handleSaveVisit = async (form: Visit) => {
     if (editingVisit) {
       await supabase.from("nri_visits").update(form).eq("id", editingVisit.id);
@@ -175,6 +198,7 @@ export default function Visited() {
   /* =======================
      FORM MODAL
   ======================= */
+  // Modal form for adding or editing visit
   const VisitForm = ({ visit }: { visit: Visit | null }) => {
     const [form, setForm] = useState<Visit>(
       visit || {
@@ -265,6 +289,7 @@ export default function Visited() {
   /* =======================
      UI
   ======================= */
+  // Header, stats cards, visits table, and modal overlays
   return (
     <div className="p-8">
       <div className="flex justify-between items-center">
@@ -349,6 +374,7 @@ export default function Visited() {
 /* =======================
    EDIT PURPOSES MODAL
 ======================= */
+// Modal for editing individual purposes for a visitor
 function EditPurposesModal({ email, allVisits, onSaved, onClose }: { email: string; allVisits: Visit[]; onSaved: () => void; onClose: () => void }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
@@ -436,6 +462,7 @@ function EditPurposesModal({ email, allVisits, onSaved, onClose }: { email: stri
 /* =======================
    DELETE PURPOSES MODAL
 ======================= */
+// Modal for deleting visit records for a visitor
 function DeletePurposesModal({ email, allVisits, onDeleted, onClose }: { email: string; allVisits: Visit[]; onDeleted: () => void; onClose: () => void }) {
   const handleDeletePurpose = async (visitId: string) => {
     if (!window.confirm("Delete this purpose and its visit record?")) return;
@@ -487,6 +514,7 @@ function DeletePurposesModal({ email, allVisits, onDeleted, onClose }: { email: 
 /* =======================
    PURPOSES MODAL
 ======================= */
+// Modal displaying all visits for a selected person
 function PurposesModal({ visits, onClose }: { visits: Visit[]; onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -533,6 +561,7 @@ function PurposesModal({ visits, onClose }: { visits: Visit[]; onClose: () => vo
 /* =======================
    STAT CARD
 ======================= */
+// Card displaying visitor count statistic with toggle button
 function StatCard({
   title,
   value,

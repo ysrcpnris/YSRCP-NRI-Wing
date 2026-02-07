@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
+// Suggestion submission structure with user info and feedback
 type Suggestion = {
   id: number;
   name: string;
@@ -9,8 +10,10 @@ type Suggestion = {
   suggestion: string;
 };
 
+// Placeholder suggestions array (not used, actual data from database)
 const dummySuggestions: Suggestion[] = [];
 
+// Custom hook to fetch suggestions from database
 // live suggestions state (fetched from Supabase)
 // we keep the variable name `dummySuggestions` only where UI references it
 // but populate `suggestions` and use that in rendering below.
@@ -50,6 +53,7 @@ const useFetchSuggestions = () => {
   return { suggestions, loading };
 };
 
+// Display suggestion count with view action button
 function StatCard({
   title,
   value,
@@ -79,7 +83,7 @@ function StatCard({
   );
 }
 
-// Modal Component for displaying full suggestion
+// Modal overlay displaying full suggestion text with metadata
 function SuggestionModal({
   suggestion,
   onClose,
@@ -123,13 +127,16 @@ function SuggestionModal({
   );
 }
 
+// Admin interface displaying suggestions overview with expandable table
 export default function Suggestions() {
+  // Toggle table visibility
   const [showTable, setShowTable] = useState(false);
+  // Currently selected suggestion for modal display
   const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
   const { suggestions } = useFetchSuggestions();
   const totalSuggestions = suggestions.length;
 
-  // Truncate text to specified length
+  // Shorten text to specified length with ellipsis
   const truncateText = (text: string, maxLength: number = 80) => {
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
   };

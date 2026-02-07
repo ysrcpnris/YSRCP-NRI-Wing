@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Plus, Edit3, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
+// Notification item structure with title, content, and delivery status
 type NotificationItem = {
   id: string;
   title: string;
@@ -9,19 +10,26 @@ type NotificationItem = {
   status: "Draft" | "Sent";
 };
 
+// Admin interface for creating and managing event notifications
 export default function EventsNotifications() {
+  // List of notification items
   const [events, setEvents] = useState<NotificationItem[]>([]);
+  // Modal visibility state
   const [modalOpen, setModalOpen] = useState(false);
+  // Current item being edited (null if creating new)
   const [editItem, setEditItem] = useState<NotificationItem | null>(null);
 
+  // Form field states for notification title, content, and status
   const [title, setTitle] = useState("");
   const [info, setInfo] = useState("");
   const [status, setStatus] = useState<"Draft" | "Sent">("Draft");
 
+  // Load all notifications on component mount
   useEffect(() => {
     fetchEvents();
   }, []);
 
+  // Fetch all notifications from database
   const fetchEvents = async () => {
     const { data } = await supabase
       .from("events")
@@ -31,6 +39,7 @@ export default function EventsNotifications() {
     setEvents(data || []);
   };
 
+  // Prepare form for creating new or editing existing notification
   const openModal = (item?: NotificationItem) => {
     setEditItem(item || null);
     setTitle(item?.title || "");
@@ -39,6 +48,7 @@ export default function EventsNotifications() {
     setModalOpen(true);
   };
 
+  // Create new or update existing notification in database
   const saveEvent = async () => {
     if (!title || !info) return;
 
@@ -55,6 +65,7 @@ export default function EventsNotifications() {
     fetchEvents();
   };
 
+  // Remove notification from database
   const deleteEvent = async (id: string) => {
     await supabase.from("events").delete().eq("id", id);
     fetchEvents();
@@ -63,6 +74,7 @@ export default function EventsNotifications() {
  return (
   <div className="p-6">
     {/* HEADER */}
+    {/* Page title and new notification button*/}
     <div className="flex justify-between items-center mb-6">
       <div>
         <h1 className="text-3xl font-bold text-[#1368d6]">
@@ -82,6 +94,7 @@ export default function EventsNotifications() {
     </div>
 
     {/* GRID */}
+    {/*Card grid displaying all notifications with edit/delete actions*/}
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {events.map((e) => (
         <div
@@ -132,7 +145,9 @@ export default function EventsNotifications() {
       ))}
     </div>
 
+
     {/* EMPTY STATE */}
+    
     {events.length === 0 && (
       <div className="text-center py-16 text-gray-500">
         No notifications created yet.
@@ -140,6 +155,7 @@ export default function EventsNotifications() {
     )}
 
     {/* MODAL */}
+    {/* Form modal for creating or editing notifications*/}
     {modalOpen && (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl">
