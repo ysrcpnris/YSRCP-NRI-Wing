@@ -148,7 +148,7 @@ useEffect(() => {
       return;
     }
 
-    window.location.href = "/dashboard";
+    window.location.href = "/";
   };
 
 //   if (loading) {

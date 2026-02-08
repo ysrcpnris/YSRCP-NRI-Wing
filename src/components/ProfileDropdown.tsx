@@ -16,7 +16,7 @@ interface ProfileDropdownProps {
 }
 
 export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => {
-  const { signOut } = useAuth();
+  const { signOut,user } = useAuth();
   const navigate = useNavigate();
 
 
@@ -95,21 +95,27 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
   };
 
   const handleLogout = async () => {
-    await signOut();
-    window.location.href = '/';
-  };
+  setIsOpen(false);                 // close dropdown
+  navigate("/", { replace: true }); // instant redirect
+  await signOut();                  // backend cleanup
+};
 
-const fullName = (() => {
+const authFullName =
+  (user?.user_metadata?.full_name as string) ||
+  `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`.trim();
+
+const profileFullName = (() => {
   const first = profile?.first_name?.trim() || '';
   const last = profile?.last_name?.trim() || '';
 
-  // Prevent ""
-  if (!last || first.toLowerCase() === last.toLowerCase()) {
-    return first;
-  }
+  if (!first) return '';
+  if (!last || first.toLowerCase() === last.toLowerCase()) return first;
 
   return `${first} ${last}`;
 })();
+
+const fullName = profileFullName || authFullName || 'User';
+
 const initials =
   fullName
     .split(' ')

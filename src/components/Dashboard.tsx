@@ -4,6 +4,8 @@ import { Listbox } from "@headlessui/react";
 import { ProfileDropdown } from './ProfileDropdown';
 import nriLogo from './nrilogo.png';
 import { useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+
 
 /**
  * ═══════════════════════════════════════════════════════════════
@@ -17,97 +19,7 @@ import { useLocation } from "react-router-dom";
  */
 
 //Coontry → States → Cities
-const countryData: Record<
-  string,
-  { name: string; cities: string[] }[]
-> = {
-  USA: [
-    { name: 'California', cities: ['Los Angeles', 'San Francisco', 'San Diego', 'Sacramento'] },
-    { name: 'Texas', cities: ['Houston', 'Dallas', 'Austin', 'San Antonio'] },
-  ],
-  UK: [
-    { name: 'England', cities: ['London', 'Manchester', 'Liverpool'] },
-    { name: 'Scotland', cities: ['Edinburgh', 'Glasgow'] },
-  ],
-  Canada: [
-    { name: 'Ontario', cities: ['Toronto', 'Ottawa'] },
-    { name: 'British Columbia', cities: ['Vancouver', 'Surrey'] },
-  ],
-  UAE: [
-    { name: 'Dubai', cities: ['Dubai City', 'Jumeirah', 'Deira'] },
-    { name: 'Abu Dhabi', cities: ['Abu Dhabi City', 'Al Ain'] },
-  ],
-Singapore: [
-  {
-    name: "Central Region",
-    cities: [
-      "Orchard",
-      "Marina Bay",
-      "CBD",
-      "Tiong Bahru",
-      "Bukit Timah",
-      "Novena",
-      "Bishan",
-      "Toa Payoh",
-    ],
-  },
-  {
-    name: "East Region",
-    cities: [
-      "Tampines",
-      "Pasir Ris",
-      "Bedok",
-      "Changi",
-      "Simei",
-    ],
-  },
-  {
-    name: "West Region",
-    cities: [
-      "Jurong East",
-      "Jurong West",
-      "Bukit Batok",
-      "Bukit Panjang",
-      "Clementi",
-    ],
-  },
-  {
-    name: "North Region",
-    cities: [
-      "Woodlands",
-      "Yishun",
-      "Sembawang",
-      "Admiralty",
-    ],
-  },
-  {
-    name: "North-East Region",
-    cities: [
-      "Hougang",
-      "Sengkang",
-      "Punggol",
-      "Serangoon",
-    ],
-  },
-],
 
-
-  Netherlands: [
-  {
-    name: "North Holland",
-    cities: ["Amsterdam", "Haarlem", "Zaandam"],
-  },
-  {
-    name: "South Holland",
-    cities: ["Rotterdam", "The Hague", "Leiden"],
-  },
-  {
-    name: "Utrecht",
-    cities: ["Utrecht", "Amersfoort"],
-  },
-],
-
-};
 
 /**
  * ═══════════════════════════════════════════════════════════════
@@ -1299,6 +1211,12 @@ const AccordionItem = ({
 
 const Dashboard: React.FC = () => {
   const { user, refreshProfile, profile, signOut } = useAuth();
+
+  // 🔐 IMPORTANT: instant redirect after logout
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
   const [expandedSection, setExpandedSection] =
     useState<SectionKey | null>("profile");
 
@@ -1471,16 +1389,7 @@ useEffect(() => {
   fetchReferralCount();
 }, [profile?.id]);
 
-const normalizedCountry = profile?.country_of_residence
-  ?.trim()
-  .toLowerCase();
-const countryConfig = useMemo(() => {
-  if (!normalizedCountry) return undefined;
 
-  return Object.entries(countryData).find(
-    ([key]) => key.toLowerCase() === normalizedCountry
-  )?.[1];
-}, [normalizedCountry]);
 
 /**
  * ═══════════════════════════════════════════════════════════════
@@ -1640,9 +1549,42 @@ const roleOptions: Record<string, string[]> = {
    * - Enables communication with overseas members in their timezone
    */
 
-  const [countryOfResidence, setCountryOfResidence] = useState("India");
+
 const [stateAbroad, setStateAbroad] = useState("");
 const [cityAbroad, setCityAbroad] = useState("");
+const [countryOfResidence, setCountryOfResidence] = useState<string>("India");
+
+const [countries, setCountries] = useState<
+  {
+    code: string;
+    name: string;
+    phone: string | null;
+  }[]
+>([]);
+
+useEffect(() => {
+  const loadCountries = async () => {
+    const { data, error } = await supabase
+      .from("countries")
+      .select("code, name, phone")
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("Countries fetch error:", error);
+      return;
+    }
+
+    setCountries(data || []);
+  };
+
+  loadCountries();
+}, []);
+
+useEffect(() => {
+  if (profile?.country_of_residence) {
+    setCountryOfResidence(profile.country_of_residence);
+  }
+}, [profile?.country_of_residence]);
 
   /**
    * ═══════════════════════════════════════════════════════════════
@@ -1761,8 +1703,6 @@ useEffect(() => {
 useEffect(() => {
   if (!profile) return;
 
-  setCountryOfResidence(profile.country_of_residence || "India");
-
   if (profile.country_of_residence !== "India") {
     setStateAbroad(profile.state_abroad || "");
     setCityAbroad(profile.city_abroad || "");
@@ -1771,6 +1711,7 @@ useEffect(() => {
     setCityAbroad("");
   }
 }, [profile]);
+
 
 /**
  * ═══════════════════════════════════════════════════════════════
@@ -1991,7 +1932,8 @@ const handleSubmitService = async () => {
       .insert({
         user_id: user.id,
         applicant_name: fullName,
-        current_location: profile?.country_of_residence || "India",
+        current_location: countryOfResidence || "India",
+
         service_type: selectedService,
         service_category: selectedSub,
         service_option: selectedInner,
@@ -2267,9 +2209,6 @@ if (!district || !assembly) {
     setLeadersByRole(grouped);
   }
 }
-
-
-
 
       // =======================
       // 2.5 NRI COORDINATOR
@@ -2719,7 +2658,7 @@ role_designation: roleDesignation,
   updated_at: new Date().toISOString(),
 
   // 🌍 Abroad (current residence)
-  country_of_residence: profile?.country_of_residence || null,
+  country_of_residence: countryOfResidence || null,
   state_abroad: stateAbroad || profile?.state_abroad || null,
   city_abroad: cityAbroad || profile?.city_abroad || null,
 
@@ -2766,7 +2705,7 @@ const handleSubmitSuggestion = async () => {
 
     const { error } = await supabase.from("suggestions").insert({
       name: fullName,
-      country: profile?.country_of_residence || "India",
+      country: countryOfResidence || "India",
       suggestion: message,
       suggestion_date: new Date().toISOString().split("T")[0], // ✅ CORRECT
     });
@@ -2991,16 +2930,71 @@ const handleSubmitSuggestion = async () => {
   <label className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2 block">
     Current Residency
   </label>
+{/* 🌍 COUNTRY (FROM DB) */}
+<Listbox
+  value={countryOfResidence}
+  onChange={(value) => {
+    setCountryOfResidence(value);
 
-  {/* COUNTRY (read-only) */}
-  <div
-    className="w-full p-3 bg-gray-100 border border-gray-300 rounded-lg
-               text-sm font-bold text-gray-700 cursor-not-allowed"
-  >
-    {profile?.country_of_residence || "India"}
+    // reset dependent fields
+    if (value === "India") {
+      setStateAbroad("");
+      setCityAbroad("");
+    } else {
+      setIndianState("");
+      setDistrict("");
+      setAssembly("");
+      setMandal("");
+    }
+  }}
+>
+  <div className="relative">
+    <Listbox.Button
+      className="
+        w-full h-11 px-3
+        bg-gray-50 border border-gray-300 rounded-lg
+        flex items-center justify-between
+        text-left text-sm font-semibold text-gray-900
+        focus:bg-white focus:ring-2 focus:ring-indigo-500
+        outline-none
+      "
+    >
+      <span className="truncate">
+        {countryOfResidence || "Select Country"}
+      </span>
+      <ChevronDown size={18} className="text-gray-500" />
+    </Listbox.Button>
+
+    <Listbox.Options
+      className="
+        absolute z-50 mt-1 w-full
+        max-h-60 overflow-auto
+        rounded-lg bg-white
+        border border-gray-300
+        shadow-lg text-sm
+      "
+    >
+      {countries.map((c) => (
+        <Listbox.Option
+          key={c.code}
+          value={c.name}
+          className={({ active }) =>
+            `cursor-pointer px-3 py-2 ${
+              active ? "bg-indigo-100 text-indigo-900" : "text-gray-900"
+            }`
+          }
+        >
+          {c.name}
+        </Listbox.Option>
+      ))}
+    </Listbox.Options>
   </div>
+</Listbox>
+
+
 {/* 🌍 STATE + CITY (ONLY IF ABROAD) */}
-{profile?.country_of_residence !== "India" && (
+{countryOfResidence !== "India" && (
+
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
 
     {/* ===== STATE ===== */}
@@ -3810,7 +3804,7 @@ const renderServicesContent = () => (
                        text-xs font-bold"
           />
           <input
-            value={profile?.country_of_residence || "India"}
+            value={countryOfResidence || "India"}
             disabled
             className="w-full p-3 bg-gray-100 border rounded-lg
                        text-xs font-bold"
@@ -4012,7 +4006,7 @@ const renderSuggestionsContent = () => (
           Country
         </label>
         <input
-          value={profile?.country_of_residence || "India"}
+          value={countryOfResidence || "India"}
           disabled
           className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg
                      text-sm font-bold text-gray-600 cursor-not-allowed"
