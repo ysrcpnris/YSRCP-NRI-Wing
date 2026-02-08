@@ -6,12 +6,12 @@ type HeroProps = {
 
 const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
   const desktopSlides = [
-    { img: "/Slider/simg1.jpg" },
+    //{ img: "/Slider/simg1.jpg" },
     { img: "/Slider/simg2.jpg" },
-    { img: "/Slider/simg3.jpg" },
+    //{ img: "/Slider/simg3.jpg" },
     { img: "/Slider/simg4.jpg" },
-    { img: "/Slider/simg5.jpg" },
-    { img: "/Slider/simg6.jpeg" },
+    //{ img: "/Slider/simg5.jpg" },
+    //{ img: "/Slider/simg6.jpeg" },
   ];
 
   const mobileSlides = [{ img: "/Slider/msimg1.png" }];
