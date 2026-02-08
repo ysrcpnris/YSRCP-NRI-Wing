@@ -100,21 +100,31 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
   await signOut();                  // backend cleanup
 };
 
-const authFullName =
-  (user?.user_metadata?.full_name as string) ||
-  `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`.trim();
-
-const profileFullName = (() => {
-  const first = profile?.first_name?.trim() || '';
-  const last = profile?.last_name?.trim() || '';
-
-  if (!first) return '';
-  if (!last || first.toLowerCase() === last.toLowerCase()) return first;
-
-  return `${first} ${last}`;
+// Build full name with intelligent fallback chain
+const fullName = (() => {
+  // Primary: Use profile data
+  if (profile?.first_name) {
+    const last = profile.last_name && profile.last_name !== profile.first_name
+      ? ` ${profile.last_name}`
+      : '';
+    return `${profile.first_name}${last}`;
+  }
+  
+  if (profile?.last_name) {
+    return profile.last_name;
+  }
+  
+  // Secondary: Use auth metadata as fallback (profile might be null during token refresh)
+  const authFirst = (user?.user_metadata?.first_name as string) || '';
+  const authLast = (user?.user_metadata?.last_name as string) || '';
+  const authFull = (user?.user_metadata?.full_name as string) || '';
+  
+  if (authFirst && authLast) return `${authFirst} ${authLast}`;
+  if (authFirst) return authFirst;
+  if (authFull) return authFull;
+  
+  return 'User';
 })();
-
-const fullName = profileFullName || authFullName || 'User';
 
 const initials =
   fullName
