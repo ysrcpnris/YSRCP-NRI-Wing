@@ -38,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const initializingRef = useRef(true);
   const killingSessionRef = useRef(false);
-  const lastEventRef = useRef<string | null>(null);
 
   const clearAdminFlag = () => {
     localStorage.removeItem("is_admin");
@@ -192,15 +191,9 @@ if (!p) {
     await processReferralIfNeeded(session.user.id, p);
   };
 
-  const handleSession = async (session: Session | null, event?: string) => {
-    // If session is null but we just had a SIGNED_IN event, it's a token refresh
-    // Don't reset the profile - it will be re-fetched once session is available
+  const handleSession = async (session: Session | null) => {
     if (!session?.user) {
-      // Only reset state on explicit SIGNED_OUT or if initializing
-      if (event === 'SIGNED_OUT' || initializingRef.current) {
-        hardResetState();
-      }
-      // For token refresh (null session with SIGNED_IN event), keep profile cached
+      hardResetState();
       return;
     }
 
@@ -238,17 +231,14 @@ if (!p) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (initializingRef.current) return;
       if (!mounted) return;
-
-      // Track the event type to distinguish token refresh from logout
-      lastEventRef.current = event;
 
       // Handle auth changes in background without toggling the global
       // loading state — avoid showing the full-page loader when the
       // tab regains focus or the token refreshes.
-      void handleSession(session, event);
+      void handleSession(session);
     });
 
     return () => {
