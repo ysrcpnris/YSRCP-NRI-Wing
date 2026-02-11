@@ -8,6 +8,8 @@ import {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase, Profile } from "../lib/supabase";
+import { MESSAGES } from "../constants/messages";
+
 
 type AuthContextType = {
   user: User | null;
@@ -25,6 +27,8 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -48,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchProfile = async (userId: string) => {
+  try {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -58,9 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("fetchProfile error:", error);
       return null;
     }
-
-    return data;
-  };
+    return data as Profile | null;
+  } catch (err) {
+    console.error("fetchProfile unexpected error:", err);
+    return null;
+  }
+};
 
   const hardResetState = () => {
     setUser(null);
@@ -167,46 +175,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let p = await fetchProfile(session.user.id);
 
     // If profile not found, try to create it from auth user metadata (populated during signup)
-    if (!p) {
-      try {
-        const meta: any = session.user.user_metadata || {};
+ // If profile missing → block session
+if (!p) {
+  console.error("Profile missing for verified user");
+  await killUnverifiedSession();
+  return;
+}
 
-        const insertPayload: any = {
-          id: session.user.id,
-          email: session.user.email,
-          first_name: meta.first_name || meta.full_name || "",
-          last_name: meta.last_name || "",
-          full_name: meta.full_name || `${meta.first_name || ""} ${meta.last_name || ""}`.trim() || null,
-          mobile_number: meta.mobile_number || null,
-          whatsapp_number: meta.whatsapp_number || null,
-          country_of_residence: meta.country_of_residence || null,
-          indian_state: meta.indian_state || null,
-          district: meta.district || null,
-          assembly_constituency: meta.assembly_constituency || null,
-          mandal: meta.mandal || null,
-          city_abroad: meta.city_abroad || null,
-          state_abroad: meta.state_abroad || null,
-          profession: meta.profession || null,
-          organization: meta.organization || null,
-          designation: meta.designation || null,
-          contribution: meta.contribution || null,
-          referral_code: meta.referral_code || null,
-          role: meta.role || 'user',
-          auth_user_id: session.user.id,
-        };
-
-        const { error: insertErr } = await supabase.from('profiles').insert(insertPayload);
-        if (insertErr) {
-          // Log and continue — insertion may fail due to unique constraints or triggers
-          console.error('Failed to insert profile after verification:', insertErr);
-        } else {
-          // Refresh fetched profile
-          p = await fetchProfile(session.user.id);
-        }
-      } catch (e) {
-        console.error('Error creating profile after verification:', e);
-      }
-    }
+  
 
     setProfile(p);
     setAdminFlag(p);
@@ -349,27 +325,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await killUnverifiedSession();
   };
 
-  const signIn = async (email: string, password: string) => {
+const signIn = async (email: string, password: string) => {
+  const normalizedEmail = (email || "").trim().toLowerCase();
+
+  try {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: normalizedEmail,
       password,
     });
 
-    if (error) throw error;
+    // If auth returned an error (bad creds, rate limit, etc.)
+    if (error) {
+      // Best-effort: check profiles table to differentiate "not registered" from wrong credentials.
+      try {
+        const { data: profileByEmail, error: profErr } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", normalizedEmail)
+          .limit(1)
+          .maybeSingle();
 
-    const user = data.user;
+        if (!profErr && !profileByEmail) {
+          // No profile row for this email -> treat as not registered
+          throw new Error(MESSAGES.NOT_REGISTERED);
+        }
+      } catch (inner) {
+        // ignore inner errors, continue to generic wrong credentials
+      }
 
+      // If we reached here, treat as generic wrong credentials
+      throw new Error(MESSAGES.WRONG_CREDENTIALS);
+    }
+
+    const user = data?.user;
     if (!user) {
-      throw new Error("Login failed");
+      throw new Error(MESSAGES.WRONG_CREDENTIALS);
     }
 
+    // If email not confirmed
     if (!user.email_confirmed_at) {
-      await supabase.auth.signOut();
-      throw new Error("Please verify your email before logging in");
+      // sign out to clear session if any
+      try { await supabase.auth.signOut(); } catch (_) {}
+      throw new Error(MESSAGES.EMAIL_NOT_VERIFIED);
     }
 
+    // Ensure profiles row exists for this user id
+    const profileRow = await fetchProfile(user.id);
+    if (!profileRow) {
+      // sign out defensively
+      try { await supabase.auth.signOut(); } catch (_) {}
+      throw new Error(MESSAGES.REGISTRATION_INCOMPLETE);
+    }
+
+    // all good — return the auth response (caller will continue)
     return data;
-  };
+  } catch (err: any) {
+    // Distinguish network/timeouts vs other errors
+    if (err?.message?.includes("timed out") || err?.message === "Request timed out") {
+      throw new Error(MESSAGES.TIMEOUT);
+    }
+    if (err?.name === "AuthSessionMissingError") {
+      throw new Error(MESSAGES.GENERIC_ERROR);
+    }
+    // If it's already a user-friendly message, rethrow it
+    if (err instanceof Error && Object.values(MESSAGES).includes(err.message)) {
+      throw err;
+    }
+    // Otherwise wrap with generic network message if it's a fetch/network issue
+    if (err?.message?.toLowerCase().includes("network") || err?.message?.toLowerCase().includes("fetch")) {
+      throw new Error(MESSAGES.NETWORK_ERROR);
+    }
+
+    // fallback
+    throw new Error(err?.message || MESSAGES.GENERIC_ERROR);
+  }
+};
+
 
   const signOut = async () => {
     try {

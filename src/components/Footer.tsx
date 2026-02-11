@@ -64,7 +64,7 @@ const Footer: React.FC = () => {
     },
     {
       icon: Youtube,
-      url: "https://www.ysrcongress.com/",
+      url: "https://www.youtube.com/@ysrcpofficial",
     },
   ];
 

@@ -567,55 +567,102 @@ const handleSubmit = async (e: React.FormEvent) => {
   const withTimeout = <T,>(p: Promise<T>, ms = 15000): Promise<T> =>
     new Promise<T>((resolve, reject) => {
       const id = setTimeout(() => reject(new Error("Request timed out")), ms);
-      p.then((res) => {
-        clearTimeout(id);
-        resolve(res);
-      }).catch((err) => {
-        clearTimeout(id);
-        reject(err);
-      });
+      p
+        .then((res) => {
+          clearTimeout(id);
+          resolve(res);
+        })
+        .catch((err) => {
+          clearTimeout(id);
+          reject(err);
+        });
     });
 
   try {
-   if (mode === "signin") {
-  // 1 Sign in (AuthContext handles Supabase auth)
-  await withTimeout(
-    signIn(formData.email, formData.password),
-    15000
-  );
+    if (mode === "signin") {
+      // 1) attempt sign in (AuthContext.signIn handles auth & email verification checks)
+      // capture return value in case signIn returns session data
+      let signInResult: any = null;
+      try {
+        signInResult = await withTimeout(
+          signIn(formData.email, formData.password),
+          15000
+        );
+      } catch (err) {
+        // rethrow to outer catch so we unify error handling
+        throw err;
+      }
 
-  //  Get logged-in user (Supabase v2 way)
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+      // 2) Get current user (fallback if signIn didn't return user)
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    throw new Error("Unable to fetch user after login");
-  }
+      if (userError || !user) {
+        throw new Error("Login failed. Please try again.");
+      }
 
-  // 3 Fetch role from profiles (SAFE)
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle(); 
+      // 3) Extra safety: block if email not verified (signIn normally already checks this)
+      if (!user.email_confirmed_at) {
+        await supabase.auth.signOut();
+        throw new Error(
+          "Email not verified. Please check your inbox and click the verification link."
+        );
+      }
 
-  if (profileError) throw profileError;
+      // 4) Check profile existence (profile must exist for full registration)
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle(); // use maybeSingle to avoid throw when missing
 
-  onClose();
+      if (profileError) {
+        console.error("profiles lookup error:", profileError);
+        // Something went wrong on backend — don't reveal details to user
+        throw new Error("Something went wrong. Please try again later.");
+      }
 
-  //  Role-based redirect
-  if (profile?.role === "admin") {
-    navigate("/admin/dashboard");
-  } else {
-    navigate("/dashboard");
-  }
+      if (!profile) {
+        // ensure we clear session and block access
+        await supabase.auth.signOut();
+        throw new Error(
+          "Registration incomplete. Please complete signup or contact support."
+        );
+      }
 
-  return;
-}
+      // 5) Success → close modal & redirect based on role
+      onClose();
+
+      if (profile.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+
+      return;
+    }
 
     /* ================= SIGN UP ================= */
+    // Password rules (min 8, 1 uppercase, 1 number, 1 special char)
+    const passwordRulesRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+    if (!passwordRulesRegex.test(formData.password)) {
+      const pwMsg =
+        "Password must be at least 8 characters long and include one uppercase letter, one number, and one special character.";
+      toast.error(pwMsg, { position: "top-right", autoClose: 5000 });
+      setError(pwMsg);
+      setLoading(false);
+      return;
+    }
+    if (formData.password !== confirmPassword) {
+      const confMsg = "Password and Confirm Password must match.";
+      toast.error(confMsg, { position: "top-right", autoClose: 5000 });
+      setError(confMsg);
+      setLoading(false);
+      return;
+    }
+
     const profilePayload: Record<string, unknown> = {
       first_name: formData.first_name,
       last_name: formData.last_name,
@@ -658,8 +705,22 @@ const handleSubmit = async (e: React.FormEvent) => {
     setFormData((f) => ({ ...f, password: "" }));
     setConfirmPassword("");
   } catch (err: unknown) {
-    const msg =
-      err instanceof Error ? err.message : "Something went wrong";
+    // Map common errors to friendly messages for production
+    let msg = "Something went wrong. Please try again.";
+    if (err instanceof Error) {
+      const text = err.message || "";
+      if (text.includes("timed out") || text === "Request timed out") {
+        msg = "Request timed out. Please try again.";
+      } else if (
+        text.toLowerCase().includes("network") ||
+        text.toLowerCase().includes("failed to fetch")
+      ) {
+        msg = "Network error. Please check your connection and try again.";
+      } else {
+        // If the error is already user-friendly (from signIn/signUp), show it.
+        msg = text;
+      }
+    }
 
     toast.error(msg, { position: "top-right", autoClose: 5000 });
     setError(msg);

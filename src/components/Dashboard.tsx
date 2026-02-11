@@ -1535,6 +1535,13 @@ const roleOptions: Record<string, string[]> = {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+// 🔗 Profile section refs for Missing Info navigation
+const profilePhotoRef = useRef<HTMLDivElement | null>(null);
+const personalInfoRef = useRef<HTMLDivElement | null>(null);
+const residencyRef = useRef<HTMLDivElement | null>(null);
+const indianAddressRef = useRef<HTMLDivElement | null>(null);
+const professionalRef = useRef<HTMLDivElement | null>(null);
+const contributionRef = useRef<HTMLDivElement | null>(null);
 
   /**
    * ═══════════════════════════════════════════════════════════════
@@ -2395,7 +2402,15 @@ if (!profile.dob) {
 }
 
   const country = profile.country_of_residence?.trim().toLowerCase();
-const isIndia = true;
+const isIndia =
+  (countryOfResidence || profile.country_of_residence) === "India";
+// ✅ 1. Check Indian State FIRST
+if (!indianState) {
+  missing.push({
+    key: "state",
+    label: "Select State",
+  });
+}
 
 if (indianState) {
   if (!district)
@@ -2453,6 +2468,29 @@ if (!isIndia) {
   assembly,
   mandal,
 ]);
+const missingFieldToRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
+  photo: profilePhotoRef,
+  mobile: personalInfoRef,
+  dob: personalInfoRef,
+
+  state_abroad: residencyRef,
+  city_abroad: residencyRef,
+
+  district: indianAddressRef,
+  assembly: indianAddressRef,
+  mandal: indianAddressRef,
+
+  profession: professionalRef,
+  role: professionalRef,
+  company: professionalRef,
+
+  facebook: professionalRef,
+  twitter: professionalRef,
+  linkedin: professionalRef,
+  instagram: professionalRef,
+
+  contribution: contributionRef,
+};
 
 
 
@@ -2737,7 +2775,11 @@ const handleSubmitSuggestion = async () => {
         {/* Left Column: Progress & Stats */}
         <div className="lg:col-span-1 space-y-6">
           {/* Profile Photo Block */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm text-center">
+          <div
+  ref={profilePhotoRef}
+  className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm text-center"
+>
+
             <div className="w-28 h-28 mx-auto rounded-full overflow-hidden bg-gray-100 mb-3">
               {photoPreview ? (
                 <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
@@ -2841,7 +2883,7 @@ const handleSubmitSuggestion = async () => {
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 text-red-600">
               Missing Info
             </h4>
            <div className="space-y-2">
@@ -2851,13 +2893,26 @@ const handleSubmitSuggestion = async () => {
   </div>
 ) : (
   missingProfileFields.map((item) => (
-    <div
-      key={item.key}
-      onClick={() => setExpandedSection("profile")}
-      className="flex items-center justify-between p-2 bg-white
-                 border border-gray-200 rounded hover:border-indigo-300
-                 cursor-pointer transition-all"
-    >
+  <div
+    key={item.key}
+    onClick={() => {
+      // 1️⃣ Open Profile section
+      setExpandedSection("profile");
+
+      // 2️⃣ Scroll to exact section after it opens
+      setTimeout(() => {
+        const ref = missingFieldToRefMap[item.key];
+        ref?.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 200);
+    }}
+    className="flex items-center justify-between p-2 bg-white
+               border border-gray-200 rounded hover:border-indigo-300
+               cursor-pointer transition-all"
+  >
+
       <span className="text-xs font-bold text-gray-600">
         {item.label}
       </span>
@@ -2874,7 +2929,7 @@ const handleSubmitSuggestion = async () => {
         {/* Right Column: Form */}
         <div className="lg:col-span-2 space-y-6">
 
-          
+          <div ref={personalInfoRef}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
@@ -2926,7 +2981,7 @@ const handleSubmitSuggestion = async () => {
 </div>
 
 {/* 🌍 Current Residency */}
-<div className="md:col-span-2 mt-4">
+<div ref={residencyRef} className="md:col-span-2 mt-4">
   <label className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2 block">
     Current Residency
   </label>
@@ -3043,7 +3098,7 @@ const handleSubmitSuggestion = async () => {
 </div>
 
 {/* 📍 Address Details */}
-<div className="md:col-span-2 mt-4 ">
+<div ref={indianAddressRef} className="md:col-span-2 mt-4 ">
   <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
    Indian Address 
   </h4>
@@ -3284,7 +3339,11 @@ const handleSubmitSuggestion = async () => {
           </div>  
 
 
-          <div className="p-5 bg-white rounded-xl border border-gray-200">
+    <div
+  ref={professionalRef}
+  className="p-5 bg-white rounded-xl border border-gray-200"
+>
+
             <h4 className="text-xs font-black text-gray-500 mb-3 uppercase tracking-wider">
               Professional & Social
             </h4>
@@ -3420,7 +3479,7 @@ onChange={(value) => {
             </div>
           </div>
 
-<div className="mt-6">
+<div ref={contributionRef} className="mt-6">
   <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
     I want to contribute via:
   </h4>
@@ -3461,6 +3520,7 @@ onChange={(value) => {
               <Check size={14} /> Save Details
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>
