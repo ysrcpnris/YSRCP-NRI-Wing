@@ -1328,7 +1328,7 @@ return;
                     </div>
                   </div>
                   
-                  {/*just a single input for password with show/hide toggle, no confirm password field
+                  {/*just a single input for password with show/hide toggle, no confirm password field*/}
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Password <span className="text-red-500">*</span>
@@ -1350,7 +1350,7 @@ return;
                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
-                  </div>*/}
+                  </div>
                   
 
 
