@@ -2292,11 +2292,33 @@ if (eventsError) {
     };
   };
 
-const fullName = profile?.first_name
-  ? profile.last_name && profile.last_name !== profile.first_name
-    ? `${profile.first_name} ${profile.last_name}`
-    : profile.first_name
-  : "Member";
+const fullName = (() => {
+  // Primary: Use profile first_name if available
+  if (profile?.first_name) {
+    const last = profile.last_name && profile.last_name !== profile.first_name
+      ? ` ${profile.last_name}`  
+      : '';
+    return `${profile.first_name}${last}`;
+  }
+  
+  // Secondary: Use profile last_name if first_name missing
+  if (profile?.last_name) {
+    return profile.last_name;
+  }
+  
+  // Tertiary: Use auth metadata as fallback (profile might be null temporarily during token refresh)
+  if (user?.user_metadata?.first_name) {
+    const last = user.user_metadata?.last_name ? ` ${user.user_metadata.last_name}` : '';
+    return `${user.user_metadata.first_name}${last}`;
+  }
+  
+  // Final fallback: Use full_name from auth metadata
+  if (user?.user_metadata?.full_name) {
+    return String(user.user_metadata.full_name);
+  }
+  
+  return 'Member';
+})();
 
 
       // ======>Uncommet this after buying the domain==========
