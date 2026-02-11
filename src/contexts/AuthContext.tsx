@@ -324,7 +324,6 @@ if (!p) {
     // We still sign the user out here to force email verification flow (existing behavior).
     await killUnverifiedSession();
   };
-
 const signIn = async (email: string, password: string) => {
   const normalizedEmail = (email || "").trim().toLowerCase();
 
@@ -334,72 +333,49 @@ const signIn = async (email: string, password: string) => {
       password,
     });
 
-    // If auth returned an error (bad creds, rate limit, etc.)
+    // If auth failed
     if (error) {
-      // Best-effort: check profiles table to differentiate "not registered" from wrong credentials.
-      try {
-        const { data: profileByEmail, error: profErr } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("email", normalizedEmail)
-          .limit(1)
-          .maybeSingle();
+      // Check if this email exists in auth by attempting password reset
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        normalizedEmail,
+        { redirectTo: window.location.origin }
+      );
 
-        if (!profErr && !profileByEmail) {
-          // No profile row for this email -> treat as not registered
-          throw new Error(MESSAGES.NOT_REGISTERED);
-        }
-      } catch (inner) {
-        // ignore inner errors, continue to generic wrong credentials
+      if (!resetError) {
+        // Email exists but login failed -> either wrong password or unverified
+        throw new Error(MESSAGES.EMAIL_NOT_VERIFIED);
       }
 
-      // If we reached here, treat as generic wrong credentials
-      throw new Error(MESSAGES.WRONG_CREDENTIALS);
+      // Email truly doesn't exist
+      throw new Error(MESSAGES.NOT_REGISTERED);
     }
 
     const user = data?.user;
+
     if (!user) {
       throw new Error(MESSAGES.WRONG_CREDENTIALS);
     }
 
-    // If email not confirmed
     if (!user.email_confirmed_at) {
-      // sign out to clear session if any
-      try { await supabase.auth.signOut(); } catch (_) {}
+      await supabase.auth.signOut();
       throw new Error(MESSAGES.EMAIL_NOT_VERIFIED);
     }
 
-    // Ensure profiles row exists for this user id
     const profileRow = await fetchProfile(user.id);
     if (!profileRow) {
-      // sign out defensively
-      try { await supabase.auth.signOut(); } catch (_) {}
+      await supabase.auth.signOut();
       throw new Error(MESSAGES.REGISTRATION_INCOMPLETE);
     }
 
-    // all good — return the auth response (caller will continue)
     return data;
   } catch (err: any) {
-    // Distinguish network/timeouts vs other errors
-    if (err?.message?.includes("timed out") || err?.message === "Request timed out") {
-      throw new Error(MESSAGES.TIMEOUT);
-    }
-    if (err?.name === "AuthSessionMissingError") {
-      throw new Error(MESSAGES.GENERIC_ERROR);
-    }
-    // If it's already a user-friendly message, rethrow it
     if (err instanceof Error && Object.values(MESSAGES).includes(err.message)) {
       throw err;
     }
-    // Otherwise wrap with generic network message if it's a fetch/network issue
-    if (err?.message?.toLowerCase().includes("network") || err?.message?.toLowerCase().includes("fetch")) {
-      throw new Error(MESSAGES.NETWORK_ERROR);
-    }
-
-    // fallback
-    throw new Error(err?.message || MESSAGES.GENERIC_ERROR);
+    throw new Error(MESSAGES.GENERIC_ERROR);
   }
 };
+
 
 
   const signOut = async () => {
