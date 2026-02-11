@@ -10,7 +10,7 @@ const TESTIMONIALS_DATA = [
   },
   {
     quote:
-      "From telemedicine top rank to industrial investments—Jagan Anna balanced welfare with strong economic development! ",
+      "From telemedicine top rank to industrial investments—Jagan Anna balanced welfare with strong economic development!",
     author: "MR. Vamsi",
     role: "Australia",
   },
@@ -88,7 +88,7 @@ const TESTIMONIALS_DATA = [
   },
   {
     quote:
-      "Port expansions like Ramayapatnam & Machilipatnam under Jagan garu drove cargo growth & blue economy. AP's industrial rise is unmatched! ",
+      "Port expansions like Ramayapatnam & Machilipatnam under Jagan garu drove cargo growth & blue economy. AP's industrial rise is unmatched!",
     author: "MR. Venu CH",
     role: "Canada",
   },
@@ -100,19 +100,19 @@ const TESTIMONIALS_DATA = [
   },
   {
     quote:
-      "From Rs. 13 lakh cr at GIS Summit to MSME job surge—Jagan Mohan Reddy's policies generated lakhs of jobs & boosted AP's economy! ",
+      "From Rs. 13 lakh cr at GIS Summit to MSME job surge—Jagan Mohan Reddy's policies generated lakhs of jobs & boosted AP's economy!",
     author: "MR. Murali Krishna",
     role: "Singapore",
   },
   {
     quote:
-      "Jagan garu's transparent governance & investor-friendly policies ranked AP No.1 in EoDB. Industries flourished despite challenges! ",
+      "Jagan garu's transparent governance & investor-friendly policies ranked AP No.1 in EoDB. Industries flourished despite challenges!",
     author: "MR. Karthik",
     role: "Netherlands",
   },
   {
     quote:
-      "Adani's 300 MW data centers & tech park in Vizag—Jagan Anna's efforts connected AP to global IT ecosystem & created massive employment! ",
+      "Adani's 300 MW data centers & tech park in Vizag—Jagan Anna's efforts connected AP to global IT ecosystem & created massive employment!",
     author: "Dr. Pradeep Chinta",
     role: "UK",
   },
