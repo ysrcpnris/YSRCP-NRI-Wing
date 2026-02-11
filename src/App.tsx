@@ -42,7 +42,7 @@ import Gorumudda from "./pages/Gorumudda";
 import Cheyutha from "./pages/Cheyutha";
 import Yuvanestham from "./pages/Yuvanestham";
 import LiveStreamPage from "./pages/LiveStream";
-import RegisterPage from "./pages/RegisterPage1";
+import RegisterPage from "./pages/RegisterPage";
 import ResetPasswordConfirmPage from "./pages/ResetPasswordConfirmPage";
 
 import AdminDashboard from "./AdminDashboard/AdminDashboard";

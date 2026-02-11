@@ -1327,8 +1327,6 @@ return;
                       {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
                     </div>
                   </div>
-                  
-                  {/*just a single input for password with show/hide toggle, no confirm password field*/}
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Password <span className="text-red-500">*</span>
