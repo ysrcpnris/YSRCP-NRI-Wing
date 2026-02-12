@@ -6,7 +6,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import ResetPassword from "./ResetPassword";
-import { validatePassword } from "../lib/password";
 
 type AuthModalProps = {
   mode: "signin" | "signup";
@@ -646,10 +645,13 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
 
     /* ================= SIGN UP ================= */
-    const pwError = validatePassword(formData.password);
-    if (pwError) {
-      toast.error(pwError, { position: "top-right", autoClose: 5000 });
-      setError(pwError);
+    // Password rules (min 8, 1 uppercase, 1 number, 1 special char)
+    const passwordRulesRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+    if (!passwordRulesRegex.test(formData.password)) {
+      const pwMsg =
+        "Password must be at least 8 characters long and include one uppercase letter, one number, and one special character.";
+      toast.error(pwMsg, { position: "top-right", autoClose: 5000 });
+      setError(pwMsg);
       setLoading(false);
       return;
     }
