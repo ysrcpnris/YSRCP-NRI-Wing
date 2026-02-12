@@ -4,6 +4,7 @@ import { Eye, EyeOff, Loader, ArrowLeft } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { validatePassword } from "../lib/password";
 
 export default function ResetPasswordConfirmPage() {
   const navigate = useNavigate();
@@ -27,24 +28,7 @@ useEffect(() => {
 }, []);
 
 
-  const validatePassword = (password: string): string | null => {
-    if (password.length < 8) {
-      return "Password must be at least 8 characters long";
-    }
-    if (!/[A-Z]/.test(password)) {
-      return "Password must contain at least one uppercase letter";
-    }
-    if (!/[a-z]/.test(password)) {
-      return "Password must contain at least one lowercase letter";
-    }
-    if (!/[0-9]/.test(password)) {
-      return "Password must contain at least one number";
-    }
-    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>?]/.test(password)) {
-      return "Password must contain at least one special character";
-    }
-    return null;
-  };
+  
 
 const handleResetPassword = async (e: React.FormEvent) => {
   e.preventDefault();

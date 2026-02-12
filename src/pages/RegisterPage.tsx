@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 import { countriesData } from '../lib/countryCodes';
+import { validatePassword } from '../lib/password';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -1108,8 +1109,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   try {
     // validations
-    if (formData.password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
+    const pwError = validatePassword(formData.password);
+    if (pwError) {
+      throw new Error(pwError);
     }
 
     const currentCode = getCurrentCountryCode();
