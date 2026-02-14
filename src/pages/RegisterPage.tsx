@@ -6,12 +6,27 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
+
+
 import { countriesData } from '../lib/countryCodes';
+const getPasswordError = (password: string): string | null => {
+  if (password.length < 8) return "Password must be at least 8 characters";
+  if (!/[A-Z]/.test(password)) return "Must include at least one uppercase letter";
+  if (!/[a-z]/.test(password)) return "Must include at least one lowercase letter";
+  if (!/[0-9]/.test(password)) return "Must include at least one number";
+  if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password))
+    return "Must include at least one special character";
+  return null;
+};
+
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
- 
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -1102,11 +1117,21 @@ export default function RegisterPage() {
   };
 
 const handleSubmit = async (e: React.FormEvent) => {
+ 
   e.preventDefault();
   setError('');
   setLoading(true);
 
   try {
+     const pwdError = getPasswordError(formData.password);
+     if (formData.password !== confirmPassword) {
+  throw new Error("Passwords do not match");
+}
+
+if (pwdError) {
+  throw new Error(pwdError);
+}
+
     // validations
     if (formData.password.length < 6) {
       throw new Error('Password must be at least 6 characters');
@@ -1158,107 +1183,104 @@ return;
       isMounted.current = false;
     };
   }, []);
+  const isPasswordInvalid = !!passwordError || (confirmPassword !== formData.password);
+return (
+  <>
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="light"
+    />
 
-  return (
-    <>
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
-      
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-4 px-2 sm:py-12 sm:px-4 md:px-6">
-        <div className="max-w-5xl mx-auto">
-          <div
-            className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl md:shadow-2xl p-3 sm:p-6 md:p-8"
-            style={{ border: '2px sm:border-4 solid #1e88e5' }}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-4 px-2 sm:py-12 sm:px-4 md:px-6">
+      <div className="max-w-5xl mx-auto">
+        <div
+          className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl md:shadow-2xl p-3 sm:p-6 md:p-8"
+          style={{ border: '2px sm:border-4 solid #1e88e5' }}
+        >
+          <button
+            onClick={() => navigate('/', { state: { openLogin: true } })}
+            className="mb-3 sm:mb-4 inline-block text-blue-600 hover:text-blue-700 font-semibold text-xs sm:text-sm md:text-base"
           >
-            <button
-              onClick={() => navigate('/', { state: { openLogin: true } })}
-              className="mb-3 sm:mb-4 inline-block text-blue-600 hover:text-blue-700 font-semibold text-xs sm:text-sm md:text-base"
-            >
-              ← Back to Home
-            </button>
+            ← Back to Home
+          </button>
 
-            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold mb-2 text-white bg-gradient-to-r from-[#1356aed2] to-[#1E6BD6] p-2 sm:p-3 md:p-4 rounded-lg shadow">
-              Join YSRCP NRI Wing
-            </h2>
+          <h2 className="text-lg sm:text-2xl md:text-3xl font-bold mb-2 text-white bg-gradient-to-r from-[#1356aed2] to-[#1E6BD6] p-2 sm:p-3 md:p-4 rounded-lg shadow">
+            Join YSRCP NRI Wing
+          </h2>
 
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-              Register to become part of our global community
-            </p>
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+            Register to become part of our global community
+          </p>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 sm:px-4 sm:py-3 rounded-lg mb-4 text-sm sm:text-base">
-                {error}
-              </div>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 sm:px-4 sm:py-3 rounded-lg mb-4 text-sm sm:text-base">
+              {error}
+            </div>
+          )}
 
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            {/* Personal Information */}
+            <div className="border-b pb-3 sm:pb-4">
+              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white mb-2 sm:mb-3 p-2 sm:p-2.5 rounded bg-blue-600">
+                Personal Information
+              </h3>
 
-           
-
-              {/* Personal Information */}
-              <div className="border-b pb-3 sm:pb-4">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white mb-2 sm:mb-3 p-2 sm:p-2.5 rounded bg-blue-600">
-                  Personal Information
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.first_name}
-                      onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-blue-400 rounded-lg bg-blue-50 focus:ring-2 focus:ring-green-500 focus:border-blue-600"
-                    />
-                  </div>
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Last Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.last_name}
-                      onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div> */}
-
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                      Country of Residence <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      required
-                      value={formData.country_of_residence}
-                      onChange={(e) => {
-                        const selectedCountry = e.target.value;
-                        const countryCode = getCountryCodeFromCountryName(selectedCountry);
-                        setFormData({
-                          ...formData,
-                          country_of_residence: selectedCountry,
-                          mobile_number: countryCode,
-                          state_abroad: '',
-                          city_abroad: '',
-                        });
-                        setPhoneError('');
-                      }}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Select Country</option>
-                      {countryCodes.map((country) => (
-                        <option key={country.name} value={country.name}>
-                          {country.name} (+{country.code.replace('+', '')})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-blue-400 rounded-lg bg-blue-50 focus:ring-2 focus:ring-green-500 focus:border-blue-600"
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mt-3 sm:mt-4">
-                   <div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    Country of Residence <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.country_of_residence}
+                    onChange={(e) => {
+                      const selectedCountry = e.target.value;
+                      const countryCode = getCountryCodeFromCountryName(selectedCountry);
+                      setFormData({
+                        ...formData,
+                        country_of_residence: selectedCountry,
+                        mobile_number: countryCode,
+                        state_abroad: '',
+                        city_abroad: '',
+                      });
+                      setPhoneError('');
+                    }}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Country</option>
+                    {countryCodes.map((country) => (
+                      <option key={country.name} value={country.name}>
+                        {country.name} (+{country.code.replace('+', '')})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
+
+                <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Email ID <span className="text-red-500">*</span>
                   </label>
@@ -1267,520 +1289,289 @@ return;
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  
                 </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                      Mobile Number <span className="text-red-500">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      <div className="flex">
-                        <div className="flex items-center border border-gray-300 rounded-l-lg bg-gray-50 px-2">
-                          <select
-                            required
-                            value={getCurrentCountryCode()}
-                            onChange={(e) => {
-                              const newCode = e.target.value;
-                              const prevCode = getCurrentCountryCode();
-                              const numberOnly = formData.mobile_number.slice(prevCode.length);
-                              setFormData({ ...formData, mobile_number: newCode + numberOnly });
-                              // validate on code change
-                              const expected = phoneLengths[newCode];
-                              if (expected && numberOnly.length > 0 && numberOnly.length !== expected) {
-                                setPhoneError(`Mobile number must be ${expected} digits for ${newCode}`);
-                              } else {
-                                setPhoneError('');
-                              }
-                            }}
-                            className="bg-transparent text-sm sm:text-base outline-none px-2 py-2"
-                          >
-                            {countryCodes.map((country) => (
-                              <option key={country.code} value={country.code}>
-                                {country.code}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
 
-                        <input
-                          type="tel"
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    Mobile Number <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    <div className="flex">
+                      <div className="flex items-center border border-gray-300 rounded-l-lg bg-gray-50 px-2">
+                        <select
                           required
-                          value={formData.mobile_number.slice(getCurrentCountryCode().length)}
+                          value={getCurrentCountryCode()}
                           onChange={(e) => {
-                            const currentCode = getCurrentCountryCode();
-                            let digits = e.target.value.replace(/\D/g, '');
-                            const expected = phoneLengths[currentCode];
-                            if (expected) digits = digits.slice(0, expected);
-                            setFormData({ ...formData, mobile_number: currentCode + digits });
-                            if (expected && digits.length > 0 && digits.length !== expected) {
-                              setPhoneError(`Mobile number must be ${expected} digits for ${currentCode}`);
+                            const newCode = e.target.value;
+                            const prevCode = getCurrentCountryCode();
+                            const numberOnly = formData.mobile_number.slice(prevCode.length);
+                            setFormData({ ...formData, mobile_number: newCode + numberOnly });
+                            const expected = phoneLengths[newCode];
+                            if (expected && numberOnly.length > 0 && numberOnly.length !== expected) {
+                              setPhoneError(`Mobile number must be ${expected} digits for ${newCode}`);
                             } else {
                               setPhoneError('');
                             }
                           }}
-                          className="flex-1 px-3 py-2.5 text-sm sm:text-base border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder=" "
-                        />
-                      </div>
-                      {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                      Password <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        required
-                        minLength={6}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
-                    </div>
-                  </div>
-                  
-
-
-
-
-                </div>
-
-                {/* <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email ID <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div> */}
-
-                <div className="grid md:grid-cols-3 gap-4 mt-4">
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Country of Residence <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      required
-                      value={formData.country_of_residence}
-                      onChange={(e) => {
-                        const selectedCountry = e.target.value;
-                        setFormData({
-                          ...formData,
-                          country_of_residence: selectedCountry,
-                          state_abroad: '',
-                          city_abroad: '',
-                        });
-                      }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Select Country</option>
-                      {Object.keys(countryData).map((country) => (
-                        <option key={country} value={country}>
-                          {country}
-                        </option>
-                      ))}
-                    </select>
-                  </div> */}
-
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      State
-                    </label>
-                    <select
-                      value={formData.state_abroad}
-                      onChange={(e) => {
-                        const selectedState = e.target.value;
-                        setFormData({
-                          ...formData,
-                          state_abroad: selectedState,
-                          city_abroad: '',
-                        });
-                      }}
-                      disabled={!formData.country_of_residence}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                    >
-                      <option value="">Select State</option>
-                      {formData.country_of_residence &&
-                        countryData[formData.country_of_residence]?.map((state) => (
-                          <option key={state.name} value={state.name}>
-                            {state.name}
-                          </option>
-                        ))}
-                    </select>
-                  </div> */}
-
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      City
-                    </label>
-                    <select
-                      value={formData.city_abroad}
-                      onChange={(e) => setFormData({ ...formData, city_abroad: e.target.value })}
-                      disabled={!formData.state_abroad}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                    >
-                      <option value="">Select City</option>
-                      {formData.country_of_residence &&
-                        formData.state_abroad &&
-                        countryData[formData.country_of_residence]
-                          ?.find((state) => state.name === formData.state_abroad)
-                          ?.cities.map((city) => (
-                            <option key={city} value={city}>
-                              {city}
+                          className="bg-transparent text-sm sm:text-base outline-none px-2 py-2"
+                        >
+                          {countryCodes.map((country) => (
+                            <option key={country.code} value={country.code}>
+                              {country.code}
                             </option>
                           ))}
-                    </select>
-                  </div> */}
-                </div>
-              </div>
-
-               {/* {/* COMMENTED OUT: Indian Address Details to Referral */}
-                    <div className="border-b pb-3 sm:pb-4 mb-3 sm:mb-4">
-                      <h3 className="text-sm sm:text-base md:text-lg font-semibold text-blue-600 mb-2 sm:mb-3 flex items-center">
-                        <MapPin size={18} className="mr-2 text-blue-600 flex-shrink-0" />
-                        INDIAN ADDRESS DETAILS
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                            State <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            required
-                            value={formData.indian_state}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                indian_state: e.target.value,
-                                district: "",
-                                assembly_constituency: "",
-                              })
-                            }
-                            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          >
-                            <option value="">Select State</option>
-                            {Object.keys(indianAddressData).map((state) => (
-                              <option key={state} value={state}>
-                                {state}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                            District <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            required
-                            value={formData.district}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                district: e.target.value,
-                                assembly_constituency: "",
-                              })
-                            }
-                            disabled={!formData.indian_state}
-                            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                          >
-                            <option value="">Select District</option>
-                            {formData.indian_state &&
-                              indianAddressData[formData.indian_state]?.map(
-                                (d) => (
-                                  <option key={d.name} value={d.name}>
-                                    {d.name}
-                                  </option>
-                                )
-                              )}
-                          </select>
-                        </div>
+                        </select>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
-                        <div>
-                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                            Assembly Constituency{" "}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            required
-                            value={formData.assembly_constituency}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                assembly_constituency: e.target.value,
-                                mandal: "",
-                              })
-                            }
-                            disabled={!formData.district}
-                            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                          >
-                            <option value="">
-                              Select Assembly Constituency
-                            </option>
-                            {formData.indian_state &&
-                              formData.district &&
-                              indianAddressData[formData.indian_state]
-                                ?.find((d) => d.name === formData.district)
-                                ?.constituencies.map((c) => (
-                                  <option key={c.name} value={c.name}>
-                                    {c.name}
-                                  </option>
-                                ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                            Mandal / Municipality{" "}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            required
-                            value={formData.mandal}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                mandal: e.target.value,
-                              })
-                            }
-                            disabled={!formData.assembly_constituency}
-                            className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                          >
-                            <option value="">
-                              Select Mandal / Municipality
-                            </option>
-                            {formData.indian_state &&
-                              formData.district &&
-                              formData.assembly_constituency &&
-                              indianAddressData[formData.indian_state]
-                                ?.find((d) => d.name === formData.district)
-                                ?.constituencies.find(
-                                  (c) => c.name === formData.assembly_constituency
-                                )
-                                ?.mandals.map((m) => (
-                                  <option key={m} value={m}>
-                                    {m}
-                                  </option>
-                                ))}
-                          </select>
-                        </div>
-                        {/* <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Village <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.village}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                village: e.target.value,
-                              })
-                            }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          />
-                        </div> */}
-                      </div>
-                    </div>
-
-              {/* Password Fields */}
-              {/* <div className="border-b pb-4">
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 p-2 rounded bg-blue-600">
-                  Security
-                </h3>
-
-                <div className="grid md:grid-cols-2 gap-4"> */}
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Password <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
                       <input
-                        type={showPassword ? 'text' : 'password'}
+                        type="tel"
                         required
-                        minLength={6}
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full px-3 py-2.5 sm:px-4 sm:py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={formData.mobile_number.slice(getCurrentCountryCode().length)}
+                        onChange={(e) => {
+                          const currentCode = getCurrentCountryCode();
+                          let digits = e.target.value.replace(/\D/g, '');
+                          const expected = phoneLengths[currentCode];
+                          if (expected) digits = digits.slice(0, expected);
+                          setFormData({ ...formData, mobile_number: currentCode + digits });
+                          if (expected && digits.length > 0 && digits.length !== expected) {
+                            setPhoneError(`Mobile number must be ${expected} digits for ${currentCode}`);
+                          } else {
+                            setPhoneError('');
+                          }
+                        }}
+                        className="flex-1 px-3 py-2.5 text-sm sm:text-base border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder=" "
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
                     </div>
-                  </div> */}
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Confirm Password <span className="text-red-500">*</span>
-                    </label>
+                    {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
+                  </div>
+                </div>
+
+                {/* empty cell for md layout (optional) */}
+                <div className="hidden md:block" />
+              </div>
+            </div>
+
+            {/* Security Section */}
+            <div className="border-b pb-3 sm:pb-4">
+              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white mb-2 sm:mb-3 p-2 sm:p-2.5 rounded bg-blue-600">
+                Security
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Password */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      minLength={6}
+                      minLength={8}
+                      value={formData.password}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({ ...formData, password: value });
+                        setPasswordError(getPasswordError(value));
+                      }}
+                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  {passwordError && <p className="text-red-600 text-sm mt-1">{passwordError}</p>}
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    Confirm Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      minLength={8}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
-                  </div>
-                </div>
-              </div> */}
-
-              {/* Demographics & Professional Details */}
-              {/* <div className="border-b pb-4">
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 p-2 rounded bg-blue-600">
-                  Demographics & Professional Details
-                </h3>
-
-                <div className="grid md:grid-cols-3 gap-4"> */}
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Gender <span className="text-red-500">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      {['Male', 'Female'].map((gender) => (
-                        <label key={gender} className="flex items-center">
-                          <input
-                            type="radio"
-                            name="gender"
-                            value={gender}
-                            checked={formData.gender === gender}
-                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                            className="mr-2"
-                          />
-                          {gender}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Date of Birth <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.dob || ''}
-                      onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                      max={new Date().toISOString().split('T')[0]}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Profession <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      required
-                      value={formData.profession}
-                      onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      <option value="">Select Profession</option>
-                      {professions.map((prof) => (
-                        <option key={prof} value={prof}>
-                          {prof}
-                        </option>
-                      ))}
-                    </select>
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                   </div>
-                </div>
 
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Organization / Company
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.organization}
-                      onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Role / Designation
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.role_designation}
-                      onChange={(e) => setFormData({ ...formData, role_designation: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  {confirmPassword && confirmPassword !== formData.password && (
+                    <p className="text-red-600 text-sm mt-1">Passwords do not match</p>
+                  )}
+                  {confirmPassword && confirmPassword === formData.password && !passwordError && (
+                    <p className="text-green-600 text-sm mt-1">Passwords match</p>
+                  )}
                 </div>
-              </div> */}
+              </div>
+            </div>
 
-              {/* Referral
-              <div className="border-b pb-4">
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 p-2 rounded bg-blue-600">
-                  Referral
-                </h3>
+            {/* INDIAN ADDRESS DETAILS */}
+            <div className="border-b pb-3 sm:pb-4 mb-3 sm:mb-4">
+              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-blue-600 mb-2 sm:mb-3 flex items-center">
+                <MapPin size={18} className="mr-2 text-blue-600 flex-shrink-0" />
+                INDIAN ADDRESS DETAILS
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    State <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.indian_state}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        indian_state: e.target.value,
+                        district: '',
+                        assembly_constituency: '',
+                      })
+                    }
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select State</option>
+                    {Object.keys(indianAddressData).map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Referred By <span className="text-red-500">*</span>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    District <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={formData.referred_by}
-                    onChange={(e) => setFormData({ ...formData, referred_by: e.target.value })}
-                    placeholder="Enter the name of the person who referred you (optional)"
-                    // className="w-full px-3 py-2.5 sm:px-4 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div> */}
-              {/* </div> */}
+                  <select
+                    required
+                    value={formData.district}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        district: e.target.value,
+                        assembly_constituency: '',
+                      })
+                    }
+                    disabled={!formData.indian_state}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  >
+                    <option value="">Select District</option>
+                    {formData.indian_state &&
+                      indianAddressData[formData.indian_state]?.map((d) => (
+                        <option key={d.name} value={d.name}>
+                          {d.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
 
-             
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:shadow-lg transition disabled:opacity-60"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    Assembly Constituency <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.assembly_constituency}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        assembly_constituency: e.target.value,
+                        mandal: '',
+                      })
+                    }
+                    disabled={!formData.district}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  >
+                    <option value="">Select Assembly Constituency</option>
+                    {formData.indian_state &&
+                      formData.district &&
+                      indianAddressData[formData.indian_state]
+                        ?.find((d) => d.name === formData.district)
+                        ?.constituencies.map((c) => (
+                          <option key={c.name} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
+                  </select>
+                </div>
 
-              >
-                {loading ? 'Creating account...' : 'Register'}
-              </button>
-            </form>
-
-            
-
-
-            <div className="mt-4 sm:mt-6 text-center">
-              <p className="text-sm sm:text-base text-gray-600">
-                Already have an account?{' '}
-                <button
-                  onClick={() => navigate('/', { state: { openLogin: true } })}
-                  className="text-blue-600 hover:text-blue-700 font-semibold"
-                >
-                  Sign In
-                </button>
-              </p>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    Mandal / Municipality <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.mandal}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        mandal: e.target.value,
+                      })
+                    }
+                    disabled={!formData.assembly_constituency}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  >
+                    <option value="">Select Mandal / Municipality</option>
+                    {formData.indian_state &&
+                      formData.district &&
+                      formData.assembly_constituency &&
+                      indianAddressData[formData.indian_state]
+                        ?.find((d) => d.name === formData.district)
+                        ?.constituencies.find((c) => c.name === formData.assembly_constituency)
+                        ?.mandals.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                  </select>
+                </div>
+              </div>
             </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:shadow-lg transition disabled:opacity-60"
+            >
+              {loading ? 'Creating account...' : 'Register'}
+            </button>
+          </form>
+
+          <div className="mt-4 sm:mt-6 text-center">
+            <p className="text-sm sm:text-base text-gray-600">
+              Already have an account?{' '}
+              <button
+                onClick={() => navigate('/', { state: { openLogin: true } })}
+                className="text-blue-600 hover:text-blue-700 font-semibold"
+              >
+                Sign In
+              </button>
+            </p>
           </div>
         </div>
       </div>
-    </>
-  );
+    </div>
+  </>
+);
 }

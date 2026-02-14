@@ -111,19 +111,18 @@ function AppContent() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("signin");
 
-useEffect(() => {
-  const blockedRoutes = ["/verify-email", "/email-verified"];
+  useEffect(() => {
+    const blockedRoutes = ["/verify-email", "/email-verified"];
 
-  if (
-    location.state?.openLogin &&
-    !blockedRoutes.includes(location.pathname)
-  ) {
-    setAuthMode("signin");
-    setShowAuthModal(true);
-    window.history.replaceState({}, document.title);
-  }
-}, [location.state, location.pathname]);
-
+    if (
+      location.state?.openLogin &&
+      !blockedRoutes.includes(location.pathname)
+    ) {
+      setAuthMode("signin");
+      setShowAuthModal(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, location.pathname]);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
@@ -136,6 +135,35 @@ useEffect(() => {
       data.subscription.unsubscribe();
     };
   }, [navigate]);
+
+  // ============================================================
+  // SPECIAL GUARD:
+  // If the user is visiting the email verification pages, render
+  // only those routes (and the auth modal) to prevent other global
+  // redirect logic from immediately sending them to "/".
+  // This ensures the user actually sees the "Email Verified" screen.
+  // ============================================================
+  if (location.pathname === "/email-verified" || location.pathname === "/verify-email") {
+    return (
+      <>
+        <Routes>
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/email-verified" element={<EmailVerifiedPage />} />
+        </Routes>
+
+        {showAuthModal && (
+          <AuthModal
+            mode={authMode}
+            onClose={() => setShowAuthModal(false)}
+            onSwitchMode={() =>
+              setAuthMode(authMode === "signin" ? "signup" : "signin")
+            }
+          />
+        )}
+      </>
+    );
+  }
+  // ============================================================
 
   if (loading) {
     return (
@@ -215,9 +243,6 @@ useEffect(() => {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
-
-
-       
       </Routes>
 
       {showAuthModal && (
