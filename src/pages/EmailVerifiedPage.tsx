@@ -4,7 +4,6 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-
 type PageState =
   | "initializing"
   | "verifying"
@@ -15,19 +14,22 @@ type PageState =
 export default function EmailVerifiedPage() {
   const { loading, signOut } = useAuth();
 
-
   const [state, setState] = useState<PageState>("initializing");
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const mountedRef = useRef<boolean>(true);
   const processedRef = useRef<boolean>(false);
+  const redirectTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      if (redirectTimerRef.current) {
+        window.clearTimeout(redirectTimerRef.current);
+      }
     };
   }, []);
 
@@ -40,63 +42,65 @@ const navigate = useNavigate();
       setMessage("");
       setError("");
 
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+      // Try to ensure session is parsed by supabase first
+      // Instead of checking raw Supabase session,
+// rely on AuthContext which already restored the user.
 
-      if (!mountedRef.current) return;
+const { data } = await supabase.auth.getUser();
 
-      if (sessionError) {
-        setError("Unable to validate verification session.");
-        setState("error");
-        return;
-      }
+if (!data?.user) {
+  setError("Verification session not found. Please log in again.");
+  setState("error");
+  return;
+}
 
-      if (!session?.user) {
-        setError("Verification session not found. Please log in again.");
-        setState("error");
-        return;
-      }
+if (!data.user.email_confirmed_at) {
+  setError("Email verification not completed yet.");
+  setState("error");
+  return;
+}
 
-      if (!session.user.email_confirmed_at) {
-        setError("Email verification not completed yet.");
-        setState("error");
-        return;
+      // Clean up URL hash (remove tokens) so UI & route-guards see a clean URL
+      try {
+        if (window.location.hash) {
+          const clean = window.location.pathname + window.location.search;
+          window.history.replaceState(null, "", clean);
+        }
+      } catch (_) {
+        // ignore any history replacement issues
       }
 
       setMessage("Your email has been successfully verified.");
       setState("verified");
 
-      try {
-        await supabase.auth.signOut();
-      } catch (_) {
-      }
-
       if (!mountedRef.current) return;
 
-      setState("redirecting");
+      // Keep the page visible briefly so user sees the success message.
+      // After that, navigate to the dashboard (or change to a route you prefer).
+      redirectTimerRef.current = window.setTimeout(() => {
+        if (!mountedRef.current) return;
+        setState("redirecting");
+        navigate("/dashboard", { replace: true });
+      }, 2200);
     };
 
     processVerification();
-  }, []);
+  }, [navigate]);
 
   if (loading) {
     return null;
   }
 
-//   if (isVerified && user) {
-//     return <Navigate to="/dashboard" replace />;
-//   }
-const goToLogin = async () => {
-  try {
-    await signOut();
-  } catch (_) {
-  } finally {
-    navigate("/", { replace: true, state: { openLogin: true } });
-  }
-};
-
+  // Provide a manual way to sign-out & open the login modal (keeps your original UX)
+  const goToLogin = async () => {
+    try {
+      await signOut();
+    } catch (_) {
+      // ignore
+    } finally {
+      navigate("/", { replace: true, state: { openLogin: true } });
+    }
+  };
 
   return (
     <div
@@ -166,8 +170,30 @@ const goToLogin = async () => {
                 color: "#666",
               }}
             >
-              For security reasons, please log in again to continue.
+              You are now logged in. Redirecting to your dashboard…
             </p>
+            <div style={{ marginTop: 18 }}>
+              <button
+                onClick={() => {
+                  // immediate continue without waiting for timeout
+                  if (redirectTimerRef.current) {
+                    window.clearTimeout(redirectTimerRef.current);
+                  }
+                  navigate("/dashboard", { replace: true });
+                }}
+                style={{
+                  padding: "10px 16px",
+                  borderRadius: "6px",
+                  border: "1px solid #ddd",
+                  backgroundColor: "#fff",
+                  color: "#111",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }}
+              >
+                Continue to Dashboard
+              </button>
+            </div>
           </div>
         )}
 
@@ -188,23 +214,8 @@ const goToLogin = async () => {
                 marginBottom: "20px",
               }}
             >
-              Your email is verified. Please log in again to continue.
+              Your email is verified. Redirecting you now.
             </p>
-
-            <button
-              onClick={goToLogin}
-              style={{
-                padding: "12px 20px",
-                borderRadius: "6px",
-                border: "none",
-                backgroundColor: "#111",
-                color: "#fff",
-                fontSize: "14px",
-                cursor: "pointer",
-              }}
-            >
-              Go to Login
-            </button>
           </div>
         )}
 

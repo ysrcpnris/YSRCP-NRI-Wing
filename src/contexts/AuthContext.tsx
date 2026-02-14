@@ -10,7 +10,6 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase, Profile } from "../lib/supabase";
 import { MESSAGES } from "../constants/messages";
 
-
 type AuthContextType = {
   user: User | null;
   profile: Profile | null;
@@ -27,8 +26,6 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -52,23 +49,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchProfile = async (userId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
 
-    if (error) {
-      console.error("fetchProfile error:", error);
+      if (error) {
+        console.error("fetchProfile error:", error);
+        return null;
+      }
+      return data as Profile | null;
+    } catch (err) {
+      console.error("fetchProfile unexpected error:", err);
       return null;
     }
-    return data as Profile | null;
-  } catch (err) {
-    console.error("fetchProfile unexpected error:", err);
-    return null;
-  }
-};
+  };
 
   const hardResetState = () => {
     setUser(null);
@@ -83,11 +80,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await supabase.auth.signOut();
     } catch (_) {
+      // ignore
     } finally {
       hardResetState();
       killingSessionRef.current = false;
     }
   };
+
+  const sleep = (ms: number) =>
+    new Promise<void>((res) => {
+      setTimeout(() => res(), ms);
+    });
 
   /**
    * This runs after we've verified the session and fetched the profile.
@@ -169,20 +172,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * Apply a verified session: set user, mark verified and load profile.
+   * If profile is not yet present (DB trigger delay), retry a few times before signing out.
+   */
   const applyVerifiedSession = async (session: Session) => {
     setUser(session.user);
     setIsVerified(true);
+
+    // Try to fetch profile immediately
     let p = await fetchProfile(session.user.id);
 
-    // If profile not found, try to create it from auth user metadata (populated during signup)
- // If profile missing → block session
-if (!p) {
-  console.error("Profile missing for verified user");
-  await killUnverifiedSession();
-  return;
-}
+    // If profile not found, retry a few times with backoff to allow DB trigger to run.
+    if (!p) {
+      const maxAttempts = 6;
+      for (let attempt = 1; attempt <= maxAttempts && !p; attempt++) {
+        const waitMs = 500 * attempt; // progressive backoff: 500, 1000, 1500 ...
+        await sleep(waitMs);
+        p = await fetchProfile(session.user.id);
+      }
+    }
 
-  
+    // If still missing after retries, then sign the user out (this preserves the original behavior,
+    // but avoids immediate logout when a DB trigger is simply taking a moment).
+    if (!p) {
+      console.error("Profile still missing after retries for user:", session.user.id);
+      await killUnverifiedSession();
+      return;
+    }
 
     setProfile(p);
     setAdminFlag(p);
@@ -212,20 +229,24 @@ if (!p) {
   useEffect(() => {
     let mounted = true;
 
-    const init = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+const init = async () => {
+  // 🔥 Wait so Supabase can parse the URL hash (#access_token)
+  await new Promise(res => setTimeout(res, 120));
 
-      if (!mounted) return;
+  let {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-      await handleSession(session);
+  if (!mounted) return;
 
-      if (mounted) {
-        setLoading(false);
-        initializingRef.current = false;
-      }
-    };
+  await handleSession(session);
+
+  if (mounted) {
+    setLoading(false);
+    initializingRef.current = false;
+  }
+};
+
 
     init();
 
@@ -272,34 +293,34 @@ if (!p) {
     const meta: Record<string, unknown> = {};
     // Include common profile fields so DB trigger can create profiles after verification
     const keys: (keyof typeof profileData)[] = [
-      'first_name',
-      'last_name',
-      'full_name',
-      'mobile_number',
-      'whatsapp_number',
-      'country_of_residence',
-      'state_abroad',
-      'city_abroad',
-      'indian_state',
-      'district',
-      'assembly_constituency',
-      'mandal',
-      'village',
-      'profession',
-      'organization',
-      'designation',
-      'contribution',
-      'participate_campaign',
-      'instagram_id',
-      'facebook_id',
-      'twitter_id',
-      'linkedin_id',
-      'referral_code',
+      "first_name",
+      "last_name",
+      "full_name",
+      "mobile_number",
+      "whatsapp_number",
+      "country_of_residence",
+      "state_abroad",
+      "city_abroad",
+      "indian_state",
+      "district",
+      "assembly_constituency",
+      "mandal",
+      "village",
+      "profession",
+      "organization",
+      "designation",
+      "contribution",
+      "participate_campaign",
+      "instagram_id",
+      "facebook_id",
+      "twitter_id",
+      "linkedin_id",
+      "referral_code",
     ];
 
     for (const k of keys) {
       const v = profileData[k];
-      if (v !== undefined && v !== null && v !== '') meta[k as string] = v;
+      if (v !== undefined && v !== null && v !== "") meta[k as string] = v;
     }
 
     const { data, error } = await supabase.auth.signUp({
@@ -324,59 +345,58 @@ if (!p) {
     // We still sign the user out here to force email verification flow (existing behavior).
     await killUnverifiedSession();
   };
-const signIn = async (email: string, password: string) => {
-  const normalizedEmail = (email || "").trim().toLowerCase();
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password,
-    });
+  const signIn = async (email: string, password: string) => {
+    const normalizedEmail = (email || "").trim().toLowerCase();
 
-    // If auth failed
-    if (error) {
-      // Check if this email exists in auth by attempting password reset
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        normalizedEmail,
-        { redirectTo: window.location.origin }
-      );
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
 
-      if (!resetError) {
-        // Email exists but login failed -> either wrong password or unverified
+      // If auth failed
+      if (error) {
+        // Check if this email exists in auth by attempting password reset
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+          normalizedEmail,
+          { redirectTo: window.location.origin }
+        );
+
+        if (!resetError) {
+          // Email exists but login failed -> either wrong password or unverified
+          throw new Error(MESSAGES.EMAIL_NOT_VERIFIED);
+        }
+
+        // Email truly doesn't exist
+        throw new Error(MESSAGES.NOT_REGISTERED);
+      }
+
+      const user = data?.user;
+
+      if (!user) {
+        throw new Error(MESSAGES.WRONG_CREDENTIALS);
+      }
+
+      if (!user.email_confirmed_at) {
+        await supabase.auth.signOut();
         throw new Error(MESSAGES.EMAIL_NOT_VERIFIED);
       }
 
-      // Email truly doesn't exist
-      throw new Error(MESSAGES.NOT_REGISTERED);
+      const profileRow = await fetchProfile(user.id);
+      if (!profileRow) {
+        await supabase.auth.signOut();
+        throw new Error(MESSAGES.REGISTRATION_INCOMPLETE);
+      }
+
+      return data;
+    } catch (err: any) {
+      if (err instanceof Error && Object.values(MESSAGES).includes(err.message)) {
+        throw err;
+      }
+      throw new Error(MESSAGES.GENERIC_ERROR);
     }
-
-    const user = data?.user;
-
-    if (!user) {
-      throw new Error(MESSAGES.WRONG_CREDENTIALS);
-    }
-
-    if (!user.email_confirmed_at) {
-      await supabase.auth.signOut();
-      throw new Error(MESSAGES.EMAIL_NOT_VERIFIED);
-    }
-
-    const profileRow = await fetchProfile(user.id);
-    if (!profileRow) {
-      await supabase.auth.signOut();
-      throw new Error(MESSAGES.REGISTRATION_INCOMPLETE);
-    }
-
-    return data;
-  } catch (err: any) {
-    if (err instanceof Error && Object.values(MESSAGES).includes(err.message)) {
-      throw err;
-    }
-    throw new Error(MESSAGES.GENERIC_ERROR);
-  }
-};
-
-
+  };
 
   const signOut = async () => {
     try {

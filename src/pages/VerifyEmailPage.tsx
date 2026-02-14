@@ -148,7 +148,8 @@ useEffect(() => {
       return;
     }
 
-    window.location.href = "/";
+    window.location.href = "/email-verified";
+
   };
 
 //   if (loading) {
