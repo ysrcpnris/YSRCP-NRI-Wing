@@ -19,6 +19,7 @@ import { supabase } from "../lib/supabase";
 
 const CHANNEL_ID = "UCM3lYQQxJZTzQzYO35-_JCw";
 const MAX_VIDEOS = 12;
+const REFRESH_INTERVAL = 30 * 60 * 1000;
 
 const formatRelativeTime = (publishedAt: string) => {
   const diff = Date.now() - new Date(publishedAt).getTime();
@@ -87,6 +88,7 @@ const BottomCards: React.FC = () => {
       {openModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl relative animate-fadeIn">
+            {/* Close Button */}
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl font-bold transition"
               onClick={() => setOpenModal(false)}
@@ -95,14 +97,17 @@ const BottomCards: React.FC = () => {
               ×
             </button>
 
+            {/* Title */}
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-3 text-gray-900 text-center">
               {modalContent.title}
             </h2>
 
+            {/* Description */}
             <p className="text-sm sm:text-md text-gray-600 mb-8 text-center max-w-2xl mx-auto">
               {modalContent.description}
             </p>
 
+            {/* Coming Soon Section */}
             <div className="flex flex-col items-center justify-center gap-4">
               <div className="text-6xl animate-bounce">🚀</div>
               <span className="text-lg sm:text-xl font-semibold text-gray-500 tracking-wide">
@@ -134,57 +139,91 @@ export default function PressMeetsAndSocial() {
     const fetchVideos = async () => {
       setLoading(true);
       const key = import.meta.env.VITE_YOUTUBE_API_KEY;
-
-      try {
-        // Fetch videos from channel directly
-        const res = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&order=date&maxResults=${MAX_VIDEOS}&type=video&key=${key}`
-        );
-
-        const json = await res.json();
-
-        if (json.error || !json.items) throw new Error("YouTube API failed");
-
-        const videoData = json.items.map((v: any) => ({
-          title: v.snippet?.title || 'Untitled',
-          url: `https://www.youtube.com/watch?v=${v.id?.videoId || ''}`,
-          image: `https://img.youtube.com/vi/${v.id?.videoId}/hqdefault.jpg`,
-          time: formatRelativeTime(v.snippet?.publishedAt || new Date().toISOString()),
-          views: "—",
-          isLive: v.snippet?.liveBroadcastContent === "live",
-        }));
-
-        setVideos(videoData);
-        setLoading(false);
-      } catch (err) {
-        // fallback to Supabase if API fails
+      
+      // Try YouTube API first
+      if (key) {
         try {
-          const { data, error } = await supabase
-            .from('youtube_videos')
-            .select('*')
-            .order('published_at', { ascending: false })
-            .limit(MAX_VIDEOS);
+          // Search for the official YS Jagan Mohan Reddy channel
+          const channelRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&q=YS%20Jagan%20Mohan%20Reddy%20Official&type=channel&maxResults=1&key=${key}`
+          );
 
-          if (!error && data) {
-            const videoData = data.map((v: any) => ({
-              title: v.title,
-              url: v.video_url,
-              image: v.thumbnail,
-              time: formatRelativeTime(v.published_at),
-              views: "—",
-              isLive: false,
-            }));
-            setVideos(videoData);
+          const channelJson = await channelRes.json();
+          
+          if (channelJson.error) {
+            throw new Error(channelJson.error.message || "Channel API Error");
           }
+          
+          if (!channelJson.items || channelJson.items.length === 0) {
+            throw new Error("Official channel not found");
+          }
+
+          const foundChannelId = channelJson.items[0].id.channelId;
+          
+          // Now fetch videos from this channel
+          const res = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${foundChannelId}&order=date&maxResults=${MAX_VIDEOS}&type=video&key=${key}`
+          );
+
+          const json = await res.json();
+          
+          if (json.error) {
+            throw new Error(json.error.message || "Video API Error");
+          }
+          
+          if (!json.items || json.items.length === 0) {
+            throw new Error("No items in response");
+          }
+
+          const videoData = json.items.map((v: any) => ({
+            title: v.snippet?.title || 'Untitled',
+            url: `https://www.youtube.com/watch?v=${v.id?.videoId || ''}`,
+            image: v.snippet?.thumbnails?.medium?.url || v.snippet?.thumbnails?.high?.url || v.snippet?.thumbnails?.default?.url || '',
+            time: formatRelativeTime(v.snippet?.publishedAt || new Date().toISOString()),
+            views: "—",
+            isLive: v.snippet?.liveBroadcastContent === "live",
+          }));
+
+          setVideos(videoData);
           setLoading(false);
-        } catch (e) {
-          setLoading(false);
+          return;
+        } catch (error) {
+          // YouTube API failed, will use Supabase fallback
         }
+      }
+
+      // Fallback: Fetch from Supabase
+      try {
+        const { data, error } = await supabase
+          .from('youtube_videos')
+          .select('*')
+          .order('published_at', { ascending: false })
+          .limit(MAX_VIDEOS);
+
+        if (error) {
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          const videoData = data.map((v: any) => ({
+            title: v.title,
+            url: v.video_url,
+            image: v.thumbnail,
+            time: formatRelativeTime(v.published_at),
+            views: "—",
+            isLive: false,
+          }));
+          setVideos(videoData);
+        }
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
       }
     };
 
     fetchVideos();
-    const i = setInterval(fetchVideos, 60 * 60 * 1000); // 1 hour refresh
+    // Increase refresh interval to 1 hour to avoid quota issues
+    const i = setInterval(fetchVideos, 60 * 60 * 1000);
     return () => clearInterval(i);
   }, []);
 
@@ -279,38 +318,43 @@ export default function PressMeetsAndSocial() {
           <Share2 /> Digital Channels
         </h2>
 
+        {/* SOCIAL CARDS */}
         <div className="grid grid-cols-1 gap-3 sm:gap-4">
-          {[{
-            title: "Jagan Anna",
-            desc: "Official Leader Handles",
-            colors: [
-              { icon: Facebook, bg: "bg-blue-100", text: "text-blue-700", url: "https://www.facebook.com/ysjagan/" },
-              { icon: Twitter, bg: "bg-sky-100", text: "text-sky-600", url: "https://x.com/ysjagan/" },
-              { icon: Instagram, bg: "bg-pink-100", text: "text-pink-600", url: "https://www.instagram.com/ysjagan/" },
-              { icon: MessageCircle, bg: "bg-green-100", text: "text-green-600", url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
-              { icon: Send, bg: "bg-cyan-100", text: "text-cyan-600", url: "https://t.me/s/JaganSpeaks?q=%23YSJagan&before=4121" },
-            ],
-          },{
-            title: "YSRCP Party",
-            desc: "Official Party Updates",
-            colors: [
-              { icon: Facebook, bg: "bg-blue-100", text: "text-blue-700", url: "https://www.instagram.com/ysrcongress/?hl=en" },
-              { icon: Twitter, bg: "bg-sky-100", text: "text-sky-600", url: "https://x.com/YSRCParty" },
-              { icon: Instagram, bg: "bg-pink-100", text: "text-pink-600", url: "https://www.instagram.com/ysrcongress/?hl=en" },
-              { icon: MessageCircle, bg: "bg-green-100", text: "text-green-600", url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
-              { icon: Send, bg: "bg-cyan-100", text: "text-cyan-600", url: "https://www.ysrcongress.com/" },
-            ],
-          },{
-            title: "NRI Community",
-            desc: "Direct Connect",
-            colors: [
-              { icon: Facebook, bg: "bg-blue-50", text: "text-blue-600" },
-              { icon: Twitter, bg: "bg-sky-50", text: "text-sky-600" },
-              { icon: Instagram, bg: "bg-pink-50", text: "text-pink-600" },
-              { icon: MessageCircle, bg: "bg-green-50", text: "text-green-600" },
-              { icon: Send, bg: "bg-cyan-50", text: "text-cyan-600" },
-            ],
-          }].map((c, idx) => (
+          {[
+            {
+              title: "Jagan Anna",
+              desc: "Official Leader Handles",
+              colors: [
+                { icon: Facebook, bg: "bg-blue-100", text: "text-blue-700", url: "https://www.facebook.com/ysjagan/" },
+                { icon: Twitter, bg: "bg-sky-100", text: "text-sky-600", url: "https://x.com/ysjagan/" },
+                { icon: Instagram, bg: "bg-pink-100", text: "text-pink-600", url: "https://www.instagram.com/ysjagan/" },
+                { icon: MessageCircle, bg: "bg-green-100", text: "text-green-600", url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
+                { icon: Send, bg: "bg-cyan-100", text: "text-cyan-600", url: "https://t.me/s/JaganSpeaks?q=%23YSJagan&before=4121" },
+              ],
+            },
+            {
+              title: "YSRCP Party",
+              desc: "Official Party Updates",
+              colors: [
+                { icon: Facebook, bg: "bg-blue-100", text: "text-blue-700", url: "https://www.instagram.com/ysrcongress/?hl=en" },
+                { icon: Twitter, bg: "bg-sky-100", text: "text-sky-600", url: "https://x.com/YSRCParty" },
+                { icon: Instagram, bg: "bg-pink-100", text: "text-pink-600", url: "https://www.instagram.com/ysrcongress/?hl=en" },
+                { icon: MessageCircle, bg: "bg-green-100", text: "text-green-600", url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
+                { icon: Send, bg: "bg-cyan-100", text: "text-cyan-600", url: "https://www.ysrcongress.com/" },
+              ],
+            },
+            {
+              title: "NRI Community",
+              desc: "Direct Connect",
+              colors: [
+                { icon: Facebook, bg: "bg-blue-50", text: "text-blue-600" },
+                { icon: Twitter, bg: "bg-sky-50", text: "text-sky-600" },
+                { icon: Instagram, bg: "bg-pink-50", text: "text-pink-600" },
+                { icon: MessageCircle, bg: "bg-green-50", text: "text-green-600" },
+                { icon: Send, bg: "bg-cyan-50", text: "text-cyan-600" },
+              ],
+            },
+          ].map((c, idx) => (
             <div
               key={idx}
               className="bg-white p-4 sm:p-5 border-l-[5px] sm:border-l-[6px] border-ysrcp-blue rounded-r-xl shadow flex flex-col justify-between"
