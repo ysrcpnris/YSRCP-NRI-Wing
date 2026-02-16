@@ -182,6 +182,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Try to fetch profile immediately
     let p = await fetchProfile(session.user.id);
+ const { error } = await supabase
+  .from("profiles")
+  .upsert({
+    id: session.user.id,
+    auth_user_id: session.user.id,
+    email: session.user.email,
+
+    first_name:
+      session.user.user_metadata?.first_name ||
+      session.user.user_metadata?.full_name?.split(" ")[0] ||
+      "User",
+
+    last_name:
+      session.user.user_metadata?.last_name ||
+      session.user.user_metadata?.full_name?.split(" ")[1] ||
+      "User",
+
+    full_name: session.user.user_metadata?.full_name || null,
+
+    mobile_number: session.user.user_metadata?.mobile_number || null,
+    country_of_residence: session.user.user_metadata?.country_of_residence || null,
+    indian_state: session.user.user_metadata?.indian_state || null,
+    district: session.user.user_metadata?.district || null,
+    assembly_constituency: session.user.user_metadata?.assembly_constituency || null,
+    mandal: session.user.user_metadata?.mandal || null,
+
+    referral_code: session.user.user_metadata?.referral_code || null,
+    role: "user",
+    created_at: new Date().toISOString(),
+  });
+
 
     // If profile not found, retry a few times with backoff to allow DB trigger to run.
     if (!p) {
@@ -208,6 +239,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await processReferralIfNeeded(session.user.id, p);
   };
 
+  /**
+   * Helper: Attempt to exchange tokens from URL into a Supabase session.
+   * Returns the exchanged session (or null).
+   */
+  // const tryExchangeUrlForSession = async (): Promise<Session | null> => {
+  //   try {
+  //     // supabase.auth.getSessionFromUrl will parse hash/search and store session if present.
+  //     // storeSession:true ensures client-side session is stored.
+  //     // If there's no token in URL this resolves to { data: { session: null } }.
+  //     const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+  //     if (error) {
+  //       console.warn("getSessionFromUrl error:", error);
+  //     }
+  //     const session = data?.session ?? null;
+
+  //     // Clean the URL to remove tokens (prevents repeated processing).
+  //     try {
+  //       const url = new URL(window.location.href);
+  //       if (url.hash) {
+  //         url.hash = "";
+  //         window.history.replaceState({}, document.title, url.toString());
+  //       } else if (url.searchParams.has("access_token") || url.searchParams.has("refresh_token")) {
+  //         // remove query params that Supabase might have left
+  //         url.searchParams.delete("access_token");
+  //         url.searchParams.delete("refresh_token");
+  //         url.searchParams.delete("type");
+  //         url.searchParams.delete("provider_token");
+  //         window.history.replaceState({}, document.title, url.toString());
+  //       }
+  //     } catch (e) {
+  //       // ignore URL clean errors
+  //     }
+
+  //     return session;
+  //   } catch (err) {
+  //     console.error("tryExchangeUrlForSession unexpected error:", err);
+  //     return null;
+  //   }
+  // };
+
   const handleSession = async (session: Session | null) => {
     if (!session?.user) {
       hardResetState();
@@ -218,7 +289,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session.user.recovery_sent_at ||
       session.user.user_metadata?.recovery === true;
 
-    if (!session.user.email_confirmed_at && !isRecovery) {
+    const path = window.location.pathname;
+
+const isEmailVerificationRedirect = path === "/email-verified";
+const isPasswordResetRedirect = path === "/reset-password-confirm";
+
+
+    if (
+  !session.user.email_confirmed_at &&
+  !isRecovery &&
+  !isEmailVerificationRedirect &&
+  !isPasswordResetRedirect
+) {
+
       await killUnverifiedSession();
       return;
     }
@@ -229,36 +312,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-const init = async () => {
-  // 🔥 Wait so Supabase can parse the URL hash (#access_token)
-  await new Promise(res => setTimeout(res, 120));
+    const init = async () => {
+      // small delay to allow Supabase to parse URL hash if any (helps in SPA flows)
+      await new Promise((res) => setTimeout(res, 120));
 
-  let {
-    data: { session },
-  } = await supabase.auth.getSession();
+      // If the current URL likely contains a Supabase auth token (email verify link),
+      // attempt to exchange it into a session first.
+      const pathname = window.location.pathname;
+      const hasHashAccessToken = window.location.hash && window.location.hash.includes("access_token");
+      const hasQueryAccessToken = window.location.search && window.location.search.includes("access_token");
+      const isEmailVerifiedPath = pathname === "/email-verified";
 
-  if (!mounted) return;
+      let exchangedSession: Session | null = null;
+      // if (isEmailVerifiedPath || hasHashAccessToken || hasQueryAccessToken) {
+      //   exchangedSession = await tryExchangeUrlForSession();
+      // }
 
-  await handleSession(session);
+      // If nothing exchanged, fallback to current stored session (if any)
+      let {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-  if (mounted) {
-    setLoading(false);
-    initializingRef.current = false;
-  }
-};
+      // prefer exchanged session if present
+      if (exchangedSession) session = exchangedSession;
 
+      if (!mounted) return;
+
+      await handleSession(session);
+
+      if (mounted) {
+        setLoading(false);
+        initializingRef.current = false;
+      }
+    };
 
     init();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      // During initialisation we avoid handling the event; once initialisation done, we handle
+      // auth state changes. This prevents double processing during the page load token exchange.
       if (initializingRef.current) return;
       if (!mounted) return;
 
-      // Handle auth changes in background without toggling the global
-      // loading state — avoid showing the full-page loader when the
-      // tab regains focus or the token refreshes.
       void handleSession(session);
     });
 
@@ -284,119 +381,146 @@ const init = async () => {
    * - Send collected form/profile data as `options.data` (raw_user_meta_data).
    * - Let the DB trigger read raw_user_meta_data and create profiles atomically.
    */
-  const signUp = async (
-    email: string,
-    password: string,
-    profileData: Partial<Profile>
-  ) => {
-    // Build the metadata payload with only relevant keys (sanitized)
-    const meta: Record<string, unknown> = {};
-    // Include common profile fields so DB trigger can create profiles after verification
-    const keys: (keyof typeof profileData)[] = [
-      "first_name",
-      "last_name",
-      "full_name",
-      "mobile_number",
-      "whatsapp_number",
-      "country_of_residence",
-      "state_abroad",
-      "city_abroad",
-      "indian_state",
-      "district",
-      "assembly_constituency",
-      "mandal",
-      "village",
-      "profession",
-      "organization",
-      "designation",
-      "contribution",
-      "participate_campaign",
-      "instagram_id",
-      "facebook_id",
-      "twitter_id",
-      "linkedin_id",
-      "referral_code",
-    ];
+ const signUp = async (
+  email: string,
+  password: string,
+  profileData: Partial<Profile>
+) => {
+  const normalizedEmail = email.trim().toLowerCase();
 
-    for (const k of keys) {
-      const v = profileData[k];
-      if (v !== undefined && v !== null && v !== "") meta[k as string] = v;
+  // 🔴 STEP 1 — check if user already exists in profiles
+  const { data: existingUser, error: checkError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error("Profile lookup error:", checkError);
+    throw new Error("Unable to register. Please try again.");
+  }
+
+  if (existingUser) {
+    // 🛑 BLOCK signup immediately
+    throw new Error("User already registered. Please login instead.");
+  }
+
+  // 🔵 STEP 2 — build metadata for DB trigger
+  const meta: Record<string, unknown> = {};
+  const keys: (keyof typeof profileData)[] = [
+    "first_name",
+    "last_name",
+    "full_name",
+    "mobile_number",
+    "whatsapp_number",
+    "country_of_residence",
+    "state_abroad",
+    "city_abroad",
+    "indian_state",
+    "district",
+    "assembly_constituency",
+    "mandal",
+    "village",
+    "profession",
+    "organization",
+    "designation",
+    "contribution",
+    "participate_campaign",
+    "instagram_id",
+    "facebook_id",
+    "twitter_id",
+    "linkedin_id",
+    "referral_code",
+  ];
+
+  for (const k of keys) {
+    const v = profileData[k];
+    if (v !== undefined && v !== null && v !== "") meta[k as string] = v;
+  }
+
+  // 🔵 STEP 3 — call Supabase signup only if safe
+  const { data, error } = await supabase.auth.signUp({
+    email: normalizedEmail,
+    password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/email-verified`,
+      data: meta,
+    },
+  });
+
+  if (error) {
+    const msg = error.message.toLowerCase();
+
+    if (msg.includes("already registered")) {
+      throw new Error("User already registered. Please login.");
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
+    throw new Error("Unable to register. Please try again.");
+  }
+
+  if (!data.user) {
+    throw new Error("Signup failed. Please try again.");
+  }
+
+  // 🔴 force email verification flow
+  await killUnverifiedSession();
+};
+
+
+const signIn = async (email: string, password: string) => {
+  const normalizedEmail = (email || "").trim().toLowerCase();
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/email-verified`,
-        data: meta,
-      },
     });
 
+    // 🔴 Handle Supabase auth errors clearly
     if (error) {
-      throw error;
+      const msg = error.message.toLowerCase();
+
+      if (msg.includes("invalid login credentials")) {
+        throw new Error("Invalid email or password.");
+      }
+
+      if (msg.includes("email not confirmed")) {
+        throw new Error("Please verify your email before logging in.");
+      }
+
+      throw new Error("Unable to login. Please try again.");
     }
 
-    if (!data.user) {
-      throw new Error("Signup failed");
+    const user = data?.user;
+
+    if (!user) {
+      throw new Error("Invalid email or password.");
     }
 
-    // IMPORTANT: do NOT attempt profile insert or delete auth here.
-    // The DB trigger will create the profile and ensure atomicity.
-    // We still sign the user out here to force email verification flow (existing behavior).
-    await killUnverifiedSession();
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const normalizedEmail = (email || "").trim().toLowerCase();
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password,
-      });
-
-      // If auth failed
-      if (error) {
-        // Check if this email exists in auth by attempting password reset
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-          normalizedEmail,
-          { redirectTo: window.location.origin }
-        );
-
-        if (!resetError) {
-          // Email exists but login failed -> either wrong password or unverified
-          throw new Error(MESSAGES.EMAIL_NOT_VERIFIED);
-        }
-
-        // Email truly doesn't exist
-        throw new Error(MESSAGES.NOT_REGISTERED);
-      }
-
-      const user = data?.user;
-
-      if (!user) {
-        throw new Error(MESSAGES.WRONG_CREDENTIALS);
-      }
-
-      if (!user.email_confirmed_at) {
-        await supabase.auth.signOut();
-        throw new Error(MESSAGES.EMAIL_NOT_VERIFIED);
-      }
-
-      const profileRow = await fetchProfile(user.id);
-      if (!profileRow) {
-        await supabase.auth.signOut();
-        throw new Error(MESSAGES.REGISTRATION_INCOMPLETE);
-      }
-
-      return data;
-    } catch (err: any) {
-      if (err instanceof Error && Object.values(MESSAGES).includes(err.message)) {
-        throw err;
-      }
-      throw new Error(MESSAGES.GENERIC_ERROR);
+    // 🔴 Block login if email not verified
+    if (!user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      throw new Error("Please verify your email before logging in.");
     }
-  };
+
+    // 🔴 Ensure profile exists
+    const profileRow = await fetchProfile(user.id);
+    if (!profileRow) {
+      await supabase.auth.signOut();
+      throw new Error("Registration incomplete. Contact support.");
+    }
+
+    return data;
+
+  } catch (err: any) {
+    if (err instanceof Error) {
+      throw err; // pass real message to UI
+    }
+    throw new Error("Something went wrong. Please try again.");
+  }
+};
+
+
 
   const signOut = async () => {
     try {

@@ -54,28 +54,19 @@ const APP_URL = import.meta.env.VITE_APP_URL;
         return;
       }
 
-      if (resetMethod === "email") {
-        const { error: resetError } =
-          await supabase.auth.resetPasswordForEmail(email, {
-  redirectTo: `${APP_URL}/reset-password-confirm`,
-});
+     if (resetMethod === "email") {
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${APP_URL}/reset-password-confirm`,
+  });
 
+  if (isMounted.current) {
+    setIsSubmitted(true);
+    setLoading(false);   // 🔥 IMPORTANT
+    toast.success("Password reset link sent! Check your email.");
+  }
+}
 
-        if (resetError) {
-          // Don't reveal if email exists (security best practice)
-          if (isMounted.current) {
-            setIsSubmitted(true);
-            toast.success("Password reset link sent successfully.");
-          }
-          clearTimeout(disableTimer);
-          return;
-        }
-
-        if (isMounted.current) {
-          setIsSubmitted(true);
-          toast.success("Password reset link sent successfully.");
-        }
-      } else {
+ else {
         // Send OTP via magic link
         const { error: otpError } = await supabase.auth.signInWithOtp({
           email: email,
