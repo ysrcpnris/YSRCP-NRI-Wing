@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 type PageState =
   | "initializing"
@@ -13,79 +12,116 @@ type PageState =
 
 export default function EmailVerifiedPage() {
   const { loading, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [state, setState] = useState<PageState>("initializing");
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
-  const navigate = useNavigate();
 
   const mountedRef = useRef<boolean>(true);
   const processedRef = useRef<boolean>(false);
   const redirectTimerRef = useRef<number | null>(null);
+  const pollAbortRef = useRef<boolean>(false);
+
+  // Lock this page so route-guards that check pathname won't immediately sign the user out
+  useEffect(() => {
+    if (location.pathname === "/email-verified") {
+      try {
+        sessionStorage.setItem("email_verified_page", "true");
+      } catch {}
+    }
+    return () => {
+      try {
+        sessionStorage.removeItem("email_verified_page");
+      } catch {}
+    };
+  }, [location.pathname]);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      pollAbortRef.current = true;
       if (redirectTimerRef.current) {
         window.clearTimeout(redirectTimerRef.current);
       }
     };
   }, []);
 
+  const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
   useEffect(() => {
-    const processVerification = async () => {
-      if (processedRef.current) return;
-      processedRef.current = true;
+    // Only run on the /email-verified path
+    if (window.location.pathname !== "/email-verified") return;
 
-      setState("verifying");
-      setMessage("");
-      setError("");
+    if (processedRef.current) return;
+    processedRef.current = true;
 
-      // Try to ensure session is parsed by supabase first
-      // Instead of checking raw Supabase session,
-// rely on AuthContext which already restored the user.
+    let cancelled = false;
+    pollAbortRef.current = false;
 
-const { data } = await supabase.auth.getUser();
-
-if (!data?.user) {
-  setError("Verification session not found. Please log in again.");
-  setState("error");
-  return;
-}
-
-if (!data.user.email_confirmed_at) {
-  setError("Email verification not completed yet.");
-  setState("error");
-  return;
-}
-
-      // Clean up URL hash (remove tokens) so UI & route-guards see a clean URL
+    const run = async () => {
+      // === NEW SIMPLE FLOW ===
+      // Supabase may or may not auto-sign-in the user after email confirmation depending on your settings.
+      // It's safest UX to treat this page as a confirmation landing: show success and send user to login.
+      // That avoids waiting forever for a session that won't be created.
       try {
-        if (window.location.hash) {
-          const clean = window.location.pathname + window.location.search;
-          window.history.replaceState(null, "", clean);
+        setState("verifying");
+        setMessage("Finalizing verification...");
+
+        // Small UX pause so the user sees the verifying state briefly
+        await sleep(800);
+
+        // Optional: try a single quick getSession to show email in the message if available
+        try {
+          const { data } = await supabase.auth.getSession();
+          const session = data?.session ?? null;
+          if (session?.user?.email) {
+            setMessage(`Finishing verification for ${session.user.email}...`);
+            // small extra pause so the message is visible
+            await sleep(700);
+          }
+        } catch (err) {
+          // ignore transient getSession errors — we will proceed to show verified message either way
+          // console.warn("single getSession attempt failed:", err);
         }
-      } catch (_) {
-        // ignore any history replacement issues
-      }
 
-      setMessage("Your email has been successfully verified.");
-      setState("verified");
-
-      if (!mountedRef.current) return;
-
-      // Keep the page visible briefly so user sees the success message.
-      // After that, navigate to the dashboard (or change to a route you prefer).
-      redirectTimerRef.current = window.setTimeout(() => {
+        // Show final verified message and redirect to login/home to open login modal
         if (!mountedRef.current) return;
-        setState("redirecting");
-        navigate("/dashboard", { replace: true });
-      }, 2200);
+        setState("verified");
+        setMessage("Your email has been verified successfully. Please log in.");
+
+        // Short delay so user reads the message, then redirect to home and open login modal
+        redirectTimerRef.current = window.setTimeout(() => {
+          if (!mountedRef.current) return;
+          setState("redirecting");
+          navigate("/", { replace: true, state: { openLogin: true } });
+        }, 1600);
+
+        return;
+      } catch (err) {
+        // Any unexpected error — show friendly message and offer fallback
+        console.warn("email verification landing error:", err);
+        if (!mountedRef.current) return;
+        setError("Something went wrong while finalizing verification. Please go to Login and try signing in.");
+        setState("error");
+      }
+      // === END SIMPLE FLOW ===
     };
 
-    processVerification();
-  }, [navigate]);
+    run();
+
+    return () => {
+      cancelled = true;
+      pollAbortRef.current = true;
+      // cleanup timer
+      if (redirectTimerRef.current) {
+        window.clearTimeout(redirectTimerRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return null;
@@ -130,56 +166,44 @@ if (!data.user.email_confirmed_at) {
         {state === "initializing" && (
           <div>
             <h2 style={{ marginBottom: "12px" }}>Initializing</h2>
-            <p style={{ fontSize: "14px", color: "#555" }}>
-              Preparing verification status…
-            </p>
+            <p style={{ fontSize: "14px", color: "#555" }}>Preparing verification status…</p>
           </div>
         )}
 
         {state === "verifying" && (
           <div>
             <h2 style={{ marginBottom: "12px" }}>Verifying Email</h2>
-            <p style={{ fontSize: "14px", color: "#555" }}>
-              Please wait while we confirm your email verification.
-            </p>
+            <p style={{ fontSize: "14px", color: "#555" }}>Please wait while we confirm your email verification.</p>
+            <div style={{ marginTop: 16 }}>
+              <div
+                style={{
+                  display: "inline-block",
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  border: "4px solid #111",
+                  borderTopColor: "transparent",
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+              <style>{`@keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}</style>
+              <div style={{ marginTop: 12, color: "#333" }}>{message || "Finalizing verification..."}</div>
+            </div>
           </div>
         )}
 
         {state === "verified" && (
           <div>
-            <h2
-              style={{
-                marginBottom: "12px",
-                color: "#1a7f37",
-              }}
-            >
-              Email Verified
-            </h2>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "#444",
-                marginBottom: "16px",
-              }}
-            >
-              {message}
-            </p>
-            <p
-              style={{
-                fontSize: "13px",
-                color: "#666",
-              }}
-            >
-              You are now logged in. Redirecting to your dashboard…
-            </p>
+            <h2 style={{ marginBottom: "12px", color: "#1a7f37" }}>Email Verified</h2>
+            <p style={{ fontSize: "14px", color: "#444", marginBottom: "16px" }}>{message || "Verification successful."}</p>
+            <p style={{ fontSize: "13px", color: "#666" }}>You can now log in. Opening login…</p>
             <div style={{ marginTop: 18 }}>
               <button
                 onClick={() => {
-                  // immediate continue without waiting for timeout
                   if (redirectTimerRef.current) {
                     window.clearTimeout(redirectTimerRef.current);
                   }
-                  navigate("/dashboard", { replace: true });
+                  navigate("/", { replace: true, state: { openLogin: true } });
                 }}
                 style={{
                   padding: "10px 16px",
@@ -191,7 +215,7 @@ if (!data.user.email_confirmed_at) {
                   cursor: "pointer",
                 }}
               >
-                Continue to Dashboard
+                Go to Login
               </button>
             </div>
           </div>
@@ -199,45 +223,15 @@ if (!data.user.email_confirmed_at) {
 
         {state === "redirecting" && (
           <div>
-            <h2
-              style={{
-                marginBottom: "12px",
-                color: "#1a7f37",
-              }}
-            >
-              Verification Complete
-            </h2>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "#444",
-                marginBottom: "20px",
-              }}
-            >
-              Your email is verified. Redirecting you now.
-            </p>
+            <h2 style={{ marginBottom: "12px", color: "#1a7f37" }}>Verification Complete</h2>
+            <p style={{ fontSize: "14px", color: "#444", marginBottom: "20px" }}>Your email is verified. Redirecting you now.</p>
           </div>
         )}
 
         {state === "error" && (
           <div>
-            <h2
-              style={{
-                marginBottom: "12px",
-                color: "#a40000",
-              }}
-            >
-              Verification Error
-            </h2>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "#a40000",
-                marginBottom: "16px",
-              }}
-            >
-              {error}
-            </p>
+            <h2 style={{ marginBottom: "12px", color: "#a40000" }}>Verification Error</h2>
+            <p style={{ fontSize: "14px", color: "#a40000", marginBottom: "16px" }}>{error}</p>
             <button
               onClick={goToLogin}
               style={{

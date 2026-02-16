@@ -16,11 +16,33 @@ export default function ResetPasswordConfirmPage() {
   const [success, setSuccess] = useState(false);
   const isMounted = useRef(true);
 
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
+useEffect(() => {
+  const exchangeSession = async () => {
+    try {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(
+        window.location.href
+      );
+
+      if (error) {
+        setError(
+          "This password reset link is invalid or expired. Please request a new one."
+        );
+        return;
+      }
+
+      if (data?.session) {
+        toast.success("Reset link verified. You can now set a new password.");
+      }
+    } catch (err) {
+      setError(
+        "Something went wrong while verifying your reset link. Please try again."
+      );
+    }
+  };
+
+  exchangeSession();
+}, []);
+
 
 useEffect(() => {
   supabase.auth.getSession();

@@ -786,9 +786,11 @@ const handleSubmit = async (e: React.FormEvent) => {
               </div>
             )}
 
-            {forgotPassword ? (
-              <ResetPassword onBack={() => setForgotPassword(false)} />
-            ) : (
+           {forgotPassword && (
+  <ResetPassword onBack={() => setForgotPassword(false)} />
+)}
+{!forgotPassword && (
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === "signup" && (
                   <>
