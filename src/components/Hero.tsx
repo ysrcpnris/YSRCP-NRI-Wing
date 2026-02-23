@@ -6,7 +6,7 @@ type HeroProps = {
 
 const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
   const desktopSlides = [
-    { img: "/Slider/simg1.png" },
+    { img: "/Slider/simg11.png" },
     { img: "/Slider/simg2.jpg" },
     //{ img: "/Slider/simg3.jpg" },
     { img: "/Slider/simg4.jpg" },
@@ -43,8 +43,7 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
   return (
     <section
       id="hero"
-      className="relative w-full flex items-end justify-center text-center text-white pb-20 px-4 overflow-hidden"
-      style={{ height: isMobile ? "calc(140vh - 72px)" : "calc(110vh - 72px)" }}
+      className="relative w-full flex items-end justify-center text-center text-white pb-20 px-4 overflow-hidden min-h-screen bg-black"
     >
       {/* Background Slider */}
       <div className="absolute inset-0 bg-fixed bg-center bg-cover bg-no-repeat transition-all duration-[1200ms]">
@@ -52,13 +51,12 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
           <img
             key={index}
             src={s.img}
-            className={`absolute ${
-              isMobile
-                ? "left-1/2 top-0 transform -translate-x-1/2 w-auto h-full"
-                : "inset-0 w-full h-full"
-            } object-cover transition-all duration-[1200ms] ${
-              current === index ? "opacity-100 scale-100" : "opacity-0 scale-110"
+            className={`absolute inset-0 w-full h-full object-contain object-center transition-all duration-[1200ms] ${
+              current === index
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-110"
             }`}
+            alt={`Slide ${index + 1}`}
           />
         ))}
 

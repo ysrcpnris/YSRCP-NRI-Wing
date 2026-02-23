@@ -2328,8 +2328,8 @@ const fullName = (() => {
 //     : '';
 
 const referralLink =
-  profile?.referral_code && profile?.first_name
-    ? `${window.location.origin}/ref/${profile.first_name.toLowerCase()}/${profile.referral_code}`
+  profile?.referral_code
+    ? `${window.location.origin}/ref/${profile.referral_code}`
     : '';
 
 

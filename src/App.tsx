@@ -206,7 +206,7 @@ function AppContent() {
  
         <Route path="/suggestions" element={<Navigate to="/glimpse" replace />} />
         <Route path="/glimpse" element={<Glimpse />} />
-        <Route path="/ref/:name/:code" element={<ReferralRedirect />} />
+        <Route path="/ref/:code" element={<ReferralRedirect />} />
 
         <Route path="/services" element={<Initiatives />} />
         <Route path="/pillars" element={<PillarPage onBack={() => window.history.back()} onPillarSelect={() => {}} />} />
