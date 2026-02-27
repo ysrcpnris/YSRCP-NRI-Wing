@@ -6,15 +6,13 @@ type HeroProps = {
 
 const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
   const desktopSlides = [
-    { img: "/Slider/simg11.png" },
-    { img: "/Slider/simg2.jpg" },
-    //{ img: "/Slider/simg3.jpg" },
-    { img: "/Slider/simg4.jpg" },
-    //{ img: "/Slider/simg5.jpg" },
-    //{ img: "/Slider/simg6.jpeg" },
+    { img: "/Slider/simg1.jpeg" },
+    { img: "/Slider/simg2.jpeg" },
+    { img: "/Slider/simg3.jpeg" },
+    { img: "/Slider/simg4.png" },
   ];
 
-  const mobileSlides = [{ img: "/Slider/msimg1.jpeg" }];
+  const mobileSlides = [{ img: "/Slider/msimg1.jpeg"}];
 
   const [current, setCurrent] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -43,7 +41,7 @@ const Hero: React.FC<HeroProps> = ({ onJoinNow }) => {
   return (
     <section
       id="hero"
-      className="relative w-full flex items-end justify-center text-center text-white pb-20 px-4 overflow-hidden min-h-screen bg-black"
+      className="relative w-full flex items-end justify-center text-center text-white pb-20 px-4 overflow-hidden min-h-screen bg-white"
     >
       {/* Background Slider */}
       <div className="absolute inset-0 bg-fixed bg-center bg-cover bg-no-repeat transition-all duration-[1200ms]">

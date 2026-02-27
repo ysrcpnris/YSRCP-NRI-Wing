@@ -1423,11 +1423,11 @@ return (
               </div>
             </div>
 
-            {/* INDIAN ADDRESS DETAILS */}
+            {/* INDIA ADDRESS DETAILS */}
             <div className="border-b pb-3 sm:pb-4 mb-3 sm:mb-4">
               <h3 className="text-sm sm:text-base md:text-lg font-semibold text-blue-600 mb-2 sm:mb-3 flex items-center">
                 <MapPin size={18} className="mr-2 text-blue-600 flex-shrink-0" />
-                INDIAN ADDRESS DETAILS
+                INDIA ADDRESS DETAILS
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">

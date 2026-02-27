@@ -3122,7 +3122,7 @@ const handleSubmitSuggestion = async () => {
 {/* 📍 Address Details */}
 <div ref={indianAddressRef} className="md:col-span-2 mt-4 ">
   <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
-   Indian Address 
+   India Address 
   </h4>
 
   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

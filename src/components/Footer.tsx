@@ -169,7 +169,7 @@ const Footer: React.FC = () => {
 
         {/* COPYRIGHT */}
         <div className="mt-2 text-center text-[11px] text-gray-400">
-          © 2025 YSR Congress Party ·
+          © 2026 YSR Congress Party ·
           <a href="#" className="mx-1 hover:text-white">
             Terms
           </a>
