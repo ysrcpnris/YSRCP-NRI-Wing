@@ -1206,7 +1206,7 @@ return (
           style={{ border: '2px sm:border-4 solid #1e88e5' }}
         >
           <button
-            onClick={() => navigate('/', { state: { openLogin: true } })}
+            onClick={() => navigate('/')}
             className="mb-3 sm:mb-4 inline-block text-blue-600 hover:text-blue-700 font-semibold text-xs sm:text-sm md:text-base"
           >
             ← Back to Home

@@ -106,7 +106,7 @@ export const countriesData: Country[] = [
   { name: "Hong Kong", code: "852" },
   { name: "Hungary", code: "36" },
   { name: "Iceland", code: "354" },
-  { name: "India", code: "91" },
+  //{ name: "India", code: "91" },
   { name: "Indonesia", code: "62" },
   { name: "Iran", code: "98" },
   { name: "Iraq", code: "964" },

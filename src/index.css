@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -138,5 +139,8 @@
 }
 /* global styles, optional */
 html, body, #root { height: 100%; }
+body {
+  font-family: 'Inter';
+}
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 8px; }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Video,
   Calendar,
@@ -38,9 +39,72 @@ const SocialIcon = ({ icon: Icon, bg, text, url }: any) => {
   return url ? <a href={url} target="_blank" rel="noopener noreferrer">{node}</a> : node;
 };
 
+// Drive video carousel: replace the placeholder IDs with your Google Drive file IDs
+const DRIVE_VIDEOS: Array<{ id: string; title?: string; thumb?: string }> = [
+  { id: 'PUT_FILE_ID_1', title: 'Video 1', thumb: 'https://drive.google.com/drive/folders/16NCReh6abEs-NI5WEgsWGoCts9q3Xjzd?usp=drive_link' },
+  { id: 'PUT_FILE_ID_2', title: 'Video 2', thumb: 'https://drive.google.com/drive/folders/1sxDHbUpU_2L3i3O-DIJ9mxbEziP3MkGf?usp=drive_link' },
+  { id: 'PUT_FILE_ID_3', title: 'Video 3', thumb: 'https://drive.google.com/drive/folders/1Kel4Ini7mas87K5Wra_Wp6T-2w7m3gbQ?usp=drive_link' },
+  { id: 'PUT_FILE_ID_4', title: 'Video 4', thumb: 'https://drive.google.com/drive/folders/16CAnbnJM-LpJo5fRcZpgJDaxZdbC0IwB?usp=drive_link' },
+  { id: 'PUT_FILE_ID_5', title: 'Video 5', thumb: '' },
+  { id: 'PUT_FILE_ID_6', title: 'Video 6', thumb: '' },
+  { id: 'PUT_FILE_ID_7', title: 'Video 7', thumb: '' },
+];
+
+function DriveCarousel({ videos = DRIVE_VIDEOS }: { videos?: Array<{ id: string; title?: string; thumb?: string }> }) {
+  const [idx, setIdx] = useState(0);
+
+  const goPrev = () => setIdx((i) => (i - 1 + videos.length) % videos.length);
+  const goNext = () => setIdx((i) => (i + 1) % videos.length);
+
+  const current = videos[idx];
+
+  return (
+    <div className="w-full max-w-3xl mx-auto">
+      <div className="relative bg-black rounded-lg overflow-hidden">
+        <div className="aspect-w-16 aspect-h-9">
+          <iframe
+            title={current?.title || 'Drive Video'}
+            src={current?.id && current.id !== 'PUT_FILE_ID_1' ? `https://drive.google.com/file/d/${current.id}/preview` : ''}
+            className="w-full h-full"
+            frameBorder="0"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+          />
+          {!current?.id || current.id.startsWith('PUT_FILE_ID') ? (
+            <div className="absolute inset-0 flex items-center justify-center text-white bg-black/60">
+              <div className="text-center">
+                <div className="text-2xl font-bold">Drive video not configured</div>
+                <div className="text-sm mt-2">Replace file IDs in the component with your Drive file IDs.</div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Controls */}
+        <button onClick={goPrev} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/30 rounded-full p-2">‹</button>
+        <button onClick={goNext} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/30 rounded-full p-2">›</button>
+      </div>
+
+      {/* Thumbnails */}
+      <div className="flex items-center gap-2 mt-3 overflow-x-auto px-2">
+        {videos.map((v, i) => (
+          <button key={i} onClick={() => setIdx(i)} className={`shrink-0 rounded-md overflow-hidden border ${i === idx ? 'ring-2 ring-ysrcp-blue' : 'border-gray-200'}`}>
+            {v.thumb ? (
+              <img src={v.thumb} alt={v.title} className="w-36 h-20 object-cover" />
+            ) : (
+              <div className="w-36 h-20 bg-gray-200 flex items-center justify-center text-sm">No thumb</div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const BottomCards: React.FC = () => {
   const [openModal, setOpenModal] = useState(false);
   const [modalContent, setModalContent] = useState<{ title: string; description: string }>({ title: "", description: "" });
+  const navigate = useNavigate();
 
   const handleCardClick = (title: string, description: string) => {
     setModalContent({ title, description });
@@ -62,8 +126,8 @@ const BottomCards: React.FC = () => {
             </div>
             <ArrowUpRight size={16} />
           </div>
-          <h4 className="mt-3 text-sm font-black">Contribute for ORM</h4>
-          <p className="text-[10px] text-blue-100">Join the Digital Defense Team.</p>
+          <h4 className="mt-3 text-sm font-black text-center">Contribute for ORM</h4>
+          <p className="text-[10px] text-blue-100 text-center">Join the Digital Defense Team.</p>
         </div>
 
         <div
@@ -80,8 +144,8 @@ const BottomCards: React.FC = () => {
               APPLY
             </span>
           </div>
-          <h4 className="mt-3 text-sm font-black">App Building Team</h4>
-          <p className="text-[10px] text-green-100">Tech volunteers needed.</p>
+          <h4 className="mt-3 text-sm font-black text-center">App Building Team</h4>
+          <p className="text-[10px] text-green-100 text-center">Tech volunteers needed.</p>
         </div>
       </div>
 
@@ -107,19 +171,36 @@ const BottomCards: React.FC = () => {
               {modalContent.description}
             </p>
 
-            {/* Coming Soon Section */}
-            <div className="flex flex-col items-center justify-center gap-4">
-              <div className="text-6xl animate-bounce">🚀</div>
-              <span className="text-lg sm:text-xl font-semibold text-gray-500 tracking-wide">
-                Coming Soon
-              </span>
-              <button
-                className="mt-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white px-8 py-3 rounded-full font-bold cursor-not-allowed shadow-md"
-                disabled
-              >
-                Stay Tuned ✨
-              </button>
-            </div>
+            {/* Coming Soon / Action Section */}
+            {modalContent.title === "Contribute for ORM" ? (
+              <div className="flex flex-col items-center justify-center gap-4">
+                <div className="text-6xl animate-bounce">🚀</div>
+                <span className="text-lg sm:text-xl font-semibold text-gray-500 tracking-wide">Join the team</span>
+                <button
+                  onClick={() => {
+                    setOpenModal(false);
+                    navigate('/register');
+                  }}
+                  className="mt-4 bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-500"
+                >
+                  Register Now
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-4">
+                <div className="text-6xl animate-bounce">🚀</div>
+                <span className="text-lg sm:text-xl font-semibold text-gray-500 tracking-wide">Join the App Building Team</span>
+                <button
+                  onClick={() => {
+                    setOpenModal(false);
+                    navigate('/register');
+                  }}
+                  className="mt-4 bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-500"
+                >
+                  Register Now
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -274,6 +355,13 @@ export default function PressMeetsAndSocial() {
         <h2 className="text-white font-black text-xl text-center mb-6 flex justify-center gap-2">
           <Video /> Jagan Anna On Air
         </h2>
+
+        {/* If DRIVE_VIDEOS are configured (replace placeholder IDs), show Drive carousel */}
+        {DRIVE_VIDEOS[0].id && !DRIVE_VIDEOS[0].id.startsWith('PUT_FILE_ID') ? (
+          <div className="mb-6">
+            <DriveCarousel videos={DRIVE_VIDEOS} />
+          </div>
+        ) : null}
 
         {loading && !videos.length && (
           <div className="text-white text-center py-12">
