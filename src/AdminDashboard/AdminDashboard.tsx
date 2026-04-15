@@ -67,6 +67,7 @@ const CONTINENTS = [
 type Row = {
   id: string;
   first_name?: string | null;
+  last_name?: string | null;
   full_name?: string | null;
   email?: string | null;
   mobile_number?: string | null;
@@ -112,7 +113,8 @@ const calculateAge = (dob: string | null | undefined): number | string => {
 // Exports member data to Excel with formatted columns and auto-fit widths
 const exportToExcel = (data: any[], filename: string = "registrations.xlsx") => {
   const exportData = data.map((row: any) => ({
-    "Full Name": row.full_name || "-",
+    "First Name": row.first_name || "-",
+    "Last Name": row.last_name || "-",
     "Email": row.email || "-",
     "Mobile Number": row.mobile_number || "-",
     "WhatsApp Number": row.whatsapp_number || "-",
@@ -355,7 +357,7 @@ function MembersList({
                     key={m.id}
                     className={`text-sm hover:bg-blue-50 ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
                   >
-                    <td className="py-2 px-4">{(m as any).first_name || "-"}</td>
+                    <td className="py-2 px-4">{[(m as any).first_name, (m as any).last_name].filter(Boolean).join(" ") || "-"}</td>
                     <td className="py-2 px-4">{(m as any).email || "-"}</td>
                     <td className="py-2 px-4">{(m as any).mobile_number || "-"}</td>
                     <td className="py-2 px-4">{(m as any).whatsapp_number || "-"}</td>
@@ -558,7 +560,7 @@ export default function AdminDashboard() {
           const { data, error } = await supabase
             .from(TABLE_NAME)
             .select(
-              "id, first_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, created_at"
+              "id, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, created_at"
             )
             .range(offset, offset + batchSize - 1);
 

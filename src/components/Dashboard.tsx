@@ -2674,8 +2674,10 @@ const handleSaveProfile = async () => {
   if (!user) return;
 
   try {
-    const fullName =
-      (document.getElementById("fullName") as HTMLInputElement)?.value || "";
+    const first_name =
+      (document.getElementById("firstName") as HTMLInputElement)?.value || "";
+    const last_name =
+      (document.getElementById("lastName") as HTMLInputElement)?.value || "";
 
     const mobile_number =
       (document.getElementById("mobile_number") as HTMLInputElement)?.value || "";
@@ -2693,15 +2695,7 @@ const dob =
 
     const instagram =
       (document.getElementById("instagram") as HTMLInputElement)?.value || "";
-const nameParts = fullName.trim().split(/\s+/);
 
-const first_name = nameParts[0];
-const last_name =
-  nameParts.length > 1
-    ? nameParts.slice(1).join(" ")
-    : ""; 
-
-   
 const updates = {
   first_name,
   last_name,
@@ -2955,12 +2949,23 @@ const handleSubmitSuggestion = async () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                Full Name
+                First Name
               </label>
               <input
-              id="fullName"
+              id="firstName"
                 type="text"
-                defaultValue={fullName}
+                defaultValue={profile?.first_name || ''}
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                Last Name
+              </label>
+              <input
+              id="lastName"
+                type="text"
+                defaultValue={profile?.last_name || ''}
                 className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               />
             </div>

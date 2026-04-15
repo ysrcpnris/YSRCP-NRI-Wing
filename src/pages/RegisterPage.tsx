@@ -33,6 +33,9 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [countrySearch, setCountrySearch] = useState('');
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
   const isMounted = useRef(true);
 
   const [formData, setFormData] = useState({
@@ -69,6 +72,17 @@ export default function RegisterPage() {
     name: country.name,
     code: '+' + country.code
   }));
+
+  // Close country dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
+        setShowCountryDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Expected national number lengths (approximate) for validation (digits after country code)
   const phoneLengths: Record<string, number> = {
@@ -1146,9 +1160,11 @@ if (pwdError) {
 
     const profilePayload = {
       first_name: formData.first_name,
-      last_name: formData.last_name || formData.first_name,
+      last_name: formData.last_name,
       mobile_number: formData.mobile_number,
       country_of_residence: formData.country_of_residence,
+      state_abroad: formData.state_abroad,
+      city_abroad: formData.city_abroad,
       indian_state: formData.indian_state,
       district: formData.district,
       assembly_constituency: formData.assembly_constituency,
@@ -1236,7 +1252,7 @@ return (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Full Name <span className="text-red-500">*</span>
+                    First Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -1249,32 +1265,106 @@ return (
 
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Country of Residence <span className="text-red-500">*</span>
+                    Last Name <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <input
+                    type="text"
                     required
-                    value={formData.country_of_residence}
+                    value={formData.last_name}
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-blue-400 rounded-lg bg-blue-50 focus:ring-2 focus:ring-green-500 focus:border-blue-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
+                <div className="relative" ref={countryDropdownRef}>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    Country You Currently Live In <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={countrySearch}
+                    placeholder="Search or select a country"
                     onChange={(e) => {
-                      const selectedCountry = e.target.value;
-                      const countryCode = getCountryCodeFromCountryName(selectedCountry);
-                      setFormData({
-                        ...formData,
-                        country_of_residence: selectedCountry,
-                        mobile_number: countryCode,
-                        state_abroad: '',
-                        city_abroad: '',
-                      });
-                      setPhoneError('');
+                      setCountrySearch(e.target.value);
+                      setShowCountryDropdown(true);
+                      if (formData.country_of_residence) {
+                        setFormData({
+                          ...formData,
+                          country_of_residence: '',
+                          mobile_number: '',
+                          state_abroad: '',
+                          city_abroad: '',
+                        });
+                      }
                     }}
+                    onFocus={() => setShowCountryDropdown(true)}
                     className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select Country</option>
-                    {countryCodes.map((country) => (
-                      <option key={country.name} value={country.name}>
-                        {country.name} (+{country.code.replace('+', '')})
-                      </option>
-                    ))}
-                  </select>
+                  />
+                  {showCountryDropdown && (
+                    <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+                      {countryCodes
+                        .filter((country) =>
+                          country.name.toLowerCase().includes(countrySearch.toLowerCase())
+                        )
+                        .map((country) => (
+                          <li
+                            key={country.name}
+                            onClick={() => {
+                              const countryCode = getCountryCodeFromCountryName(country.name);
+                              setFormData({
+                                ...formData,
+                                country_of_residence: country.name,
+                                mobile_number: countryCode,
+                                state_abroad: '',
+                                city_abroad: '',
+                              });
+                              setCountrySearch(`${country.name} (+${country.code.replace('+', '')})`);
+                              setShowCountryDropdown(false);
+                              setPhoneError('');
+                            }}
+                            className="px-3 sm:px-4 py-2 text-sm sm:text-base cursor-pointer hover:bg-blue-50"
+                          >
+                            {country.name} (+{country.code.replace('+', '')})
+                          </li>
+                        ))}
+                      {countryCodes.filter((country) =>
+                        country.name.toLowerCase().includes(countrySearch.toLowerCase())
+                      ).length === 0 && (
+                        <li className="px-3 sm:px-4 py-2 text-sm text-gray-400">No countries found</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    State / Province <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.state_abroad}
+                    placeholder="Enter your state or province"
+                    onChange={(e) => setFormData({ ...formData, state_abroad: e.target.value })}
+                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.city_abroad}
+                    placeholder="Enter your city"
+                    onChange={(e) => setFormData({ ...formData, city_abroad: e.target.value })}
+                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
                 </div>
               </div>
 

@@ -59,7 +59,7 @@ export default function AdminProfileMenu() {
           <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-fadeIn">
             <div className="px-5 py-4 bg-gradient-to-br from-blue-50 to-white border-b border-gray-100">
               <p className="text-sm font-bold text-[#1368d6] truncate">
-                {profile?.full_name}
+                {[profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || profile?.full_name}
               </p>
               <p className="text-xs text-gray-500 truncate">{profile?.email}</p>
             </div>

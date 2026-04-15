@@ -20,7 +20,7 @@ type AuthContextType = {
     password: string,
     profileData: Partial<Profile>
   ) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<Session | null>;
+  signIn: (email: string, password: string) => Promise<{ user: User; session: Session } | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
@@ -197,12 +197,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     last_name:
       session.user.user_metadata?.last_name ||
       session.user.user_metadata?.full_name?.split(" ")[1] ||
-      "User",
+      "change last name",
 
-    full_name: session.user.user_metadata?.full_name || null,
+    full_name: session.user.user_metadata?.full_name ||
+      [session.user.user_metadata?.first_name, session.user.user_metadata?.last_name].filter(Boolean).join(" ") ||
+      null,
 
     mobile_number: session.user.user_metadata?.mobile_number || null,
     country_of_residence: session.user.user_metadata?.country_of_residence || null,
+    state_abroad: session.user.user_metadata?.state_abroad || null,
+    city_abroad: session.user.user_metadata?.city_abroad || null,
     indian_state: session.user.user_metadata?.indian_state || null,
     district: session.user.user_metadata?.district || null,
     assembly_constituency: session.user.user_metadata?.assembly_constituency || null,

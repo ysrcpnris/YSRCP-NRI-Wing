@@ -147,9 +147,9 @@ export default function Assistance() {
 
       {/* STATS CARDS - Total, Pending, and Resolved counts */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total Requests" value={total} onClick={() => setSelected("total")} />
-        <StatCard title="Pending Requests" value={pending} onClick={() => setSelected("pending")} />
-        <StatCard title="Resolved Requests" value={resolved} onClick={() => setSelected("resolved")} />
+        <StatCard title="Total Requests" value={total} onClick={() => setSelected(selected === "total" ? null : "total")} active={selected === "total"} />
+        <StatCard title="Pending Requests" value={pending} onClick={() => setSelected(selected === "pending" ? null : "pending")} active={selected === "pending"} />
+        <StatCard title="Resolved Requests" value={resolved} onClick={() => setSelected(selected === "resolved" ? null : "resolved")} active={selected === "resolved"} />
       </div>
 
       {/* TABLE - Displays requests based on selected status filter */}

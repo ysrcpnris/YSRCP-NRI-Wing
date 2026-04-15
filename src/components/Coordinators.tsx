@@ -15,7 +15,7 @@ export default function Coordinators() {
       .from('coordinators')
       .select(`
         *,
-        profile:profiles(full_name, email, profile_photo, current_city, current_country)
+        profile:profiles(first_name, last_name, full_name, email, profile_photo, current_city, current_country)
       `)
       .order('region');
 
@@ -99,10 +99,10 @@ export default function Coordinators() {
                 <div className="text-center mb-4">
                   <img
                     src={coordinator.profile?.profile_photo || 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=300'}
-                    alt={coordinator.profile?.full_name}
+                    alt={[coordinator.profile?.first_name, coordinator.profile?.last_name].filter(Boolean).join(" ") || coordinator.profile?.full_name}
                     className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-blue-100"
                   />
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{coordinator.profile?.full_name}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">{[coordinator.profile?.first_name, coordinator.profile?.last_name].filter(Boolean).join(" ") || coordinator.profile?.full_name}</h3>
                   <p className="text-sm font-semibold text-blue-600 mb-2">{coordinator.position}</p>
                   <div className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-4">
                     {coordinator.region}

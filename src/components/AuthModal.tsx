@@ -29,12 +29,26 @@ export default function AuthModal({
     }
   }, [mode, onClose, navigate]);
 
+  // Close country dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
+        setShowCountryDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const isMounted = useRef(true);
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [forgotPassword, setForgotPassword] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     // Personal Information
@@ -895,32 +909,62 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
 
                       <div className="grid md:grid-cols-3 gap-4 mt-4">
                         {/* Country Dropdown */}
-                        <div>
+                        <div className="relative" ref={countryDropdownRef}>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Country of Residence{" "}
+                            Country You Currently Live In{" "}
                             <span className="text-red-500">*</span>
                           </label>
-                          <select
+                          <input
+                            type="text"
                             required
-                            value={formData.country_of_residence}
+                            value={countrySearch}
+                            placeholder="Search or select a country"
                             onChange={(e) => {
-                              const selectedCountry = e.target.value;
-                              setFormData({
-                                ...formData,
-                                country_of_residence: selectedCountry,
-                                state_abroad: "",
-                                city_abroad: "",
-                              });
+                              setCountrySearch(e.target.value);
+                              setShowCountryDropdown(true);
+                              if (formData.country_of_residence) {
+                                setFormData({
+                                  ...formData,
+                                  country_of_residence: "",
+                                  state_abroad: "",
+                                  city_abroad: "",
+                                });
+                              }
                             }}
+                            onFocus={() => setShowCountryDropdown(true)}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          >
-                            <option value="">Select Country</option>
-                            {Object.keys(countryData).map((country) => (
-                              <option key={country} value={country}>
-                                {country}
-                              </option>
-                            ))}
-                          </select>
+                          />
+                          {showCountryDropdown && (
+                            <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+                              {Object.keys(countryData)
+                                .filter((country) =>
+                                  country.toLowerCase().includes(countrySearch.toLowerCase())
+                                )
+                                .map((country) => (
+                                  <li
+                                    key={country}
+                                    onClick={() => {
+                                      setFormData({
+                                        ...formData,
+                                        country_of_residence: country,
+                                        state_abroad: "",
+                                        city_abroad: "",
+                                      });
+                                      setCountrySearch(country);
+                                      setShowCountryDropdown(false);
+                                    }}
+                                    className="px-4 py-2 text-sm cursor-pointer hover:bg-blue-50"
+                                  >
+                                    {country}
+                                  </li>
+                                ))}
+                              {Object.keys(countryData).filter((country) =>
+                                country.toLowerCase().includes(countrySearch.toLowerCase())
+                              ).length === 0 && (
+                                <li className="px-4 py-2 text-sm text-gray-400">No countries found</li>
+                              )}
+                            </ul>
+                          )}
                         </div>
 
                         {/* State Dropdown */}

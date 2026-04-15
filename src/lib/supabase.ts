@@ -48,6 +48,8 @@ export type Profile = {
   suggestions?: string;
   // Referral Information
   referred_by?: string;
+  referral_code?: string;
+  designation?: string;
 
   // Social Media Handles
   instagram_id?: string;
