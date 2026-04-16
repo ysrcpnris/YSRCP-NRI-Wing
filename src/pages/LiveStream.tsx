@@ -52,7 +52,7 @@ export default function LiveStreamPage() {
         >
           ← Back
         </button>
-        <h1 className="text-4xl font-bold text-center text-[#1368d6] flex-1">
+        <h1 className="text-4xl font-bold text-center text-primary-600 flex-1">
           🎥 Live Stream
         </h1>
       </div>
@@ -87,7 +87,7 @@ export default function LiveStreamPage() {
       )}
 
       {/* 🕒 Past Streams Section */}
-      <h2 className="text-2xl font-bold text-center text-[#1368d6] mb-6">
+      <h2 className="text-2xl font-bold text-center text-primary-600 mb-6">
         📺 Past Streams
       </h2>
 

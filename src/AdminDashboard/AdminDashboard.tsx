@@ -173,8 +173,8 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
       }}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
         current === page
-          ? "bg-[#1368d6] text-white shadow-md"
-          : "text-gray-700 hover:bg-blue-50 hover:text-[#1368d6]"
+          ? "bg-primary-600 text-white shadow-md"
+          : "text-gray-700 hover:bg-blue-50 hover:text-primary-600"
       }`}
     >
       <Icon size={18} />
@@ -205,7 +205,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
                 className="w-10 h-10 rounded-full border-2 border-green-600 shadow-sm"
               />
               <div className="text-left">
-                <div className="font-semibold text-[#1368d6]">NRI Convenor</div>
+                <div className="font-semibold text-primary-600">NRI Convenor</div>
                 <div className="text-xs text-green-600">NRI Wing</div>
               </div>
             </button>
@@ -217,7 +217,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             {showProfileMenu && (
               <div className="absolute left-4 top-20 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
                 <div className="px-4 py-3 bg-gradient-to-br from-blue-50 to-white border-b border-gray-100">
-                  <p className="text-sm font-bold text-[#1368d6]">Admin Menu</p>
+                  <p className="text-sm font-bold text-primary-600">Admin Menu</p>
                 </div>
                 <div className="p-2">
                   <button
@@ -225,7 +225,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
                       setShowProfileMenu(false);
                       setShowProfile(true);
                     }}
-                    className="w-full px-3 py-2 text-sm font-medium flex items-center gap-2 text-gray-700 hover:bg-blue-50 hover:text-[#1368d6] rounded-lg transition-all"
+                    className="w-full px-3 py-2 text-sm font-medium flex items-center gap-2 text-gray-700 hover:bg-blue-50 hover:text-primary-600 rounded-lg transition-all"
                   >
                     <User size={16} />
                     My Profile
@@ -235,7 +235,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
                       setShowProfileMenu(false);
                       navigate("/change-password");
                     }}
-                    className="w-full px-3 py-2 text-sm font-medium flex items-center gap-2 text-gray-700 hover:bg-blue-50 hover:text-[#1368d6] rounded-lg transition-all"
+                    className="w-full px-3 py-2 text-sm font-medium flex items-center gap-2 text-gray-700 hover:bg-blue-50 hover:text-primary-600 rounded-lg transition-all"
                   >
                     <Lock size={16} />
                     Change Password
@@ -298,7 +298,7 @@ function StatCard({
       </div>
       <button
         onClick={onClick}
-        className="mt-4 bg-[#1368d6] text-white px-3 py-2 rounded-md text-sm hover:bg-green-600 transition-all duration-200 w-fit self-center"
+        className="mt-4 bg-primary-600 text-white px-3 py-2 rounded-md text-sm hover:bg-green-600 transition-all duration-200 w-fit self-center"
       >
         View More
       </button>
@@ -327,10 +327,10 @@ function MembersList({
   return (
     <div className="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm p-6">
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-xl font-semibold text-[#1368d6]">{title}</h2>
+        <h2 className="text-xl font-semibold text-primary-600">{title}</h2>
         <button
           onClick={onBack}
-          className="px-4 py-2 text-sm rounded-md bg-[#1368d6] text-white hover:bg-green-600 transition"
+          className="px-4 py-2 text-sm rounded-md bg-primary-600 text-white hover:bg-green-600 transition"
         >
           ← Back
         </button>
@@ -342,7 +342,7 @@ function MembersList({
         <>
           <div className="overflow-x-auto">
             <table className="min-w-full border border-gray-200 rounded-lg">
-              <thead className="bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white">
+              <thead className="bg-gradient-to-r from-primary-600 to-accent-600 text-white">
                 <tr>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Name</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Email</th>
@@ -380,7 +380,7 @@ function MembersList({
                   className={`px-4 py-1.5 rounded-md border ${
                     page === 1
                       ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                      : "border-[#1368d6] text-[#1368d6] hover:bg-blue-50"
+                      : "border-primary-600 text-primary-600 hover:bg-blue-50"
                   }`}
                 >
                   Previous
@@ -659,7 +659,7 @@ export default function AdminDashboard() {
                   setShowIdleWarning(false);
                   resetIdleTimer();
                 }}
-                className="bg-[#1368d6] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+                className="bg-primary-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
               >
                 Continue Session
               </button>
@@ -680,7 +680,7 @@ export default function AdminDashboard() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setSidebarOpen(true)}
-          className="md:hidden fixed top-4 left-4 z-50 bg-[#1368d6] text-white p-2 rounded-lg shadow-md"
+          className="md:hidden fixed top-4 left-4 z-50 bg-primary-600 text-white p-2 rounded-lg shadow-md"
         >
           <Menu size={20} />
         </button>
@@ -688,7 +688,7 @@ export default function AdminDashboard() {
     <>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-[#1368d6] mb-2">
+            <h1 className="text-3xl font-bold text-primary-600 mb-2">
               Coordinator Dashboard
             </h1>
             <p className="text-gray-500">
@@ -718,7 +718,7 @@ export default function AdminDashboard() {
             {/* ------- CONTINENTS / COUNTRIES / STATES ------- */}
             {!selectedContinent && (
               <>
-                <h2 className="text-2xl font-bold text-[#1368d6] mb-3">
+                <h2 className="text-2xl font-bold text-primary-600 mb-3">
                   <br />
                   Continents
                 </h2>
@@ -741,10 +741,10 @@ export default function AdminDashboard() {
             {selectedContinent && !selectedCountry && (
               <>
                 <div className="flex justify-between items-center mt-8 mb-3">
-                  <h2 className="text-xl font-bold text-[#1368d6]">Countries in {selectedContinent}</h2>
+                  <h2 className="text-xl font-bold text-primary-600">Countries in {selectedContinent}</h2>
                   <button
                     onClick={() => setSelectedContinent(null)}
-                    className="px-3 py-2 text-sm rounded border hover:bg-blue-50 text-[#1368d6]"
+                    className="px-3 py-2 text-sm rounded border hover:bg-blue-50 text-primary-600"
                   >
                     ← Back
                   </button>
@@ -785,7 +785,7 @@ export default function AdminDashboard() {
             {/* ---------- CHARTS ---------- */}
             {showCharts && (
               <div className="bg-white border rounded-xl p-6 shadow-sm mt-10">
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-[#1368d6]">
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-primary-600">
                   <BarChart3 size={18} /> Statistics Overview
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -915,7 +915,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative animate-scaleUp">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#1368d6] to-[#00a86b] px-8 py-6 text-white relative">
+        <div className="bg-gradient-to-r from-primary-600 to-accent-600 px-8 py-6 text-white relative">
           <button
             onClick={onClose}
             className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors"
@@ -996,7 +996,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
             <button
               onClick={updateProfile}
               disabled={saving}
-              className="px-8 py-2.5 bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="px-8 py-2.5 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
               {saving ? "Saving..." : "Save Changes"}

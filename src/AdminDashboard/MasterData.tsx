@@ -216,7 +216,7 @@ export default function MasterData() {
   // Interface with filters, table, and modal for leader management
   return (
     <div className="p-4 md:p-6">
-      <h1 className="text-2xl md:text-3xl font-bold text-[#1368d6] mb-4 md:mb-6">
+      <h1 className="text-2xl md:text-3xl font-bold text-primary-600 mb-4 md:mb-6">
        Local Leaders
       </h1>
 
@@ -377,7 +377,7 @@ export default function MasterData() {
       {showModal && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-2xl p-4 md:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-      <h3 className="text-xl font-semibold mb-6 text-[#1368d6]">
+      <h3 className="text-xl font-semibold mb-6 text-primary-600">
         {editItem ? "Edit Leader Assignment" : "Add New Leader"}
       </h3>
 

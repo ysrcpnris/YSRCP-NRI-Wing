@@ -138,7 +138,7 @@ export default function Assistance() {
   return (
     <div className="p-6">
       {/* HEADER - Page title and description */}
-      <h1 className="text-2xl font-bold text-[#1368d6] mb-1">
+      <h1 className="text-2xl font-bold text-primary-600 mb-1">
         Assistance Requests Overview
       </h1>
       <p className="text-gray-500 mb-6">
@@ -156,7 +156,7 @@ export default function Assistance() {
       {selected && (
         <div className="bg-white rounded-xl border shadow-sm p-6">
           <div className="flex justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#1368d6] capitalize">
+            <h2 className="text-lg font-semibold text-primary-600 capitalize">
               {selected} Requests
             </h2>
             {/* Close table view button */}
@@ -171,7 +171,7 @@ export default function Assistance() {
           <div className="overflow-x-auto">
             <table className="min-w-full border rounded-lg text-sm">
               {/* Table header with status columns */}
-              <thead className="bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white">
+              <thead className="bg-gradient-to-r from-primary-600 to-accent-600 text-white">
                 <tr>
                   <th className="px-3 py-2 text-left">Name</th>
                   <th className="px-3 py-2 text-left">Service</th>
@@ -226,7 +226,7 @@ export default function Assistance() {
                       {item.status === "pending" ? (
                         <button
                           onClick={() => openAllocationForm(item)}
-                          className="bg-[#1368d6] text-white px-3 py-1 rounded"
+                          className="bg-primary-600 text-white px-3 py-1 rounded"
                         >
                           Resolve
                         </button>
@@ -263,7 +263,7 @@ export default function Assistance() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-lg rounded-xl p-6 shadow-xl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-[#1368d6]">{`Resolve – ${selectedRequest.applicant_name}`}</h3>
+              <h3 className="text-lg font-semibold text-primary-600">{`Resolve – ${selectedRequest.applicant_name}`}</h3>
               <button onClick={() => setAllocateModalOpen(false)} className="text-xl font-bold">×</button>
             </div>
             {/* Team assignment dropdown */}
@@ -305,7 +305,7 @@ export default function Assistance() {
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-[#1368d6] text-white rounded"
+                className="px-4 py-2 bg-primary-600 text-white rounded"
                 onClick={handleResolve}
               >
                 Submit
@@ -333,7 +333,7 @@ function Modal({
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
       <div className="bg-white w-full max-w-2xl rounded-2xl p-7 shadow-2xl border border-gray-200 transform transition-all animate-slideUp max-h-[80vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-          <h3 className="text-xl font-bold bg-gradient-to-r from-[#1368d6] to-[#00a86b] bg-clip-text text-transparent">{title}</h3>
+          <h3 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">{title}</h3>
           <button 
             onClick={onClose} 
             className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-colors duration-200"
@@ -371,7 +371,7 @@ function StatCard({
       <div className="text-3xl text-green-600">{value}</div>
       <button
         onClick={onClick}
-        className="mt-3 bg-[#1368d6] text-white px-4 py-2 rounded"
+        className="mt-3 bg-primary-600 text-white px-4 py-2 rounded"
       >
         {active ? "Hide" : "View More"}
       </button>

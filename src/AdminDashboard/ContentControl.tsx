@@ -329,7 +329,7 @@ export default function ContentControl() {
   // Interface with sections for live link, gallery, and banners management
   return (
     <div className="p-4 sm:p-8">
-      <h1 className="text-3xl font-bold text-[#1368d6] mb-6">
+      <h1 className="text-3xl font-bold text-primary-600 mb-6">
         CONTENT MANAGEMENT
       </h1>
 

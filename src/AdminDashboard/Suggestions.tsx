@@ -75,7 +75,7 @@ function StatCard({
       </div>
       <button
         onClick={onClick}
-        className="mt-4 bg-[#1368d6] text-white px-3 py-2 rounded-md text-sm hover:bg-green-600 transition-all duration-200 w-fit self-center"
+        className="mt-4 bg-primary-600 text-white px-3 py-2 rounded-md text-sm hover:bg-green-600 transition-all duration-200 w-fit self-center"
       >
         View More
       </button>
@@ -95,11 +95,11 @@ function SuggestionModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full mx-4 border-2 border-[#1368d6]">
+      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full mx-4 border-2 border-primary-600">
         {/* Header */}
         <div className="flex justify-between items-start mb-4 pb-3 border-b border-blue-100">
           <div className="text-sm text-gray-600">
-            <span className="font-semibold text-[#1368d6]">
+            <span className="font-semibold text-primary-600">
               {suggestion.name}
             </span>
             <span className="text-gray-400 mx-2">·</span>
@@ -110,14 +110,14 @@ function SuggestionModal({
 
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-[#1368d6] text-2xl font-bold transition-colors"
+            className="text-gray-400 hover:text-primary-600 text-2xl font-bold transition-colors"
           >
             ×
           </button>
         </div>
 
         {/* Suggestion Body */}
-        <div className="max-h-[60vh] overflow-y-auto border-2 border-[#1368d6] rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white">
+        <div className="max-h-[60vh] overflow-y-auto border-2 border-primary-600 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white">
           <p className="text-gray-800 leading-relaxed whitespace-pre-wrap text-base">
             {suggestion.suggestion}
           </p>
@@ -143,7 +143,7 @@ export default function Suggestions() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-[#1368d6] mb-2">
+      <h1 className="text-2xl font-bold text-primary-600 mb-2">
         Suggestions Overview
       </h1>
       <p className="text-gray-500 mb-6">
@@ -164,12 +164,12 @@ export default function Suggestions() {
       {showTable && (
         <div className="bg-white border rounded-xl shadow-sm p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-[#1368d6]">
+            <h2 className="text-lg font-semibold text-primary-600">
               All Suggestions
             </h2>
             <button
               onClick={() => setShowTable(false)}
-              className="px-3 py-1.5 text-sm border rounded hover:bg-blue-50 text-[#1368d6]"
+              className="px-3 py-1.5 text-sm border rounded hover:bg-blue-50 text-primary-600"
             >
               Close
             </button>
@@ -177,7 +177,7 @@ export default function Suggestions() {
 
           <div className="overflow-x-auto">
             <table className="min-w-full border border-gray-200 rounded-lg">
-              <thead className="bg-[#1368d6] text-white">
+              <thead className="bg-primary-600 text-white">
                 <tr>
                   <th className="px-4 py-2 text-left text-sm font-medium">
                     Name
@@ -204,7 +204,7 @@ export default function Suggestions() {
                     <td className="px-4 py-2 text-sm">{s.date}</td>
                     <td
                       onClick={() => setSelectedSuggestion(s)}
-                      className="px-4 py-2 text-sm text-[#1368d6] cursor-pointer hover:underline font-medium"
+                      className="px-4 py-2 text-sm text-primary-600 cursor-pointer hover:underline font-medium"
                     >
                       {truncateText(s.suggestion, 80)}
                     </td>

@@ -1231,7 +1231,7 @@ const Dashboard: React.FC = () => {
    * - Improve UX by persisting user's section preference
    */
   
- const [selectedService, setSelectedService] = useState<string | null>(null);
+ const [selectedService, setSelectedService] = useState<keyof typeof SERVICE_CONFIG | null>(null);
 const [selectedSub, setSelectedSub] = useState<string | null>(null);
 const [selectedInner, setSelectedInner] = useState<string | null>(null);
   useEffect(() => {
@@ -2193,7 +2193,7 @@ if (!district || !assembly) {
   if (error) {
     console.error("Leaders fetch error:", error);
   } else {
-    const grouped = (data as LeaderAssignmentRow[]).reduce(
+    const grouped = (data as unknown as LeaderAssignmentRow[]).reduce(
       (acc, item) => {
         if (!item.leaders_master?.is_active) return acc;
 
@@ -2801,9 +2801,14 @@ const handleSubmitSuggestion = async () => {
                 <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
               ) : profile?.profile_photo ? (
                 <img
-                  src={profile.profile_photo}
+                  src={`${profile.profile_photo}?t=${Date.now()}`}
                   alt="avatar"
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).parentElement!.innerHTML =
+                      '<div class="w-full h-full flex items-center justify-center text-sm text-gray-500">No Photo</div>';
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">
@@ -3379,84 +3384,45 @@ const handleSubmitSuggestion = async () => {
   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
     Professional Category
   </label>
-
- <Listbox
-  value={profession}
-onChange={(value) => {
-  setProfession(value);
-  setRoleDesignation("");
-  setOrganization("");
-}}
-
->
-
-    <div className="relative">
-      <Listbox.Button className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg flex items-center justify-between text-sm font-semibold">
-        <span>{profession || "Select Category"}</span>
-        <ChevronDown size={18} />
-      </Listbox.Button>
-
-      <Listbox.Options className="absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg">
-        {["Job", "Business", "Student"].map((opt) => (
-          <Listbox.Option
-            key={opt}
-            value={opt}
-            className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-          >
-            {opt}
-          </Listbox.Option>
-        ))}
-      </Listbox.Options>
-    </div>
-  </Listbox>
+  <input
+    type="text"
+    value={profession}
+    onChange={(e) => setProfession(e.target.value)}
+    placeholder="e.g. Software Engineer, Doctor, Business Owner, Student"
+    className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+               text-sm font-semibold
+               focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+  />
 </div>
 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
   <div className="mb-4">
    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-    {profession === "Student"
-      ? "Course / Field of Study"
-      : profession === "Business"
-      ? "Role / Business Domain"
-      : "Role / Designation"}
+    Role / Designation
   </label>
   <input
     id="role_designation"
     type="text"
     value={roleDesignation}
     onChange={(e) => setRoleDesignation(e.target.value)}
-    disabled={!profession}
-    placeholder={
-      profession === "Student"
-        ? "e.g. B.Tech Computer Science"
-        : profession === "Business"
-        ? "e.g. Founder, Manufacturing"
-        : "e.g. Software Engineer"
-    }
+    placeholder="e.g. Senior Developer, Founder, B.Tech CS"
     className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
-               text-sm font-semibold disabled:opacity-50
+               text-sm font-semibold
                focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
   />
   </div>
 
   <div className="mb-4">
     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-      {profession === "Student"
-        ? "College / University"
-        : "Company Name"}
+      Company / Organization Name
     </label>
   <input
     id="organization"
     type="text"
     value={organization}
     onChange={(e) => setOrganization(e.target.value)}
-    disabled={!profession}
-    placeholder={
-      profession === "Student"
-        ? "e.g. IIT Delhi"
-        : "e.g. Infosys"
-    }
+    placeholder="e.g. Infosys, IIT Delhi"
     className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
-               text-sm font-semibold disabled:opacity-50"
+               text-sm font-semibold"
   />
   </div>
 </div>
@@ -3788,8 +3754,8 @@ const renderConnectContent = () => {
                       "info"
                     );
                   }}
-                  className="w-full py-2 rounded-lg bg-[#25D366]
-                             hover:bg-[#20b85a] text-white font-bold
+                  className="w-full py-2 rounded-lg bg-whatsapp-500
+                             hover:bg-whatsapp-600 text-white font-bold
                              text-xs flex items-center justify-center
                              gap-1.5 transition-colors shadow-sm"
                 >
@@ -3928,7 +3894,7 @@ const renderServicesContent = () => (
                    rounded-lg bg-white border border-gray-200
                    shadow-lg text-sm"
       >
-        {Object.keys(SERVICE_CONFIG[selectedService].subs)
+        {Object.keys(SERVICE_CONFIG[selectedService].subs as Record<string, string[]>)
           .filter((sub) => sub !== selectedSub) // ⭐ same trick
           .map((sub) => (
             <Listbox.Option
@@ -3980,9 +3946,9 @@ const renderServicesContent = () => (
                            shadow-lg text-sm"
               >
                 {selectedSub &&
-                  SERVICE_CONFIG[selectedService].subs[selectedSub]
-                    .filter((opt) => opt !== selectedInner) // ⭐ KEY LINE
-                    .map((opt) => (
+                  ((SERVICE_CONFIG[selectedService].subs as Record<string, string[]>)[selectedSub] || [])
+                    .filter((opt: string) => opt !== selectedInner) // ⭐ KEY LINE
+                    .map((opt: string) => (
                       <Listbox.Option
                         key={opt}
                         value={opt}

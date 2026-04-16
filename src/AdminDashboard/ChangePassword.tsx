@@ -248,7 +248,7 @@ function PasswordInput({
           disabled={disabled}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#1368d6]"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-primary-600"
         />
         <button
           type="button"
@@ -462,9 +462,9 @@ export default function ChangePassword() {
 
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-6">
-        <Lock size={26} className="text-[#1368d6]" />
+        <Lock size={26} className="text-primary-600" />
         <div>
-          <h1 className="text-2xl font-bold text-[#1368d6]">
+          <h1 className="text-2xl font-bold text-primary-600">
             Change Password
           </h1>
           <p className="text-sm text-gray-500">
@@ -533,7 +533,7 @@ export default function ChangePassword() {
             disabled={!canSubmit}
             className={`inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-white transition-all ${
               canSubmit
-                ? "bg-gradient-to-r from-[#1368d6] to-[#00a86b] hover:opacity-95"
+                ? "bg-gradient-to-r from-primary-600 to-accent-600 hover:opacity-95"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
           >

@@ -218,7 +218,7 @@ export default function Visited() {
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
         <div className="bg-white w-full max-w-lg rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-[#1368d6] mb-4">
+          <h2 className="text-xl font-semibold text-primary-600 mb-4">
             {visit ? "Edit Visit" : "Add Visit"}
           </h2>
 
@@ -275,7 +275,7 @@ export default function Visited() {
               Cancel
             </button>
             <button
-              className="px-4 py-2 bg-[#1368d6] text-white rounded"
+              className="px-4 py-2 bg-primary-600 text-white rounded"
               onClick={() => handleSaveVisit(form)}
             >
               Save
@@ -294,7 +294,7 @@ export default function Visited() {
     <div className="p-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-[#1368d6]">
+          <h1 className="text-3xl font-bold text-primary-600">
             NRI Visits with Hon’ble CM
           </h1>
           <p className="text-gray-600">Overview of all NRI visits</p>
@@ -302,7 +302,7 @@ export default function Visited() {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-[#1368d6] text-white px-5 py-2 rounded-lg"
+          className="bg-primary-600 text-white px-5 py-2 rounded-lg"
         >
           + Add Visit
         </button>
@@ -318,7 +318,7 @@ export default function Visited() {
       {view !== "none" && (
         <div className="bg-white border rounded-xl p-6">
           <table className="w-full border">
-            <thead className="bg-[#1368d6] text-white">
+            <thead className="bg-primary-600 text-white">
               <tr>
                 <th className="p-3 text-center">Name</th>
                 <th className="p-3 text-center">Email</th>
@@ -393,7 +393,7 @@ function EditPurposesModal({ email, allVisits, onSaved, onClose }: { email: stri
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-lg rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-[#1368d6] mb-4">
+        <h2 className="text-xl font-semibold text-primary-600 mb-4">
           Edit All Purposes for {email}
         </h2>
 
@@ -448,7 +448,7 @@ function EditPurposesModal({ email, allVisits, onSaved, onClose }: { email: stri
 
         <div className="flex justify-end gap-3">
           <button
-            className="px-4 py-2 bg-[#1368d6] text-white rounded"
+            className="px-4 py-2 bg-primary-600 text-white rounded"
             onClick={onClose}
           >
             Close
@@ -473,7 +473,7 @@ function DeletePurposesModal({ email, allVisits, onDeleted, onClose }: { email: 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-lg rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-[#1368d6] mb-4">
+        <h2 className="text-xl font-semibold text-primary-600 mb-4">
           Delete All Purposes for {email}
         </h2>
 
@@ -500,7 +500,7 @@ function DeletePurposesModal({ email, allVisits, onDeleted, onClose }: { email: 
 
         <div className="flex justify-end gap-3">
           <button
-            className="px-4 py-2 bg-[#1368d6] text-white rounded"
+            className="px-4 py-2 bg-primary-600 text-white rounded"
             onClick={onClose}
           >
             Close
@@ -519,14 +519,14 @@ function PurposesModal({ visits, onClose }: { visits: Visit[]; onClose: () => vo
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-2xl rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-[#1368d6] mb-4">
+        <h2 className="text-xl font-semibold text-primary-600 mb-4">
           All Visits ({visits.length})
         </h2>
 
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {visits.length > 0 ? (
             visits.map((visit, idx) => (
-              <div key={idx} className="flex gap-4 items-start p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border-l-4 border-[#1368d6]">
+              <div key={idx} className="flex gap-4 items-start p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border-l-4 border-primary-600">
                 <div className="flex-1">
                   <p className="font-semibold text-gray-800">{visit.purpose || "(No purpose)"}</p>
                   <div className="flex gap-4 mt-2 text-sm text-gray-600">
@@ -547,7 +547,7 @@ function PurposesModal({ visits, onClose }: { visits: Visit[]; onClose: () => vo
 
         <div className="flex justify-end gap-3 mt-6">
           <button
-            className="px-4 py-2 bg-[#1368d6] text-white rounded"
+            className="px-4 py-2 bg-primary-600 text-white rounded"
             onClick={onClose}
           >
             Close
@@ -579,7 +579,7 @@ function StatCard({
       <div className="text-3xl text-green-600">{value}</div>
       <button
         onClick={onClick}
-        className="mt-3 bg-[#1368d6] text-white px-4 py-2 rounded"
+        className="mt-3 bg-primary-600 text-white px-4 py-2 rounded"
       >
         {active ? "Hide" : "View More"}
       </button>

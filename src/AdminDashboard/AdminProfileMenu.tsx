@@ -46,7 +46,7 @@ export default function AdminProfileMenu() {
           onClick={() => setOpen(!open)}
           className="flex items-center gap-2 px-2 py-1.5 rounded-full hover:bg-gray-100 transition-all duration-200"
         >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white flex items-center justify-center shadow-md border-2 border-white">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary-600 to-accent-600 text-white flex items-center justify-center shadow-md border-2 border-white">
             <User size={20} />
           </div>
           <div className="hidden md:block text-left pr-2">
@@ -58,7 +58,7 @@ export default function AdminProfileMenu() {
         {open && (
           <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-fadeIn">
             <div className="px-5 py-4 bg-gradient-to-br from-blue-50 to-white border-b border-gray-100">
-              <p className="text-sm font-bold text-[#1368d6] truncate">
+              <p className="text-sm font-bold text-primary-600 truncate">
                 {[profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || profile?.full_name}
               </p>
               <p className="text-xs text-gray-500 truncate">{profile?.email}</p>
@@ -71,9 +71,9 @@ export default function AdminProfileMenu() {
                   setOpen(false);
                   setShowProfile(true);
                 }}
-                className="w-full px-4 py-2.5 text-sm font-medium flex items-center gap-3 text-gray-700 hover:bg-blue-50 hover:text-[#1368d6] rounded-xl transition-all"
+                className="w-full px-4 py-2.5 text-sm font-medium flex items-center gap-3 text-gray-700 hover:bg-blue-50 hover:text-primary-600 rounded-xl transition-all"
               >
-                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-[#1368d6]">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-primary-600">
                   <User size={16} />
                 </div>
                 My Profile
@@ -82,7 +82,7 @@ export default function AdminProfileMenu() {
               {/* Change Password button */}
               <button
                 onClick={() => navigate("/change-password")}
-                className="w-full px-4 py-2.5 text-sm font-medium flex items-center gap-3 text-gray-700 hover:bg-blue-50 hover:text-[#1368d6] rounded-xl transition-all"
+                className="w-full px-4 py-2.5 text-sm font-medium flex items-center gap-3 text-gray-700 hover:bg-blue-50 hover:text-primary-600 rounded-xl transition-all"
               >
                 <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500">
                   <Lock size={16} />
@@ -173,7 +173,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative animate-scaleUp">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#1368d6] to-[#00a86b] px-8 py-6 text-white relative">
+        <div className="bg-gradient-to-r from-primary-600 to-accent-600 px-8 py-6 text-white relative">
           <button
             onClick={onClose}
             className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors"
@@ -261,7 +261,7 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
             <button
               onClick={updateProfile}
               disabled={saving}
-              className="px-8 py-2.5 bg-gradient-to-r from-[#1368d6] to-[#00a86b] text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="px-8 py-2.5 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
               {saving ? "Saving..." : "Save Changes"}

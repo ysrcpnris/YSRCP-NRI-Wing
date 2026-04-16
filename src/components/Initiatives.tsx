@@ -9,7 +9,7 @@ export default function Initiatives() {
   const services = [
     {
       title: "Student Support",
-      icon: <GraduationCap className="w-10 h-10 text-[#E7A95B] mx-auto block" />,
+      icon: <GraduationCap className="w-10 h-10 text-gold-500 mx-auto block" />,
       short: "Guidance for academic & growth",
       long: `
         • Assistance with foreign education guidance  

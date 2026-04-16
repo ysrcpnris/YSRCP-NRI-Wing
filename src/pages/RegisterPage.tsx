@@ -1215,43 +1215,39 @@ return (
       theme="light"
     />
 
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 py-4 px-2 sm:py-12 sm:px-4 md:px-6">
-      <div className="max-w-5xl mx-auto">
-        <div
-          className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg sm:shadow-xl md:shadow-2xl p-3 sm:p-6 md:p-8"
-          style={{ border: '2px sm:border-4 solid #1e88e5' }}
-        >
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/40 to-gray-50 py-6 px-4 sm:py-10 sm:px-6">
+      <div className="max-w-2xl mx-auto">
+        {/* Header card */}
+        <div className="text-center mb-6">
           <button
             onClick={() => navigate('/')}
-            className="mb-3 sm:mb-4 inline-block text-blue-600 hover:text-blue-700 font-semibold text-xs sm:text-sm md:text-base"
+            className="text-sm text-primary-600 hover:text-primary-700 font-medium mb-4 inline-flex items-center gap-1"
           >
             ← Back to Home
           </button>
-
-          <h2 className="text-lg sm:text-2xl md:text-3xl font-bold mb-2 text-white bg-gradient-to-r from-[#1356aed2] to-[#1E6BD6] p-2 sm:p-3 md:p-4 rounded-lg shadow">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Join YSRCP NRI Wing
           </h2>
-
-          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+          <p className="text-sm text-gray-500 mt-1">
             Register to become part of our global community
           </p>
+        </div>
 
+        <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-5 sm:p-8">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 sm:px-4 sm:py-3 rounded-lg mb-4 text-sm sm:text-base">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-            {/* Personal Information */}
-            <div className="border-b pb-3 sm:pb-4">
-              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white mb-2 sm:mb-3 p-2 sm:p-2.5 rounded bg-blue-600">
-                Personal Information
-              </h3>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ── Personal Information ── */}
+            <fieldset>
+              <legend className="section-heading w-full mb-4">Personal Information</legend>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     First Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1259,12 +1255,12 @@ return (
                     required
                     value={formData.first_name}
                     onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-blue-400 rounded-lg bg-blue-50 focus:ring-2 focus:ring-green-500 focus:border-blue-600"
+                    className="input-field"
+                    placeholder="First name"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1272,14 +1268,15 @@ return (
                     required
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-blue-400 rounded-lg bg-blue-50 focus:ring-2 focus:ring-green-500 focus:border-blue-600"
+                    className="input-field"
+                    placeholder="Last name"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div className="relative" ref={countryDropdownRef}>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     Country You Currently Live In <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1301,10 +1298,10 @@ return (
                       }
                     }}
                     onFocus={() => setShowCountryDropdown(true)}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   />
                   {showCountryDropdown && (
-                    <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+                    <ul className="absolute z-50 w-full mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
                       {countryCodes
                         .filter((country) =>
                           country.name.toLowerCase().includes(countrySearch.toLowerCase())
@@ -1325,7 +1322,7 @@ return (
                               setShowCountryDropdown(false);
                               setPhoneError('');
                             }}
-                            className="px-3 sm:px-4 py-2 text-sm sm:text-base cursor-pointer hover:bg-blue-50"
+                            className="px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors"
                           >
                             {country.name} (+{country.code.replace('+', '')})
                           </li>
@@ -1333,14 +1330,14 @@ return (
                       {countryCodes.filter((country) =>
                         country.name.toLowerCase().includes(countrySearch.toLowerCase())
                       ).length === 0 && (
-                        <li className="px-3 sm:px-4 py-2 text-sm text-gray-400">No countries found</li>
+                        <li className="px-4 py-2 text-sm text-gray-400">No countries found</li>
                       )}
                     </ul>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     State / Province <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1349,12 +1346,14 @@ return (
                     value={formData.state_abroad}
                     placeholder="Enter your state or province"
                     onChange={(e) => setFormData({ ...formData, state_abroad: e.target.value })}
-                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     City <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1363,15 +1362,12 @@ return (
                     value={formData.city_abroad}
                     placeholder="Enter your city"
                     onChange={(e) => setFormData({ ...formData, city_abroad: e.target.value })}
-                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     Email ID <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1379,81 +1375,73 @@ return (
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
+                    placeholder="you@example.com"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Mobile Number <span className="text-red-500">*</span>
-                  </label>
-                  <div className="space-y-2">
-                    <div className="flex">
-                      <div className="flex items-center border border-gray-300 rounded-l-lg bg-gray-50 px-2">
-                        <select
-                          required
-                          value={getCurrentCountryCode()}
-                          onChange={(e) => {
-                            const newCode = e.target.value;
-                            const prevCode = getCurrentCountryCode();
-                            const numberOnly = formData.mobile_number.slice(prevCode.length);
-                            setFormData({ ...formData, mobile_number: newCode + numberOnly });
-                            const expected = phoneLengths[newCode];
-                            if (expected && numberOnly.length > 0 && numberOnly.length !== expected) {
-                              setPhoneError(`Mobile number must be ${expected} digits for ${newCode}`);
-                            } else {
-                              setPhoneError('');
-                            }
-                          }}
-                          className="bg-transparent text-sm sm:text-base outline-none px-2 py-2"
-                        >
-                          {countryCodes.map((country) => (
-                            <option key={country.code} value={country.code}>
-                              {country.code}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <input
-                        type="tel"
-                        required
-                        value={formData.mobile_number.slice(getCurrentCountryCode().length)}
-                        onChange={(e) => {
-                          const currentCode = getCurrentCountryCode();
-                          let digits = e.target.value.replace(/\D/g, '');
-                          const expected = phoneLengths[currentCode];
-                          if (expected) digits = digits.slice(0, expected);
-                          setFormData({ ...formData, mobile_number: currentCode + digits });
-                          if (expected && digits.length > 0 && digits.length !== expected) {
-                            setPhoneError(`Mobile number must be ${expected} digits for ${currentCode}`);
-                          } else {
-                            setPhoneError('');
-                          }
-                        }}
-                        className="flex-1 px-3 py-2.5 text-sm sm:text-base border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder=" "
-                      />
-                    </div>
-                    {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
-                  </div>
-                </div>
-
-                {/* empty cell for md layout (optional) */}
-                <div className="hidden md:block" />
               </div>
-            </div>
 
-            {/* Security Section */}
-            <div className="border-b pb-3 sm:pb-4">
-              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white mb-2 sm:mb-3 p-2 sm:p-2.5 rounded bg-blue-600">
-                Security
-              </h3>
+              <div className="mt-4">
+                <label className="input-label">
+                  Mobile Number <span className="text-red-500">*</span>
+                </label>
+                <div className="flex">
+                  <div className="flex items-center border border-gray-300 rounded-l-lg bg-gray-50 px-1">
+                    <select
+                      required
+                      value={getCurrentCountryCode()}
+                      onChange={(e) => {
+                        const newCode = e.target.value;
+                        const prevCode = getCurrentCountryCode();
+                        const numberOnly = formData.mobile_number.slice(prevCode.length);
+                        setFormData({ ...formData, mobile_number: newCode + numberOnly });
+                        const expected = phoneLengths[newCode];
+                        if (expected && numberOnly.length > 0 && numberOnly.length !== expected) {
+                          setPhoneError(`Mobile number must be ${expected} digits for ${newCode}`);
+                        } else {
+                          setPhoneError('');
+                        }
+                      }}
+                      className="bg-transparent text-sm outline-none px-1 py-2.5"
+                    >
+                      {countryCodes.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.code}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.mobile_number.slice(getCurrentCountryCode().length)}
+                    onChange={(e) => {
+                      const currentCode = getCurrentCountryCode();
+                      let digits = e.target.value.replace(/\D/g, '');
+                      const expected = phoneLengths[currentCode];
+                      if (expected) digits = digits.slice(0, expected);
+                      setFormData({ ...formData, mobile_number: currentCode + digits });
+                      if (expected && digits.length > 0 && digits.length !== expected) {
+                        setPhoneError(`Mobile number must be ${expected} digits for ${currentCode}`);
+                      } else {
+                        setPhoneError('');
+                      }
+                    }}
+                    className="flex-1 px-4 py-2.5 text-sm border-t border-b border-r border-gray-300 rounded-r-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    placeholder="Phone number"
+                  />
+                </div>
+                {phoneError && <p className="text-sm text-red-600 mt-1">{phoneError}</p>}
+              </div>
+            </fieldset>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Password */}
+            {/* ── Security ── */}
+            <fieldset>
+              <legend className="section-heading w-full mb-4">Security</legend>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -1467,22 +1455,22 @@ return (
                         setFormData({ ...formData, password: value });
                         setPasswordError(getPasswordError(value));
                       }}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="input-field pr-10"
+                      placeholder="Min 8 characters"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  {passwordError && <p className="text-red-600 text-sm mt-1">{passwordError}</p>}
+                  {passwordError && <p className="text-red-600 text-xs mt-1">{passwordError}</p>}
                 </div>
 
-                {/* Confirm Password */}
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     Confirm Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -1492,37 +1480,37 @@ return (
                       minLength={8}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-2 text-sm sm:text-base pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="input-field pr-10"
+                      placeholder="Re-enter password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-
                   {confirmPassword && confirmPassword !== formData.password && (
-                    <p className="text-red-600 text-sm mt-1">Passwords do not match</p>
+                    <p className="text-red-600 text-xs mt-1">Passwords do not match</p>
                   )}
                   {confirmPassword && confirmPassword === formData.password && !passwordError && (
-                    <p className="text-green-600 text-sm mt-1">Passwords match</p>
+                    <p className="text-green-600 text-xs mt-1">Passwords match</p>
                   )}
                 </div>
               </div>
-            </div>
+            </fieldset>
 
-            {/* INDIA ADDRESS DETAILS */}
-            <div className="border-b pb-3 sm:pb-4 mb-3 sm:mb-4">
-              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-blue-600 mb-2 sm:mb-3 flex items-center">
-                <MapPin size={18} className="mr-2 text-blue-600 flex-shrink-0" />
-                INDIA ADDRESS DETAILS
-              </h3>
+            {/* ── India Address Details ── */}
+            <fieldset>
+              <legend className="section-heading w-full mb-4 flex items-center gap-2">
+                <MapPin size={16} />
+                India Address Details
+              </legend>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     State <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -1536,7 +1524,7 @@ return (
                         assembly_constituency: '',
                       })
                     }
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   >
                     <option value="">Select State</option>
                     {Object.keys(indianAddressData).map((state) => (
@@ -1548,7 +1536,7 @@ return (
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     District <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -1562,7 +1550,7 @@ return (
                       })
                     }
                     disabled={!formData.indian_state}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    className="input-field"
                   >
                     <option value="">Select District</option>
                     {formData.indian_state &&
@@ -1575,9 +1563,9 @@ return (
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     Assembly Constituency <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -1591,9 +1579,9 @@ return (
                       })
                     }
                     disabled={!formData.district}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    className="input-field"
                   >
-                    <option value="">Select Assembly Constituency</option>
+                    <option value="">Select Constituency</option>
                     {formData.indian_state &&
                       formData.district &&
                       indianAddressData[formData.indian_state]
@@ -1607,7 +1595,7 @@ return (
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="input-label">
                     Mandal / Municipality <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -1620,9 +1608,9 @@ return (
                       })
                     }
                     disabled={!formData.assembly_constituency}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    className="input-field"
                   >
-                    <option value="">Select Mandal / Municipality</option>
+                    <option value="">Select Mandal</option>
                     {formData.indian_state &&
                       formData.district &&
                       formData.assembly_constituency &&
@@ -1637,23 +1625,24 @@ return (
                   </select>
                 </div>
               </div>
-            </div>
+            </fieldset>
 
+            {/* ── Submit ── */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:shadow-lg transition disabled:opacity-60"
+              className="btn-gradient w-full py-3 text-base rounded-xl"
             >
-              {loading ? 'Creating account...' : 'Register'}
+              {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
-          <div className="mt-4 sm:mt-6 text-center">
-            <p className="text-sm sm:text-base text-gray-600">
+          <div className="mt-5 text-center">
+            <p className="text-sm text-gray-500">
               Already have an account?{' '}
               <button
                 onClick={() => navigate('/', { state: { openLogin: true } })}
-                className="text-blue-600 hover:text-blue-700 font-semibold"
+                className="text-primary-600 hover:text-primary-700 font-semibold"
               >
                 Sign In
               </button>

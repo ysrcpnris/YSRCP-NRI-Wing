@@ -77,7 +77,7 @@ export default function EventsNotifications() {
     {/* Page title and new notification button*/}
     <div className="flex justify-between items-center mb-6">
       <div>
-        <h1 className="text-3xl font-bold text-[#1368d6]">
+        <h1 className="text-3xl font-bold text-primary-600">
           Events & Notifications
         </h1>
         <p className="text-gray-500 mt-1">

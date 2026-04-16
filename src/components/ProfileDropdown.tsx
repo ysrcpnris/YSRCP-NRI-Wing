@@ -145,15 +145,18 @@ const initials =
       >
         {profile?.profile_photo ? (
           <img
-            src={profile.profile_photo}
+            src={`${profile.profile_photo}?t=${Date.now()}`}
             alt={fullName}
-            className="w-11 h-11 rounded-full object-cover border-2 border-green-600"
+            className="w-11 h-11 rounded-full object-cover border-2 border-primary-500"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+            }}
           />
-        ) : (
-          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-700 to-green-600 text-white flex items-center justify-center text-sm font-bold">
-            {initials}
-          </div>
-        )}
+        ) : null}
+        <div className={`w-11 h-11 rounded-full bg-gradient-to-br from-primary-600 to-accent-600 text-white flex items-center justify-center text-sm font-bold ${profile?.profile_photo ? 'hidden' : ''}`}>
+          {initials}
+        </div>
 
         <div className="hidden sm:flex flex-col items-start">
           <p className="text-sm font-bold text-gray-900">{fullName || 'User'}</p>

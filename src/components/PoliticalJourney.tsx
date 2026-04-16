@@ -126,7 +126,7 @@ export default function PoliticalJourney() {
       >
         {/* IMAGE SECTION */}
         <div className="w-full md:w-3/5">
-          <div className="bg-white border-4 border-[#00C853] rounded-xl shadow-xl p-2 w-full">
+          <div className="bg-white border-4 border-accent-500 rounded-xl shadow-xl p-2 w-full">
             <img
               src={selected.image}
               alt={selected.title}
@@ -143,7 +143,7 @@ export default function PoliticalJourney() {
         {/* TEXT SECTION */}
         <div className="w-full md:w-2/5">
           <h3
-            className="text-xl sm:text-2xl md:text-3xl font-bold text-[#063A7A] mb-3 underline underline-offset-4 decoration-[#00C853] text-justify"
+            className="text-xl sm:text-2xl md:text-3xl font-bold text-[#063A7A] mb-3 underline underline-offset-4 decoration-accent-500 text-justify"
             style={{ fontFamily: 'Times New Roman, serif' }}
           >
             {selected.title}
@@ -173,7 +173,7 @@ export default function PoliticalJourney() {
                 transition-all duration-200
                 ${
                   active
-                    ? "bg-[#00C853] text-white shadow-lg scale-105"
+                    ? "bg-accent-500 text-white shadow-lg scale-105"
                     : "border border-white text-white hover:bg-white hover:text-[#063A7A]"
                 }
               `}

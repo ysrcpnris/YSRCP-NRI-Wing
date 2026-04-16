@@ -168,7 +168,7 @@ const APP_URL = import.meta.env.VITE_APP_URL;
         {/* Back Button */}
         <button
           onClick={onBack}
-          className="w-full bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-primary-700 to-primary-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition flex items-center justify-center gap-2"
         >
           <ArrowLeft size={20} />
           Back to Login
@@ -178,28 +178,22 @@ const APP_URL = import.meta.env.VITE_APP_URL;
   }
 
   return (
-    <form onSubmit={handleResetPassword} className="space-y-4">
-      {/* Title */}
-      <div className="mb-6">
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">
-          Reset Your Password
-        </h3>
-        <p className="text-gray-600 text-sm">
-          Forgot your password? No worries. Enter your registered email address
-          below and we'll send you a link to reset your password securely.
+    <form onSubmit={handleResetPassword} className="space-y-5">
+      <div>
+        <h3 className="text-xl font-bold text-gray-900 mb-1">Reset Your Password</h3>
+        <p className="text-sm text-gray-500">
+          Enter your registered email and we'll send you a reset link.
         </p>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
           {error}
         </div>
       )}
 
-      {/* Email Input */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="input-label">
           Email Address <span className="text-red-500">*</span>
         </label>
         <input
@@ -208,25 +202,22 @@ const APP_URL = import.meta.env.VITE_APP_URL;
           disabled={loading || buttonDisabled}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your registered email"
-          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition"
+          placeholder="you@example.com"
+          className="input-field"
         />
       </div>
 
-      {/* Reset Method Selection */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          How would you like to reset?
-        </label>
+        <label className="input-label">Reset method</label>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => setResetMethod("email")}
             disabled={loading || buttonDisabled}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition ${
+            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition ${
               resetMethod === "email"
-                ? "bg-[#0B4DA2] text-white shadow-md"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-primary-600 text-white shadow-sm"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             Reset Link
@@ -235,10 +226,10 @@ const APP_URL = import.meta.env.VITE_APP_URL;
             type="button"
             onClick={() => setResetMethod("otp")}
             disabled={loading || buttonDisabled}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition ${
+            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition ${
               resetMethod === "otp"
-                ? "bg-[#0B4DA2] text-white shadow-md"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-primary-600 text-white shadow-sm"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             OTP
@@ -246,52 +237,32 @@ const APP_URL = import.meta.env.VITE_APP_URL;
         </div>
       </div>
 
-      {/* Submit Button */}
       <button
         type="submit"
         disabled={loading || buttonDisabled}
-        className="w-full bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] text-white py-2.5 rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="btn-gradient w-full py-3 rounded-xl flex items-center justify-center gap-2"
       >
         {loading ? (
           <>
             <Loader size={18} className="animate-spin" />
-            Sending {resetMethod === "email" ? "Reset Link" : "OTP"}...
+            Sending...
           </>
         ) : buttonDisabled ? (
-          <>
-            <span className="text-yellow-200">⏱️ Please wait before trying again</span>
-          </>
+          <span className="text-white/70">Please wait before trying again</span>
         ) : (
           `Send ${resetMethod === "email" ? "Reset Link" : "OTP"}`
         )}
       </button>
 
-      {/* Back to Login */}
       <button
         type="button"
         onClick={onBack}
         disabled={loading}
-        className="w-full text-[#0B4DA2] hover:text-[#0B4DA2] font-medium transition py-2 flex items-center justify-center gap-2 disabled:opacity-50"
+        className="w-full text-sm text-primary-600 hover:text-primary-700 font-medium transition py-1 flex items-center justify-center gap-1.5 disabled:opacity-50"
       >
-        <ArrowLeft size={18} />
+        <ArrowLeft size={16} />
         Back to Login
       </button>
-
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-gray-700 space-y-2">
-        <p>
-          <strong>ℹ️ How it works:</strong>
-        </p>
-        <ul className="list-disc list-inside space-y-1 text-gray-600">
-          <li>
-            {resetMethod === "email"
-              ? "We'll send you a secure link to reset your password"
-              : "We'll send you a one-time password (OTP) to reset your password"}
-          </li>
-          <li>The link/OTP will expire after 24 hours for security</li>
-          <li>Click the link in your email to proceed</li>
-        </ul>
-      </div>
     </form>
   );
 }

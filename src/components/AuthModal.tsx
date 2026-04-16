@@ -764,38 +764,30 @@ const handleSubmit = async (e: React.FormEvent) => {
         onMouseDown={() => onClose()}
       >
         <div
-          className={`bg-white rounded-2xl w-full ${
-            mode === "signup" ? "max-w-4xl" : "max-w-xl"
-          } max-h-[95vh] overflow-y-auto relative shadow-2xl`}
-          style={{ border: "5px solid #0B4DA2" }} // YSRCP Blue thick border
+          className="bg-white rounded-2xl w-full max-w-md max-h-[95vh] overflow-y-auto relative shadow-modal border border-gray-200"
           onMouseDown={(e) => e.stopPropagation()}
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition z-10"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
 
-          <div className="p-8">
-            <h2
-              className={`text-3xl font-bold mb-2 ${
-                mode === "signup"
-                  ? "text-white bg-gradient-to-r from-[#0B4DA2] to-[#1E6BD6] p-3 rounded-lg shadow"
-                  : "text-gray-900"
-              }`}
-            >
-              {mode === "signin" ? "Welcome Back" : "Join YSRCP NRI Wing"}
-            </h2>
-
-            <p className="text-gray-600 mb-6">
-              {mode === "signin"
-                ? "Sign in to access your dashboard"
-                : "Register to become part of our global community"}
-            </p>
+          <div className="p-6 sm:p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {mode === "signin" ? "Welcome Back" : "Join YSRCP NRI Wing"}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {mode === "signin"
+                  ? "Sign in to access your dashboard"
+                  : "Register to become part of our global community"}
+              </p>
+            </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm">
                 {error}
               </div>
             )}
@@ -810,7 +802,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <>
                     {/* Personal Information */}
                     <div className="border-b pb-4 mb-4">
-                      <h3 className="text-lg font-semibold text-white mb-3 p-2 rounded bg-[#0B4DA2]">
+                      <h3 className="text-lg font-semibold text-white mb-3 p-2 rounded bg-primary-700">
                         Personal Information
                       </h3>
 
@@ -846,7 +838,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 last_name: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-700 focus:border-transparent"
                           />
                         </div>
                       </div>
@@ -867,7 +859,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 mobile_number: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-700 focus:border-transparent"
                             placeholder="+1 (123) 456-7890"
                           />
                         </div>
@@ -886,7 +878,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 whatsapp_number: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-700 focus:border-transparent"
                             placeholder="+1 (123) 456-7890"
                           />
                         </div>
@@ -903,7 +895,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                           onChange={(e) =>
                             setFormData({ ...formData, email: e.target.value })
                           }
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-700 focus:border-transparent"
                         />
                       </div>
 
@@ -1254,7 +1246,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                               setFormData({ ...formData, dob: e.target.value })
                             }
                             max={new Date().toISOString().split("T")[0]} // Prevent future dates
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-700 focus:border-transparent"
                           />
                         </div>
 
@@ -1271,7 +1263,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 profession: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B4DA2] focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-700 focus:border-transparent"
                           >
                             <option value="">Select Profession</option>
                             {professions.map((prof) => (
@@ -1430,9 +1422,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                 {mode === "signin" && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                      </label>
+                      <label className="input-label">Email</label>
                       <input
                         type="email"
                         required
@@ -1440,14 +1430,13 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                         onChange={(e) =>
                           setFormData({ ...formData, email: e.target.value })
                         }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="input-field"
+                        placeholder="you@example.com"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Password
-                      </label>
+                      <label className="input-label">Password</label>
                       <div className="relative">
                         <input
                           type={showPassword ? "text" : "password"}
@@ -1459,18 +1448,15 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                               password: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="input-field pr-10"
+                          placeholder="Enter your password"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
-                          {showPassword ? (
-                            <EyeOff size={20} />
-                          ) : (
-                            <Eye size={20} />
-                          )}
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
                     </div>
@@ -1479,7 +1465,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                       <button
                         type="button"
                         onClick={() => setForgotPassword(true)}
-                        className="text-blue-600 hover:text-blue-700 font-medium transition"
+                        className="text-sm text-primary-600 hover:text-primary-700 font-medium transition"
                       >
                         Forgot Password?
                       </button>
@@ -1490,8 +1476,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#1E6BD6] to-[#1E6BD6] text-white py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:shadow-lg transition disabled:opacity-60"
-
+                  className="btn-gradient w-full py-3 rounded-xl"
                 >
                   {loading
                     ? "Please wait..."
@@ -1502,15 +1487,16 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
               </form>
             )}
 
-            <div className="mt-6 text-center">
-              <button
-                onClick={onSwitchMode}
-                className="text-blue-600 hover:text-blue-700 font-medium transition"
-              >
-                {mode === "signin"
-                  ? "Don't have an account? Register"
-                  : "Already have an account? Sign In"}
-              </button>
+            <div className="mt-5 text-center">
+              <p className="text-sm text-gray-500">
+                {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
+                <button
+                  onClick={onSwitchMode}
+                  className="text-primary-600 hover:text-primary-700 font-semibold"
+                >
+                  {mode === "signin" ? "Register" : "Sign In"}
+                </button>
+              </p>
             </div>
           </div>
         </div>
