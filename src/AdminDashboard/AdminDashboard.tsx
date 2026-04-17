@@ -13,6 +13,7 @@ import MasterData from "./MasterData";
 import EventsNotifications from "./EventsNotifications";
 
 import ContentControl from "./ContentControl";
+import News from "./News";
 import AdminProfileMenu from "./AdminProfileMenu";
 import ysrLogo from "../components/nrilogo.png";
 import { useAuth } from "../contexts/AuthContext";
@@ -262,12 +263,22 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             {/* <Item icon={FolderKanban} label="Service Inbox" page="serviceInbox" /> */}
             <Item icon={Settings} label="Master Data" page="masterData" />
             <Item icon={Newspaper} label="Events & Notifications" page="eventsnotifications" />
+            <Item icon={Newspaper} label="News" page="news" />
             <Item icon={Globe} label="Content Control" page="contentControl" />
 
           </nav>
         </div>
 
-        
+        {/* Logout button (bottom of sidebar) */}
+        <div className="p-4 border-t border-blue-100">
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-all"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* Profile Modal */}
@@ -409,6 +420,7 @@ function MembersList({
 /* ---------- Main Dashboard ---------- */
 // Main admin dashboard with geographic drill-down, charts, and session timeout protection
 export default function AdminDashboard() {
+  const { signOut } = useAuth();
   // Dashboard state
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -612,12 +624,18 @@ export default function AdminDashboard() {
 
   // No more state-level grouping: we directly show members for a country
 
-  // Logout handler: clears session and redirects to home
-  const handleLogout = () => {
+  // Logout handler: fully signs out (Supabase + local flags) and redirects to home
+  const handleLogout = async () => {
     // Clear all timers
     if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
     if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
-    
+
+    try {
+      await signOut();
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+
     localStorage.removeItem("is_admin");
     localStorage.removeItem("adminLoginTime");
     navigate("/", { replace: true });
@@ -846,6 +864,7 @@ export default function AdminDashboard() {
       {/* {currentPage === "serviceInbox" && <ServiceInbox />} */}
       {currentPage === "masterData" && <MasterData />}
       {currentPage === "eventsnotifications" && <EventsNotifications />}
+      {currentPage === "news" && <News />}
       {currentPage === "contentControl" && <ContentControl />}
 
       </main>

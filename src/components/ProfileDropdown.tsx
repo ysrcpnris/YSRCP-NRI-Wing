@@ -145,12 +145,14 @@ const initials =
       >
         {profile?.profile_photo ? (
           <img
-            src={`${profile.profile_photo}?t=${Date.now()}`}
+            src={profile.profile_photo}
             alt={fullName}
             className="w-11 h-11 rounded-full object-cover border-2 border-primary-500"
             onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+              const img = e.currentTarget as HTMLImageElement;
+              img.style.display = 'none';
+              const sibling = img.nextElementSibling as HTMLElement | null;
+              if (sibling) sibling.classList.remove('hidden');
             }}
           />
         ) : null}

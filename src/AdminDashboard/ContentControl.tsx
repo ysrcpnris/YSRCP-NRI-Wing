@@ -32,36 +32,6 @@ type BannerItem = {
 // Admin interface for managing live links, gallery images, and homepage banners
 export default function ContentControl() {
   /* =====================================================
-     ADMIN AUTO AUTH (🔥 VERY IMPORTANT)
-  ===================================================== */
-  // Ensure admin authentication, auto-login if session missing
-  useEffect(() => {
-    const ensureAdminAuth = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-
-      if (sessionData.session) {
-        console.log("✅ Admin already authenticated");
-        return;
-      }
-
-      console.log("🔐 Admin not authenticated. Auto logging in...");
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: "admin@yourapp.com",   // 👈 CHANGE IF NEEDED
-        password: "Admin@123",        // 👈 CHANGE IF NEEDED
-      });
-
-      if (error) {
-        console.error("❌ Admin auto-login failed:", error.message);
-      } else {
-        console.log("✅ Admin auto-login success:", data.user);
-      }
-    };
-
-    ensureAdminAuth();
-  }, []);
-
-  /* =====================================================
      LIVE LINK
   ===================================================== */
   // Store and manage press meet live broadcast URL

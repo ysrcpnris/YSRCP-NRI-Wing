@@ -35,6 +35,8 @@ import StudentYouth from "./pages/Studentyouth";
 import ReferralRedirect from "./pages/ReferralRedirect";
 
 import AmmaVodi from "./pages/AmmaVodi";
+import PoliticalJourneyDetail from "./pages/PoliticalJourneyDetail";
+import NewsDetail from "./pages/NewsDetail";
 import VidyaDeevena from "./pages/VidyaDeevena";
 import VasathiDeevena from "./pages/VasathiDeevena";
 import NriConnect from "./pages/NriConnect";
@@ -211,6 +213,8 @@ function AppContent() {
         <Route path="/services" element={<Initiatives />} />
         <Route path="/pillars" element={<PillarPage onBack={() => window.history.back()} onPillarSelect={() => {}} />} />
         <Route path="/pillars/:id" element={<PillarDetailWrapper />} />
+        <Route path="/political-journey/:year" element={<PoliticalJourneyDetail setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
+        <Route path="/news/:id" element={<NewsDetail setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
 
         <Route path="/register" element={<RegisterPage />} />
 

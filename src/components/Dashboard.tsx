@@ -2031,7 +2031,7 @@ const handleRemovePhoto = async () => {
     setUploading(true);
     try {
       const fileExt = photoFile.name.split('.').pop();
-      const filePath = `profile-photos/${user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}_${Date.now()}.${fileExt}`;
      const { error: uploadError } = await supabase.storage
   .from('profile-photos')
   .upload(filePath, photoFile, { upsert: true });
@@ -2801,13 +2801,12 @@ const handleSubmitSuggestion = async () => {
                 <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
               ) : profile?.profile_photo ? (
                 <img
-                  src={`${profile.profile_photo}?t=${Date.now()}`}
+                  src={profile.profile_photo}
                   alt="avatar"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).parentElement!.innerHTML =
-                      '<div class="w-full h-full flex items-center justify-center text-sm text-gray-500">No Photo</div>';
+                    const img = e.currentTarget as HTMLImageElement;
+                    img.style.display = 'none';
                   }}
                 />
               ) : (

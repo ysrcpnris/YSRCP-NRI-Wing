@@ -649,9 +649,14 @@ const handleSubmit = async (e: React.FormEvent) => {
       // 5) Success → close modal & redirect based on role
       onClose();
 
+      const intendedPath = sessionStorage.getItem("post_login_redirect");
+      sessionStorage.removeItem("post_login_redirect");
+
       if (profile.role === "admin") {
-        navigate("/admin/dashboard");
+        // If admin tried to access a specific admin page, honor it
+        navigate(intendedPath && intendedPath.startsWith("/admin") ? intendedPath : "/admin/dashboard");
       } else {
+        // Non-admins always land on normal dashboard
         navigate("/dashboard");
       }
 

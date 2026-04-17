@@ -17,13 +17,20 @@ const cspDev = `
     https://platform.twitter.com
     https://connect.facebook.net
     https://www.instagram.com;
-  style-src 'self' 'unsafe-inline';
+  style-src
+    'self'
+    'unsafe-inline'
+    https://fonts.googleapis.com;
+  font-src
+    'self'
+    data:
+    https://fonts.gstatic.com;
   img-src
     'self'
     data:
     blob:
-    https://i.ytimg.com
-    https://ytimg.com
+    https://vvemeahgetmhcxlkbnzq.supabase.co
+    https://*.ytimg.com
     https://pbs.twimg.com
     https://ton.twimg.com
     https://www.instagram.com
@@ -34,6 +41,7 @@ const cspDev = `
     https://syndication.twitter.com
     https://www.facebook.com
     https://www.instagram.com;
+  media-src 'self' data: blob:;
 `.replace(/\n/g, " ");
 
 export default defineConfig({

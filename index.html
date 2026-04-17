@@ -32,10 +32,11 @@
       https://ton.twimg.com
       https://www.instagram.com
       https://scontent.cdninstagram.com
-      https://i.ytimg.com
-      https://ytimg.com;
+      https://*.ytimg.com;
 
-    style-src 'self' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+
+    font-src 'self' data: https://fonts.gstatic.com;
 
     connect-src
       'self'
@@ -43,9 +44,7 @@
       https://www.googleapis.com
       https://youtube.googleapis.com;
 
-    media-src 'self';
-
-    font-src 'self';
+    media-src 'self' data: blob:;
   "
 />
 

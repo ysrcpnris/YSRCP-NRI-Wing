@@ -289,7 +289,7 @@ export default function PressMeetsAndSocial() {
           const videoData = data.map((v: any) => ({
             title: v.title,
             url: v.video_url,
-            image: v.thumbnail,
+            image: v.thumbnail_url || v.thumbnail || "",
             time: formatRelativeTime(v.published_at),
             views: "—",
             isLive: false,
@@ -328,8 +328,21 @@ export default function PressMeetsAndSocial() {
   const Card = (v: any, i: number) => (
     <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
        className="bg-white/10 rounded-xl w-[260px] shrink-0 overflow-hidden">
-      <div className="relative h-[150px]">
-        <img src={v.image} className="w-full h-full object-cover" />
+      <div className="relative h-[150px] bg-gray-800">
+        {v.image ? (
+          <img
+            src={v.image}
+            alt={v.title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-white/40 text-xs">
+            No thumbnail
+          </div>
+        )}
         {v.isLive && (
           <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded flex gap-1">
             <Radio size={12} /> LIVE

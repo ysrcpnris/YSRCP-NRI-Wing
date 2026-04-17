@@ -182,43 +182,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Try to fetch profile immediately
     let p = await fetchProfile(session.user.id);
- const { error } = await supabase
-  .from("profiles")
-  .upsert({
-    id: session.user.id,
-    auth_user_id: session.user.id,
-    email: session.user.email,
 
-    first_name:
-      session.user.user_metadata?.first_name ||
-      session.user.user_metadata?.full_name?.split(" ")[0] ||
-      "User",
+    // Only create a profile if one does NOT already exist (first-time login).
+    // Never touch existing profiles here — doing so would overwrite role and other fields.
+    if (!p) {
+      await supabase
+        .from("profiles")
+        .insert({
+          id: session.user.id,
+          auth_user_id: session.user.id,
+          email: session.user.email,
 
-    last_name:
-      session.user.user_metadata?.last_name ||
-      session.user.user_metadata?.full_name?.split(" ")[1] ||
-      "change last name",
+          first_name:
+            session.user.user_metadata?.first_name ||
+            session.user.user_metadata?.full_name?.split(" ")[0] ||
+            "User",
 
-    full_name: session.user.user_metadata?.full_name ||
-      [session.user.user_metadata?.first_name, session.user.user_metadata?.last_name].filter(Boolean).join(" ") ||
-      null,
+          last_name:
+            session.user.user_metadata?.last_name ||
+            session.user.user_metadata?.full_name?.split(" ")[1] ||
+            "change last name",
 
-    mobile_number: session.user.user_metadata?.mobile_number || null,
-    country_of_residence: session.user.user_metadata?.country_of_residence || null,
-    state_abroad: session.user.user_metadata?.state_abroad || null,
-    city_abroad: session.user.user_metadata?.city_abroad || null,
-    indian_state: session.user.user_metadata?.indian_state || null,
-    district: session.user.user_metadata?.district || null,
-    assembly_constituency: session.user.user_metadata?.assembly_constituency || null,
-    mandal: session.user.user_metadata?.mandal || null,
+          full_name: session.user.user_metadata?.full_name ||
+            [session.user.user_metadata?.first_name, session.user.user_metadata?.last_name].filter(Boolean).join(" ") ||
+            null,
 
-    referral_code: session.user.user_metadata?.referral_code || null,
-    role: "user",
-    created_at: new Date().toISOString(),
-  });
+          mobile_number: session.user.user_metadata?.mobile_number || null,
+          country_of_residence: session.user.user_metadata?.country_of_residence || null,
+          state_abroad: session.user.user_metadata?.state_abroad || null,
+          city_abroad: session.user.user_metadata?.city_abroad || null,
+          indian_state: session.user.user_metadata?.indian_state || null,
+          district: session.user.user_metadata?.district || null,
+          assembly_constituency: session.user.user_metadata?.assembly_constituency || null,
+          mandal: session.user.user_metadata?.mandal || null,
 
+          referral_code: session.user.user_metadata?.referral_code || null,
+          role: "user",
+          created_at: new Date().toISOString(),
+        });
+    }
 
-    // If profile not found, retry a few times with backoff to allow DB trigger to run.
+    // If profile not found, retry a few times with backoff to allow DB trigger / insert to finish.
     if (!p) {
       const maxAttempts = 6;
       for (let attempt = 1; attempt <= maxAttempts && !p; attempt++) {
