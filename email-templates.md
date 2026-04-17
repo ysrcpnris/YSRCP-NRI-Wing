@@ -11,9 +11,9 @@ All templates use inline CSS (required — email clients strip `<style>` tags) a
 
 ---
 
-## 1. CONFIRM SIGNUP
+## 1. CONFIRM SIGNUP  ✨ (personalized)
 
-Subject: `Verify your email — YSRCP NRI Wing`
+Subject: `Welcome {{ .Data.first_name }} — please verify your email`
 
 ```html
 <!DOCTYPE html>
@@ -31,55 +31,76 @@ Subject: `Verify your email — YSRCP NRI Wing`
 
             <!-- Header -->
             <tr>
-              <td style="background:linear-gradient(135deg,#0B4DA2 0%,#1E6BD6 100%);padding:32px 24px;text-align:center;">
+              <td style="background:linear-gradient(135deg,#0B4DA2 0%,#1E6BD6 100%);padding:36px 24px;text-align:center;">
                 <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.3px;">YSRCP NRI Wing</h1>
-                <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">Global Unity · Local Impact</p>
+                <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;letter-spacing:0.5px;">Global Unity · Local Impact</p>
+              </td>
+            </tr>
+
+            <!-- Recipient strip -->
+            <tr>
+              <td style="background:#f9fafb;padding:10px 32px;border-bottom:1px solid #eef2f7;">
+                <p style="margin:0;font-size:12px;color:#6b7280;">Sent to <span style="color:#111827;font-weight:500;">{{ .Email }}</span></p>
               </td>
             </tr>
 
             <!-- Body -->
             <tr>
-              <td style="padding:40px 32px 16px;">
-                <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">Confirm your email address</h2>
-                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4b5563;">
-                  Welcome aboard! Please confirm your email address to activate your account and join the NRI Wing community.
+              <td style="padding:36px 32px 8px;">
+                <h2 style="margin:0 0 14px;font-size:24px;font-weight:700;color:#111827;letter-spacing:-0.2px;">
+                  {{ if .Data.first_name }}Welcome, {{ .Data.first_name }}! 👋{{ else }}Welcome aboard! 👋{{ end }}
+                </h2>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.65;color:#4b5563;">
+                  You're one step away from joining the <strong style="color:#0B4DA2;">YSRCP NRI Wing</strong> community — a global network of NRIs contributing to a progressive Andhra Pradesh.
+                </p>
+                <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#4b5563;">
+                  Confirm your email to activate your account and get started.
                 </p>
 
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 28px;">
+                <!-- CTA Button -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
                   <tr>
-                    <td style="border-radius:10px;background:linear-gradient(135deg,#0B4DA2 0%,#1E6BD6 100%);">
+                    <td style="border-radius:10px;background:linear-gradient(135deg,#0B4DA2 0%,#1E6BD6 100%);box-shadow:0 4px 12px rgba(11,77,162,0.25);">
                       <a href="{{ .ConfirmationURL }}"
-                         style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;">
-                        Verify Email
+                         style="display:inline-block;padding:14px 40px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;">
+                        Verify my email →
                       </a>
                     </td>
                   </tr>
                 </table>
 
-                <p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">
-                  Or paste this link into your browser:
-                </p>
-                <p style="margin:6px 0 0;font-size:12px;word-break:break-all;">
-                  <a href="{{ .ConfirmationURL }}" style="color:#1E6BD6;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+                <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">
+                  Button not working? <a href="{{ .ConfirmationURL }}" style="color:#1E6BD6;font-weight:500;text-decoration:underline;">Click here to verify</a>.
                 </p>
               </td>
             </tr>
 
-            <!-- Info box -->
+            <!-- What's next -->
             <tr>
-              <td style="padding:0 32px 24px;">
-                <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">
-                  <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
-                    🔒 This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.
+              <td style="padding:8px 32px 24px;">
+                <div style="background:linear-gradient(135deg,#f0f9ff 0%,#f5f3ff 100%);border:1px solid #dbeafe;border-radius:12px;padding:16px 18px;">
+                  <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#0B4DA2;">✨ What's next?</p>
+                  <p style="margin:0;font-size:13px;line-height:1.6;color:#475569;">
+                    After verification you'll be able to connect with leadership, access exclusive updates, and contribute to initiatives that matter.
                   </p>
                 </div>
+              </td>
+            </tr>
+
+            <!-- Security note -->
+            <tr>
+              <td style="padding:0 32px 28px;">
+                <p style="margin:0;font-size:11px;line-height:1.6;color:#9ca3af;text-align:center;">
+                  🔒 This link expires in 24 hours. If you didn't sign up for YSRCP NRI Wing, you can safely ignore this email.
+                </p>
               </td>
             </tr>
 
             <!-- Footer -->
             <tr>
               <td style="background:#0f172a;padding:22px 24px;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.5;">
+                <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#ffffff;">YSRCP NRI Wing</p>
+                <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">
                   YSR Congress Party · NRI Wing<br/>
                   <a href="https://ysrcpnriwing.org" style="color:#93c5fd;text-decoration:none;">ysrcpnriwing.org</a>
                 </p>
@@ -96,9 +117,9 @@ Subject: `Verify your email — YSRCP NRI Wing`
 
 ---
 
-## 2. MAGIC LINK (OTP flow)
+## 2. MAGIC LINK (OTP flow)  ✨ (personalized)
 
-Subject: `Your sign-in link — YSRCP NRI Wing`
+Subject: `Your sign-in link for YSRCP NRI Wing`
 
 ```html
 <!DOCTYPE html>
@@ -116,46 +137,57 @@ Subject: `Your sign-in link — YSRCP NRI Wing`
 
             <!-- Header -->
             <tr>
-              <td style="background:linear-gradient(135deg,#00a86b 0%,#00C853 100%);padding:32px 24px;text-align:center;">
-                <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">YSRCP NRI Wing</h1>
-                <p style="margin:6px 0 0;color:rgba(255,255,255,0.9);font-size:13px;">Global Unity · Local Impact</p>
+              <td style="background:linear-gradient(135deg,#00a86b 0%,#00C853 100%);padding:36px 24px;text-align:center;">
+                <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.3px;">YSRCP NRI Wing</h1>
+                <p style="margin:6px 0 0;color:rgba(255,255,255,0.9);font-size:13px;letter-spacing:0.5px;">Global Unity · Local Impact</p>
+              </td>
+            </tr>
+
+            <!-- Recipient strip -->
+            <tr>
+              <td style="background:#f0fdf4;padding:10px 32px;border-bottom:1px solid #dcfce7;">
+                <p style="margin:0;font-size:12px;color:#14532d;">Sent to <span style="color:#064e3b;font-weight:500;">{{ .Email }}</span></p>
               </td>
             </tr>
 
             <!-- Body -->
             <tr>
-              <td style="padding:40px 32px 16px;">
-                <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">Sign in to your account</h2>
-                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4b5563;">
-                  Click the button below to sign in to YSRCP NRI Wing. No password needed.
+              <td style="padding:36px 32px 8px;">
+                <h2 style="margin:0 0 14px;font-size:24px;font-weight:700;color:#111827;letter-spacing:-0.2px;">
+                  {{ if .Data.first_name }}Hi {{ .Data.first_name }}, welcome back 👋{{ else }}Welcome back 👋{{ end }}
+                </h2>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.65;color:#4b5563;">
+                  You requested a secure sign-in link — no password needed. Just click below to jump straight in.
+                </p>
+                <p style="margin:0 0 28px;font-size:14px;line-height:1.6;color:#6b7280;">
+                  This link works on any device. It'll sign you in instantly.
                 </p>
 
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 28px;">
+                <!-- CTA Button -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
                   <tr>
-                    <td style="border-radius:10px;background:linear-gradient(135deg,#00a86b 0%,#00C853 100%);">
+                    <td style="border-radius:10px;background:linear-gradient(135deg,#00a86b 0%,#00C853 100%);box-shadow:0 4px 12px rgba(0,168,107,0.25);">
                       <a href="{{ .ConfirmationURL }}"
-                         style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;">
-                        Sign In
+                         style="display:inline-block;padding:14px 40px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;">
+                        Sign me in →
                       </a>
                     </td>
                   </tr>
                 </table>
 
-                <p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">
-                  Or paste this link into your browser:
-                </p>
-                <p style="margin:6px 0 0;font-size:12px;word-break:break-all;">
-                  <a href="{{ .ConfirmationURL }}" style="color:#00a86b;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+                <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">
+                  Button not working? <a href="{{ .ConfirmationURL }}" style="color:#00a86b;font-weight:500;text-decoration:underline;">Click here to sign in</a>.
                 </p>
               </td>
             </tr>
 
-            <!-- Info box -->
+            <!-- Security card -->
             <tr>
-              <td style="padding:0 32px 24px;">
-                <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">
-                  <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
-                    🔒 This link is valid for 1 hour and can only be used once. If you didn't request it, you can ignore this email.
+              <td style="padding:8px 32px 24px;">
+                <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:14px 16px;">
+                  <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#9a3412;">🔒 Not you?</p>
+                  <p style="margin:0;font-size:12px;line-height:1.6;color:#7c2d12;">
+                    If you didn't ask for this link, someone may have typed your email by mistake. No action is needed — just ignore this email. The link expires in 1 hour.
                   </p>
                 </div>
               </td>
@@ -164,9 +196,10 @@ Subject: `Your sign-in link — YSRCP NRI Wing`
             <!-- Footer -->
             <tr>
               <td style="background:#0f172a;padding:22px 24px;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.5;">
+                <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#ffffff;">YSRCP NRI Wing</p>
+                <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">
                   YSR Congress Party · NRI Wing<br/>
-                  <a href="https://ysrcpnriwing.org" style="color:#93c5fd;text-decoration:none;">ysrcpnriwing.org</a>
+                  <a href="https://ysrcpnriwing.org" style="color:#86efac;text-decoration:none;">ysrcpnriwing.org</a>
                 </p>
               </td>
             </tr>
@@ -181,7 +214,7 @@ Subject: `Your sign-in link — YSRCP NRI Wing`
 
 ---
 
-## 3. RESET PASSWORD
+## 3. RESET PASSWORD  ✨ (personalized)
 
 Subject: `Reset your password — YSRCP NRI Wing`
 
@@ -201,57 +234,79 @@ Subject: `Reset your password — YSRCP NRI Wing`
 
             <!-- Header -->
             <tr>
-              <td style="background:linear-gradient(135deg,#0B4DA2 0%,#1E6BD6 100%);padding:32px 24px;text-align:center;">
-                <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">YSRCP NRI Wing</h1>
-                <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">Global Unity · Local Impact</p>
+              <td style="background:linear-gradient(135deg,#0B4DA2 0%,#1E6BD6 100%);padding:36px 24px;text-align:center;">
+                <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:0.3px;">YSRCP NRI Wing</h1>
+                <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;letter-spacing:0.5px;">Global Unity · Local Impact</p>
+              </td>
+            </tr>
+
+            <!-- Recipient strip -->
+            <tr>
+              <td style="background:#f9fafb;padding:10px 32px;border-bottom:1px solid #eef2f7;">
+                <p style="margin:0;font-size:12px;color:#6b7280;">Sent to <span style="color:#111827;font-weight:500;">{{ .Email }}</span></p>
               </td>
             </tr>
 
             <!-- Body -->
             <tr>
-              <td style="padding:40px 32px 16px;">
-                <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">Reset your password</h2>
-                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4b5563;">
-                  We received a request to reset the password for your account. Click the button below to choose a new password.
+              <td style="padding:36px 32px 8px;">
+                <h2 style="margin:0 0 14px;font-size:24px;font-weight:700;color:#111827;letter-spacing:-0.2px;">
+                  {{ if .Data.first_name }}Hi {{ .Data.first_name }},{{ else }}Hi there,{{ end }} let's get you back in 🔐
+                </h2>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.65;color:#4b5563;">
+                  We received a request to reset the password for your <strong style="color:#0B4DA2;">YSRCP NRI Wing</strong> account.
+                </p>
+                <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#4b5563;">
+                  Click the button below to choose a new password. It only takes a moment.
                 </p>
 
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 28px;">
+                <!-- CTA Button -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
                   <tr>
-                    <td style="border-radius:10px;background:linear-gradient(135deg,#0B4DA2 0%,#1E6BD6 100%);">
+                    <td style="border-radius:10px;background:linear-gradient(135deg,#0B4DA2 0%,#1E6BD6 100%);box-shadow:0 4px 12px rgba(11,77,162,0.25);">
                       <a href="{{ .ConfirmationURL }}"
-                         style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;">
-                        Reset Password
+                         style="display:inline-block;padding:14px 40px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;">
+                        Reset my password →
                       </a>
                     </td>
                   </tr>
                 </table>
 
-                <p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">
-                  Or paste this link into your browser:
-                </p>
-                <p style="margin:6px 0 0;font-size:12px;word-break:break-all;">
-                  <a href="{{ .ConfirmationURL }}" style="color:#1E6BD6;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+                <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">
+                  Button not working? <a href="{{ .ConfirmationURL }}" style="color:#1E6BD6;font-weight:500;text-decoration:underline;">Click here to reset</a>.
                 </p>
               </td>
             </tr>
 
-            <!-- Info box -->
+            <!-- Security alert -->
             <tr>
-              <td style="padding:0 32px 24px;">
-                <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;">
-                  <p style="margin:0;font-size:12px;color:#92400e;line-height:1.6;">
-                    ⚠️ If you didn't request this reset, please ignore this email — your password will remain unchanged. This link expires in 1 hour.
+              <td style="padding:8px 32px 24px;">
+                <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:14px 16px;">
+                  <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#92400e;">⚠️ Didn't request this?</p>
+                  <p style="margin:0;font-size:12px;line-height:1.6;color:#78350f;">
+                    If you didn't ask to reset your password, someone may have entered your email by mistake. Your account is safe — just ignore this email. Your current password will stay unchanged.
                   </p>
                 </div>
+              </td>
+            </tr>
+
+            <!-- Tips -->
+            <tr>
+              <td style="padding:0 32px 28px;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#475569;">💡 Password tips</p>
+                <p style="margin:0;font-size:12px;line-height:1.6;color:#64748b;">
+                  Use at least 8 characters with a mix of letters, numbers, and symbols. Don't reuse passwords from other sites.
+                </p>
               </td>
             </tr>
 
             <!-- Footer -->
             <tr>
               <td style="background:#0f172a;padding:22px 24px;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#cbd5e1;line-height:1.5;">
+                <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#ffffff;">YSRCP NRI Wing</p>
+                <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">
                   YSR Congress Party · NRI Wing<br/>
-                  <a href="https://ysrcpnriwing.org" style="color:#93c5fd;text-decoration:none;">ysrcpnriwing.org</a>
+                  This link expires in 1 hour · <a href="https://ysrcpnriwing.org" style="color:#93c5fd;text-decoration:none;">ysrcpnriwing.org</a>
                 </p>
               </td>
             </tr>

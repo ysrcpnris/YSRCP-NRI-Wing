@@ -92,3 +92,24 @@ Reliably delivered (real SMTP, no rate limit)
 Professionally branded (matches website)
 Trusted by spam filters (your own domain)
 The email-templates.md file stays in your repo as your branding source of truth. If you ever want to tweak something, edit the HTML in that file then re-paste into Supabase.
+
+
+Log in to Resend → https://resend.com/domains
+Click "Add Domain"
+Enter: ysrcpnriwing.org
+Select a region (closest to your users)
+Click Add
+Resend shows you 3-4 DNS records to add (MX, TXT for SPF, TXT for DKIM, usually a DMARC record too)
+Go to your domain registrar (wherever you bought ysrcpnriwing.org — GoDaddy, Namecheap, Hostinger, etc.)
+Add each DNS record Resend showed you. Usually looks like:
+Type: TXT, Name: send._domainkey, Value: p=MIGfMA0GCSqGSIb3...
+Type: MX, Name: send, Value: feedback-smtp.us-east-1.amazonses.com, Priority: 10
+Type: TXT, Name: send, Value: v=spf1 include:amazonses.com ~all
+Back in Resend → click Verify DNS records
+Wait 1-15 minutes (DNS propagation)
+When status turns Verified (green), you're done
+Then update Supabase:
+
+Supabase Dashboard → Auth → SMTP Settings
+Change Sender email from onboarding@resend.dev to no-reply@ysrcpnriwing.org (or any prefix like admin@, hello@, etc. — the domain must be the verified one)
+Save

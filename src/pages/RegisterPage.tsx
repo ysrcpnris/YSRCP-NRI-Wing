@@ -1405,7 +1405,7 @@ return (
                       className="bg-transparent text-sm outline-none px-1 py-2.5"
                     >
                       {countryCodes.map((country) => (
-                        <option key={country.code} value={country.code}>
+                        <option key={country.name} value={country.code}>
                           {country.code}
                         </option>
                       ))}
