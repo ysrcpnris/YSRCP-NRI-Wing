@@ -63,7 +63,7 @@ const PILLARS = [
     title: "Governance Reforms",
     info: "Village and Ward Secretariats, volunteer system, transparency and citizen-centric service delivery.",
     image: "/pillar-images/468959763_8971065816247139_3372442148156847674_n.jpg",
-    icon: <Landmark className="text-ysrcp-blue" />
+    icon: <Landmark className="text-primary-600" />
   },
 
   // 8. Decentralization & Development
@@ -81,7 +81,7 @@ const PILLARS = [
     title: "Economic Growth",
     info: "Welfare-led growth putting money in people's hands and strengthening local markets.",
     image: "/pillar-images/525018991_1302193227941609_2585825087392610829_n.jpg",
-    icon: <TrendingUp className="text-ysrcp-blue" />
+    icon: <TrendingUp className="text-primary-600" />
   },
 
   // 10. Social Justice
@@ -99,7 +99,7 @@ const PILLARS = [
     title: "Blue Economy",
     info: "Ports, shipping, fisheries, aquaculture, coastal trade and marine livelihoods.",
     image: "/pillar-images/159622322_3921148761238895_2124063265924097094_n.jpg",
-    icon: <Globe className="text-blue-500" />
+    icon: <Globe className="text-primary-500" />
   },
 
   // Any remaining pillar(s) (kept after the ordered list)
@@ -153,12 +153,19 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
     navigate(`/pillars/${pillar.id}`);
   };
   return (
-    <section id="section-pillars" className="pt-0 pb-3 px-6 bg-white relative overflow-hidden">
+    <section id="section-pillars" className="pt-16 md:pt-20 pb-10 px-4 sm:px-6 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-3">
-          <span className="px-6 py-2 bg-gradient-to-r from-ysrcp-blue to-ysrcp-green text-black rounded-full text-sm font-black uppercase tracking-widest mb-4 inline-block">Vision & Strategy</span>
-          <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 uppercase tracking-tight">The Pillars of Progress</h2>
-          <div className="w-24 h-2 bg-ysrcp-green mx-auto rounded-full"></div>
+        <div className="text-center mb-8 md:mb-12">
+          <span className="inline-block px-4 py-1.5 bg-primary-50 border border-primary-100 text-primary-700 rounded-full text-xs font-semibold uppercase tracking-widest mb-4">
+            Vision & Strategy
+          </span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
+            The <span className="bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">Pillars of Progress</span>
+          </h2>
+          <p className="text-gray-500 text-sm md:text-base max-w-2xl mx-auto">
+            Twelve foundational pillars driving a stronger, more inclusive Andhra Pradesh.
+          </p>
+          <div className="w-20 h-1 bg-gradient-to-r from-primary-500 to-accent-500 mx-auto rounded-full mt-5"></div>
         </div>
 
         {/* Mobile horizontal carousel (snap-x) - fully visible cards on small screens */}
@@ -177,7 +184,7 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
                       <h3 className="text-xl font-black uppercase">{pillar.title}</h3>
                       <p className="mt-2 text-sm text-white/90 line-clamp-3">{pillar.info}</p>
                       <div className="mt-4">
-                        <button onClick={() => handlePillarClick(pillar)} className="bg-ysrcp-green text-white px-4 py-2 rounded-full font-bold">View Details</button>
+                        <button onClick={() => handlePillarClick(pillar)} className="bg-accent-600 text-white px-4 py-2 rounded-full font-bold">View Details</button>
                       </div>
                     </div>
                   </div>
@@ -208,7 +215,7 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
                 <button
                   key={i}
                   onClick={() => { if (cardRefs.current[i] && containerRef.current) { containerRef.current.scrollTo({ left: (cardRefs.current[i] as HTMLElement).offsetLeft, behavior: 'smooth' }); } }}
-                  className={`w-2 h-2 rounded-full transition ${i === currentIdx ? 'bg-ysrcp-green' : 'bg-white/40'}`}
+                  className={`w-2 h-2 rounded-full transition ${i === currentIdx ? 'bg-accent-600' : 'bg-white/40'}`}
                   aria-label={`Go to pillar ${i+1}`}
                 />
               ))}
@@ -242,7 +249,7 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
                     </div>
                   </div>
                   
-                  <h3 className="font-black uppercase tracking-tight leading-tight transition-all duration-300 text-sm mb-2 group-hover:text-ysrcp-yellow">
+                  <h3 className="font-black uppercase tracking-tight leading-tight transition-all duration-300 text-sm mb-2 group-hover:text-gold-400">
                     {pillar.title}
                   </h3>
                   
@@ -250,7 +257,7 @@ const TenPillars: React.FC<TenPillarsProps> = ({ onPillarSelect }) => {
                     {pillar.info}
                   </p>
 
-                  <div className="mt-2 text-[10px] font-black uppercase tracking-widest text-ysrcp-green flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="mt-2 text-[10px] font-black uppercase tracking-widest text-accent-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     View Detailed Roadmap &rarr;
                   </div>
                 </div>

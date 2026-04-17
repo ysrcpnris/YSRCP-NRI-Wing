@@ -13,7 +13,7 @@ export default function About() {
   //       {/* ================= HEADER ================= */}
   //       <div className="text-center mb-14 md:mb-20">
   //         <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">
-  //           <span className="text-blue-700">About</span>{" "}
+  //           <span className="text-primary-700">About</span>{" "}
   //           <span className="text-green-600">YSRCP NRI Wing</span>
   //         </h2>
 

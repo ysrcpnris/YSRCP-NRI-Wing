@@ -141,7 +141,7 @@ const Testimonials = () => {
     <section className="relative bg-white py-10 overflow-hidden">
       <div className="text-center mb-6">
         <h2
-          className="text-xl sm:text-2xl font-black uppercase text-blue-600"
+          className="text-xl sm:text-2xl font-black uppercase text-primary-600"
           style={{ fontFamily: "Times New Roman, serif" }}
         >
           Voices of Our Global Community
@@ -157,7 +157,7 @@ const Testimonials = () => {
               : "border-l-blue-600";
             const textColor = isGreen
               ? "text-green-700"
-              : "text-blue-700";
+              : "text-primary-700";
 
             return (
               <div

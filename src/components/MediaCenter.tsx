@@ -91,7 +91,7 @@ export default function MediaCenter() {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">{article.title}</h3>
                   <p className="text-gray-600 mb-4 line-clamp-3">{article.excerpt}</p>
-                  <button className="text-blue-600 font-semibold hover:text-blue-700 transition">
+                  <button className="text-primary-600 font-semibold hover:text-primary-700 transition">
                     Read More →
                   </button>
                 </div>
@@ -102,12 +102,12 @@ export default function MediaCenter() {
 
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-xl text-center hover:shadow-lg transition-all duration-300">
-            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Image className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Photo Gallery</h3>
             <p className="text-gray-600 mb-4">Browse through our collection of event photos and memorable moments</p>
-            <button className="text-blue-600 font-semibold hover:text-blue-700 transition">
+            <button className="text-primary-600 font-semibold hover:text-primary-700 transition">
               View Gallery →
             </button>
           </div>

@@ -181,7 +181,7 @@ const BottomCards: React.FC = () => {
                     setOpenModal(false);
                     navigate('/register');
                   }}
-                  className="mt-4 bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-500"
+                  className="mt-4 bg-primary-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-500"
                 >
                   Register Now
                 </button>
@@ -195,7 +195,7 @@ const BottomCards: React.FC = () => {
                     setOpenModal(false);
                     navigate('/register');
                   }}
-                  className="mt-4 bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-500"
+                  className="mt-4 bg-primary-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-500"
                 >
                   Register Now
                 </button>
@@ -426,7 +426,7 @@ export default function PressMeetsAndSocial() {
               title: "Jagan Anna",
               desc: "Official Leader Handles",
               colors: [
-                { icon: Facebook, bg: "bg-blue-100", text: "text-blue-700", url: "https://www.facebook.com/ysjagan/" },
+                { icon: Facebook, bg: "bg-blue-100", text: "text-primary-700", url: "https://www.facebook.com/ysjagan/" },
                 { icon: Twitter, bg: "bg-sky-100", text: "text-sky-600", url: "https://x.com/ysjagan/" },
                 { icon: Instagram, bg: "bg-pink-100", text: "text-pink-600", url: "https://www.instagram.com/ysjagan/" },
                 { icon: MessageCircle, bg: "bg-green-100", text: "text-green-600", url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
@@ -437,7 +437,7 @@ export default function PressMeetsAndSocial() {
               title: "YSRCP Party",
               desc: "Official Party Updates",
               colors: [
-                { icon: Facebook, bg: "bg-blue-100", text: "text-blue-700", url: "https://www.instagram.com/ysrcongress/?hl=en" },
+                { icon: Facebook, bg: "bg-blue-100", text: "text-primary-700", url: "https://www.instagram.com/ysrcongress/?hl=en" },
                 { icon: Twitter, bg: "bg-sky-100", text: "text-sky-600", url: "https://x.com/YSRCParty" },
                 { icon: Instagram, bg: "bg-pink-100", text: "text-pink-600", url: "https://www.instagram.com/ysrcongress/?hl=en" },
                 { icon: MessageCircle, bg: "bg-green-100", text: "text-green-600", url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
@@ -448,7 +448,7 @@ export default function PressMeetsAndSocial() {
               title: "NRI Community",
               desc: "Direct Connect",
               colors: [
-                { icon: Facebook, bg: "bg-blue-50", text: "text-blue-600" },
+                { icon: Facebook, bg: "bg-blue-50", text: "text-primary-600" },
                 { icon: Twitter, bg: "bg-sky-50", text: "text-sky-600" },
                 { icon: Instagram, bg: "bg-pink-50", text: "text-pink-600" },
                 { icon: MessageCircle, bg: "bg-green-50", text: "text-green-600" },

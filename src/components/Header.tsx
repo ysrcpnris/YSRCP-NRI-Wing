@@ -13,9 +13,18 @@ export default function Header({ onSignUp }: HeaderProps) {
   const [openJaganMenu, setOpenJaganMenu] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [showAuth, setShowAuth] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Shrink + shadow on scroll
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: any) => {
@@ -27,15 +36,14 @@ export default function Header({ onSignUp }: HeaderProps) {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-
   const scrollToSection = (id: string) => {
     const doScroll = () => {
       const el = document.getElementById(id);
       if (!el) return;
-      const headerEl = document.querySelector('header') as HTMLElement | null;
+      const headerEl = document.querySelector("header") as HTMLElement | null;
       const headerHeight = headerEl ? headerEl.offsetHeight : 80;
       const top = el.getBoundingClientRect().top + window.scrollY - headerHeight - 16;
-      window.scrollTo({ top, behavior: 'smooth' });
+      window.scrollTo({ top, behavior: "smooth" });
       setMobileMenuOpen(false);
     };
 
@@ -47,121 +55,160 @@ export default function Header({ onSignUp }: HeaderProps) {
     }
   };
 
+  const navLink =
+    "relative text-gray-700 hover:text-primary-600 transition-colors duration-200 font-medium " +
+    "after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-0 after:bg-primary-600 after:transition-all after:duration-300 hover:after:w-full";
+
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-md z-50">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-white/95 backdrop-blur-md shadow-md"
+            : "bg-white/85 backdrop-blur-sm shadow-sm"
+        }`}
+      >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-
+          <div
+            className={`flex justify-between items-center transition-all duration-300 ${
+              scrolled ? "h-14" : "h-16"
+            }`}
+          >
             {/* Logo */}
-            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate("/")}>
-              <div className="w-10 h-10 rounded-full overflow-hidden">
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => navigate("/")}
+            >
+              <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary-100 group-hover:ring-primary-300 transition-all duration-300">
                 <img src={nriLogo} alt="logo" className="w-full h-full object-cover" />
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-blue-700">YSRCP NRI Wing</h1>
-                <p className="text-xs text-gray-600">Global Unity, Local Impact</p>
+              <div className="hidden sm:block">
+                <h1 className="text-base lg:text-lg font-bold bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent leading-tight">
+                  YSRCP NRI Wing
+                </h1>
+                <p className="text-[10px] lg:text-xs text-gray-500 tracking-wide">
+                  Global Unity, Local Impact
+                </p>
               </div>
             </div>
 
             {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-6 font-medium">
-              <button onClick={() => scrollToSection("hero")} className="hover:text-blue-600">Home</button>
-              <button onClick={() => scrollToSection("journey")} className="hover:text-blue-600">About</button>
-              <button onClick={() => scrollToSection('services')} className="hover:text-blue-600">Services</button>
-              {/* <button onClick={() => navigate('/pillars')} className="hover:text-blue-600">Pillars</button> */}
-
-              {/* Jagan-Mark Dropdown */}
-              <div className="relative jagan-dropdown" onMouseEnter={() => setOpenJaganMenu(true)} onMouseLeave={() => setOpenJaganMenu(false)}>
-                <button onClick={() => scrollToSection('section-pillars')} className="font-semibold hover:text-blue-600 flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm">
+              <button onClick={() => scrollToSection("hero")} className={navLink}>
+                Home
+              </button>
+              <button onClick={() => scrollToSection("journey")} className={navLink}>
+                About
+              </button>
+              <button onClick={() => scrollToSection("services")} className={navLink}>
+                Services
+              </button>
+              <div
+                className="relative jagan-dropdown"
+                onMouseEnter={() => setOpenJaganMenu(true)}
+                onMouseLeave={() => setOpenJaganMenu(false)}
+              >
+                <button
+                  onClick={() => scrollToSection("section-pillars")}
+                  className={navLink}
+                >
                   Jagan-Mark
                 </button>
-                {/* {openJaganMenu && (
-                  <div className="absolute bg-white shadow-lg rounded-md mt-2 w-48 border z-50">
-                    <div className="relative group">
-                      <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-medium flex justify-between items-center">
-                        Development ▸
-                      </button>
-                      <div className="absolute left-full top-0 bg-white border shadow-md rounded-md w-52 hidden group-hover:block">
-                        <button onClick={() => navigate("/health")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Health</button>
-                        <button onClick={() => navigate("/education")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Education</button>
-                        <button onClick={() => navigate("/agriculture")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Agriculture</button>
-                        <button onClick={() => navigate("/women")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Women Empowerment</button>
-                        <button onClick={() => navigate("/students")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Student / Youth</button>
-                      </div>
-                    </div>
-                    <div className="relative group">
-                      <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 font-medium flex justify-between items-center">
-                        Welfare ▸
-                      </button>
-                      <div className="absolute left-full top-0 bg-white border shadow-md rounded-md w-64 hidden group-hover:block">
-                        <button onClick={() => navigate('/welfare/amma-vodi')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Amma Vodi</button>
-                        <button onClick={() => navigate('/welfare/vidya-deevena')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Vidya Deevena</button>
-                        <button onClick={() => navigate('/welfare/vasathi-deevena')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Vasathi Deevena</button>
-                        <button onClick={() => navigate('/welfare/nri-connect')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna NRI Connect</button>
-                        <button onClick={() => navigate('/welfare/gorumudda')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Gorumudda</button>
-                        <button onClick={() => navigate('/welfare/cheyutha')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Cheyutha</button>
-                        <button onClick={() => navigate('/welfare/yuvanestham')} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Jagananna Yuvanestham</button>
-                      </div>
-                    </div>
-                    <button onClick={() => navigate("/reforms")} className="block w-full text-left px-4 py-2 hover:bg-gray-100">Reforms</button>
-                  </div>
-                )} */}
               </div>
-
-              <button onClick={() => scrollToSection('glimpse')} className="hover:text-blue-600">Gallery</button>
+              <button onClick={() => scrollToSection("glimpse")} className={navLink}>
+                Gallery
+              </button>
 
               {/* Desktop Login/Register Buttons */}
-             <button
-  onClick={() => { setAuthMode("signin"); setShowAuth(true); }}
-  className="bg-blue-600 text-white px-5 py-2 rounded-md font-bold hover:bg-green-500"
->
-  Login
-</button>
-
-<button
-  onClick={() => navigate("/register")}
-  className="bg-blue-600 text-white px-5 py-2 rounded-md font-bold hover:bg-green-500"
->
-  Register
-</button>
-
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-gray-700">
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden py-4 space-y-3 border-t">
-              <button onClick={() => scrollToSection("hero")} className="block w-full text-left py-2">Home</button>
-              <button onClick={() => scrollToSection("journey")} className="block w-full text-left py-2">About</button>
-              <button onClick={() => scrollToSection('section-pillars')} className="font-semibold text-gray-800 px-2 pt-2 w-full text-left">Jagan-Mark</button>
-              {/* <button onClick={() => scrollToSection('development')} className="block w-full text-left py-2 pl-4">Development</button>
-              <button onClick={() => navigate('/welfare')} className="block w-full text-left py-2 pl-4">Welfare</button>
-              <button onClick={() => navigate('/reforms')} className="block w-full text-left py-2 pl-4">Reforms</button> */}
-              <button onClick={() => scrollToSection('services')} className="block w-full text-left py-2">Services</button>
-              {/* <button onClick={() => { navigate('/pillars'); setMobileMenuOpen(false); }} className="block w-full text-left py-2">Pillars</button> */}
-              <button onClick={() => scrollToSection('glimpse')} className="block w-full text-left py-2">Gallery</button>
-
-              {/* Mobile Login/Register */}
               <button
-                onClick={() => { setAuthMode("signin"); setShowAuth(true); setMobileMenuOpen(false); }}
-                className="w-full bg-blue-600 text-white py-2 rounded-full font-bold hover:bg-green-500"
+                onClick={() => {
+                  setAuthMode("signin");
+                  setShowAuth(true);
+                }}
+                className="px-5 py-2 text-sm font-semibold text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-50 hover:border-primary-300 transition-all duration-200"
               >
                 Login
               </button>
+
               <button
-                onClick={() => { navigate("/register"); setMobileMenuOpen(false); }}
-                className="w-full bg-blue-600 text-white py-2 rounded-full font-bold hover:bg-green-500"
+                onClick={() => navigate("/register")}
+                className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
               >
                 Register
               </button>
             </div>
-          )}
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+
+          {/* Mobile Menu */}
+          <div
+            className={`md:hidden overflow-hidden transition-all duration-300 ${
+              mobileMenuOpen ? "max-h-[500px] pb-4" : "max-h-0"
+            }`}
+          >
+            <div className="space-y-1 pt-2 border-t border-gray-100">
+              <button
+                onClick={() => scrollToSection("hero")}
+                className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => scrollToSection("journey")}
+                className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition"
+              >
+                About
+              </button>
+              <button
+                onClick={() => scrollToSection("services")}
+                className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition"
+              >
+                Services
+              </button>
+              <button
+                onClick={() => scrollToSection("section-pillars")}
+                className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-800 hover:bg-primary-50 hover:text-primary-700 transition"
+              >
+                Jagan-Mark
+              </button>
+              <button
+                onClick={() => scrollToSection("glimpse")}
+                className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition"
+              >
+                Gallery
+              </button>
+
+              <div className="flex gap-2 pt-3">
+                <button
+                  onClick={() => {
+                    setAuthMode("signin");
+                    setShowAuth(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex-1 py-2.5 text-sm font-semibold text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-50 transition"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/register");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex-1 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg shadow-sm hover:shadow-md transition"
+                >
+                  Register
+                </button>
+              </div>
+            </div>
+          </div>
         </nav>
       </header>
 

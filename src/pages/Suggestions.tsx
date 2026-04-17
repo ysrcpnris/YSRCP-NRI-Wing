@@ -60,7 +60,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
       />
 
       <section className="pt-24 p-10 text-center">
-        <h1 className="text-3xl font-bold text-blue-700 mb-4">Suggestions & Feedback</h1>
+        <h1 className="text-3xl font-bold text-primary-700 mb-4">Suggestions & Feedback</h1>
         <p className="text-gray-700 max-w-2xl mx-auto mb-8">
           Your feedback is valuable to us. Share your suggestions, ideas, or concerns about our initiatives and services.
         </p>
@@ -75,7 +75,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
               </p>
               <button
                 onClick={() => setSubmitted(false)}
-                className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                className="mt-4 bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700"
               >
                 Submit Another Suggestion
               </button>
@@ -94,7 +94,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -110,7 +110,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -127,7 +127,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
                     placeholder="Enter your phone number"
                   />
                 </div>
@@ -142,7 +142,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
                     value={formData.category}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
                   >
                     <option value="">Select a category</option>
                     <option value="health">Health Initiatives</option>
@@ -168,7 +168,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500"
                   placeholder="Brief subject of your suggestion"
                 />
               </div>
@@ -184,7 +184,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
                   onChange={handleChange}
                   required
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-vertical"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-500 resize-vertical"
                   placeholder="Please provide detailed information about your suggestion or feedback..."
                 />
               </div>
@@ -193,7 +193,7 @@ export default function Suggestions({ setAuthMode, setShowAuthModal }: Suggestio
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                  className="bg-primary-600 text-white px-8 py-3 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit Suggestion'}
                 </button>

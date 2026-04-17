@@ -31,7 +31,7 @@ export default function ImpactMap() {
   //               </div>
   //             </div>
   //             <h3 className="text-xl font-bold text-gray-900 text-center mb-2">{region.name}</h3>
-  //             <p className="text-3xl font-bold text-blue-600 text-center mb-3">{region.count}</p>
+  //             <p className="text-3xl font-bold text-primary-600 text-center mb-3">{region.count}</p>
   //             <div className="flex flex-wrap gap-2 justify-center">
   //               {region.countries.map((country, idx) => (
   //                 <span key={idx} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
@@ -45,7 +45,7 @@ export default function ImpactMap() {
 
   //       <div className="mt-12 text-center">
   //         <p className="text-2xl font-bold text-gray-900">
-  //           <span className="text-blue-600">45,000+</span> NRI Supporters in <span className="text-green-600">50+</span> Countries
+  //           <span className="text-primary-600">45,000+</span> NRI Supporters in <span className="text-green-600">50+</span> Countries
   //         </p>
   //       </div>
   //     </div>

@@ -114,7 +114,7 @@ export default function Events() {
 //               placeholder="Search events..."
 //               value={searchTerm}
 //               onChange={(e) => setSearchTerm(e.target.value)}
-//               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+//               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent"
 //             />
 //           </div>
 //           <div className="flex gap-2">
@@ -159,7 +159,7 @@ export default function Events() {
 //               className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100"
 //             >
 //               <div className="h-48 bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
-//                 <Calendar className="w-16 h-16 text-blue-600" />
+//                 <Calendar className="w-16 h-16 text-primary-600" />
 //               </div>
 
 //               <div className="p-6">
@@ -210,7 +210,7 @@ export default function Events() {
 //                         RSVP
 //                       </button>
 //                       {event.type === 'virtual' && (
-//                         <button className="bg-blue-100 text-blue-600 p-2 rounded-lg hover:bg-blue-200 transition">
+//                         <button className="bg-blue-100 text-primary-600 p-2 rounded-lg hover:bg-blue-200 transition">
 //                           <Video className="w-5 h-5" />
 //                         </button>
 //                       )}

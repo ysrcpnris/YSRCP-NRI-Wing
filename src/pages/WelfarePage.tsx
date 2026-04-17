@@ -54,7 +54,7 @@ export default function WelfarePage() {
               className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl border border-gray-200 cursor-pointer transition"
               onClick={() => navigate(`/welfare/${scheme.id}`)}
             >
-              <h3 className="text-2xl font-semibold text-blue-700 mb-2">{scheme.title}</h3>
+              <h3 className="text-2xl font-semibold text-primary-700 mb-2">{scheme.title}</h3>
               <p className="text-gray-600">{scheme.description}</p>
             </div>
           ))}

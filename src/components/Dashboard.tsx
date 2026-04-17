@@ -2524,7 +2524,7 @@ const missingFieldToRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
     <div className="flex-1 min-w-[200px]">
       <div className="flex justify-between text-xs font-bold text-gray-500 mb-1.5">
         <span>Profile Completion</span>
-        <span className="text-indigo-600">{profileCompletion}%</span>
+        <span className="text-primary-600">{profileCompletion}%</span>
       </div>
 
       <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
@@ -2532,7 +2532,7 @@ const missingFieldToRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
           className={`h-full rounded-full shadow-sm transition-all duration-500 ${
             profileCompletion === 100
               ? "bg-green-500"
-              : "bg-indigo-600"
+              : "bg-primary-600"
           }`}
           style={{ width: `${profileCompletion}%` }}
         />
@@ -2578,7 +2578,7 @@ const missingFieldToRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
       </div>
       <div className="w-px bg-gray-200 h-6 hidden sm:block"></div>
       <div className="flex items-center gap-2">
-        <span className="text-2xl font-black text-blue-600 leading-none">
+        <span className="text-2xl font-black text-primary-600 leading-none">
           {referralStats.passive}
         </span>
         <div className="flex flex-col">
@@ -2611,7 +2611,7 @@ const renderConnectSummary = () => {
   const renderServicesSummary = () => (
     <div className="flex flex-wrap items-center gap-4 w-full mt-1 opacity-90">
       <div className="flex gap-2">
-        <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-[10px] font-bold uppercase border border-blue-100">
+        <span className="px-2 py-1 bg-blue-50 text-primary-700 rounded text-[10px] font-bold uppercase border border-blue-100">
           Student
         </span>
         <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded text-[10px] font-bold uppercase border border-purple-100">
@@ -2843,7 +2843,7 @@ const handleSubmitSuggestion = async () => {
               <button
                 disabled={!photoFile || uploading}
                 onClick={handleUploadPhoto}
-                className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold disabled:opacity-60"
+                className="px-3 py-2 bg-primary-600 text-white rounded-lg text-xs font-bold disabled:opacity-60"
               >
                 {uploading ? 'Uploading...' : 'Upload Photo'}
               </button>
@@ -2861,13 +2861,13 @@ const handleSubmitSuggestion = async () => {
 )}
 
           </div>
-          <div className="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+          <div className="bg-primary-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
             <div className="text-center relative z-10">
               <div className="w-20 h-20 mx-auto mb-3 relative">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                   <path
-                    className="text-indigo-800"
+                    className="text-primary-800"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
                     stroke="currentColor"
@@ -2893,7 +2893,7 @@ const handleSubmitSuggestion = async () => {
   Profile Completion Status
 </h3>
 
-<p className="text-indigo-200 text-xs mb-3">
+<p className="text-primary-200 text-xs mb-3">
   Your profile is {profileCompletion}% complete
 </p>
 
@@ -2929,14 +2929,14 @@ const handleSubmitSuggestion = async () => {
       }, 200);
     }}
     className="flex items-center justify-between p-2 bg-white
-               border border-gray-200 rounded hover:border-indigo-300
+               border border-gray-200 rounded hover:border-primary-300
                cursor-pointer transition-all"
   >
 
       <span className="text-xs font-bold text-gray-600">
         {item.label}
       </span>
-      <ArrowRight size={12} className="text-indigo-500" />
+      <ArrowRight size={12} className="text-primary-500" />
     </div>
   ))
 )}
@@ -2959,7 +2959,7 @@ const handleSubmitSuggestion = async () => {
               id="firstName"
                 type="text"
                 defaultValue={profile?.first_name || ''}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
               />
             </div>
             <div>
@@ -2970,7 +2970,7 @@ const handleSubmitSuggestion = async () => {
               id="lastName"
                 type="text"
                 defaultValue={profile?.last_name || ''}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
               />
             </div>
             <div>
@@ -2981,7 +2981,7 @@ const handleSubmitSuggestion = async () => {
               id="email"
                 type="email"
                 defaultValue={profile?.email ?? ''}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
               />
             </div>
             <div>
@@ -3006,7 +3006,7 @@ const handleSubmitSuggestion = async () => {
     defaultValue={profile?.dob || ""}
     className="w-full p-3 bg-gray-50 border border-gray-200
                rounded-lg text-sm font-bold text-gray-700
-               focus:bg-white focus:ring-2 focus:ring-indigo-500
+               focus:bg-white focus:ring-2 focus:ring-primary-500
                outline-none transition-all"
   />
 </div>
@@ -3041,7 +3041,7 @@ const handleSubmitSuggestion = async () => {
         bg-gray-50 border border-gray-300 rounded-lg
         flex items-center justify-between
         text-left text-sm font-semibold text-gray-900
-        focus:bg-white focus:ring-2 focus:ring-indigo-500
+        focus:bg-white focus:ring-2 focus:ring-primary-500
         outline-none
       "
     >
@@ -3066,7 +3066,7 @@ const handleSubmitSuggestion = async () => {
           value={c.name}
           className={({ active }) =>
             `cursor-pointer px-3 py-2 ${
-              active ? "bg-indigo-100 text-indigo-900" : "text-gray-900"
+              active ? "bg-primary-100 text-primary-900" : "text-gray-900"
             }`
           }
         >
@@ -3099,7 +3099,7 @@ const handleSubmitSuggestion = async () => {
         placeholder="Enter State / Province"
         className="w-full h-11 px-3 bg-gray-50 border border-gray-300
                    rounded-lg text-sm font-semibold text-gray-700
-                   focus:bg-white focus:ring-2 focus:ring-indigo-500
+                   focus:bg-white focus:ring-2 focus:ring-primary-500
                    outline-none"
       />
     </div>
@@ -3117,7 +3117,7 @@ const handleSubmitSuggestion = async () => {
         placeholder="Enter City"
         className="w-full h-11 px-3 bg-gray-50 border border-gray-300
                    rounded-lg text-sm font-semibold text-gray-700
-                   focus:bg-white focus:ring-2 focus:ring-indigo-500
+                   focus:bg-white focus:ring-2 focus:ring-primary-500
                    outline-none"
       />
     </div>
@@ -3153,7 +3153,7 @@ const handleSubmitSuggestion = async () => {
         bg-gray-50 border border-gray-300 rounded-lg
         flex items-center justify-between
         text-left text-[16px] md:text-sm font-semibold text-gray-900
-        focus:bg-white focus:ring-2 focus:ring-indigo-500
+        focus:bg-white focus:ring-2 focus:ring-primary-500
         outline-none
       "
     >
@@ -3208,7 +3208,7 @@ const handleSubmitSuggestion = async () => {
     bg-gray-50 border border-gray-300 rounded-lg
     text-left text-[16px] md:text-sm font-semibold text-gray-900
     flex items-center justify-between
-    focus:bg-white focus:ring-2 focus:ring-indigo-500
+    focus:bg-white focus:ring-2 focus:ring-primary-500
     outline-none
   "
 >
@@ -3242,7 +3242,7 @@ const handleSubmitSuggestion = async () => {
             className={({ active }) =>
               `cursor-pointer px-3 py-2 ${
                 active
-                  ? "bg-indigo-100 text-indigo-900"
+                  ? "bg-primary-100 text-primary-900"
                   : "text-gray-900"
               }`
             }
@@ -3271,7 +3271,7 @@ const handleSubmitSuggestion = async () => {
         bg-gray-50 border border-gray-300 rounded-lg
         flex items-center justify-between
         text-left text-[16px] md:text-sm font-semibold text-gray-900
-        focus:bg-white focus:ring-2 focus:ring-indigo-500
+        focus:bg-white focus:ring-2 focus:ring-primary-500
         outline-none
       "
     >
@@ -3322,7 +3322,7 @@ const handleSubmitSuggestion = async () => {
         bg-gray-50 border border-gray-300 rounded-lg
         flex items-center justify-between
         text-left text-[16px] md:text-sm font-semibold text-gray-900
-        focus:bg-white focus:ring-2 focus:ring-indigo-500
+        focus:bg-white focus:ring-2 focus:ring-primary-500
         outline-none
       "
     >
@@ -3390,7 +3390,7 @@ const handleSubmitSuggestion = async () => {
     placeholder="e.g. Software Engineer, Doctor, Business Owner, Student"
     className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
                text-sm font-semibold
-               focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+               focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
   />
 </div>
 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3406,7 +3406,7 @@ const handleSubmitSuggestion = async () => {
     placeholder="e.g. Senior Developer, Founder, B.Tech CS"
     className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
                text-sm font-semibold
-               focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+               focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
   />
   </div>
 
@@ -3429,13 +3429,13 @@ const handleSubmitSuggestion = async () => {
             {/* Social Media Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
-                <Facebook className="absolute left-3 top-3 text-blue-600" size={16} />
+                <Facebook className="absolute left-3 top-3 text-primary-600" size={16} />
                 <input
                 id="facebook"
                   type="text"
                   defaultValue={profile?.facebook_id ?? ''}
                   placeholder="Facebook Profile URL / ID"
-                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
               <div className="relative">
@@ -3445,17 +3445,17 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   defaultValue={profile?.twitter_id ?? ''}
                   placeholder="X (Twitter) Handle"
-                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
               <div className="relative">
-                <Linkedin className="absolute left-3 top-3 text-blue-700" size={16} />
+                <Linkedin className="absolute left-3 top-3 text-primary-700" size={16} />
                 <input
                 id="linkedin"
                   type="text"
                   defaultValue={profile?.linkedin_id ?? ''}
                   placeholder="LinkedIn Profile URL"
-                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
               <div className="relative">
@@ -3465,7 +3465,7 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   defaultValue={profile?.instagram_id ?? ''}
                   placeholder="Instagram Handle"
-                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
             </div>
@@ -3488,7 +3488,7 @@ const handleSubmitSuggestion = async () => {
           key={opt.id}
           className="flex items-center gap-2 px-3 py-2
                      border border-gray-200 rounded-lg cursor-pointer
-                     hover:border-indigo-500 hover:bg-indigo-50"
+                     hover:border-primary-500 hover:bg-primary-50"
         >
           <input
             type="checkbox"
@@ -3600,7 +3600,7 @@ const handleSubmitSuggestion = async () => {
             <h4 className="font-bold text-xs text-gray-700 uppercase tracking-wider">
               Passive Tree
             </h4>
-            <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+            <span className="text-[10px] bg-blue-100 text-primary-700 px-2 py-0.5 rounded-full font-bold">
               {passiveReferrals.length} Members
             </span>
           </div>
@@ -3692,7 +3692,7 @@ const renderConnectContent = () => {
   const colorClasses = [
     { text: "text-emerald-600", border: "border-emerald-200" },
     { text: "text-teal-600", border: "border-teal-200" },
-    { text: "text-blue-600", border: "border-blue-200" },
+    { text: "text-primary-600", border: "border-blue-200" },
     { text: "text-purple-600", border: "border-purple-200" },
   ];
 
@@ -3771,7 +3771,7 @@ const renderConnectContent = () => {
 
 const SERVICE_UI = {
   student: {
-    icon: <GraduationCap size={22} className="text-blue-600" />,
+    icon: <GraduationCap size={22} className="text-primary-600" />,
     bg: "bg-blue-50",
   },
   legal: {
@@ -3902,7 +3902,7 @@ const renderServicesContent = () => (
               className={({ active }) =>
                 `cursor-pointer px-3 py-2 ${
                   active
-                    ? "bg-indigo-100 text-indigo-900"
+                    ? "bg-primary-100 text-primary-900"
                     : "text-gray-900"
                 }`
               }
@@ -3954,7 +3954,7 @@ const renderServicesContent = () => (
                         className={({ active }) =>
                           `cursor-pointer px-3 py-2 ${
                             active
-                              ? "bg-indigo-100 text-indigo-900"
+                              ? "bg-primary-100 text-primary-900"
                               : "text-gray-900"
                           }`
                         }
@@ -3979,7 +3979,7 @@ const renderServicesContent = () => (
         <button
           onClick={handleSubmitService}
           disabled={!selectedInner || submittingService}
-          className="w-full bg-indigo-600 text-white py-2 rounded-lg
+          className="w-full bg-primary-600 text-white py-2 rounded-lg
                      text-xs font-bold disabled:opacity-60"
         >
           {submittingService ? "Submitting..." : "Submit Request"}
@@ -4075,7 +4075,7 @@ const renderSuggestionsContent = () => (
           ref={suggestionRef}
           rows={4}
           className="w-full p-3 bg-white border border-gray-300 rounded-lg
-                     text-sm outline-none focus:ring-2 focus:ring-indigo-500
+                     text-sm outline-none focus:ring-2 focus:ring-primary-500
                      resize-none"
           placeholder="Write your suggestion here..."
         />
@@ -4086,8 +4086,8 @@ const renderSuggestionsContent = () => (
         <button
           onClick={handleSubmitSuggestion}
           disabled={submittingSuggestion}
-          className="px-6 py-2 bg-indigo-600 text-white text-xs font-bold
-                     rounded-lg hover:bg-indigo-700 disabled:opacity-60"
+          className="px-6 py-2 bg-primary-600 text-white text-xs font-bold
+                     rounded-lg hover:bg-primary-700 disabled:opacity-60"
         >
           {submittingSuggestion ? "Submitting..." : "Submit Suggestion"}
         </button>
@@ -4119,7 +4119,7 @@ const renderSuggestionsContent = () => (
       {toast && (
         <div
        className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 ${
-  toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-blue-600 text-white'
+  toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-primary-600 text-white'
 }`}
         >
           {toast.type === 'success' ? <CheckCircle size={16} /> : <Info size={16} />}
@@ -4161,7 +4161,7 @@ const renderSuggestionsContent = () => (
             summary={renderProfileSummary()}
             icon={<User size={20} />}
             content={renderProfileContent()}
-            color="bg-indigo-600"
+            color="bg-primary-600"
             expandedSection={expandedSection}
             toggleSection={toggleSection}
           />
@@ -4183,7 +4183,7 @@ const renderSuggestionsContent = () => (
             summary={renderConnectSummary()}
             icon={<MessageSquare size={20} />}
             content={renderConnectContent()}
-            color="bg-blue-600"
+            color="bg-primary-600"
             expandedSection={expandedSection}
             toggleSection={toggleSection}
           />
@@ -4248,7 +4248,7 @@ const renderSuggestionsContent = () => (
   title="Suggestions"
   icon={<MessageSquare size={20} />}
   content={renderSuggestionsContent()}
-  color="bg-indigo-600"
+  color="bg-primary-600"
   expandedSection={expandedSection}
   toggleSection={toggleSection}
 />

@@ -186,7 +186,7 @@ const initials =
   }}
   className="w-full px-6 py-4 flex items-center gap-4 text-gray-800 hover:bg-blue-50 transition font-semibold"
 >
-  <User size={20} className="text-blue-700" />
+  <User size={20} className="text-primary-700" />
   My Profile
 </button>
 

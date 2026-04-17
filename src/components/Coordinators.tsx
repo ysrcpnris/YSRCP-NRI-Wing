@@ -103,19 +103,19 @@ export default function Coordinators() {
                     className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-blue-100"
                   />
                   <h3 className="text-xl font-bold text-gray-900 mb-1">{[coordinator.profile?.first_name, coordinator.profile?.last_name].filter(Boolean).join(" ") || coordinator.profile?.full_name}</h3>
-                  <p className="text-sm font-semibold text-blue-600 mb-2">{coordinator.position}</p>
+                  <p className="text-sm font-semibold text-primary-600 mb-2">{coordinator.position}</p>
                   <div className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-4">
                     {coordinator.region}
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center text-gray-600">
-                    <MapPin className="w-4 h-4 mr-2 text-blue-600" />
+                    <MapPin className="w-4 h-4 mr-2 text-primary-600" />
                     {coordinator.profile?.current_city}, {coordinator.profile?.current_country}
                   </div>
                   <div className="flex items-center text-gray-600">
                     <Mail className="w-4 h-4 mr-2 text-green-600" />
-                    <a href={`mailto:${coordinator.profile?.email}`} className="hover:text-blue-600 transition">
+                    <a href={`mailto:${coordinator.profile?.email}`} className="hover:text-primary-600 transition">
                       {coordinator.profile?.email}
                     </a>
                   </div>

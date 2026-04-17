@@ -21,7 +21,7 @@ export default function Women({ setAuthMode, setShowAuthModal }: WomenProps) {
       />
 
      <section className="pt-24 p-10 text-center">
-  <h1 className="text-3xl font-bold text-blue-700 mb-4">Women Empowerment Initiatives</h1>
+  <h1 className="text-3xl font-bold text-primary-700 mb-4">Women Empowerment Initiatives</h1>
   <p className="text-gray-700 max-w-2xl mx-auto mb-8">
     Under YSRCP leadership, numerous women initiatives like self-help groups,
     skill development programs, and financial assistance for women entrepreneurs

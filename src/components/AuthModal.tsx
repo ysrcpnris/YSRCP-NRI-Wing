@@ -929,7 +929,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                               }
                             }}
                             onFocus={() => setShowCountryDropdown(true)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                           {showCountryDropdown && (
                             <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
@@ -980,7 +980,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                               });
                             }}
                             disabled={!formData.country_of_residence}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
                           >
                             <option value="">Select State</option>
                             {formData.country_of_residence &&
@@ -1008,7 +1008,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                               })
                             }
                             disabled={!formData.state_abroad}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
                           >
                             <option value="">Select City</option>
                             {formData.country_of_residence &&
@@ -1045,7 +1045,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 password: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                           <button
                             type="button"
@@ -1071,7 +1071,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                           minLength={6}
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -1097,7 +1097,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 assembly_constituency: "",
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           >
                             <option value="">Select State</option>
                             {Object.keys(indianAddressData).map((state) => (
@@ -1123,7 +1123,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                               })
                             }
                             disabled={!formData.indian_state}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
                           >
                             <option value="">Select District</option>
                             {formData.indian_state &&
@@ -1154,7 +1154,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                               })
                             }
                             disabled={!formData.district}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
                           >
                             <option value="">
                               Select Assembly Constituency
@@ -1185,7 +1185,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 mandal: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                         </div>
                         <div>
@@ -1202,7 +1202,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 village: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                         </div>
                       </div>
@@ -1294,7 +1294,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 organization: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                         </div>
                         <div>
@@ -1310,7 +1310,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 role_designation: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                         </div>
                       </div>
@@ -1318,7 +1318,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
 
                     {/* Engagement & Referral */}
                     <div className="border-b pb-4 mb-4">
-                      <h3 className="text-lg font-semibold text-white mb-3 p-2 rounded bg-blue-600">
+                      <h3 className="text-lg font-semibold text-white mb-3 p-2 rounded bg-primary-600">
                         Engagement & Referral
                       </h3>
 
@@ -1327,7 +1327,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                         <select
                           value={formData.contribution}
                           onChange={(e) => setFormData({ ...formData, contribution: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         >
                           <option value="">Select contribution</option>
                           {contributions.map((c) => (
@@ -1343,7 +1343,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                           value={formData.referred_by}
                           onChange={(e) => setFormData({ ...formData, referred_by: e.target.value })}
                           placeholder="Name of referrer (optional)"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -1367,7 +1367,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 instagram_id: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                         </div>
                         <div>
@@ -1383,7 +1383,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 facebook_id: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                         </div>
                         <div>
@@ -1399,7 +1399,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 twitter_id: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                         </div>
                         <div>
@@ -1415,7 +1415,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 linkedin_id: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                         </div>
                       </div>

@@ -59,7 +59,7 @@ export default function JoinUs({ onRegister }: JoinUsProps) {
 
             <button
               onClick={onRegister}
-              className="bg-white text-blue-600 px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl hover:scale-105 transition-all duration-300"
+              className="bg-white text-primary-600 px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl hover:scale-105 transition-all duration-300"
             >
               Register Now
             </button>

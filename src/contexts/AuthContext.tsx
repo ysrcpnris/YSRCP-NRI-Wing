@@ -184,11 +184,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let p = await fetchProfile(session.user.id);
 
     // Only create a profile if one does NOT already exist (first-time login).
-    // Never touch existing profiles here — doing so would overwrite role and other fields.
+    // Use upsert with ignoreDuplicates so it's idempotent with the auth trigger —
+    // the trigger may have already created the profile. Never overwrite existing rows.
     if (!p) {
       await supabase
         .from("profiles")
-        .insert({
+        .upsert({
           id: session.user.id,
           auth_user_id: session.user.id,
           email: session.user.email,
@@ -219,7 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           referral_code: session.user.user_metadata?.referral_code || null,
           role: "user",
           created_at: new Date().toISOString(),
-        });
+        }, { onConflict: "id", ignoreDuplicates: true });
     }
 
     // If profile not found, retry a few times with backoff to allow DB trigger / insert to finish.

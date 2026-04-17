@@ -15,7 +15,7 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const isMounted = useRef(true);
-const APP_URL = import.meta.env.VITE_APP_URL;
+
   useEffect(() => {
     return () => {
       isMounted.current = false;
@@ -54,49 +54,50 @@ const APP_URL = import.meta.env.VITE_APP_URL;
         return;
       }
 
-     if (resetMethod === "email") {
-  await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${APP_URL}/reset-password-confirm`,
-  });
+      // Use the current origin so it works in both dev (localhost) and production
+      const redirectUrl = `${window.location.origin}/reset-password-confirm`;
 
-  if (isMounted.current) {
-    setIsSubmitted(true);
-    setLoading(false);   // 🔥 IMPORTANT
-    toast.success("Password reset link sent! Check your email.");
-  }
-}
+      if (resetMethod === "email") {
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(
+          email,
+          { redirectTo: redirectUrl }
+        );
 
- else {
-        // Send OTP via magic link
-        const { error: otpError } = await supabase.auth.signInWithOtp({
-          email: email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/reset-password-confirm`,
-          },
-        });
-
-        if (otpError) {
-          // Don't reveal if email exists (security best practice)
-          if (isMounted.current) {
-            setIsSubmitted(true);
-            toast.success("OTP/magic link sent successfully.");
-          }
-          clearTimeout(disableTimer);
-          return;
+        if (resetErr) {
+          console.warn("Reset password error:", resetErr.message);
         }
 
         if (isMounted.current) {
           setIsSubmitted(true);
-          toast.success("OTP/magic link sent successfully. Check your email!");
+          setLoading(false);
+          toast.success("Password reset link sent! Check your email.");
+        }
+      } else {
+        // Send magic link (used as OTP-style passwordless login)
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: redirectUrl,
+            shouldCreateUser: false,
+          },
+        });
+
+        if (otpError) {
+          console.warn("OTP send error:", otpError.message);
+        }
+
+        if (isMounted.current) {
+          setIsSubmitted(true);
+          setLoading(false);
+          toast.success("Magic link sent! Check your email to sign in.");
         }
       }
     } catch (err: unknown) {
-      // For security, don't reveal specific errors
-      void (err instanceof Error ? err.message : "An error occurred. Please try again.");
+      console.warn("Reset flow exception:", err);
+      // Security best practice: don't reveal if email exists — always show success
       if (isMounted.current) {
-        // For security, don't reveal specific errors
         setIsSubmitted(true);
-        toast.success("Password reset link sent successfully.");
+        toast.success("If the email exists, a reset link has been sent.");
       }
     } finally {
       if (isMounted.current) {

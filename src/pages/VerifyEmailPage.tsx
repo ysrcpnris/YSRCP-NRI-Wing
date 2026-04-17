@@ -26,35 +26,29 @@ export default function VerifyEmailPage() {
 
   const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef<boolean>(true);
-  const pollAbortRef = useRef<boolean>(false);
+  const redirectedRef = useRef<boolean>(false);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      pollAbortRef.current = true;
-      if (cooldownTimerRef.current) {
-        clearInterval(cooldownTimerRef.current);
-      }
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
     };
   }, []);
 
   useEffect(() => {
     const emailFromState = (location.state as any)?.email;
-    if (emailFromState) {
-      setEmail(emailFromState);
-    }
+    if (emailFromState) setEmail(emailFromState);
   }, [location.state]);
 
+  // Cooldown ticker
   useEffect(() => {
     if (cooldown <= 0) {
       if (cooldownTimerRef.current) {
         clearInterval(cooldownTimerRef.current);
         cooldownTimerRef.current = null;
       }
-      if (status === "cooldown") {
-        setStatus("idle");
-      }
+      if (status === "cooldown") setStatus("idle");
       return;
     }
 
@@ -73,6 +67,52 @@ export default function VerifyEmailPage() {
       }, 1000);
     }
   }, [cooldown, status]);
+
+  // ==========================================================
+  // CROSS-TAB VERIFICATION DETECTION
+  // When the verification email is clicked in another tab,
+  // Supabase writes the new session to localStorage and emits a
+  // SIGNED_IN event. Listen for it and auto-redirect this tab too.
+  // ==========================================================
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mountedRef.current || redirectedRef.current) return;
+
+        if (
+          (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") &&
+          session?.user?.email_confirmed_at
+        ) {
+          redirectedRef.current = true;
+          setMessage("Email verified! Redirecting to your dashboard...");
+          setStatus("success");
+          setTimeout(() => {
+            if (mountedRef.current) navigate("/dashboard");
+          }, 800);
+        }
+      }
+    );
+
+    // Also poll storage on focus in case storage event was missed (some browsers)
+    const onFocus = async () => {
+      if (redirectedRef.current) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email_confirmed_at && !redirectedRef.current) {
+        redirectedRef.current = true;
+        setMessage("Email verified! Redirecting...");
+        setStatus("success");
+        setTimeout(() => {
+          if (mountedRef.current) navigate("/dashboard");
+        }, 500);
+      }
+    };
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [navigate]);
 
   const canResend = useMemo(() => {
     if (!email) return false;
@@ -93,8 +133,7 @@ export default function VerifyEmailPage() {
   };
 
   const resendVerificationEmail = async () => {
-    if (!canResend) return;
-    if (!email) return;
+    if (!canResend || !email) return;
 
     resetMessages();
     setStatus("sending");
@@ -121,35 +160,44 @@ export default function VerifyEmailPage() {
     startCooldown(60);
   };
 
-  const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
   /**
-   * Manual check (user-click)
+   * Manual check button — more robust.
+   * Tries getSession → getUser (forces a refresh from Supabase) → profile check.
    */
   const manualCheckVerification = async () => {
     resetMessages();
     setStatus("checking");
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    // 1) Try current session
+    let { data: { session } } = await supabase.auth.getSession();
+
+    // 2) If no session, ask Supabase directly (in case localStorage is stale or this tab was never signed in)
+    if (!session?.user) {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        // Re-fetch session after getUser potentially refreshed
+        const retry = await supabase.auth.getSession();
+        session = retry.data.session;
+      }
+    }
 
     if (!mountedRef.current) return;
 
     if (!session?.user) {
-      setError("Session not found. Please try logging in or clicking the verify link again.");
+      setError(
+        "We couldn't find an active session. If you've already clicked the verify link in another tab, please log in from the home page."
+      );
       setStatus("error");
       return;
     }
 
-    // If server hasn't marked email confirmed yet, tell the user to wait
     if (!session.user.email_confirmed_at) {
-      setError("Email not verified yet. Please check your inbox and click the link.");
+      setError("Your email isn't verified yet. Please click the link in your inbox.");
       setStatus("error");
       return;
     }
 
-    // Check profiles table
+    // Email is verified — check profile exists
     const { data: profileRow, error: profileErr } = await supabase
       .from("profiles")
       .select("id")
@@ -163,206 +211,65 @@ export default function VerifyEmailPage() {
     }
 
     if (!profileRow) {
-      setError("Verification still being processed. Please wait a few seconds and try 'I have verified my email' again.");
+      setError(
+        "Verification is still being processed. Please wait a few seconds and try again."
+      );
       setStatus("error");
       return;
     }
 
-    // success -> navigate to protected area
     setMessage("Verification complete. Redirecting...");
     setStatus("success");
-    // Replace with whichever page your app expects (dashboard/home)
     navigate("/dashboard");
   };
 
-  /**
-   * Core: If this page is loaded as the email redirect target (or token present),
-   * exchange token -> session, then poll until profile exists (or timeout).
-   */
-  useEffect(() => {
-    // run only when on /email-verified path
-    if (window.location.pathname !== "/email-verified") return;
-
-    let cancelled = false;
-    pollAbortRef.current = false;
-
-    const runExchangeAndPoll = async () => {
-      resetMessages();
-      setStatus("checking");
-      setMessage("Finishing verification. This may take a few seconds...");
-
-      // Try to exchange tokens from URL (safe even if nothing present)
-      try {
-        const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
-        if (error) {
-          // Not fatal: sometimes there is no token in URL; we continue to poll current session.
-          console.warn("getSessionFromUrl:", error);
-        } else if (data?.session) {
-          // if session exists after exchange, optionally set email field for UX
-          try {
-            setEmail((prev) => prev || (data.session?.user?.email ?? ""));
-          } catch {}
-        }
-      } catch (err) {
-        console.warn("getSessionFromUrl unexpected error:", err);
-      }
-
-      // Poll for session + profile
-      const start = Date.now();
-      const TIMEOUT_MS = 30_000; // 30s max wait
-      const INTERVAL_MS = 1000;
-
-      while (!cancelled && !pollAbortRef.current && Date.now() - start < TIMEOUT_MS) {
-        try {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-
-          if (!session?.user) {
-            // no session yet — maybe waiting for exchange or user signed out
-            await sleep(INTERVAL_MS);
-            continue;
-          }
-
-          // wait until Supabase marks email as confirmed
-          if (!session.user.email_confirmed_at) {
-            await sleep(INTERVAL_MS);
-            continue;
-          }
-
-          // check for profile row
-          const { data: profileRow, error: profileErr } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("id", session.user.id)
-            .maybeSingle();
-
-          if (profileErr) {
-            console.warn("profile check error:", profileErr);
-            await sleep(INTERVAL_MS);
-            continue;
-          }
-
-          if (profileRow && profileRow.id) {
-            // success
-            if (!mountedRef.current) return;
-            setMessage("Verification complete. Redirecting...");
-            setStatus("success");
-            // navigate to app area (change route if you prefer)
-            navigate("/dashboard");
-            return;
-          }
-
-          // not yet created; wait and retry
-          await sleep(INTERVAL_MS);
-        } catch (err) {
-          console.warn("polling error:", err);
-          await sleep(INTERVAL_MS);
-        }
-      }
-
-      // timed out
-      if (!cancelled && mountedRef.current) {
-        setError(
-          "Verification timed out. The email is confirmed but profile creation is taking longer than expected. You can try 'I have verified my email' or re-open the link from your inbox."
-        );
-        setStatus("error");
-        setMessage("");
-      }
-    };
-
-    runExchangeAndPoll();
-
-    return () => {
-      cancelled = true;
-      pollAbortRef.current = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (loading) {
-    // keep silent loader while global auth loading
-    return null;
-  }
+  if (loading) return null;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#f7f7f7",
-        padding: "32px",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "520px",
-          backgroundColor: "#ffffff",
-          borderRadius: "10px",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-          padding: "32px",
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ marginBottom: "24px", textAlign: "center" }}>
-          <h1 style={{ margin: 0, marginBottom: "12px", fontSize: "24px", fontWeight: 600, color: "#111" }}>
-            Verify your email
-          </h1>
-
-          <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.6", color: "#555" }}>
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-6 sm:p-10">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-card border border-gray-100 p-6 sm:p-8">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h1>
+          <p className="text-sm text-gray-500 leading-relaxed">
             To continue using WINGS, you must verify your email address.
             <br />
             We have sent a verification link to:
           </p>
-
-          <p style={{ marginTop: "8px", fontSize: "15px", fontWeight: 500, color: "#000", wordBreak: "break-all" }}>
+          <p className="mt-2 text-sm font-semibold text-gray-900 break-all">
             {email || "—"}
           </p>
         </div>
 
         {status === "checking" && (
-          <div style={{ marginBottom: 16, textAlign: "center" }}>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ display: "inline-block", width: 36, height: 36, borderRadius: 18, border: "4px solid #111", borderTopColor: "transparent", animation: "spin 1s linear infinite" }} />
+          <div className="mb-4 text-center">
+            <div className="inline-block w-9 h-9 rounded-full border-4 border-primary-600 border-t-transparent animate-spin" />
+            <div className="mt-3 text-sm text-gray-700">
+              {message || "Finishing verification..."}
             </div>
-            <div style={{ color: "#333" }}>{message || "Finishing verification..."}</div>
-            <style>{`@keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }`}</style>
           </div>
         )}
 
         {message && status !== "checking" && (
-          <div style={{ marginBottom: "16px", padding: "12px", borderRadius: "6px", backgroundColor: "#e6f7e6", color: "#1a7f1a", fontSize: "14px", textAlign: "center" }}>
+          <div className="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm text-center">
             {message}
           </div>
         )}
 
         {error && (
-          <div style={{ marginBottom: "16px", padding: "12px", borderRadius: "6px", backgroundColor: "#fdeaea", color: "#a40000", fontSize: "14px", textAlign: "center" }}>
+          <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm text-center">
             {error}
           </div>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="space-y-3">
           <button
             onClick={resendVerificationEmail}
             disabled={!canResend}
-            style={{
-              width: "100%",
-              padding: "12px",
-              fontSize: "14px",
-              fontWeight: 500,
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-              backgroundColor: canResend ? "#111" : "#ddd",
-              color: canResend ? "#fff" : "#888",
-              cursor: canResend ? "pointer" : "not-allowed",
-              transition: "all 0.2s ease",
-            }}
+            className={`w-full py-3 rounded-lg text-sm font-semibold transition ${
+              canResend
+                ? "bg-gray-900 text-white hover:bg-gray-800"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            }`}
           >
             {status === "sending"
               ? "Sending verification email..."
@@ -373,25 +280,14 @@ export default function VerifyEmailPage() {
 
           <button
             onClick={manualCheckVerification}
-            style={{
-              width: "100%",
-              padding: "12px",
-              fontSize: "14px",
-              fontWeight: 500,
-              borderRadius: "6px",
-              border: "1px solid #111",
-              backgroundColor: "#fff",
-              color: "#111",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
+            className="w-full py-3 rounded-lg text-sm font-semibold border border-gray-300 text-gray-900 bg-white hover:bg-gray-50 transition"
           >
             I have verified my email
           </button>
         </div>
 
-        <div style={{ marginTop: "24px", fontSize: "12px", color: "#777", textAlign: "center", lineHeight: "1.6" }}>
-          If you don’t see the email, please check your spam folder.
+        <div className="mt-6 text-xs text-gray-500 text-center leading-relaxed">
+          If you don't see the email, please check your spam folder.
           <br />
           Make sure you used the correct email address.
           <br />

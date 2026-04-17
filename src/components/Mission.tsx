@@ -3,7 +3,7 @@ import { Globe, Heart, Award } from 'lucide-react';
 export default function Mission() {
   const missions = [
     {
-      icon: <Globe className="w-12 h-12 text-blue-600" />,
+      icon: <Globe className="w-12 h-12 text-primary-600" />,
       title: 'Global Unity',
       description:
         'Connecting NRIs worldwide to support Andhra Pradesh development and YSR Congress Party initiatives'
@@ -15,7 +15,7 @@ export default function Mission() {
         'Facilitating education, employment, and welfare programs for students and job seekers in AP'
     },
     {
-      icon: <Award className="w-12 h-12 text-blue-600" />,
+      icon: <Award className="w-12 h-12 text-primary-600" />,
       title: 'Andhra Pride',
       description:
         'Strengthening the bond between NRIs and their homeland through active participation and support'

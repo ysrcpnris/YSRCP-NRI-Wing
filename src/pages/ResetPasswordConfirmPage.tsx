@@ -17,28 +17,47 @@ export default function ResetPasswordConfirmPage() {
   const isMounted = useRef(true);
 
 useEffect(() => {
-  const verifySession = async () => {
-    try {
-      // Wait briefly for AuthContext / Supabase to finish consuming the URL token
+  let cancelled = false;
+  let verifiedOnce = false;
+
+  const tryVerify = async () => {
+    // Retry up to 6 times (3 seconds total) to handle URL-token exchange delay
+    for (let attempt = 1; attempt <= 6; attempt++) {
+      if (cancelled) return;
       await new Promise((res) => setTimeout(res, 500));
 
       const { data: { session } } = await supabase.auth.getSession();
-
       if (session) {
-        toast.success("Reset link verified. You can now set a new password.");
-      } else {
-        setError(
-          "This password reset link is invalid or expired. Please request a new one."
-        );
+        if (!cancelled && !verifiedOnce) {
+          verifiedOnce = true;
+          toast.success("Reset link verified. You can now set a new password.");
+        }
+        return;
       }
-    } catch (err) {
+    }
+    // No session after retries
+    if (!cancelled && !verifiedOnce) {
       setError(
-        "Something went wrong while verifying your reset link. Please try again."
+        "This password reset link is invalid or expired. Please request a new one."
       );
     }
   };
 
-  verifySession();
+  // Also listen for SIGNED_IN / PASSWORD_RECOVERY events in case getSession() races
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (session && !verifiedOnce && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN")) {
+      verifiedOnce = true;
+      setError("");
+      toast.success("Reset link verified. You can now set a new password.");
+    }
+  });
+
+  tryVerify();
+
+  return () => {
+    cancelled = true;
+    subscription.unsubscribe();
+  };
 }, []);
 
 

@@ -5,7 +5,7 @@ const cspDev = `
   default-src 'self';
   connect-src
     'self'
-    https://vvemeahgetmhcxlkbnzq.supabase.co
+    https://rcpcmjrahhzayqxexpkv.supabase.co
     https://api.supabase.io
     ws://localhost:*
     https://www.googleapis.com
@@ -29,7 +29,7 @@ const cspDev = `
     'self'
     data:
     blob:
-    https://vvemeahgetmhcxlkbnzq.supabase.co
+    https://rcpcmjrahhzayqxexpkv.supabase.co
     https://*.ytimg.com
     https://pbs.twimg.com
     https://ton.twimg.com

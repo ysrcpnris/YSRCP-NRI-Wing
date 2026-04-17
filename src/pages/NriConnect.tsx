@@ -22,7 +22,7 @@ export default function NriConnect({ setAuthMode, setShowAuthModal }: NriConnect
       />
 
       <section className="pt-24 p-10 text-center">
-        <h1 className="text-3xl font-bold text-blue-700 mb-4">Jagananna NRI Connect</h1>
+        <h1 className="text-3xl font-bold text-primary-700 mb-4">Jagananna NRI Connect</h1>
         <p className="text-gray-700 max-w-2xl mx-auto mb-8">
           Empowering NRIs to stay connected with welfare initiatives and contribute to state development.
         </p>

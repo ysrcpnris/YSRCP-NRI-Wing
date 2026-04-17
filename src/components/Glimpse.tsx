@@ -1,4 +1,5 @@
 import React from "react";
+import nriLogo from "./nrilogo.png";
 
 // Images array
 const images = [
@@ -13,8 +14,13 @@ export default function GlimpseGallery() {
     <section id="glimpse" className="py-12 sm:py-16 bg-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-blue-600 mb-2">
-            📸 YSRCP
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-600 mb-2 flex items-center justify-center gap-3">
+            <img
+              src={nriLogo}
+              alt="YSRCP Logo"
+              className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full object-cover shadow-sm"
+            />
+            YSRCP
           </h2>
           <p className="text-gray-700 text-sm sm:text-base">
             Explore key moments from the gallery.

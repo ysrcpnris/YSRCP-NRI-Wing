@@ -140,7 +140,7 @@ export default function News() {
   //               placeholder="Search news..."
   //               value={searchTerm}
   //               onChange={(e) => setSearchTerm(e.target.value)}
-  //               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent"
   //             />
   //           </div>
   //         </div>
@@ -171,7 +171,7 @@ export default function News() {
   //             className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100"
   //           >
   //             <div className="h-48 bg-gradient-to-br from-blue-100 to-green-100 flex items-center justify-center">
-  //               <Calendar className="w-16 h-16 text-blue-600" />
+  //               <Calendar className="w-16 h-16 text-primary-600" />
   //             </div>
 
   //             <div className="p-6">
@@ -201,7 +201,7 @@ export default function News() {
 
   //               <div className="flex items-center justify-between">
   //                 <span className="text-sm text-gray-500">{item.readTime}</span>
-  //                 <button className="flex items-center text-blue-600 hover:text-blue-800 font-semibold transition">
+  //                 <button className="flex items-center text-primary-600 hover:text-blue-800 font-semibold transition">
   //                   Read More
   //                   <ExternalLink className="w-4 h-4 ml-1" />
   //                 </button>
@@ -230,7 +230,7 @@ export default function News() {
   //             <input
   //               type="email"
   //               placeholder="Enter your email"
-  //               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
   //             />
   //             <button className="bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition">
   //               Subscribe

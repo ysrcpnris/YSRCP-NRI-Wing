@@ -48,103 +48,109 @@ const Footer: React.FC = () => {
     },
   ];
 
-  /* ✅ YSRCP PARTY SOCIAL LINKS */
   const footerSocialLinks = [
-    {
-      icon: Facebook,
-      url: "https://www.instagram.com/ysrcongress/?hl=en",
-    },
-    {
-      icon: Twitter,
-      url: "https://x.com/YSRCParty",
-    },
-    {
-      icon: Instagram,
-      url: "https://www.instagram.com/ysrcongress/?hl=en",
-    },
-    {
-      icon: Youtube,
-      url: "https://www.youtube.com/@ysrcpofficial",
-    },
+    { icon: Facebook, url: "https://www.instagram.com/ysrcongress/?hl=en", label: "Facebook" },
+    { icon: Twitter, url: "https://x.com/YSRCParty", label: "Twitter" },
+    { icon: Instagram, url: "https://www.instagram.com/ysrcongress/?hl=en", label: "Instagram" },
+    { icon: Youtube, url: "https://www.youtube.com/@ysrcpofficial", label: "YouTube" },
   ];
 
   return (
-    <footer className="relative bg-gray-900 text-white overflow-hidden">
+    <footer className="relative bg-gradient-to-br from-gray-900 via-gray-900 to-primary-900 text-white overflow-hidden">
       {/* BACKGROUND IMAGE */}
-      <div className="absolute inset-0 hidden md:block">
+      <div className="absolute inset-0 hidden md:block pointer-events-none">
         <img
           src="/ECOd9I9UYAAkV4h.jpg"
-          alt="YSRCP background"
-          className="w-full h-full object-cover object-top opacity-35"
+          alt=""
+          className="w-full h-full object-cover object-top opacity-20"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-gray-900/80 to-black/90" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 py-4">
+      {/* Decorative glow */}
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
         {/* TOP */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-8 border-b border-white/10">
           {/* LOGO */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center">
-              <Globe className="w-4 h-4" />
+            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
+              <Globe className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-sm">YSRCP</h3>
-              <p className="text-[11px] text-gray-400">NRI Portal</p>
+              <h3 className="font-bold text-base bg-gradient-to-r from-white to-primary-100 bg-clip-text text-transparent">
+                YSRCP NRI Portal
+              </h3>
+              <p className="text-xs text-gray-400">Global Unity, Local Impact</p>
             </div>
           </div>
 
-          {/* ✅ SOCIAL ICONS WITH REAL LINKS */}
+          {/* SOCIAL ICONS */}
           <div className="flex gap-2">
-            {footerSocialLinks.map(({ icon: Icon, url }, i) => (
+            {footerSocialLinks.map(({ icon: Icon, url, label }, i) => (
               <a
                 key={i}
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-7 h-7 bg-blue-600/90 rounded-full flex items-center justify-center hover:bg-blue-700 transition"
-                aria-label="YSRCP social link"
+                aria-label={label}
+                className="w-10 h-10 rounded-lg bg-white/10 hover:bg-gradient-to-br hover:from-primary-500 hover:to-primary-700 backdrop-blur-sm flex items-center justify-center border border-white/10 hover:border-transparent transition-all duration-300 hover:scale-110"
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-4 h-4" />
               </a>
             ))}
           </div>
         </div>
 
         {/* MOBILE ACCORDION */}
-        <div className="md:hidden mt-3 border-t border-gray-800">
+        <div className="md:hidden mt-4">
           {sections.map((sec) => (
-            <div key={sec.title} className="border-b border-gray-800">
+            <div key={sec.title} className="border-b border-white/10">
               <button
                 onClick={() => setOpen(open === sec.title ? null : sec.title)}
-                className="w-full flex justify-between items-center py-2.5 text-sm font-medium"
+                className="w-full flex justify-between items-center py-3 text-sm font-semibold text-white"
               >
                 {sec.title}
                 <ChevronDown
-                  className={`w-4 h-4 transition ${
+                  className={`w-4 h-4 text-primary-300 transition-transform duration-300 ${
                     open === sec.title ? "rotate-180" : ""
                   }`}
                 />
               </button>
-              {open === sec.title && (
-                <ul className="pb-2 space-y-1 text-xs text-gray-400">
+              <div
+                className={`overflow-hidden transition-all duration-300 ${
+                  open === sec.title ? "max-h-96 pb-3" : "max-h-0"
+                }`}
+              >
+                <ul className="space-y-2 text-xs text-gray-400">
                   {sec.items.map((item, i) => (
-                    <li key={i}>{item}</li>
+                    <li key={i} className="hover:text-white cursor-pointer transition">
+                      {item}
+                    </li>
                   ))}
                 </ul>
-              )}
+              </div>
             </div>
           ))}
         </div>
 
         {/* DESKTOP GRID */}
-        <div className="hidden md:grid grid-cols-3 gap-5 mt-5 text-sm">
+        <div className="hidden md:grid grid-cols-3 gap-8 mt-10 text-sm">
           {sections.map((sec) => (
             <div key={sec.title}>
-              <h4 className="font-semibold mb-2 text-sm">{sec.title}</h4>
-              <ul className="space-y-1 text-gray-400 text-xs">
+              <h4 className="font-bold mb-4 text-sm uppercase tracking-wider text-primary-300">
+                {sec.title}
+              </h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
                 {sec.items.map((item, i) => (
-                  <li key={i}>{item}</li>
+                  <li
+                    key={i}
+                    className="hover:text-white hover:translate-x-1 transition-all duration-200 cursor-pointer"
+                  >
+                    {item}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -152,31 +158,42 @@ const Footer: React.FC = () => {
         </div>
 
         {/* CONTACT */}
-        <div className="mt-4 pt-3 border-t border-gray-800 flex flex-col sm:flex-row gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-blue-400" />
+        <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm text-gray-300">
+          <a
+            href="mailto:globalcoordinator@ysrcpnriwing.org"
+            className="flex items-center gap-2 hover:text-white transition"
+          >
+            <div className="w-8 h-8 rounded-lg bg-primary-500/20 flex items-center justify-center">
+              <Mail className="w-4 h-4 text-primary-300" />
+            </div>
             globalcoordinator@ysrcpnriwing.org
-          </div>
-          <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-blue-400" />
+          </a>
+          <a href="tel:9515511111" className="flex items-center gap-2 hover:text-white transition">
+            <div className="w-8 h-8 rounded-lg bg-primary-500/20 flex items-center justify-center">
+              <Phone className="w-4 h-4 text-primary-300" />
+            </div>
             9515511111
-          </div>
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-blue-400" />
+          </a>
+          <a
+            href="https://www.ysrcongress.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 hover:text-white transition"
+          >
+            <div className="w-8 h-8 rounded-lg bg-primary-500/20 flex items-center justify-center">
+              <Globe className="w-4 h-4 text-primary-300" />
+            </div>
             www.ysrcongress.com
-          </div>
+          </a>
         </div>
 
         {/* COPYRIGHT */}
-        <div className="mt-2 text-center text-[11px] text-gray-400">
-          © 2026 YSR Congress Party ·
-          <a href="#" className="mx-1 hover:text-white">
-            Terms
-          </a>
-          |
-          <a href="#" className="mx-1 hover:text-white">
-            Privacy
-          </a>
+        <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+          <div>© 2026 YSR Congress Party · All rights reserved</div>
+          <div className="flex gap-4">
+            <a href="#" className="hover:text-white transition">Terms</a>
+            <a href="#" className="hover:text-white transition">Privacy</a>
+          </div>
         </div>
       </div>
     </footer>
