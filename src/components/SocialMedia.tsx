@@ -309,25 +309,43 @@ export default function PressMeetsAndSocial() {
   }, []);
 
   useEffect(() => {
-    const scroll = (ref: any) => {
+    // Don't start scrolling until videos are loaded (scrollWidth would be 0 otherwise)
+    if (!videos.length) return;
+
+    let rafId1 = 0, rafId2 = 0;
+
+    const scroll = (ref: any): number => {
       let x = 0, d = 1;
+      let currentRaf = 0;
       const step = () => {
-        if (ref.current && !paused.current) {
-          x += 0.4 * d;
-          if (x <= 0 || x >= ref.current.scrollWidth - ref.current.clientWidth) d *= -1;
-          ref.current.scrollLeft = x;
+        const el = ref.current;
+        if (el && !paused.current) {
+          const max = el.scrollWidth - el.clientWidth;
+          if (max > 0) {
+            x += 0.6 * d;
+            if (x <= 0) { x = 0; d = 1; }
+            else if (x >= max) { x = max; d = -1; }
+            el.scrollLeft = x;
+          }
         }
-        requestAnimationFrame(step);
+        currentRaf = requestAnimationFrame(step);
       };
-      step();
+      currentRaf = requestAnimationFrame(step);
+      return currentRaf;
     };
-    scroll(row1Ref);
-    scroll(row2Ref);
-  }, []);
+
+    rafId1 = scroll(row1Ref);
+    rafId2 = scroll(row2Ref);
+
+    return () => {
+      cancelAnimationFrame(rafId1);
+      cancelAnimationFrame(rafId2);
+    };
+  }, [videos.length]);
 
   const Card = (v: any, i: number) => (
     <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
-       className="bg-white/10 rounded-xl w-[220px] sm:w-[260px] shrink-0 overflow-hidden snap-start hover:bg-white/15 transition">
+       className="bg-white/10 rounded-xl w-[220px] sm:w-[260px] shrink-0 overflow-hidden hover:bg-white/15 transition">
       <div className="relative h-[125px] sm:h-[150px] bg-gray-800">
         {v.image ? (
           <img
@@ -404,12 +422,12 @@ export default function PressMeetsAndSocial() {
         )}
 
         <div ref={row1Ref} onMouseEnter={() => paused.current = true} onMouseLeave={() => paused.current = false}
-             className="flex gap-3 sm:gap-4 overflow-x-auto mb-4 sm:mb-6 scrollbar-none snap-x snap-mandatory">
+             className="flex gap-3 sm:gap-4 overflow-x-auto mb-4 sm:mb-6 scrollbar-none scroll-smooth">
           {videos.slice(0, 6).map(Card)}
         </div>
 
         <div ref={row2Ref} onMouseEnter={() => paused.current = true} onMouseLeave={() => paused.current = false}
-             className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory">
+             className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none scroll-smooth">
           {videos.slice(6, 12).map(Card)}
         </div>
       </div>
