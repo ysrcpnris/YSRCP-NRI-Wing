@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 import { countriesData } from '../lib/countryCodes';
+import { getStates, getCities, hasStateData } from '../lib/locationData';
 const getPasswordError = (password: string): string | null => {
   if (password.length < 8) return "Password must be at least 8 characters";
   if (!/[A-Z]/.test(password)) return "Must include at least one uppercase letter";
@@ -36,6 +37,15 @@ export default function RegisterPage() {
   const [countrySearch, setCountrySearch] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [stateSearch, setStateSearch] = useState('');
+  const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const stateDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [citySearch, setCitySearch] = useState('');
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const cityDropdownRef = useRef<HTMLDivElement>(null);
+
   const isMounted = useRef(true);
 
   const [formData, setFormData] = useState({
@@ -73,11 +83,18 @@ export default function RegisterPage() {
     code: '+' + country.code
   }));
 
-  // Close country dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
+      const t = e.target as Node;
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(t)) {
         setShowCountryDropdown(false);
+      }
+      if (stateDropdownRef.current && !stateDropdownRef.current.contains(t)) {
+        setShowStateDropdown(false);
+      }
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(t)) {
+        setShowCityDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -1295,6 +1312,8 @@ return (
                           state_abroad: '',
                           city_abroad: '',
                         });
+                        setStateSearch('');
+                        setCitySearch('');
                       }
                     }}
                     onFocus={() => setShowCountryDropdown(true)}
@@ -1319,6 +1338,8 @@ return (
                                 city_abroad: '',
                               });
                               setCountrySearch(`${country.name} (+${country.code.replace('+', '')})`);
+                              setStateSearch('');
+                              setCitySearch('');
                               setShowCountryDropdown(false);
                               setPhoneError('');
                             }}
@@ -1336,34 +1357,162 @@ return (
                   )}
                 </div>
 
-                <div>
+                {/* STATE / PROVINCE — searchable dropdown or free-text fallback */}
+                <div className="relative" ref={stateDropdownRef}>
                   <label className="input-label">
                     State / Province <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.state_abroad}
-                    placeholder="Enter your state or province"
-                    onChange={(e) => setFormData({ ...formData, state_abroad: e.target.value })}
-                    className="input-field"
-                  />
+                  {(() => {
+                    const stateList = getStates(formData.country_of_residence);
+                    const countryHasStates = hasStateData(formData.country_of_residence);
+
+                    if (!formData.country_of_residence || !countryHasStates) {
+                      // Fallback: free text if country has no state data (or not selected yet)
+                      return (
+                        <input
+                          type="text"
+                          required
+                          value={formData.state_abroad}
+                          disabled={!formData.country_of_residence}
+                          placeholder={
+                            !formData.country_of_residence
+                              ? "Select a country first"
+                              : "Enter your state or province"
+                          }
+                          onChange={(e) => {
+                            setFormData({ ...formData, state_abroad: e.target.value, city_abroad: '' });
+                            setStateSearch(e.target.value);
+                            setCitySearch('');
+                          }}
+                          className="input-field disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                      );
+                    }
+
+                    return (
+                      <>
+                        <input
+                          type="text"
+                          required
+                          value={stateSearch || formData.state_abroad}
+                          placeholder="Search or select a state"
+                          onChange={(e) => {
+                            setStateSearch(e.target.value);
+                            setShowStateDropdown(true);
+                            if (formData.state_abroad) {
+                              setFormData({ ...formData, state_abroad: '', city_abroad: '' });
+                              setCitySearch('');
+                            }
+                          }}
+                          onFocus={() => setShowStateDropdown(true)}
+                          className="input-field"
+                        />
+                        {showStateDropdown && (
+                          <ul className="absolute z-40 w-full mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+                            {stateList
+                              .filter((s) => s.toLowerCase().includes((stateSearch || '').toLowerCase()))
+                              .map((s) => (
+                                <li
+                                  key={s}
+                                  onClick={() => {
+                                    setFormData({ ...formData, state_abroad: s, city_abroad: '' });
+                                    setStateSearch(s);
+                                    setCitySearch('');
+                                    setShowStateDropdown(false);
+                                  }}
+                                  className="px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors"
+                                >
+                                  {s}
+                                </li>
+                              ))}
+                            {stateList.filter((s) =>
+                              s.toLowerCase().includes((stateSearch || '').toLowerCase())
+                            ).length === 0 && (
+                              <li className="px-4 py-2 text-sm text-gray-400">No states found</li>
+                            )}
+                          </ul>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                <div>
+                {/* CITY — searchable dropdown or free-text fallback */}
+                <div className="relative" ref={cityDropdownRef}>
                   <label className="input-label">
                     City <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city_abroad}
-                    placeholder="Enter your city"
-                    onChange={(e) => setFormData({ ...formData, city_abroad: e.target.value })}
-                    className="input-field"
-                  />
+                  {(() => {
+                    const cityList = getCities(formData.country_of_residence, formData.state_abroad);
+                    const canUseDropdown = cityList.length > 0;
+
+                    if (!canUseDropdown) {
+                      return (
+                        <input
+                          type="text"
+                          required
+                          value={formData.city_abroad}
+                          disabled={!formData.state_abroad}
+                          placeholder={
+                            !formData.state_abroad
+                              ? "Select a state first"
+                              : "Enter your city"
+                          }
+                          onChange={(e) => {
+                            setFormData({ ...formData, city_abroad: e.target.value });
+                            setCitySearch(e.target.value);
+                          }}
+                          className="input-field disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                      );
+                    }
+
+                    return (
+                      <>
+                        <input
+                          type="text"
+                          required
+                          value={citySearch || formData.city_abroad}
+                          placeholder="Search or select a city"
+                          onChange={(e) => {
+                            setCitySearch(e.target.value);
+                            setShowCityDropdown(true);
+                            if (formData.city_abroad) {
+                              setFormData({ ...formData, city_abroad: '' });
+                            }
+                          }}
+                          onFocus={() => setShowCityDropdown(true)}
+                          className="input-field"
+                        />
+                        {showCityDropdown && (
+                          <ul className="absolute z-40 w-full mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+                            {cityList
+                              .filter((c) => c.toLowerCase().includes((citySearch || '').toLowerCase()))
+                              .map((c) => (
+                                <li
+                                  key={c}
+                                  onClick={() => {
+                                    setFormData({ ...formData, city_abroad: c });
+                                    setCitySearch(c);
+                                    setShowCityDropdown(false);
+                                  }}
+                                  className="px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors"
+                                >
+                                  {c}
+                                </li>
+                              ))}
+                            {cityList.filter((c) =>
+                              c.toLowerCase().includes((citySearch || '').toLowerCase())
+                            ).length === 0 && (
+                              <li className="px-4 py-2 text-sm text-gray-400">No cities found</li>
+                            )}
+                          </ul>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div>
