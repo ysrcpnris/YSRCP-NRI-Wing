@@ -27,10 +27,10 @@ export default function GlimpseGallery() {
           </p>
         </div>
 
-        {/* Single auto-scroll row */}
+        {/* Single auto-scroll row — track is duplicated for seamless infinite loop */}
         <div className="overflow-hidden">
-          <div className="flex animate-scroll gap-3 sm:gap-4">
-            {images.concat(images).map((img, index) => (
+          <div className="flex animate-scroll gap-3 sm:gap-4 w-max">
+            {[...images, ...images, ...images, ...images].map((img, index) => (
               <div
                 key={index}
                 className="flex-shrink-0 w-60 h-72 sm:w-72 sm:h-80 md:w-80 md:h-96 overflow-hidden rounded-xl relative group bg-white shadow-md"
@@ -50,12 +50,24 @@ export default function GlimpseGallery() {
       <style>
         {`
           @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
           }
 
           .animate-scroll {
-            animation: scroll 25s linear infinite;
+            animation: scroll 14s linear infinite;
+            will-change: transform;
+          }
+
+          @media (min-width: 768px) {
+            .animate-scroll {
+              animation-duration: 22s;
+            }
+          }
+
+          /* Pause on hover for better UX */
+          .animate-scroll:hover {
+            animation-play-state: paused;
           }
         `}
       </style>

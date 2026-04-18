@@ -327,8 +327,8 @@ export default function PressMeetsAndSocial() {
 
   const Card = (v: any, i: number) => (
     <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
-       className="bg-white/10 rounded-xl w-[260px] shrink-0 overflow-hidden">
-      <div className="relative h-[150px] bg-gray-800">
+       className="bg-white/10 rounded-xl w-[220px] sm:w-[260px] shrink-0 overflow-hidden snap-start hover:bg-white/15 transition">
+      <div className="relative h-[125px] sm:h-[150px] bg-gray-800">
         {v.image ? (
           <img
             src={v.image}
@@ -364,9 +364,9 @@ export default function PressMeetsAndSocial() {
 
   return (
     <div className="flex flex-col lg:flex-row w-full bg-white">
-      <div className="lg:w-[65%] bg-gradient-to-br from-[#0055a5] to-[#003366] p-6">
-        <h2 className="text-white font-black text-xl text-center mb-6 flex justify-center gap-2">
-          <Video /> Jagan Anna On Air
+      <div className="lg:w-[65%] bg-gradient-to-br from-[#0055a5] to-[#003366] p-4 sm:p-6">
+        <h2 className="text-white font-black text-lg sm:text-xl text-center mb-4 sm:mb-6 flex justify-center items-center gap-2">
+          <Video size={20} /> Jagan Anna On Air
         </h2>
 
         {/* If DRIVE_VIDEOS are configured (replace placeholder IDs), show Drive carousel */}
@@ -404,19 +404,19 @@ export default function PressMeetsAndSocial() {
         )}
 
         <div ref={row1Ref} onMouseEnter={() => paused.current = true} onMouseLeave={() => paused.current = false}
-             className="flex gap-4 overflow-x-auto mb-6">
+             className="flex gap-3 sm:gap-4 overflow-x-auto mb-4 sm:mb-6 scrollbar-none snap-x snap-mandatory">
           {videos.slice(0, 6).map(Card)}
         </div>
 
         <div ref={row2Ref} onMouseEnter={() => paused.current = true} onMouseLeave={() => paused.current = false}
-             className="flex gap-4 overflow-x-auto">
+             className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory">
           {videos.slice(6, 12).map(Card)}
         </div>
       </div>
 
-      <div className="lg:w-[35%] bg-gray-50 p-6">
-        <h2 className="font-black text-center mb-4 flex justify-center gap-2">
-          <Share2 /> Digital Channels
+      <div className="lg:w-[35%] bg-gray-50 p-4 sm:p-6">
+        <h2 className="font-black text-center mb-4 flex justify-center items-center gap-2 text-lg sm:text-xl">
+          <Share2 size={20} /> Digital Channels
         </h2>
 
         {/* SOCIAL CARDS */}
@@ -442,17 +442,6 @@ export default function PressMeetsAndSocial() {
                 { icon: Instagram, bg: "bg-pink-100", text: "text-pink-600", url: "https://www.instagram.com/ysrcongress/?hl=en" },
                 { icon: MessageCircle, bg: "bg-green-100", text: "text-green-600", url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
                 { icon: Send, bg: "bg-cyan-100", text: "text-cyan-600", url: "https://www.ysrcongress.com/" },
-              ],
-            },
-            {
-              title: "NRI Community",
-              desc: "Direct Connect",
-              colors: [
-                { icon: Facebook, bg: "bg-blue-50", text: "text-primary-600" },
-                { icon: Twitter, bg: "bg-sky-50", text: "text-sky-600" },
-                { icon: Instagram, bg: "bg-pink-50", text: "text-pink-600" },
-                { icon: MessageCircle, bg: "bg-green-50", text: "text-green-600" },
-                { icon: Send, bg: "bg-cyan-50", text: "text-cyan-600" },
               ],
             },
           ].map((c, idx) => (

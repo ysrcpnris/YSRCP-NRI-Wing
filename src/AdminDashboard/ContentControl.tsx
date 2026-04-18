@@ -32,6 +32,46 @@ type BannerItem = {
 // Admin interface for managing live links, gallery images, and homepage banners
 export default function ContentControl() {
   /* =====================================================
+     FEATURE TOGGLES
+  ===================================================== */
+  const [showStayConnected, setShowStayConnected] = useState<boolean>(true);
+  const [togglingStayConnected, setTogglingStayConnected] = useState(false);
+
+  // Fetch toggle state on mount
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "show_stay_connected")
+        .maybeSingle();
+
+      if (data) {
+        // value is jsonb, could be boolean or "true"/"false" string
+        const v = data.value;
+        setShowStayConnected(v === true || v === "true");
+      }
+    })();
+  }, []);
+
+  const toggleStayConnected = async () => {
+    setTogglingStayConnected(true);
+    const newValue = !showStayConnected;
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert(
+        { key: "show_stay_connected", value: newValue, updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+    if (error) {
+      alert("Failed to save toggle: " + error.message);
+    } else {
+      setShowStayConnected(newValue);
+    }
+    setTogglingStayConnected(false);
+  };
+
+  /* =====================================================
      LIVE LINK
   ===================================================== */
   // Store and manage press meet live broadcast URL
@@ -302,6 +342,41 @@ export default function ContentControl() {
       <h1 className="text-3xl font-bold text-primary-600 mb-6">
         CONTENT MANAGEMENT
       </h1>
+
+      {/* HOMEPAGE "STAY CONNECTED" TOGGLE */}
+      <div className="bg-white rounded-xl border shadow p-6 mb-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+              Homepage — Stay Connected Section
+            </h2>
+            <p className="text-sm text-gray-500">
+              When ON, the homepage shows the Notifications & Latest News containers above the Political Journey timeline. When OFF, it falls back to the original Political Journey layout (big card + year buttons).
+            </p>
+          </div>
+
+          <button
+            onClick={toggleStayConnected}
+            disabled={togglingStayConnected}
+            aria-label="Toggle Stay Connected section"
+            className={`relative inline-flex h-8 w-14 flex-shrink-0 items-center rounded-full transition-colors duration-300 ${
+              showStayConnected ? "bg-primary-600" : "bg-gray-300"
+            } disabled:opacity-60`}
+          >
+            <span
+              className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform duration-300 ${
+                showStayConnected ? "translate-x-7" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+        <div className="mt-3 text-xs font-semibold">
+          Status:{" "}
+          <span className={showStayConnected ? "text-green-600" : "text-gray-500"}>
+            {showStayConnected ? "● Enabled" : "○ Disabled"}
+          </span>
+        </div>
+      </div>
 
       <div className="bg-white rounded-xl border shadow p-6">
 

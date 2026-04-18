@@ -137,43 +137,45 @@ const TESTIMONIALS_DATA: Testimonial[] = [
 ];
 
 const Testimonials = () => {
+  // Duplicate the array for seamless infinite loop
+  const looped = [...TESTIMONIALS_DATA, ...TESTIMONIALS_DATA];
+
   return (
-    <section className="relative bg-white py-10 overflow-hidden">
-      <div className="text-center mb-6">
+    <section className="relative bg-white py-10 sm:py-14 overflow-hidden">
+      <div className="text-center mb-6 sm:mb-8 px-4">
         <h2
-          className="text-xl sm:text-2xl font-black uppercase text-primary-600"
+          className="text-lg sm:text-2xl md:text-3xl font-black uppercase text-primary-600 leading-tight"
           style={{ fontFamily: "Times New Roman, serif" }}
         >
           Voices of Our Global Community
         </h2>
+        <p className="text-xs sm:text-sm text-gray-500 mt-2">
+          What NRIs across the world are saying
+        </p>
       </div>
 
       <div className="relative w-full overflow-hidden">
-        <div className="marquee-track flex gap-6 px-6">
-          {TESTIMONIALS_DATA.map((item, idx) => {
+        <div className="marquee-track flex gap-4 sm:gap-6 px-4">
+          {looped.map((item, idx) => {
             const isGreen = idx % 2 === 0;
-            const borderColor = isGreen
-              ? "border-l-green-600"
-              : "border-l-blue-600";
-            const textColor = isGreen
-              ? "text-green-700"
-              : "text-primary-700";
+            const borderColor = isGreen ? "border-l-green-600" : "border-l-blue-600";
+            const textColor = isGreen ? "text-green-700" : "text-primary-700";
 
             return (
               <div
                 key={idx}
-                className={`w-[85vw] sm:w-[380px] min-h-[240px]
+                className={`w-[280px] sm:w-[340px] md:w-[380px] min-h-[200px] sm:min-h-[220px]
                 bg-white rounded-2xl shadow-md border border-gray-200
                 border-l-[6px] ${borderColor}
-                p-6 flex flex-col justify-between flex-shrink-0`}
+                p-5 sm:p-6 flex flex-col justify-between flex-shrink-0`}
               >
                 <p
-                  className={`italic text-sm sm:text-base leading-relaxed text-justify hyphens-auto ${textColor}`}
+                  className={`italic text-sm sm:text-base leading-relaxed text-justify ${textColor}`}
                 >
-                  “{item.quote}”
+                  "{item.quote}"
                 </p>
 
-                <div className="mt-6 text-right">
+                <div className="mt-4 sm:mt-6 text-right">
                   <p className={`font-black text-xs uppercase ${textColor}`}>
                     {item.author}
                   </p>
@@ -190,12 +192,19 @@ const Testimonials = () => {
       <style>{`
         .marquee-track {
           width: max-content;
-          animation: scroll 50s linear infinite alternate;
+          animation: testimonial-scroll 30s linear infinite;
+          will-change: transform;
         }
 
-        @keyframes scroll {
+        @keyframes testimonial-scroll {
           from { transform: translateX(0); }
-          to { transform: translateX(calc(-100% + 100vw)); }
+          to   { transform: translateX(-50%); }
+        }
+
+        @media (min-width: 768px) {
+          .marquee-track {
+            animation-duration: 50s;
+          }
         }
 
         .marquee-track:hover {

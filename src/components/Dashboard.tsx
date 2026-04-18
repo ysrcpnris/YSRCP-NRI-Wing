@@ -1049,6 +1049,12 @@ import {
   Linkedin,
   Instagram,
   Twitter,
+  Home,
+  Menu,
+  X,
+  Sparkles,
+  TrendingUp,
+  ArrowUpRight,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -1219,6 +1225,12 @@ const Dashboard: React.FC = () => {
 
   const [expandedSection, setExpandedSection] =
     useState<SectionKey | null>("profile");
+
+  // New tab-based navigation state (overview is the landing tab)
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "profile" | "referrals" | "services" | "events" | "connect" | "suggestions"
+  >("overview");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   /**
    * ═══════════════════════════════════════════════════════════════
@@ -2225,9 +2237,9 @@ if (!district || !assembly) {
         .select("id, name, phone, email")
         .eq("is_active", true)
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (nriError && nriError.code !== 'PGRST116') {
+      if (nriError) {
         console.error("NRI Coordinator fetch error:", nriError);
       } else if (nriData) {
         setNriCoordinator(nriData);
@@ -3519,7 +3531,7 @@ const handleSubmitSuggestion = async () => {
   );
 
   const renderReferralsContent = () => (
-    <div className="pt-4">
+    <div className="space-y-6">
       {/* Top Row */}
       <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
         <div>
@@ -3534,11 +3546,36 @@ const handleSubmitSuggestion = async () => {
             {referralLink}
           </code>
           <button
-            onClick={() => {
-              navigator.clipboard
-                ?.writeText(referralLink)
-                .then(() => showToast('Referral Link Copied!'))
-                .catch(() => showToast('Could not copy link', 'info'));
+            onClick={async () => {
+              if (!referralLink) {
+                showToast('Referral link not ready yet', 'info');
+                return;
+              }
+              // Preferred: modern Clipboard API (requires HTTPS / localhost)
+              try {
+                if (navigator.clipboard && window.isSecureContext) {
+                  await navigator.clipboard.writeText(referralLink);
+                  showToast('Referral Link Copied!');
+                  return;
+                }
+                // Fallback: legacy execCommand for older / insecure contexts
+                const ta = document.createElement('textarea');
+                ta.value = referralLink;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                if (ok) {
+                  showToast('Referral Link Copied!');
+                } else {
+                  showToast('Copy failed — please copy manually', 'info');
+                }
+              } catch (err) {
+                console.error('Copy failed:', err);
+                showToast('Could not copy — please copy manually', 'info');
+              }
             }}
             className="bg-white text-emerald-600 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-emerald-50 transition-colors"
           >
@@ -4112,8 +4149,213 @@ const renderSuggestionsContent = () => (
 //   </div>
 // );
 
+  /* ============================================================
+     OVERVIEW TAB — new landing view with stats & quick actions
+  ============================================================ */
+  const renderOverviewContent = () => {
+    const firstName = profile?.first_name || "there";
+    const activeCount = activeReferrals?.length || 0;
+    const passiveCount = passiveReferrals?.length || 0;
+    const eventsCount = events?.length || 0;
+    const unseen = unseenEventsCount || 0;
+
+    return (
+      <div className="space-y-6">
+        {/* WELCOME HERO */}
+        <div className="relative bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500 rounded-2xl p-6 md:p-8 text-white overflow-hidden shadow-lg">
+          <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -left-8 -bottom-8 w-40 h-40 bg-accent-500/20 rounded-full blur-3xl" />
+          <div className="relative z-10">
+            <div className="mb-2">
+              <span className="text-xs font-semibold tracking-widest uppercase opacity-90">Welcome back</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold mb-1">
+              Hi {firstName}!
+            </h1>
+            <p className="text-sm md:text-base text-white/80 max-w-xl">
+              Your NRI Wing portal — stay connected, contribute, and grow with the community.
+            </p>
+
+            <div className="flex flex-wrap gap-2 mt-5">
+              <button
+                onClick={() => setActiveTab("services")}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary-700 rounded-lg font-semibold text-sm hover:bg-gray-50 transition"
+              >
+                Submit a request <ArrowUpRight size={14} />
+              </button>
+              <button
+                onClick={() => setActiveTab("referrals")}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white border border-white/20 backdrop-blur-sm rounded-lg font-semibold text-sm hover:bg-white/20 transition"
+              >
+                Invite friends <ArrowUpRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* STAT CARDS */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <button
+            onClick={() => setActiveTab("profile")}
+            className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 text-left hover:shadow-card-hover hover:-translate-y-1 transition group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+              <User size={18} />
+            </div>
+            <p className="text-2xl md:text-3xl font-black text-gray-900 leading-none">
+              {profileCompletion}%
+            </p>
+            <p className="text-xs text-gray-500 mt-1.5">Profile complete</p>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("referrals")}
+            className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 text-left hover:shadow-card-hover hover:-translate-y-1 transition group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+              <Users size={18} />
+            </div>
+            <p className="text-2xl md:text-3xl font-black text-gray-900 leading-none">
+              {activeCount}
+            </p>
+            <p className="text-xs text-gray-500 mt-1.5">Active referrals</p>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("referrals")}
+            className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 text-left hover:shadow-card-hover hover:-translate-y-1 transition group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+              <TrendingUp size={18} />
+            </div>
+            <p className="text-2xl md:text-3xl font-black text-gray-900 leading-none">
+              {passiveCount}
+            </p>
+            <p className="text-xs text-gray-500 mt-1.5">Passive network</p>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("events")}
+            className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 text-left hover:shadow-card-hover hover:-translate-y-1 transition group relative"
+          >
+            {unseen > 0 && (
+              <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
+                +{unseen} new
+              </span>
+            )}
+            <div className="w-10 h-10 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+              <Bell size={18} />
+            </div>
+            <p className="text-2xl md:text-3xl font-black text-gray-900 leading-none">
+              {eventsCount}
+            </p>
+            <p className="text-xs text-gray-500 mt-1.5">Events & updates</p>
+          </button>
+        </div>
+
+        {/* QUICK NAV CARDS */}
+        <div>
+          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Quick links</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <button
+              onClick={() => setActiveTab("profile")}
+              className="group flex items-start gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-card hover:border-primary-300 transition text-left"
+            >
+              <div className="w-11 h-11 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0">
+                <User size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 text-sm">Complete your profile</h3>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  Add your personal, address & professional details
+                </p>
+              </div>
+              <ArrowRight size={16} className="text-gray-300 group-hover:text-primary-600 group-hover:translate-x-1 transition mt-1" />
+            </button>
+
+            <button
+              onClick={() => setActiveTab("connect")}
+              className="group flex items-start gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-card hover:border-primary-300 transition text-left"
+            >
+              <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                <MessageSquare size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 text-sm">Leadership Connect</h3>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  Reach out to your local leaders & coordinators
+                </p>
+              </div>
+              <ArrowRight size={16} className="text-gray-300 group-hover:text-amber-600 group-hover:translate-x-1 transition mt-1" />
+            </button>
+
+            <button
+              onClick={() => setActiveTab("services")}
+              className="group flex items-start gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-card hover:border-primary-300 transition text-left"
+            >
+              <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <Briefcase size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 text-sm">Services Hub</h3>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  Request student, legal, career or local support
+                </p>
+              </div>
+              <ArrowRight size={16} className="text-gray-300 group-hover:text-emerald-600 group-hover:translate-x-1 transition mt-1" />
+            </button>
+
+            <button
+              onClick={() => setActiveTab("suggestions")}
+              className="group flex items-start gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-card hover:border-primary-300 transition text-left"
+            >
+              <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+                <Send size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 text-sm">Share feedback</h3>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  Send suggestions to improve the portal
+                </p>
+              </div>
+              <ArrowRight size={16} className="text-gray-300 group-hover:text-purple-600 group-hover:translate-x-1 transition mt-1" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  /* ============================================================
+     SIDEBAR NAV CONFIG
+  ============================================================ */
+  const navItems = [
+    { id: "overview" as const,    label: "Overview",    icon: Home,          color: "text-primary-600" },
+    { id: "profile" as const,     label: "Profile",     icon: User,          color: "text-primary-600" },
+    { id: "referrals" as const,   label: "My Network",  icon: Users,         color: "text-emerald-600" },
+    { id: "services" as const,    label: "Services",    icon: Briefcase,     color: "text-amber-600" },
+    { id: "events" as const,      label: "Events",      icon: Bell,          color: "text-pink-600", badge: unseenEventsCount || 0 },
+    { id: "connect" as const,     label: "Leaders",     icon: MessageSquare, color: "text-primary-600" },
+    { id: "suggestions" as const, label: "Feedback",    icon: Send,          color: "text-purple-600" },
+  ];
+
+  const activeNav = navItems.find((n) => n.id === activeTab)!;
+
+  const renderActiveContent = () => {
+    switch (activeTab) {
+      case "overview":    return renderOverviewContent();
+      case "profile":     return renderProfileContent();
+      case "referrals":   return renderReferralsContent();
+      case "services":    return renderServicesContent();
+      case "events":      return renderEventsContent();
+      case "connect":     return renderConnectContent();
+      case "suggestions": return renderSuggestionsContent();
+      default:            return renderOverviewContent();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col font-sans bg-gray-100/95 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex flex-col md:flex-row font-sans bg-gray-50">
 
       {/* Toast Notification */}
       {toast && (
@@ -4127,133 +4369,131 @@ const renderSuggestionsContent = () => (
         </div>
       )}
 
-      {/* Header */}
-      <div className="px-6 py-4 flex justify-between items-center shrink-0 bg-white border-b border-gray-200 shadow-sm relative z-20">
-        <div className="flex items-center gap-3">
-          <img 
-            src={nriLogo} 
-            alt="NRI Logo" 
-            className="h-10 w-auto"
-          />
-          <div>
-      <h1 className="font-black text-lg text-gray-900 tracking-tight leading-none">
-  {profile?.profession
-    ? `${profile.profession} Dashboard`
-    : "My Portal"}
-</h1>
-            <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider mt-0.5">
-              ● {loadingDashboard ? 'Syncing…' : 'Online'}
-            </p>
+      {/* ========================================================
+          MOBILE TOP BAR (hidden on md+)
+      ======================================================== */}
+      <div className="md:hidden flex items-center justify-between bg-white border-b border-gray-200 px-4 py-2.5 shadow-sm relative z-20">
+        <button
+          onClick={() => setMobileNavOpen(true)}
+          className="p-2 rounded-lg hover:bg-gray-100"
+          aria-label="Open navigation"
+        >
+          <Menu size={20} />
+        </button>
+        <ProfileDropdown profile={profile ? { id: profile.id, first_name: profile.first_name || '', last_name: profile.last_name || '', email: profile.email, profile_photo: profile.profile_photo } : undefined} />
+      </div>
+
+      {/* ========================================================
+          SIDEBAR — fixed on desktop, drawer on mobile
+      ======================================================== */}
+      {/* Mobile backdrop */}
+      {mobileNavOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileNavOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`
+          fixed md:static inset-y-0 left-0 z-50 w-72 md:w-64
+          bg-white border-r border-gray-200
+          flex flex-col
+          transform transition-transform duration-300
+          ${mobileNavOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
+      >
+        {/* Sidebar top — logo & close btn */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <img src={nriLogo} alt="logo" className="h-9 w-9 rounded-full object-cover" />
+            <div>
+              <h1 className="font-black text-sm text-gray-900 leading-none">NRI Wing</h1>
+              <p className="text-[10px] text-gray-500 tracking-wider uppercase mt-0.5">Member Portal</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setMobileNavOpen(false)}
+            className="md:hidden p-1.5 rounded-lg hover:bg-gray-100"
+            aria-label="Close navigation"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileNavOpen(false);
+                }}
+                className={`
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                  ${
+                    isActive
+                      ? "bg-primary-50 text-primary-700 border border-primary-100"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }
+                `}
+              >
+                <Icon size={18} className={isActive ? "text-primary-600" : "text-gray-400"} />
+                <span className="flex-1 text-left">{item.label}</span>
+                {(item as any).badge > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {(item as any).badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Sidebar bottom — status + logout */}
+        <div className="p-3 border-t border-gray-100 space-y-2">
+          <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+            <span className={`w-1.5 h-1.5 rounded-full ${loadingDashboard ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
+            {loadingDashboard ? "Syncing..." : "Online"}
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                await signOut();
+                window.location.href = "/";
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition"
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* ========================================================
+          MAIN CONTENT
+      ======================================================== */}
+      <main className="flex-1 overflow-y-auto custom-scrollbar">
+        {/* Desktop page header — slim */}
+        <div className="hidden md:flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 sticky top-0 z-10">
+          <h2 className="font-bold text-base text-gray-900">{activeNav.label}</h2>
+          <ProfileDropdown profile={profile ? { id: profile.id, first_name: profile.first_name || '', last_name: profile.last_name || '', email: profile.email, profile_photo: profile.profile_photo } : undefined} />
+        </div>
+
+        {/* Tab content */}
+        <div className="p-4 md:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto pb-10">
+            {renderActiveContent()}
           </div>
         </div>
-       <div className="flex items-center gap-2">
- <ProfileDropdown profile={profile ? { id: profile.id, first_name: profile.first_name || '', last_name: profile.last_name || '', email: profile.email, profile_photo: profile.profile_photo } : undefined} />
-</div>
-      </div>
-
-      {/* Main Content List */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative z-10 ">
-
-        <div className="max-w-7xl mx-auto pb-20">
-          <AccordionItem
-            id="profile"
-            title="Complete Profile"
-            summary={renderProfileSummary()}
-            icon={<User size={20} />}
-            content={renderProfileContent()}
-            color="bg-primary-600"
-            expandedSection={expandedSection}
-            toggleSection={toggleSection}
-          />
-
-          <AccordionItem
-            id="referrals"
-            title="My Network"
-            summary={renderReferralsSummary()}
-            icon={<Users size={20} />}
-            content={renderReferralsContent()}
-            color="bg-emerald-600"
-            expandedSection={expandedSection}
-            toggleSection={toggleSection}
-          />
-
-          <AccordionItem
-            id="connect"
-            title="Leadership Connect"
-            summary={renderConnectSummary()}
-            icon={<MessageSquare size={20} />}
-            content={renderConnectContent()}
-            color="bg-primary-600"
-            expandedSection={expandedSection}
-            toggleSection={toggleSection}
-          />
-
-          <AccordionItem
-            id="services"
-            title="Services Hub"
-            summary={renderServicesSummary()}
-            icon={<Briefcase size={20} />}
-            content={renderServicesContent()}
-            color="bg-amber-500"
-            expandedSection={expandedSection}
-            toggleSection={toggleSection}
-          />
-<AccordionItem
-  id="events"
-  title={
-    <span className="inline-flex items-center gap-3">
-      <span>Events & Notifications</span>
-
-      {unseenEventsCount > 0 && (
-        <span
-          className="
-            bg-red-50
-            text-red-700
-            border border-red-200
-            px-3 py-1
-            rounded-full
-            text-xs
-            font-bold
-            whitespace-nowrap
-          "
-        >
-             +{unseenEventsCount}
-        </span>
-      )}
-    </span>
-  }
-  summary={renderEventsSummary()}
-  icon={<Calendar size={20} />}
-  content={renderEventsContent()}
-  color="bg-pink-600"
-  expandedSection={expandedSection}
-  toggleSection={toggleSection}
-/>
-
-{/*  NOTIFICATIONS DISABLED
-<AccordionItem
-  id="notifications"
-  title="Notifications"
-  summary={renderNotificationsSummary()}
-  icon={<Bell size={20} />}
-  content={renderNotificationsContent()}
-  color="bg-red-500"
-  expandedSection={expandedSection}
-  toggleSection={toggleSection}
-/>
-*/}
-
-<AccordionItem
-  id="suggestions"
-  title="Suggestions"
-  icon={<MessageSquare size={20} />}
-  content={renderSuggestionsContent()}
-  color="bg-primary-600"
-  expandedSection={expandedSection}
-  toggleSection={toggleSection}
-/>
-        </div>
-      </div>
+      </main>
     </div>
   );
 };
