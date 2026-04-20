@@ -1058,6 +1058,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import Cropper from 'react-easy-crop';
+import { getCroppedBlob, PixelCrop } from '../lib/cropImage';
 
 
 type SectionKey =
@@ -1546,6 +1548,14 @@ const roleOptions: Record<string, string[]> = {
   // ---------------- PHOTO UPLOAD STATE ----------------
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  // Cropper state
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperImageSrc, setCropperImageSrc] = useState<string | null>(null);
+  const [cropperOriginalName, setCropperOriginalName] = useState<string>("photo.jpg");
+  const [cropPos, setCropPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [cropZoom, setCropZoom] = useState<number>(1);
+  const [cropPixels, setCropPixels] = useState<PixelCrop | null>(null);
   const [uploading, setUploading] = useState(false);
 // 🔗 Profile section refs for Missing Info navigation
 const profilePhotoRef = useRef<HTMLDivElement | null>(null);
@@ -2025,13 +2035,46 @@ const handleRemovePhoto = async () => {
   }
 };
 
-  // Photo handlers
+  // Photo handlers — open cropper modal when a file is selected
   const handleSelectPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    setPhotoFile(file);
     const url = URL.createObjectURL(file);
-    setPhotoPreview(url);
+    setCropperImageSrc(url);
+    setCropperOriginalName(file.name);
+    setCropPos({ x: 0, y: 0 });
+    setCropZoom(1);
+    setCropPixels(null);
+    setCropperOpen(true);
+    // reset the input so re-selecting the same file still triggers change
+    e.target.value = "";
+  };
+
+  const cancelCropper = () => {
+    if (cropperImageSrc) URL.revokeObjectURL(cropperImageSrc);
+    setCropperOpen(false);
+    setCropperImageSrc(null);
+    setCropPixels(null);
+  };
+
+  const confirmCrop = async () => {
+    if (!cropperImageSrc || !cropPixels) return;
+    try {
+      const blob = await getCroppedBlob(cropperImageSrc, cropPixels, 512);
+      const extFromName = (cropperOriginalName.split(".").pop() || "jpg").toLowerCase();
+      const safeExt = ["jpg", "jpeg", "png", "webp"].includes(extFromName) ? extFromName : "jpg";
+      const file = new File([blob], `crop.${safeExt}`, { type: "image/jpeg" });
+      setPhotoFile(file);
+      const previewUrl = URL.createObjectURL(blob);
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+      setPhotoPreview(previewUrl);
+      if (cropperImageSrc) URL.revokeObjectURL(cropperImageSrc);
+      setCropperImageSrc(null);
+      setCropperOpen(false);
+    } catch (err) {
+      console.error("Crop failed:", err);
+      showToast("Couldn't crop the image. Please try again.", "info");
+    }
   };
 
   const handleUploadPhoto = async () => {
@@ -2179,16 +2222,24 @@ setPassiveReferrals(
 if (!district || !assembly) {
   setLeadersByRole({});
 } else {
-// ✅ ADD THIS LOG HERE
+  const normDistrict = normalizeDistrict(district).trim();
+  const normConstituency = normalizeAssembly(assembly).trim();
+
   console.log("LEADERS QUERY FILTERS", {
-    district: normalizeDistrict(district),
-    constituency: normalizeAssembly(assembly),
+    rawDistrict: district,
+    rawConstituency: assembly,
+    normalizedDistrict: normDistrict,
+    normalizedConstituency: normConstituency,
   });
+
+  // Use ilike for case-insensitive exact match (ilike with no % wildcards = case-insensitive =)
   const { data, error } = await supabase
     .from("leader_assignments")
     .select(`
       role,
       sort_order,
+      district,
+      constituency,
       leaders_master (
         id,
         name,
@@ -2196,11 +2247,12 @@ if (!district || !assembly) {
         is_active
       )
     `)
-    
-    .eq("district", normalizeDistrict(district))
-    .eq("constituency", normalizeAssembly(assembly))
-    .eq("is_active", true) // leader_assignments.is_active
+    .ilike("district", normDistrict)
+    .ilike("constituency", normConstituency)
+    .eq("is_active", true)
     .order("sort_order", { ascending: true });
+
+  console.log("LEADERS QUERY RESULT", { data, error });
 
   if (error) {
     console.error("Leaders fetch error:", error);
@@ -2686,6 +2738,11 @@ const handleSaveProfile = async () => {
   if (!user) return;
 
   try {
+    // If a new photo was selected but not yet uploaded, upload it first
+    if (photoFile) {
+      await handleUploadPhoto();
+    }
+
     const first_name =
       (document.getElementById("firstName") as HTMLInputElement)?.value || "";
     const last_name =
@@ -2695,6 +2752,17 @@ const handleSaveProfile = async () => {
       (document.getElementById("mobile_number") as HTMLInputElement)?.value || "";
 const dob =
   (document.getElementById("dob") as HTMLInputElement)?.value || null;
+
+// Validate DOB — reject future dates
+if (dob) {
+  const dobDate = new Date(dob);
+  const today = new Date();
+  today.setHours(23, 59, 59, 999); // end of today
+  if (dobDate > today) {
+    showToast("Date of Birth cannot be a future date", "info");
+    return;
+  }
+}
 
     const facebook =
       (document.getElementById("facebook") as HTMLInputElement)?.value || "";
@@ -2828,9 +2896,9 @@ const handleSubmitSuggestion = async () => {
               )}
             </div>
             
-            <div className="flex items-center justify-center gap-2">
-              <label className="px-3 py-1 bg-gray-100 border border-gray-200 rounded-lg cursor-pointer text-xs font-bold">
-                Select
+            <div className="flex items-center justify-center gap-2 mt-1">
+              <label className="px-4 py-2 bg-primary-600 text-white rounded-lg cursor-pointer text-xs font-bold hover:bg-primary-700 transition">
+                {profile?.profile_photo || photoPreview ? "Change Photo" : "Upload Photo"}
                 <input
                   type="file"
                   accept="image/*"
@@ -2838,81 +2906,75 @@ const handleSubmitSuggestion = async () => {
                   onChange={handleSelectPhoto}
                 />
               </label>
-              <button
-                onClick={() => {
-                  setPhotoFile(null);
-                  if (photoPreview) {
-                    URL.revokeObjectURL(photoPreview);
-                  }
-                  setPhotoPreview(null);
-                }}
-                className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-xs"
-              >
-                Cancel
-              </button>
+              {profile?.profile_photo && !photoPreview && (
+                <button
+                  onClick={handleRemovePhoto}
+                  className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-bold hover:bg-red-100 transition"
+                >
+                  Remove
+                </button>
+              )}
             </div>
-            <div className="mt-3">
-              <button
-                disabled={!photoFile || uploading}
-                onClick={handleUploadPhoto}
-                className="px-3 py-2 bg-primary-600 text-white rounded-lg text-xs font-bold disabled:opacity-60"
-              >
-                {uploading ? 'Uploading...' : 'Upload Photo'}
-              </button>
-            </div>
-            {profile?.profile_photo && (
-  <div className="mt-2">
-    <button
-      onClick={handleRemovePhoto}
-      className="px-3 py-1 bg-red-50 text-red-600 border border-red-200
-                 rounded-lg text-xs font-bold hover:bg-red-100"
-    >
-      Remove Photo
-    </button>
-  </div>
-)}
+            {photoPreview && (
+              <p className="mt-2 text-[10px] text-gray-500 italic">
+                Click "Save Details" to upload
+              </p>
+            )}
+            {uploading && (
+              <p className="mt-2 text-[10px] text-primary-600 font-semibold">
+                Uploading…
+              </p>
+            )}
 
           </div>
-          <div className="bg-primary-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-            <div className="text-center relative z-10">
-              <div className="w-20 h-20 mx-auto mb-3 relative">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                  <path
-                    className="text-primary-800"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  />
-                  <path
-                    className="text-white"
-                    strokeDasharray={`${profileCompletion} ${100 - profileCompletion}`}
+          {(() => {
+            // Color scheme based on completion percentage
+            const pct = profileCompletion;
+            const tier =
+              pct === 100 ? "complete" :
+              pct >= 70  ? "good"     :
+              pct >= 40  ? "fair"     :
+                           "low";
 
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-black">{profileCompletion}%</span>
+            const palette = {
+              complete: { bg: "bg-emerald-600", track: "text-emerald-800", bar: "text-white",     label: "text-emerald-100", status: "All set!" },
+              good:     { bg: "bg-primary-600", track: "text-primary-800", bar: "text-white",     label: "text-primary-100", status: "Almost there" },
+              fair:     { bg: "bg-amber-500",   track: "text-amber-700",   bar: "text-white",     label: "text-amber-50",    status: "Keep going" },
+              low:      { bg: "bg-red-500",     track: "text-red-700",     bar: "text-white",     label: "text-red-50",      status: "Needs attention" },
+            }[tier];
 
+            return (
+              <div className={`${palette.bg} rounded-xl p-3 text-white shadow-md relative overflow-hidden flex items-center gap-3`}>
+                <div className="w-14 h-14 relative flex-shrink-0">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className={palette.track}
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                    />
+                    <path
+                      className={palette.bar}
+                      strokeDasharray={`${pct} ${100 - pct}`}
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-[11px] font-black">{pct}%</span>
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold leading-tight">Profile Completion</h3>
+                  <p className={`text-[11px] ${palette.label} mt-0.5`}>{palette.status}</p>
                 </div>
               </div>
-             <h3 className="text-base font-bold">
-  Profile Completion Status
-</h3>
-
-<p className="text-primary-200 text-xs mb-3">
-  Your profile is {profileCompletion}% complete
-</p>
-
-             
-
-            </div>
-          </div>
+            );
+          })()}
 
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 text-red-600">
@@ -3016,6 +3078,8 @@ const handleSubmitSuggestion = async () => {
     id="dob"
     type="date"
     defaultValue={profile?.dob || ""}
+    max={new Date().toISOString().split("T")[0]}
+    min="1900-01-01"
     className="w-full p-3 bg-gray-50 border border-gray-200
                rounded-lg text-sm font-bold text-gray-700
                focus:bg-white focus:ring-2 focus:ring-primary-500
@@ -3837,7 +3901,7 @@ const renderServicesContent = () => (
             <div
               key={key}
               onClick={() => {
-                setSelectedService(key);
+                setSelectedService(key as keyof typeof SERVICE_CONFIG);
                 setSelectedSub(null);
                 setSelectedInner(null);
               }}
@@ -3875,7 +3939,7 @@ const renderServicesContent = () => (
             setSelectedSub(null);
             setSelectedInner(null);
           }}
-          className="text-xs font-bold text-gray-500 mb-4"
+          className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-lg text-sm font-semibold text-primary-700 bg-primary-50 border border-primary-100 hover:bg-primary-100 transition"
         >
           ← Back to Services
         </button>
@@ -4358,6 +4422,80 @@ const renderSuggestionsContent = () => (
     <div className="fixed inset-0 z-[100] flex flex-col md:flex-row font-sans bg-gray-50">
 
       {/* Toast Notification */}
+      {/* ========================================================
+          PROFILE PHOTO CROPPER MODAL
+      ======================================================== */}
+      {cropperOpen && cropperImageSrc && (
+        <div className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Adjust your photo</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Drag to reposition · Pinch / scroll to zoom
+                </p>
+              </div>
+              <button
+                onClick={cancelCropper}
+                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Cropper canvas */}
+            <div className="relative w-full h-[320px] sm:h-[380px] bg-gray-900">
+              <Cropper
+                image={cropperImageSrc}
+                crop={cropPos}
+                zoom={cropZoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCropPos}
+                onZoomChange={setCropZoom}
+                onCropComplete={(_area, pixels) => setCropPixels(pixels as PixelCrop)}
+              />
+            </div>
+
+            {/* Zoom slider */}
+            <div className="px-6 py-4 border-t border-gray-100">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-500 w-12">Zoom</span>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.01}
+                  value={cropZoom}
+                  onChange={(e) => setCropZoom(Number(e.target.value))}
+                  className="flex-1 accent-primary-600"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={cancelCropper}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmCrop}
+                disabled={!cropPixels}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 disabled:opacity-60 disabled:cursor-not-allowed hover:shadow-md transition"
+              >
+                Crop & Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && (
         <div
        className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 ${

@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Edit3, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { indianAddressData } from "../lib/indianAddressData";
 
 /* ======================================================
    TYPES
 ====================================================== */
-// Master leader information with name, contact, and active status
 type LeaderMaster = {
   id: string;
   name: string;
@@ -13,7 +13,6 @@ type LeaderMaster = {
   is_active: boolean;
 };
 
-// Leader role assignment to specific district and constituency
 type LeaderAssignment = {
   id: string;
   leader_id: string;
@@ -24,81 +23,61 @@ type LeaderAssignment = {
   leader: LeaderMaster;
 };
 
+const ROLES = ["Regional Coordinator", "District President", "Assembly Coordinator"];
+
 /* ======================================================
    COMPONENT
 ====================================================== */
-// Admin interface for managing local leaders and their role assignments
 export default function MasterData() {
   /* ---------------- FILTERS ---------------- */
-  // selected district, constituency, and role filters
+  const [state, setState] = useState("");
   const [district, setDistrict] = useState("");
   const [constituency, setConstituency] = useState("");
   const [role, setRole] = useState("");
 
   /* ---------------- DATA ---------------- */
-  // Available districts, constituencies, and filtered leader assignments
-  const [districts, setDistricts] = useState<string[]>([]);
-  const [constituencies, setConstituencies] = useState<string[]>([]);
   const [assignments, setAssignments] = useState<LeaderAssignment[]>([]);
+  const [loading, setLoading] = useState(false);
 
   /* ---------------- MODAL ---------------- */
-  // Modal visibility and item being edited
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<LeaderAssignment | null>(null);
 
   /* ---------------- FORM ---------------- */
-  // Form fields for leader name, contact, role, and location
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [formRole, setFormRole] = useState("");
+  const [formState, setFormState] = useState("");
   const [formDistrict, setFormDistrict] = useState("");
   const [formConstituency, setFormConstituency] = useState("");
 
   /* ======================================================
-     INITIAL LOAD
+     STATIC DATA (all states from shared file)
   ====================================================== */
-  // Load districts on component mount
-  useEffect(() => {
-    fetchDistricts();
+  const allStates = useMemo(() => {
+    return Object.keys(indianAddressData).sort();
   }, []);
 
-  // Fetch constituencies when district changes
-  useEffect(() => {
-    if (district) fetchConstituencies(district);
-  }, [district]);
+  const districtsFor = (st: string) => {
+    if (!st) return [];
+    return (indianAddressData[st] || []).map((d) => d.name).sort();
+  };
 
-  // Fetch assignments when district, constituency, or role changes
-  useEffect(() => {
-    if (district && constituency) fetchAssignments();
-  }, [district, constituency, role]);
+  const constituenciesFor = (st: string, dist: string) => {
+    if (!st || !dist) return [];
+    const d = (indianAddressData[st] || []).find((x) => x.name === dist);
+    return d ? d.constituencies.map((c) => c.name).sort() : [];
+  };
 
   /* ======================================================
-     FETCH HELPERS
+     FETCH — loads all leaders, filters are optional
   ====================================================== */
-  // Get unique districts from database
-  const fetchDistricts = async () => {
-    const { data } = await supabase
-      .from("leader_assignments")
-      .select("district")
-      .neq("district", "")
-      .order("district");
+  useEffect(() => {
+    fetchAssignments();
+  }, [state, district, constituency, role]);
 
-    setDistricts([...new Set(data?.map((d) => d.district))]);
-  };
-
-  // Get constituencies for selected district
-  const fetchConstituencies = async (district: string) => {
-    const { data } = await supabase
-      .from("leader_assignments")
-      .select("constituency")
-      .eq("district", district)
-      .order("constituency");
-
-    setConstituencies([...new Set(data?.map((c) => c.constituency))]);
-  };
-
-  // Fetch leader assignments filtered by district, constituency, and role
   const fetchAssignments = async () => {
+    setLoading(true);
     let query = supabase
       .from("leader_assignments")
       .select(
@@ -116,37 +95,61 @@ export default function MasterData() {
         )
       `
       )
-      .eq("district", district)
-      .eq("constituency", constituency)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .order("district", { ascending: true })
+      .order("constituency", { ascending: true });
 
+    if (district) query = query.eq("district", district);
+    if (constituency) query = query.eq("constituency", constituency);
     if (role) query = query.eq("role", role);
+    // State filter: only include assignments whose district belongs to the selected state
+    // (done client-side after fetching)
 
     const { data, error } = await query;
-
-    if (!error) setAssignments(data as any);
+    if (error) {
+      console.error("fetch leader_assignments error:", error);
+      setAssignments([]);
+    } else if (data) {
+      let rows = data as any[];
+      if (state) {
+        const districtsInState = new Set(districtsFor(state));
+        rows = rows.filter((r) => districtsInState.has(r.district));
+      }
+      setAssignments(rows);
+    }
+    setLoading(false);
   };
 
   /* ======================================================
-     MODAL OPEN
+     MODAL
   ====================================================== */
-  // Initialize form for creating new leader assignment
+  // Helper: which state does a given district belong to?
+  const findStateForDistrict = (dist: string) => {
+    if (!dist) return "";
+    for (const [st, districts] of Object.entries(indianAddressData)) {
+      if (districts.some((d) => d.name === dist)) return st;
+    }
+    return "";
+  };
+
   const openAddModal = () => {
     setEditItem(null);
     setName("");
     setPhone("");
     setFormRole("");
+    setFormState(state);
     setFormDistrict(district);
     setFormConstituency(constituency);
     setShowModal(true);
   };
 
-  // Load form with existing leader data for editing
   const openEditModal = (item: LeaderAssignment) => {
     setEditItem(item);
-    setName(item.leader.name);
-    setPhone(item.leader.whatsapp_number);
+    setName(item.leader?.name || "");
+    setPhone(item.leader?.whatsapp_number || "");
     setFormRole(item.role);
+    const resolvedState = findStateForDistrict(item.district);
+    setFormState(resolvedState);
     setFormDistrict(item.district);
     setFormConstituency(item.constituency);
     setShowModal(true);
@@ -155,27 +158,39 @@ export default function MasterData() {
   /* ======================================================
      SAVE
   ====================================================== */
-  // Create or update leader and assignment record in database
   const saveLeader = async () => {
-    let leaderId = editItem?.leader.id;
+    if (!name.trim() || !phone.trim() || !formRole || !formState || !formDistrict || !formConstituency) {
+      alert("Please fill all fields: name, WhatsApp, role, state, district, constituency.");
+      return;
+    }
+
+    let leaderId = editItem?.leader?.id;
 
     if (!leaderId) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("leaders_master")
         .insert({ name, whatsapp_number: phone, is_active: true })
         .select()
         .single();
 
+      if (error || !data) {
+        alert("Failed to create leader: " + (error?.message || "unknown error"));
+        return;
+      }
       leaderId = data.id;
     } else {
-      await supabase
+      const { error } = await supabase
         .from("leaders_master")
         .update({ name, whatsapp_number: phone })
         .eq("id", leaderId);
+      if (error) {
+        alert("Failed to update leader: " + error.message);
+        return;
+      }
     }
 
     if (editItem) {
-      await supabase
+      const { error } = await supabase
         .from("leader_assignments")
         .update({
           role: formRole,
@@ -183,246 +198,333 @@ export default function MasterData() {
           constituency: formConstituency,
         })
         .eq("id", editItem.id);
+      if (error) {
+        alert("Failed to update assignment: " + error.message);
+        return;
+      }
     } else {
-      await supabase.from("leader_assignments").insert({
+      const { error } = await supabase.from("leader_assignments").insert({
         leader_id: leaderId,
         role: formRole,
         district: formDistrict,
         constituency: formConstituency,
         is_active: true,
       });
+      if (error) {
+        alert("Failed to create assignment: " + error.message);
+        return;
+      }
     }
 
     setShowModal(false);
+    // If we just added in a different state/district/constituency than the filter, switch to it
+    if (formState && formDistrict && formConstituency) {
+      setState(formState);
+      setDistrict(formDistrict);
+      setConstituency(formConstituency);
+    }
     fetchAssignments();
   };
 
   /* ======================================================
-     DELETE (SAFE)
+     DELETE (SOFT)
   ====================================================== */
-  // Mark assignment as inactive instead of permanent deletion
   const deleteAssignment = async (id: string) => {
-    await supabase
-      .from("leader_assignments")
-      .update({ is_active: false })
-      .eq("id", id);
-
+    if (!confirm("Deactivate this leader assignment?")) return;
+    await supabase.from("leader_assignments").update({ is_active: false }).eq("id", id);
     fetchAssignments();
   };
 
   /* ======================================================
      UI
   ====================================================== */
-  // Interface with filters, table, and modal for leader management
   return (
     <div className="p-4 md:p-6">
-      <h1 className="text-2xl md:text-3xl font-bold text-primary-600 mb-4 md:mb-6">
-       Local Leaders
-      </h1>
+      <div className="flex flex-wrap justify-between items-start gap-3 mb-4 md:mb-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-primary-600">Local Leaders</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Add leaders by district & constituency so users see them in Leadership Connect.
+          </p>
+        </div>
+        <button
+          onClick={openAddModal}
+          className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition"
+        >
+          <Plus size={16} /> Add Leader
+        </button>
+      </div>
 
       {/* FILTERS */}
-     
-     {/* FILTERS */}
-<div className="bg-white p-3 md:p-5 rounded-2xl border shadow-sm mb-6 overflow-visible">
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 items-end overflow-visible">
-    {/* DISTRICT */}
-    <div className="z-30">
-      <label className="text-xs font-semibold text-gray-500 mb-1 block">
-        District
-      </label>
-      <select
-        className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-        value={district}
-        onChange={(e) => {
-          setDistrict(e.target.value);
-          setConstituency("");
-        }}
-      >
-        <option value="">Select District</option>
-        {districts.map((d) => (
-          <option key={d}>{d}</option>
-        ))}
-      </select>
-    </div>
+      <div className="bg-white p-4 md:p-5 rounded-2xl border border-gray-200 shadow-sm mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">State</label>
+            <select
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white"
+              value={state}
+              onChange={(e) => {
+                setState(e.target.value);
+                setDistrict("");
+                setConstituency("");
+              }}
+            >
+              <option value="">Select State</option>
+              {allStates.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
 
-    {/* CONSTITUENCY */}
-    <div className="z-20">
-      <label className="text-xs font-semibold text-gray-500 mb-1 block">
-        Constituency
-      </label>
-      <select
-        className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-        value={constituency}
-        onChange={(e) => setConstituency(e.target.value)}
-        disabled={!district}
-      >
-        <option value="">Select Constituency</option>
-        {constituencies.map((c) => (
-          <option key={c}>{c}</option>
-        ))}
-      </select>
-    </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">District</label>
+            <select
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white disabled:bg-gray-100"
+              value={district}
+              onChange={(e) => {
+                setDistrict(e.target.value);
+                setConstituency("");
+              }}
+              disabled={!state}
+            >
+              <option value="">Select District</option>
+              {districtsFor(state).map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
 
-    {/* ROLE */}
-    <div className="z-10">
-      <label className="text-xs font-semibold text-gray-500 mb-1 block">
-        Role
-      </label>
-      <select
-        className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-      >
-        <option value="">All Roles</option>
-        <option>District President</option>
-        <option>Regional Coordinator</option>
-        <option>Assembly Coordinator</option>
-      </select>
-    </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">Constituency</label>
+            <select
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white disabled:bg-gray-100"
+              value={constituency}
+              onChange={(e) => setConstituency(e.target.value)}
+              disabled={!district}
+            >
+              <option value="">Select Constituency</option>
+              {constituenciesFor(state, district).map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
 
-    {/* ADD BUTTON */}
-    <button
-      onClick={openAddModal}
-      disabled={!district || !constituency}
-      className="h-[42px] bg-green-600 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition sm:col-span-2 md:col-span-1"
-    >
-      <Plus size={16} />
-      <span className="hidden sm:inline">Add Leader</span>
-      <span className="sm:hidden">Add</span>
-    </button>
-  </div>
-</div>
-
-
-      
-      {/* TABLE */}
-      {!district || !constituency ? (
-        <div className="text-gray-500 text-center py-10">
-          Select district & constituency to view leaders
+          <div>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">Role</label>
+            <select
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="">All Roles</option>
+              {ROLES.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
         </div>
-      ) : (
-        <div className="bg-white border border-gray-200 shadow-sm overflow-x-auto">
-          <table className="w-full text-sm md:text-base">
-            <thead className="bg-blue-600 border-b border-blue-700">
+      </div>
+
+      {/* TABLE */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <p className="text-sm font-semibold text-gray-700">
+            {assignments.length} {assignments.length === 1 ? "leader" : "leaders"}
+            {state || district || constituency || role ? " (filtered)" : ""}
+          </p>
+          {(state || district || constituency || role) && (
+            <button
+              onClick={() => {
+                setState("");
+                setDistrict("");
+                setConstituency("");
+                setRole("");
+              }}
+              className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gradient-to-r from-primary-600 to-primary-500 text-white">
               <tr>
-                <th className="px-3 md:px-6 py-3 text-left font-semibold text-white text-xs md:text-sm">
-                  Leader
-                </th>
-                <th className="px-3 md:px-6 py-3 text-center font-semibold text-white text-xs md:text-sm">
-                  Role
-                </th>
-                <th className="px-3 md:px-6 py-3 text-center font-semibold text-white text-xs md:text-sm">
-                  Contact
-                </th>
-                <th className="px-3 md:px-6 py-3 text-right font-semibold text-white text-xs md:text-sm">
-                  Actions
-                </th>
+                <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Leader</th>
+                <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Role</th>
+                <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">District</th>
+                <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Constituency</th>
+                <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">WhatsApp</th>
+                <th className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-
-            <tbody className="divide-y divide-gray-150">
-              {assignments.map((a) => (
-                <tr
-                  key={a.id}
-                  className="hover:bg-gray-50 transition"
-                >
-                  <td className="px-3 md:px-6 py-2">
-                    <p className="font-medium text-gray-800 text-sm md:text-base">{a.leader.name}</p>
-                  </td>
-
-                  <td className="px-3 md:px-6 py-2 text-center">
-                    <span className="text-green-600 font-medium text-xs md:text-sm">{a.role}</span>
-                  </td>
-
-                  <td className="px-3 md:px-6 py-2 text-center">
-                    <span className="text-gray-700 text-xs md:text-sm">{a.leader.whatsapp_number}</span>
-                  </td>
-
-                  <td className="px-3 md:px-6 py-2 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openEditModal(a)}
-                        className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition"
-                        title="Edit"
-                      >
-                        <Edit3 size={18} />
-                      </button>
-
-                      <button
-                        onClick={() => deleteAssignment(a.id)}
-                        className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition"
-                        title="Deactivate"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {assignments.length === 0 && (
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-10 text-gray-400">
-                    No leaders found for selected filters
+                  <td colSpan={6} className="text-center py-10 text-gray-400">Loading…</td>
+                </tr>
+              ) : assignments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-10 text-gray-400">
+                    {state || district || constituency || role
+                      ? "No leaders match the current filters."
+                      : 'No leaders added yet. Click "Add Leader" to create the first one.'}
                   </td>
                 </tr>
+              ) : (
+                assignments.map((a) => (
+                  <tr key={a.id} className="hover:bg-gray-50 transition">
+                    <td className="px-4 py-3 font-medium text-gray-900">{a.leader?.name || "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-primary-50 text-primary-700 border border-primary-100 font-medium whitespace-nowrap">
+                        {a.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-700">{a.district || "—"}</td>
+                    <td className="px-4 py-3 text-gray-700">{a.constituency || "—"}</td>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{a.leader?.whatsapp_number || "—"}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => openEditModal(a)}
+                          className="p-2 rounded-lg text-primary-600 hover:bg-primary-50 transition"
+                          title="Edit"
+                        >
+                          <Edit3 size={16} />
+                        </button>
+                        <button
+                          onClick={() => deleteAssignment(a.id)}
+                          className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition"
+                          title="Deactivate"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
-      )}
+      </div>
 
       {/* MODAL */}
-     { /* Form for creating new leader or editing existing assignment*/}
       {showModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-2xl p-4 md:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-      <h3 className="text-xl font-semibold mb-6 text-primary-600">
-        {editItem ? "Edit Leader Assignment" : "Add New Leader"}
-      </h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">
+                {editItem ? "Edit Leader" : "Add New Leader"}
+              </h3>
+            </div>
 
-      <div className="space-y-4">
-        <input
-          className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-          placeholder="Leader Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Leader name</label>
+                <input
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                  placeholder="e.g. Sri P.V. Midhun Reddy"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
 
-        <input
-          className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-          placeholder="WhatsApp Number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                  WhatsApp number (with country code, no spaces)
+                </label>
+                <input
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                  placeholder="+919876543210"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
 
-        <input
-          className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-          placeholder="Role (e.g. District President)"
-          value={formRole}
-          onChange={(e) => setFormRole(e.target.value)}
-        />
-      </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Role</label>
+                <select
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white"
+                  value={formRole}
+                  onChange={(e) => setFormRole(e.target.value)}
+                >
+                  <option value="">Select Role</option>
+                  {ROLES.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
 
-      <div className="flex gap-3 mt-6">
-        <button
-          onClick={() => setShowModal(false)}
-          className="w-full border rounded-lg py-2 hover:bg-gray-100"
-        >
-          Cancel
-        </button>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 mb-1 block">State</label>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white"
+                    value={formState}
+                    onChange={(e) => {
+                      setFormState(e.target.value);
+                      setFormDistrict("");
+                      setFormConstituency("");
+                    }}
+                  >
+                    <option value="">Select State</option>
+                    {allStates.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 mb-1 block">District</label>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white disabled:bg-gray-100"
+                    value={formDistrict}
+                    onChange={(e) => {
+                      setFormDistrict(e.target.value);
+                      setFormConstituency("");
+                    }}
+                    disabled={!formState}
+                  >
+                    <option value="">Select District</option>
+                    {districtsFor(formState).map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Constituency</label>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white disabled:bg-gray-100"
+                    value={formConstituency}
+                    onChange={(e) => setFormConstituency(e.target.value)}
+                    disabled={!formDistrict}
+                  >
+                    <option value="">Select Constituency</option>
+                    {constituenciesFor(formState, formDistrict).map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
 
-        <button
-          onClick={saveLeader}
-          className="w-full bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700"
-        >
-          Save
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveLeader}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 transition"
+              >
+                {editItem ? "Save Changes" : "Add Leader"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

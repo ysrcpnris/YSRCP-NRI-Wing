@@ -91,7 +91,7 @@ Subject: `Welcome {{ .Data.first_name }} — please verify your email`
             <tr>
               <td style="padding:0 32px 28px;">
                 <p style="margin:0;font-size:11px;line-height:1.6;color:#9ca3af;text-align:center;">
-                  🔒 This link expires in 24 hours. If you didn't sign up for YSRCP NRI Wing, you can safely ignore this email.
+                  🔒 This link expires in 15 minutes. If you didn't sign up for YSRCP NRI Wing, you can safely ignore this email.
                 </p>
               </td>
             </tr>

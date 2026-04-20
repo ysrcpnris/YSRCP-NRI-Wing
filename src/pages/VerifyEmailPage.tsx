@@ -10,7 +10,9 @@ type StatusType =
   | "error"
   | "cooldown"
   | "checking"
-  | "success";
+  | "success"
+  | "noSession"        // No session on this device (user verified elsewhere)
+  | "alreadyVerified"; // Email is already verified
 
 export default function VerifyEmailPage() {
   const { loading } = useAuth();
@@ -70,9 +72,6 @@ export default function VerifyEmailPage() {
 
   // ==========================================================
   // CROSS-TAB VERIFICATION DETECTION
-  // When the verification email is clicked in another tab,
-  // Supabase writes the new session to localStorage and emits a
-  // SIGNED_IN event. Listen for it and auto-redirect this tab too.
   // ==========================================================
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -93,7 +92,6 @@ export default function VerifyEmailPage() {
       }
     );
 
-    // Also poll storage on focus in case storage event was missed (some browsers)
     const onFocus = async () => {
       if (redirectedRef.current) return;
       const { data: { session } } = await supabase.auth.getSession();
@@ -118,6 +116,7 @@ export default function VerifyEmailPage() {
     if (!email) return false;
     if (status === "sending") return false;
     if (status === "cooldown") return false;
+    if (status === "alreadyVerified") return false;
     if (cooldown > 0) return false;
     return true;
   }, [email, status, cooldown]);
@@ -130,6 +129,10 @@ export default function VerifyEmailPage() {
   const resetMessages = () => {
     setMessage("");
     setError("");
+  };
+
+  const goToLogin = () => {
+    navigate("/", { replace: true, state: { openLogin: true } });
   };
 
   const resendVerificationEmail = async () => {
@@ -149,6 +152,19 @@ export default function VerifyEmailPage() {
     if (!mountedRef.current) return;
 
     if (error) {
+      // Detect "already verified" from Supabase error message
+      const msg = (error.message || "").toLowerCase();
+      if (
+        msg.includes("already confirmed") ||
+        msg.includes("already verified") ||
+        msg.includes("user already") ||
+        msg.includes("email already")
+      ) {
+        setStatus("alreadyVerified");
+        setMessage("Your email is already verified. Please log in to continue.");
+        return;
+      }
+
       setError("Failed to resend verification email. Please try again later.");
       setStatus("error");
       startCooldown(30);
@@ -162,7 +178,6 @@ export default function VerifyEmailPage() {
 
   /**
    * Manual check button — more robust.
-   * Tries getSession → getUser (forces a refresh from Supabase) → profile check.
    */
   const manualCheckVerification = async () => {
     resetMessages();
@@ -171,11 +186,10 @@ export default function VerifyEmailPage() {
     // 1) Try current session
     let { data: { session } } = await supabase.auth.getSession();
 
-    // 2) If no session, ask Supabase directly (in case localStorage is stale or this tab was never signed in)
+    // 2) If no session, try getUser which may refresh
     if (!session?.user) {
       const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
-        // Re-fetch session after getUser potentially refreshed
         const retry = await supabase.auth.getSession();
         session = retry.data.session;
       }
@@ -183,21 +197,20 @@ export default function VerifyEmailPage() {
 
     if (!mountedRef.current) return;
 
+    // No session at all → friendly "verified on another device" card
     if (!session?.user) {
-      setError(
-        "We couldn't find an active session. If you've already clicked the verify link in another tab, please log in from the home page."
-      );
-      setStatus("error");
+      setStatus("noSession");
       return;
     }
 
+    // Has session but email not verified
     if (!session.user.email_confirmed_at) {
       setError("Your email isn't verified yet. Please click the link in your inbox.");
       setStatus("error");
       return;
     }
 
-    // Email is verified — check profile exists
+    // Email verified — check profile exists
     const { data: profileRow, error: profileErr } = await supabase
       .from("profiles")
       .select("id")
@@ -211,9 +224,7 @@ export default function VerifyEmailPage() {
     }
 
     if (!profileRow) {
-      setError(
-        "Verification is still being processed. Please wait a few seconds and try again."
-      );
+      setError("Verification is still being processed. Please wait a few seconds and try again.");
       setStatus("error");
       return;
     }
@@ -225,10 +236,78 @@ export default function VerifyEmailPage() {
 
   if (loading) return null;
 
+  // ============================================
+  // Special screens (friendly cards, not red errors)
+  // ============================================
+
+  if (status === "noSession") {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-6 sm:p-10">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-card border border-gray-100 p-6 sm:p-8 text-center">
+          <div className="w-14 h-14 mx-auto rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-4">
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            Looks like you verified on another device
+          </h2>
+          <p className="text-sm text-gray-600 leading-relaxed mb-6">
+            Your session isn't on this device. Please log in with your email and password to continue.
+          </p>
+          <button
+            onClick={goToLogin}
+            className="btn-gradient w-full py-3 rounded-xl"
+          >
+            Go to Login
+          </button>
+          <button
+            onClick={() => {
+              setStatus("idle");
+              resetMessages();
+            }}
+            className="w-full mt-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "alreadyVerified") {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-6 sm:p-10">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-card border border-gray-100 p-6 sm:p-8 text-center">
+          <div className="w-14 h-14 mx-auto rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-4">
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            Your email is already verified
+          </h2>
+          <p className="text-sm text-gray-600 leading-relaxed mb-6">
+            {message || "No need to resend — just log in to continue."}
+          </p>
+          <button
+            onClick={goToLogin}
+            className="btn-gradient w-full py-3 rounded-xl"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================
+  // Main verify-your-email screen
+  // ============================================
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-6 sm:p-10">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-card border border-gray-100 p-6 sm:p-8">
-        <div className="mb-6 text-center">
+        <div className="mb-5 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
             To continue using WINGS, you must verify your email address.
@@ -238,6 +317,16 @@ export default function VerifyEmailPage() {
           <p className="mt-2 text-sm font-semibold text-gray-900 break-all">
             {email || "—"}
           </p>
+        </div>
+
+        {/* 15-min expiry warning */}
+        <div className="mb-5 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2">
+          <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>
+            <strong className="font-semibold">This link expires in 15 minutes.</strong> Please verify soon — if the link expires, use "Resend verification email" below.
+          </span>
         </div>
 
         {status === "checking" && (
@@ -284,14 +373,19 @@ export default function VerifyEmailPage() {
           >
             I have verified my email
           </button>
+
+          <button
+            onClick={goToLogin}
+            className="w-full py-2 text-sm text-primary-600 hover:text-primary-700 font-medium transition"
+          >
+            Already verified? Go to Login
+          </button>
         </div>
 
-        <div className="mt-6 text-xs text-gray-500 text-center leading-relaxed">
+        <div className="mt-5 text-xs text-gray-500 text-center leading-relaxed">
           If you don't see the email, please check your spam folder.
           <br />
           Make sure you used the correct email address.
-          <br />
-          You will not be able to log in until verification is complete.
         </div>
       </div>
     </div>
