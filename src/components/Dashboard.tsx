@@ -2743,13 +2743,10 @@ const handleSaveProfile = async () => {
       await handleUploadPhoto();
     }
 
-    const first_name =
-      (document.getElementById("firstName") as HTMLInputElement)?.value || "";
-    const last_name =
-      (document.getElementById("lastName") as HTMLInputElement)?.value || "";
+    // 🔒 Locked fields (first_name, last_name, mobile_number, country/state/city,
+    //    indian_state, district, assembly, mandal) are set during registration and
+    //    must NOT be overwritten from the dashboard.
 
-    const mobile_number =
-      (document.getElementById("mobile_number") as HTMLInputElement)?.value || "";
 const dob =
   (document.getElementById("dob") as HTMLInputElement)?.value || null;
 
@@ -2777,12 +2774,9 @@ if (dob) {
       (document.getElementById("instagram") as HTMLInputElement)?.value || "";
 
 const updates = {
-  first_name,
-  last_name,
-  mobile_number,
   dob,
- profession,
-role_designation: roleDesignation,
+  profession,
+  role_designation: roleDesignation,
   organization: organization,
 
   facebook_id: facebook,
@@ -2790,20 +2784,6 @@ role_designation: roleDesignation,
   linkedin_id: linkedin,
   instagram_id: instagram,
   updated_at: new Date().toISOString(),
-
-  // 🌍 Abroad (current residence)
-  country_of_residence: countryOfResidence || null,
-  state_abroad: stateAbroad || profile?.state_abroad || null,
-  city_abroad: cityAbroad || profile?.city_abroad || null,
-
-  // 🇮🇳 Indian (permanent address)
-indian_state: indianState || null,
-district: indianState ? district || null : null,
-assembly_constituency:
-  indianState && district ? assembly || null : null,
-mandal:
-  indianState && district && assembly ? mandal || null : null,
-
 };
 
 
@@ -3026,50 +3006,53 @@ const handleSubmitSuggestion = async () => {
           <div ref={personalInfoRef}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                First Name
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                First Name <span className="text-gray-300">🔒</span>
               </label>
               <input
-              id="firstName"
+                id="firstName"
                 type="text"
-                defaultValue={profile?.first_name || ''}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                readOnly
+                value={profile?.first_name || ''}
+                className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                Last Name
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                Last Name <span className="text-gray-300">🔒</span>
               </label>
               <input
-              id="lastName"
+                id="lastName"
                 type="text"
-                defaultValue={profile?.last_name || ''}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                readOnly
+                value={profile?.last_name || ''}
+                className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                Email
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                Email <span className="text-gray-300">🔒</span>
               </label>
               <input
-              id="email"
+                id="email"
                 type="email"
-                defaultValue={profile?.email ?? ''}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                readOnly
+                value={profile?.email ?? ''}
+                className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
               />
             </div>
             <div>
-  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-    Mobile Number
-  </label>
-  <input
-    id="mobile_number"
-    type="tel"
-    defaultValue={profile?.mobile_number || ""}
-    placeholder="Mobile Number"
-    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700"
-  />
-</div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                Mobile Number <span className="text-gray-300">🔒</span>
+              </label>
+              <input
+                id="mobile_number"
+                type="tel"
+                readOnly
+                value={profile?.mobile_number || ""}
+                className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
+              />
+            </div>
 <div>
   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
     Date of Birth
@@ -3087,360 +3070,69 @@ const handleSubmitSuggestion = async () => {
   />
 </div>
 
-{/* 🌍 Current Residency */}
+{/* 🌍 Current Residency — LOCKED (filled during registration) */}
 <div ref={residencyRef} className="md:col-span-2 mt-4">
-  <label className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2 block">
-    Current Residency
+  <label className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+    Current Residency <span className="text-gray-300">🔒</span>
   </label>
-{/* 🌍 COUNTRY (FROM DB) */}
-<Listbox
-  value={countryOfResidence}
-  onChange={(value) => {
-    setCountryOfResidence(value);
-
-    // reset dependent fields
-    if (value === "India") {
-      setStateAbroad("");
-      setCityAbroad("");
-    } else {
-      setIndianState("");
-      setDistrict("");
-      setAssembly("");
-      setMandal("");
-    }
-  }}
->
-  <div className="relative">
-    <Listbox.Button
-      className="
-        w-full h-11 px-3
-        bg-gray-50 border border-gray-300 rounded-lg
-        flex items-center justify-between
-        text-left text-sm font-semibold text-gray-900
-        focus:bg-white focus:ring-2 focus:ring-primary-500
-        outline-none
-      "
-    >
-      <span className="truncate">
-        {countryOfResidence || "Select Country"}
-      </span>
-      <ChevronDown size={18} className="text-gray-500" />
-    </Listbox.Button>
-
-    <Listbox.Options
-      className="
-        absolute z-50 mt-1 w-full
-        max-h-60 overflow-auto
-        rounded-lg bg-white
-        border border-gray-300
-        shadow-lg text-sm
-      "
-    >
-      {countries.map((c) => (
-        <Listbox.Option
-          key={c.code}
-          value={c.name}
-          className={({ active }) =>
-            `cursor-pointer px-3 py-2 ${
-              active ? "bg-primary-100 text-primary-900" : "text-gray-900"
-            }`
-          }
-        >
-          {c.name}
-        </Listbox.Option>
-      ))}
-    </Listbox.Options>
-  </div>
-</Listbox>
-
-
-{/* 🌍 STATE + CITY (ONLY IF ABROAD) */}
-{countryOfResidence !== "India" && (
-
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-
-    {/* ===== STATE ===== */}
-    <div>
-      <label className="text-xs font-medium text-gray-600 mb-1 block">
-        State / Province
-      </label>
-
-      <input
-        type="text"
-        value={stateAbroad}
-        onChange={(e) => {
-          setStateAbroad(e.target.value);
-          setCityAbroad("");
-        }}
-        placeholder="Enter State / Province"
-        className="w-full h-11 px-3 bg-gray-50 border border-gray-300
-                   rounded-lg text-sm font-semibold text-gray-700
-                   focus:bg-white focus:ring-2 focus:ring-primary-500
-                   outline-none"
-      />
-    </div>
-
-    {/* ===== CITY ===== */}
-    <div>
-      <label className="text-xs font-medium text-gray-600 mb-1 block">
-        City
-      </label>
-
-      <input
-        type="text"
-        value={cityAbroad}
-        onChange={(e) => setCityAbroad(e.target.value)}
-        placeholder="Enter City"
-        className="w-full h-11 px-3 bg-gray-50 border border-gray-300
-                   rounded-lg text-sm font-semibold text-gray-700
-                   focus:bg-white focus:ring-2 focus:ring-primary-500
-                   outline-none"
-      />
-    </div>
-
-  </div>
-)}
-
-
-</div>
-
-{/* 📍 Address Details */}
-<div ref={indianAddressRef} className="md:col-span-2 mt-4 ">
-  <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
-   India Address 
-  </h4>
 
   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-    {/* State */}
-   {/* ===== STATE ===== */}
-<Listbox
-  value={indianState}
-  onChange={(value) => {
-    setIndianState(value);
-    setDistrict("");
-    setAssembly("");
-    setMandal("");
-  }}
->
-  <div className="relative">
-    <Listbox.Button
-      className="
-        w-full h-11 px-3
-        bg-gray-50 border border-gray-300 rounded-lg
-        flex items-center justify-between
-        text-left text-[16px] md:text-sm font-semibold text-gray-900
-        focus:bg-white focus:ring-2 focus:ring-primary-500
-        outline-none
-      "
-    >
-      <span className="truncate">
-        {indianState || "Select State"}
-      </span>
-      <ChevronDown size={18} className="text-gray-500" />
-    </Listbox.Button>
-
-    <Listbox.Options
-      className="
-        absolute z-50 mt-1 w-full
-        max-h-60 overflow-auto
-        rounded-lg bg-white
-        border border-gray-300
-        shadow-lg text-sm
-      "
-    >
-      {["Andhra Pradesh", "Telangana"].map((state) => (
-        <Listbox.Option
-          key={state}
-          value={state}
-          className={({ active }) =>
-            `cursor-pointer px-3 py-2 ${
-              active ? "bg-gray-100 text-gray-900" : "text-gray-900"
-            }`
-          }
-        >
-          {state}
-        </Listbox.Option>
-      ))}
-    </Listbox.Options>
+    <div>
+      <label className="text-[10px] font-medium text-gray-500 mb-1 block">Country</label>
+      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+        {countryOfResidence || "—"}
+      </div>
+    </div>
+    {countryOfResidence !== "India" && (
+      <>
+        <div>
+          <label className="text-[10px] font-medium text-gray-500 mb-1 block">State / Province</label>
+          <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+            {stateAbroad || "—"}
+          </div>
+        </div>
+        <div>
+          <label className="text-[10px] font-medium text-gray-500 mb-1 block">City</label>
+          <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+            {cityAbroad || "—"}
+          </div>
+        </div>
+      </>
+    )}
   </div>
-</Listbox>
-
-
-    {/* District */}
-{/* District (Mobile Friendly) */}
-<div className="relative">
-  <Listbox
-    value={district}
-    onChange={(value) => {
-      setDistrict(value);
-      setAssembly("");
-      setMandal("");
-    }}
-  >
-    {/* Button */}
-    <Listbox.Button
-  className="
-     w-full h-11 px-3
-    bg-gray-50 border border-gray-300 rounded-lg
-    text-left text-[16px] md:text-sm font-semibold text-gray-900
-    flex items-center justify-between
-    focus:bg-white focus:ring-2 focus:ring-primary-500
-    outline-none
-  "
->
-  <span className="truncate">
-    {district || "Select District"}
-  </span>
-
-  <ChevronDown
-    size={18}
-    className="text-gray-500 shrink-0"
-  />
-</Listbox.Button>
-
-
-    {/* Dropdown Options */}
-    <Listbox.Options
-      className="
-        absolute z-50 mt-1 w-full
-        max-h-60 overflow-auto
-        rounded-lg bg-white
-        border border-gray-200
-        shadow-lg
-        text-sm
-      "
-    >
-      {indianState &&
-        indianAddressData[indianState]?.map((d) => (
-          <Listbox.Option
-            key={d.name}
-            value={d.name}
-            className={({ active }) =>
-              `cursor-pointer px-3 py-2 ${
-                active
-                  ? "bg-primary-100 text-primary-900"
-                  : "text-gray-900"
-              }`
-            }
-          >
-            {d.name}
-          </Listbox.Option>
-        ))}
-    </Listbox.Options>
-  </Listbox>
 </div>
 
+{/* 📍 India Address — LOCKED (filled during registration) */}
+<div ref={indianAddressRef} className="md:col-span-2 mt-4 ">
+  <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+    India Address <span className="text-gray-300">🔒</span>
+  </h4>
 
-    {/* Assembly */}
-{/* ===== ASSEMBLY ===== */}
-<Listbox
-  value={assembly}
-  onChange={(value) => {
-    setAssembly(value);
-    setMandal("");
-  }}
->
-  <div className="relative">
-    <Listbox.Button
-      className="
-        w-full h-11 px-3
-        bg-gray-50 border border-gray-300 rounded-lg
-        flex items-center justify-between
-        text-left text-[16px] md:text-sm font-semibold text-gray-900
-        focus:bg-white focus:ring-2 focus:ring-primary-500
-        outline-none
-      "
-    >
-      <span className="truncate">
-        {assembly || "Select Assembly Constituency"}
-      </span>
-      <ChevronDown size={18} className="text-gray-500" />
-    </Listbox.Button>
-
-    <Listbox.Options
-      className="
-        absolute z-50 mt-1 w-full
-        max-h-60 overflow-auto
-        rounded-lg bg-white
-        border border-gray-300
-        shadow-lg text-sm
-      "
-    >
-      {indianState &&
-        district &&
-        indianAddressData[indianState]
-          ?.find((d) => d.name === district)
-          ?.constituencies.map((c) => (
-            <Listbox.Option
-              key={c.name}
-              value={c.name}
-              className={({ active }) =>
-                `cursor-pointer px-3 py-2 ${
-                  active ? "bg-gray-100 text-gray-900" : "text-gray-900"
-                }`
-              }
-            >
-              {c.name}
-            </Listbox.Option>
-          ))}
-    </Listbox.Options>
-  </div>
-</Listbox>
-
-
-    {/* Mandal */}
-  {/* ===== MANDAL ===== */}
-<Listbox value={mandal} onChange={setMandal}>
-  <div className="relative">
-    <Listbox.Button
-      className="
-        w-full h-11 px-3
-        bg-gray-50 border border-gray-300 rounded-lg
-        flex items-center justify-between
-        text-left text-[16px] md:text-sm font-semibold text-gray-900
-        focus:bg-white focus:ring-2 focus:ring-primary-500
-        outline-none
-      "
-    >
-      <span className="truncate">
-        {mandal || "Select Mandal"}
-      </span>
-      <ChevronDown size={18} className="text-gray-500" />
-    </Listbox.Button>
-
-    <Listbox.Options
-      className="
-        absolute z-50 mt-1 w-full
-        max-h-60 overflow-auto
-        rounded-lg bg-white
-        border border-gray-300
-        shadow-lg text-sm
-      "
-    >
-      {indianState &&
-        district &&
-        assembly &&
-        indianAddressData[indianState]
-          ?.find((d) => d.name === district)
-          ?.constituencies.find((c) => c.name === assembly)
-          ?.mandals.map((m) => (
-            <Listbox.Option
-              key={m}
-              value={m}
-              className={({ active }) =>
-                `cursor-pointer px-3 py-2 ${
-                  active ? "bg-gray-100 text-gray-900" : "text-gray-900"
-                }`
-              }
-            >
-              {m}
-            </Listbox.Option>
-          ))}
-    </Listbox.Options>
-  </div>
-</Listbox>
-
- 
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div>
+      <label className="text-[10px] font-medium text-gray-500 mb-1 block">State</label>
+      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+        {indianState || "—"}
+      </div>
+    </div>
+    <div>
+      <label className="text-[10px] font-medium text-gray-500 mb-1 block">District</label>
+      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+        {district || "—"}
+      </div>
+    </div>
+    <div>
+      <label className="text-[10px] font-medium text-gray-500 mb-1 block">Assembly Constituency</label>
+      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+        {assembly || "—"}
+      </div>
+    </div>
+    <div>
+      <label className="text-[10px] font-medium text-gray-500 mb-1 block">Mandal</label>
+      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+        {mandal || "—"}
+      </div>
+    </div>
   </div>
 </div>
           </div>  

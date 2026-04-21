@@ -35,15 +35,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneError, setPhoneError] = useState('');
-  const [countrySearch, setCountrySearch] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
 
-  const [stateSearch, setStateSearch] = useState('');
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const stateDropdownRef = useRef<HTMLDivElement>(null);
 
-  const [citySearch, setCitySearch] = useState('');
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const cityDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -386,63 +383,42 @@ return (
                   <label className="input-label">
                     Country You Currently Live In <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={countrySearch}
-                    placeholder="Search or select a country"
-                    onChange={(e) => {
-                      setCountrySearch(e.target.value);
-                      setShowCountryDropdown(true);
-                      if (formData.country_of_residence) {
-                        setFormData({
-                          ...formData,
-                          country_of_residence: '',
-                          mobile_number: '',
-                          state_abroad: '',
-                          city_abroad: '',
-                        });
-                        setStateSearch('');
-                        setCitySearch('');
-                      }
-                    }}
-                    onFocus={() => setShowCountryDropdown(true)}
-                    className="input-field"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCountryDropdown((v) => !v)}
+                    className="input-field text-left flex items-center justify-between"
+                  >
+                    <span className={formData.country_of_residence ? "text-gray-900" : "text-gray-400"}>
+                      {formData.country_of_residence
+                        ? `${formData.country_of_residence} (${getCurrentCountryCode()})`
+                        : "Select a country"}
+                    </span>
+                    <span className="text-gray-400 ml-2">▾</span>
+                  </button>
                   {showCountryDropdown && (
-                    <ul className="absolute z-50 w-full mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                      {countryCodes
-                        .filter((country) =>
-                          country.name.toLowerCase().includes(countrySearch.toLowerCase())
-                        )
-                        .map((country) => (
-                          <li
-                            key={country.name}
-                            onClick={() => {
-                              const countryCode = getCountryCodeFromCountryName(country.name);
-                              setFormData({
-                                ...formData,
-                                country_of_residence: country.name,
-                                mobile_number: countryCode,
-                                state_abroad: '',
-                                city_abroad: '',
-                              });
-                              setCountrySearch(`${country.name} (+${country.code.replace('+', '')})`);
-                              setStateSearch('');
-                              setCitySearch('');
-                              setShowCountryDropdown(false);
-                              setPhoneError('');
-                            }}
-                            className="px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors"
-                          >
-                            {country.name} (+{country.code.replace('+', '')})
-                          </li>
-                        ))}
-                      {countryCodes.filter((country) =>
-                        country.name.toLowerCase().includes(countrySearch.toLowerCase())
-                      ).length === 0 && (
-                        <li className="px-4 py-2 text-sm text-gray-400">No countries found</li>
-                      )}
+                    <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+                      {countryCodes.map((country) => (
+                        <li
+                          key={country.name}
+                          onClick={() => {
+                            const countryCode = getCountryCodeFromCountryName(country.name);
+                            setFormData({
+                              ...formData,
+                              country_of_residence: country.name,
+                              mobile_number: countryCode,
+                              state_abroad: '',
+                              city_abroad: '',
+                            });
+                            setShowCountryDropdown(false);
+                            setPhoneError('');
+                          }}
+                          className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
+                            formData.country_of_residence === country.name ? 'bg-primary-50 font-medium text-primary-700' : ''
+                          }`}
+                        >
+                          {country.name} (+{country.code.replace('+', '')})
+                        </li>
+                      ))}
                     </ul>
                   )}
                 </div>
@@ -471,8 +447,6 @@ return (
                             }
                             onChange={(e) => {
                               setFormData({ ...formData, state_abroad: e.target.value, city_abroad: '' });
-                              setStateSearch(e.target.value);
-                              setCitySearch('');
                             }}
                             className="input-field disabled:bg-gray-100 disabled:cursor-not-allowed"
                           />
@@ -487,48 +461,32 @@ return (
 
                     return (
                       <>
-                        <input
-                          type="text"
-                          required
-                          value={stateSearch || formData.state_abroad}
-                          placeholder="Search or select a state"
-                          onChange={(e) => {
-                            setStateSearch(e.target.value);
-                            setShowStateDropdown(true);
-                            if (formData.state_abroad) {
-                              setFormData({ ...formData, state_abroad: '', city_abroad: '' });
-                              setCitySearch('');
-                            }
-                          }}
-                          onFocus={() => setShowStateDropdown(true)}
-                          className="input-field"
-                        />
-                        <p className="text-[11px] text-gray-500 mt-1">
-                          Select from dropdown only. If your state isn't listed, select a different country or contact support.
-                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowStateDropdown((v) => !v)}
+                          className="input-field text-left flex items-center justify-between"
+                        >
+                          <span className={formData.state_abroad ? "text-gray-900" : "text-gray-400"}>
+                            {formData.state_abroad || "Select a state"}
+                          </span>
+                          <span className="text-gray-400 ml-2">▾</span>
+                        </button>
                         {showStateDropdown && (
-                          <ul className="absolute z-40 w-full mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                            {stateList
-                              .filter((s) => s.toLowerCase().includes((stateSearch || '').toLowerCase()))
-                              .map((s) => (
-                                <li
-                                  key={s}
-                                  onClick={() => {
-                                    setFormData({ ...formData, state_abroad: s, city_abroad: '' });
-                                    setStateSearch(s);
-                                    setCitySearch('');
-                                    setShowStateDropdown(false);
-                                  }}
-                                  className="px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors"
-                                >
-                                  {s}
-                                </li>
-                              ))}
-                            {stateList.filter((s) =>
-                              s.toLowerCase().includes((stateSearch || '').toLowerCase())
-                            ).length === 0 && (
-                              <li className="px-4 py-2 text-sm text-gray-400">No states found</li>
-                            )}
+                          <ul className="absolute z-40 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+                            {stateList.map((s) => (
+                              <li
+                                key={s}
+                                onClick={() => {
+                                  setFormData({ ...formData, state_abroad: s, city_abroad: '' });
+                                  setShowStateDropdown(false);
+                                }}
+                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
+                                  formData.state_abroad === s ? 'bg-primary-50 font-medium text-primary-700' : ''
+                                }`}
+                              >
+                                {s}
+                              </li>
+                            ))}
                           </ul>
                         )}
                       </>
@@ -562,7 +520,6 @@ return (
                             }
                             onChange={(e) => {
                               setFormData({ ...formData, city_abroad: e.target.value });
-                              setCitySearch(e.target.value);
                             }}
                             className="input-field disabled:bg-gray-100 disabled:cursor-not-allowed"
                           />
@@ -577,46 +534,32 @@ return (
 
                     return (
                       <>
-                        <input
-                          type="text"
-                          required
-                          value={citySearch || formData.city_abroad}
-                          placeholder="Search or select a city"
-                          onChange={(e) => {
-                            setCitySearch(e.target.value);
-                            setShowCityDropdown(true);
-                            if (formData.city_abroad) {
-                              setFormData({ ...formData, city_abroad: '' });
-                            }
-                          }}
-                          onFocus={() => setShowCityDropdown(true)}
-                          className="input-field"
-                        />
-                        <p className="text-[11px] text-gray-500 mt-1">
-                          Select from dropdown only. If your city isn't listed, select a different state.
-                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowCityDropdown((v) => !v)}
+                          className="input-field text-left flex items-center justify-between"
+                        >
+                          <span className={formData.city_abroad ? "text-gray-900" : "text-gray-400"}>
+                            {formData.city_abroad || "Select a city"}
+                          </span>
+                          <span className="text-gray-400 ml-2">▾</span>
+                        </button>
                         {showCityDropdown && (
-                          <ul className="absolute z-40 w-full mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                            {cityList
-                              .filter((c) => c.toLowerCase().includes((citySearch || '').toLowerCase()))
-                              .map((c) => (
-                                <li
-                                  key={c}
-                                  onClick={() => {
-                                    setFormData({ ...formData, city_abroad: c });
-                                    setCitySearch(c);
-                                    setShowCityDropdown(false);
-                                  }}
-                                  className="px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors"
-                                >
-                                  {c}
-                                </li>
-                              ))}
-                            {cityList.filter((c) =>
-                              c.toLowerCase().includes((citySearch || '').toLowerCase())
-                            ).length === 0 && (
-                              <li className="px-4 py-2 text-sm text-gray-400">No cities found</li>
-                            )}
+                          <ul className="absolute z-40 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+                            {cityList.map((c) => (
+                              <li
+                                key={c}
+                                onClick={() => {
+                                  setFormData({ ...formData, city_abroad: c });
+                                  setShowCityDropdown(false);
+                                }}
+                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
+                                  formData.city_abroad === c ? 'bg-primary-50 font-medium text-primary-700' : ''
+                                }`}
+                              >
+                                {c}
+                              </li>
+                            ))}
                           </ul>
                         )}
                       </>

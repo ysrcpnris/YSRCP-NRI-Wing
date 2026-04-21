@@ -396,8 +396,9 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
   profileData: Partial<Profile>
 ) => {
   const normalizedEmail = email.trim().toLowerCase();
+  const normalizedMobile = (profileData.mobile_number || "").trim();
 
-  // 🔴 STEP 1 — check if user already exists in profiles
+  // 🔴 STEP 1a — check if email already exists in profiles
   const { data: existingUser, error: checkError } = await supabase
     .from("profiles")
     .select("id")
@@ -412,6 +413,29 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
   if (existingUser) {
     // 🛑 BLOCK signup immediately
     throw new Error("User already registered. Please login instead.");
+  }
+
+  // 🔴 STEP 1b — check if mobile number already exists
+  //     Uses the mobile_exists() RPC (SECURITY DEFINER) because anon visitors
+  //     cannot SELECT other rows from profiles directly under RLS.
+  //     The DB also enforces this via a UNIQUE index, so this is just a
+  //     friendly pre-check before we hit auth.signUp.
+  if (normalizedMobile) {
+    const { data: mobileTaken, error: mobileCheckError } = await supabase.rpc(
+      "mobile_exists",
+      { p_mobile: normalizedMobile }
+    );
+
+    if (mobileCheckError) {
+      console.error("Mobile lookup error:", mobileCheckError);
+      throw new Error("Unable to register. Please try again.");
+    }
+
+    if (mobileTaken) {
+      throw new Error(
+        "This mobile number is already registered. Please login or use a different number."
+      );
+    }
   }
 
   // 🔵 STEP 2 — build metadata for DB trigger
