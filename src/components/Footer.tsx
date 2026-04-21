@@ -9,6 +9,7 @@ import {
   Youtube,
   ChevronDown,
 } from "lucide-react";
+import nriLogo from "./nrilogo.png";
 
 const Footer: React.FC = () => {
   const [open, setOpen] = useState<string | null>(null);
@@ -76,12 +77,12 @@ const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-8 border-b border-white/10">
           {/* LOGO */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
-              <Globe className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-primary-300">
+              <img src={nriLogo} alt="YSRCP NRI Portal Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <h3 className="font-bold text-base bg-gradient-to-r from-white to-primary-100 bg-clip-text text-transparent">
-                YSRCP NRI Portal
+                YSRCP NRI Wing
               </h3>
               <p className="text-xs text-gray-400">Global Unity, Local Impact</p>
             </div>

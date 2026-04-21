@@ -1,0 +1,497 @@
+{
+  "state": "Andhra Pradesh",
+  "districts": [
+    {
+      "district": "Anantapuram",
+      "cities": [
+        "Anantapuram",
+        "Dhone",
+        "Guntakal",
+        "Kadapa",
+        "Kurnool",
+        "Lepakshi",
+        "Nandyal",
+        "Puttaparthi",
+        "Raptadu",
+        "Tadipatri"
+      ],
+      "constituencies": [
+        "Anantapuram",
+        "Dhone",
+        "Guntakal",
+        "Kadapa",
+        "Kurnool",
+        "Nandyal",
+        "Tadipatri"
+      ]
+    },
+    {
+      "district": "Chittoor",
+      "cities": [
+        "Chittoor",
+        "Gudur",
+        "Madanapalle",
+        "Palamaner",
+        "Renigunta",
+        "Tirupati",
+        "Vellore"
+      ],
+      "constituencies": [
+        "Chittoor",
+        "Gudur",
+        "Madanapalle",
+        "Palamaner",
+        "Renigunta",
+        "Tirupati",
+        "Vellore"
+      ]
+    },
+    {
+      "district": "Cuddapah",
+      "cities": [
+        "Cuddapah",
+        "Jammalamadugu",
+        "Kadapa",
+        "Markapur",
+        "Nandalur",
+        "Proddatur",
+        "Rayachoty",
+        "Sarvepalli"
+      ],
+      "constituencies": [
+        "Cuddapah",
+        "Jammalamadugu",
+        "Markapur",
+        "Nandalur",
+        "Proddatur",
+        "Rayachoty"
+      ]
+    },
+    {
+      "district": "East Godavari",
+      "cities": [
+        "Amalapuram",
+        "Cocanada",
+        "Dowlaiswaram",
+        "Kakinada",
+        "Palakollu",
+        "Rajamahendravaram",
+        "Samalkot",
+        "Tanuku"
+      ],
+      "constituencies": [
+        "Amalapuram",
+        "Cocanada",
+        "Kakinada",
+        "Palakollu",
+        "Rajamahendravaram",
+        "Samalkot",
+        "Tanuku",
+        "Tuni"
+      ]
+    },
+    {
+      "district": "Guntur",
+      "cities": [
+        "Bapatla",
+        "Chirala",
+        "Guntur",
+        "Narasaraopet",
+        "Ongole",
+        "Tenali",
+        "Vinukonda"
+      ],
+      "constituencies": [
+        "Bapatla",
+        "Chirala",
+        "Guntur",
+        "Narasaraopet",
+        "Ongole",
+        "Tenali",
+        "Vinukonda"
+      ]
+    },
+    {
+      "district": "Kadapa",
+      "cities": [
+        "Badvel",
+        "Chandragiri",
+        "Gudur",
+        "Kadapa",
+        "Naidupet",
+        "Rayachoty",
+        "Sarvepalli",
+        "Tirupati"
+      ],
+      "constituencies": [
+        "Badvel",
+        "Chandragiri",
+        "Gudur",
+        "Kadapa",
+        "Naidupet",
+        "Rayachoty"
+      ]
+    },
+    {
+      "district": "Krishna",
+      "cities": [
+        "Avanigadda",
+        "Bapulapadu",
+        "Jaggaiahpet",
+        "Machilipatnam",
+        "Mylavaram",
+        "Nandigama",
+        "Vijayawada"
+      ],
+      "constituencies": [
+        "Avanigadda",
+        "Jaggaiahpet",
+        "Machilipatnam",
+        "Mylavaram",
+        "Nandigama",
+        "Vijayawada"
+      ]
+    },
+    {
+      "district": "Kurnool",
+      "cities": [
+        "Adoni",
+        "Kurnool",
+        "Nandyal",
+        "Pamulapadu",
+        "Pattikonda",
+        "Tandur"
+      ],
+      "constituencies": [
+        "Adoni",
+        "Kurnool",
+        "Nandyal",
+        "Pattikonda"
+      ]
+    },
+    {
+      "district": "Nellore",
+      "cities": [
+        "Kaviti",
+        "Nellore",
+        "Ranipet",
+        "Sriharikota",
+        "Sullurpeta",
+        "Tirupati",
+        "Venkatagiri"
+      ],
+      "constituencies": [
+        "Kaviti",
+        "Nellore",
+        "Ranipet",
+        "Sullurpeta",
+        "Venkatagiri"
+      ]
+    },
+    {
+      "district": "Prakasam",
+      "cities": [
+        "Addanki",
+        "Chirala",
+        "Kandukur",
+        "Markapur",
+        "Ongole",
+        "Singarayakonda",
+        "Tenali"
+      ],
+      "constituencies": [
+        "Addanki",
+        "Chirala",
+        "Kandukur",
+        "Markapur",
+        "Ongole",
+        "Singarayakonda"
+      ]
+    },
+    {
+      "district": "Spsr Nellore",
+      "cities": [
+        "Kaviti",
+        "Nellore",
+        "Ranipet",
+        "Sriharikota",
+        "Sullurpeta",
+        "Tirupati",
+        "Venkatagiri"
+      ],
+      "constituencies": [
+        "Kaviti",
+        "Nellore",
+        "Ranipet",
+        "Sullurpeta",
+        "Venkatagiri"
+      ]
+    },
+    {
+      "district": "Srikakulam",
+      "cities": [
+        "Amadalavalasa",
+        "Ashok Nagar",
+        "Ichchapuram",
+        "Palasa",
+        "Srikakulam",
+        "Tekkali",
+        "Ycl"
+      ],
+      "constituencies": [
+        "Amadalavalasa",
+        "Ichchapuram",
+        "Palasa",
+        "Srikakulam",
+        "Tekkali"
+      ]
+    },
+    {
+      "district": "Visakhapattanam",
+      "cities": [
+        "Anakapalli",
+        "Araku",
+        "Bheemunipatnam",
+        "Chilkalaripeta",
+        "Chintapalli",
+        "Gajuwaka",
+        "Pendurthi",
+        "Ramakrishnapur",
+        "Visakhapatnam",
+        "Vizianagaram"
+      ],
+      "constituencies": [
+        "Anakapalli",
+        "Bheemunipatnam",
+        "Chintapalli",
+        "Gajuwaka",
+        "Pendurthi",
+        "Visakhapatnam",
+        "Vizianagaram"
+      ]
+    },
+    {
+      "district": "Vizianagaram",
+      "cities": [
+        "Bobbili",
+        "Cheepurupalli",
+        "Gajapathinagaram",
+        "Modasa",
+        "Parvathipuram",
+        "Salur",
+        "Vizianagaram"
+      ],
+      "constituencies": [
+        "Bobbili",
+        "Cheepurupalli",
+        "Gajapathinagaram",
+        "Parvathipuram",
+        "Salur",
+        "Vizianagaram"
+      ]
+    },
+    {
+      "district": "West Godavari",
+      "cities": [
+        "Akividu",
+        "Bhimavaram",
+        "Eluru",
+        "Ichapuram",
+        "Narsapuram",
+        "Palacole",
+        "Tanuku",
+        "Unguturu"
+      ],
+      "constituencies": [
+        "Akividu",
+        "Bhimavaram",
+        "Eluru",
+        "Narsapuram",
+        "Palacole",
+        "Tanuku",
+        "Unguturu"
+      ]
+    },
+    {
+      "district": "Vikarabad",
+      "cities": [
+        "Ajjaram",
+        "Vikarabad",
+        "Wanaparthy"
+      ],
+      "constituencies": [
+        "Vikarabad",
+        "Wanaparthy"
+      ]
+    },
+    {
+      "district": "Amalapuram",
+      "cities": [
+        "Amalapuram",
+        "Cocanada",
+        "Kakinada",
+        "Palakollu",
+        "Samalkot",
+        "Tanuku"
+      ],
+      "constituencies": [
+        "Amalapuram",
+        "Kakinada",
+        "Palakollu",
+        "Samalkot"
+      ]
+    },
+    {
+      "district": "Bapatla",
+      "cities": [
+        "Bapatla",
+        "Chirala",
+        "Guntur",
+        "Narasaraopet"
+      ],
+      "constituencies": [
+        "Bapatla",
+        "Chirala"
+      ]
+    },
+    {
+      "district": "Eluru",
+      "cities": [
+        "Akividu",
+        "Bhimavaram",
+        "Eluru",
+        "Narsapuram",
+        "Palacole",
+        "Tanuku"
+      ],
+      "constituencies": [
+        "Bhimavaram",
+        "Eluru",
+        "Narsapuram",
+        "Palacole"
+      ]
+    },
+    {
+      "district": "Kakinada",
+      "cities": [
+        "Amalapuram",
+        "Kakinada",
+        "Palakollu",
+        "Samalkot",
+        "Tuni"
+      ],
+      "constituencies": [
+        "Amalapuram",
+        "Kakinada",
+        "Palakollu",
+        "Samalkot"
+      ]
+    },
+    {
+      "district": "Nellore",
+      "cities": [
+        "Kaviti",
+        "Nellore",
+        "Ranipet",
+        "Sullurpeta",
+        "Venkatagiri"
+      ],
+      "constituencies": [
+        "Kaviti",
+        "Nellore",
+        "Ranipet",
+        "Sullurpeta",
+        "Venkatagiri"
+      ]
+    },
+    {
+      "district": "Ongole",
+      "cities": [
+        "Addanki",
+        "Kandukur",
+        "Markapur",
+        "Ongole",
+        "Singarayakonda"
+      ],
+      "constituencies": [
+        "Addanki",
+        "Kandukur",
+        "Markapur",
+        "Ongole",
+        "Singarayakonda"
+      ]
+    },
+    {
+      "district": "Tenali",
+      "cities": [
+        "Bapatla",
+        "Chirala",
+        "Narasaraopet",
+        "Tenali",
+        "Vinukonda"
+      ],
+      "constituencies": [
+        "Narasaraopet",
+        "Tenali",
+        "Vinukonda"
+      ]
+    },
+    {
+      "district": "Tirupati",
+      "cities": [
+        "Chandragiri",
+        "Gudur",
+        "Madanapalle",
+        "Palamaner",
+        "Renigunta",
+        "Tirupati"
+      ],
+      "constituencies": [
+        "Chandragiri",
+        "Madanapalle",
+        "Palamaner",
+        "Renigunta",
+        "Tirupati"
+      ]
+    },
+    {
+      "district": "Vijayawada",
+      "cities": [
+        "Avanigadda",
+        "Jaggaiahpet",
+        "Machilipatnam",
+        "Mylavaram",
+        "Nandigama",
+        "Vijayawada"
+      ],
+      "constituencies": [
+        "Avanigadda",
+        "Jaggaiahpet",
+        "Machilipatnam",
+        "Mylavaram",
+        "Nandigama",
+        "Vijayawada"
+      ]
+    },
+    {
+      "district": "Vizianagaram",
+      "cities": [
+        "Bobbili",
+        "Cheepurupalli",
+        "Gajapathinagaram",
+        "Modasa",
+        "Parvathipuram",
+        "Salur",
+        "Vizianagaram"
+      ],
+      "constituencies": [
+        "Bobbili",
+        "Cheepurupalli",
+        "Gajapathinagaram",
+        "Parvathipuram",
+        "Salur",
+        "Vizianagaram"
+      ]
+    }
+  ]
+}

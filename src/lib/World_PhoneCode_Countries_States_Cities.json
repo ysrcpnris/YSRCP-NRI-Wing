@@ -4,2392 +4,1668 @@
     "countries": [
       {
         "phone_code": "+1",
-        "iso_code": "US",
-        "country_name": "United States",
-        "states": [
-          {
-            "state": "California",
-            "cities": [
-              "Los Angeles",
-              "San Francisco",
-              "San Diego",
-              "Sacramento",
-              "Fresno",
-              "San Jose"
-            ]
-          },
-          {
-            "state": "Texas",
-            "cities": [
-              "Houston",
-              "Dallas",
-              "Austin",
-              "San Antonio",
-              "Fort Worth",
-              "El Paso"
-            ]
-          },
-          {
-            "state": "Florida",
-            "cities": [
-              "Miami",
-              "Orlando",
-              "Tampa",
-              "Jacksonville",
-              "Fort Lauderdale",
-              "Tallahassee"
-            ]
-          },
-          {
-            "state": "New York",
-            "cities": [
-              "New York City",
-              "Buffalo",
-              "Rochester",
-              "Albany",
-              "Syracuse",
-              "Yonkers"
-            ]
-          },
-          {
-            "state": "Illinois",
-            "cities": [
-              "Chicago",
-              "Aurora",
-              "Naperville",
-              "Rockford",
-              "Springfield",
-              "Joliet"
-            ]
-          },
-          {
-            "state": "Washington",
-            "cities": [
-              "Seattle",
-              "Spokane",
-              "Tacoma",
-              "Bellevue",
-              "Everett",
-              "Kent"
-            ]
-          },
-          {
-            "state": "Georgia",
-            "cities": [
-              "Atlanta",
-              "Augusta",
-              "Savannah",
-              "Columbus",
-              "Athens",
-              "Macon"
-            ]
-          },
-          {
-            "state": "Pennsylvania",
-            "cities": [
-              "Philadelphia",
-              "Pittsburgh",
-              "Allentown",
-              "Erie",
-              "Harrisburg",
-              "Reading"
-            ]
-          },
-          {
-            "state": "Ohio",
-            "cities": [
-              "Columbus",
-              "Cleveland",
-              "Cincinnati",
-              "Toledo",
-              "Akron",
-              "Dayton"
-            ]
-          },
-          {
-            "state": "North Carolina",
-            "cities": [
-              "Charlotte",
-              "Raleigh",
-              "Greensboro",
-              "Durham",
-              "Winston-Salem",
-              "Fayetteville"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+1",
         "iso_code": "CA",
         "country_name": "Canada",
         "states": [
           {
-            "state": "Ontario",
+            "state": "Alberta",
             "cities": [
-              "Toronto",
-              "Ottawa",
-              "Mississauga",
-              "Hamilton",
-              "London",
-              "Brampton"
-            ]
-          },
-          {
-            "state": "Quebec",
-            "cities": [
-              "Montreal",
-              "Quebec City",
-              "Laval",
-              "Gatineau",
-              "Sherbrooke",
-              "Longueuil"
+              "Airdrie",
+              "Banff",
+              "Calgary",
+              "Camrose",
+              "Cochrane",
+              "Cold Lake",
+              "Drayton Valley",
+              "Edmonton",
+              "Fort McMurray",
+              "Grande Prairie",
+              "Hinton",
+              "Lethbridge",
+              "Lloydminster",
+              "Medicine Hat",
+              "Okotoks",
+              "Peace River",
+              "Red Deer",
+              "Rocky Mountain House",
+              "Slave Lake",
+              "Spruce Grove",
+              "St. Albert",
+              "Strathmore",
+              "Sylvan Lake",
+              "Taber",
+              "Vegreville",
+              "Vermilion",
+              "Wetaskiwin"
             ]
           },
           {
             "state": "British Columbia",
             "cities": [
-              "Vancouver",
-              "Surrey",
+              "Abbotsford",
+              "Armstrong",
+              "Ashcroft",
+              "Atlin",
+              "Barriere",
+              "Beaumont",
+              "Beaverdell",
+              "Bella Coola",
+              "Bendigo",
+              "Blubber Bay",
+              "Bowen Island",
+              "Brandywine Falls",
+              "Bremerton",
+              "Bridgeport",
+              "Brocklehurst",
+              "Brokenhead",
+              "Bronson",
+              "Brooks",
+              "Broughton",
+              "Brownie",
+              "Brynnor",
+              "Buckingham",
               "Burnaby",
-              "Victoria",
-              "Kelowna",
-              "Abbotsford"
-            ]
-          },
-          {
-            "state": "Alberta",
-            "cities": [
-              "Calgary",
-              "Edmonton",
-              "Red Deer",
-              "Lethbridge",
-              "St. Albert",
-              "Grande Prairie"
+              "Burns Lake",
+              "Burton",
+              "Butte",
+              "Butze Rapids",
+              "Caches Creek",
+              "Cadboro Bay",
+              "Cakebread",
+              "Caldwell",
+              "Calvert Island",
+              "Cameron Lake",
+              "Cammore",
+              "Campbell River",
+              "Canal Flats",
+              "Canoe",
+              "Cape Caution",
+              "Cape Cook",
+              "Cape Flattery",
+              "Cape Mudge",
+              "Cape Scott",
+              "Carberry",
+              "Cariboo",
+              "Carleys",
+              "Carlin",
+              "Carlson",
+              "Carlyle",
+              "Carmanah",
+              "Carmichael",
+              "Carnaby",
+              "Carnival",
+              "Carolside",
+              "Carousel",
+              "Carpenter",
+              "Carrieview",
+              "Carrington",
+              "Carroll",
+              "Carruthers",
+              "Carstairs",
+              "Carter",
+              "Carterton",
+              "Cartwright",
+              "Carvel",
+              "Casca",
+              "Cascade",
+              "Cascadia",
+              "Casey",
+              "Cashel",
+              "Cashmere",
+              "Casket",
+              "Caspian",
+              "Casplan",
+              "Casselton",
+              "Cassiar",
+              "Cassidy",
+              "Castle",
+              "Castlegar",
+              "Coquitlam",
+              "Cormorant",
+              "Cowichan",
+              "Cranaport",
+              "Cranberry",
+              "Cranbrook",
+              "Crane",
+              "Creston",
+              "Crestwood",
+              "Crews",
+              "Criccieth",
+              "Cricklade",
+              "Crindau",
+              "Criosg",
+              "Crispins",
+              "Crisply",
+              "Cristal",
+              "Cristalina",
+              "Cristina",
+              "Cristobal",
+              "Crooked River",
+              "Croppedy",
+              "Crosby",
+              "Cross",
+              "Crowfoot",
+              "Croyden",
+              "Croydon",
+              "Crucial",
+              "Crucible",
+              "Crudely",
+              "Cruelty",
+              "Cruise",
+              "Crumlin",
+              "Crumple",
+              "Crusade",
+              "Crushed",
+              "Crusher",
+              "Crushes",
+              "Crushing",
+              "Crust",
+              "Crustal",
+              "Crustily",
+              "Crustily",
+              "Crustiness",
+              "Crusty",
+              "Crutch",
+              "Crutches",
+              "Crux",
+              "Cruyff",
+              "Cry",
+              "Crying",
+              "Cryonic",
+              "Cryonics",
+              "Crystal",
+              "Crystaline",
+              "Crystalline",
+              "Crystallography",
+              "Crystalls",
+              "Crystally",
+              "Crystalyne",
+              "Crystel"
             ]
           },
           {
             "state": "Manitoba",
             "cities": [
-              "Winnipeg",
               "Brandon",
-              "Steinbach",
-              "Thompson",
+              "Churchill",
+              "Flin Flon",
+              "Killarney",
+              "Neepawa",
               "Portage la Prairie",
-              "Winkler"
+              "Selkirk",
+              "Swan River",
+              "The Pas",
+              "Thompson",
+              "Virden",
+              "Winkler",
+              "Winnipeg",
+              "Winnipegosis"
+            ]
+          },
+          {
+            "state": "New Brunswick",
+            "cities": [
+              "Bathurst",
+              "Campbellton",
+              "Chatham",
+              "Edmundston",
+              "Fredericton",
+              "Miramichi",
+              "Moncton",
+              "Riverview",
+              "Sackville",
+              "Saint John",
+              "Sainte-Anne-de-Kent"
+            ]
+          },
+          {
+            "state": "Newfoundland and Labrador",
+            "cities": [
+              "Blaketown",
+              "Bonavista",
+              "Corner Brook",
+              "Curling",
+              "Ferryland",
+              "Gander",
+              "Gladbrook",
+              "Goose Bay",
+              "Grand Falls-Windsor",
+              "Happy Valley",
+              "Humber Arm South",
+              "Labrador City",
+              "Marystown",
+              "Paradise",
+              "Port Union",
+              "Port aux Basques",
+              "Portugal Cove-St. Philip's",
+              "St. John's",
+              "Stephenville",
+              "Torbay",
+              "Trinity",
+              "Twillingate",
+              "Wabana"
+            ]
+          },
+          {
+            "state": "Northwest Territories",
+            "cities": [
+              "Aklavik",
+              "Deline",
+              "Detah",
+              "Fort Good Hope",
+              "Fort McPherson",
+              "Fortuna Ledge",
+              "Gameti",
+              "Hay River",
+              "Inuvik",
+              "Jean Marie River",
+              "Kakisa",
+              "Ndilo",
+              "Norman Wells",
+              "North Hay River",
+              "Rae",
+              "Rae-Edzo",
+              "Sachs Harbour",
+              "Tuktoyaktuk",
+              "Tulita",
+              "Tłı̨chǫ",
+              "Wekweètì",
+              "Wha Ti",
+              "Whatiò",
+              "Wrigley",
+              "Yellowknife"
+            ]
+          },
+          {
+            "state": "Nova Scotia",
+            "cities": [
+              "Amherst",
+              "Antigonish",
+              "Arichat",
+              "Baddeck",
+              "Barrington",
+              "Battersea",
+              "Beaverbasin",
+              "Berwick",
+              "Bible Hill",
+              "Big Bras d'Or",
+              "Blandford",
+              "Blanford",
+              "Boularderie",
+              "Boutilier's Point",
+              "Bridgetown",
+              "Bridgewater",
+              "Brier Island",
+              "Broad Cove",
+              "Broadwater",
+              "Brockton",
+              "Brook Village",
+              "Brookfield",
+              "Brookside",
+              "Broomfield",
+              "Brossard",
+              "Broughton",
+              "Brudenell",
+              "Bude",
+              "Buffalo",
+              "Bunscoil",
+              "Burgeo",
+              "Burlington",
+              "Burnt Islands",
+              "Burntside",
+              "Bursary",
+              "Bury"
+            ]
+          },
+          {
+            "state": "Nunavut",
+            "cities": [
+              "Apex",
+              "Arctic Bay",
+              "Arviat",
+              "Atafu",
+              "Atigun Pass",
+              "Atkinson Point",
+              "Atqasuk",
+              "Aulertailaq",
+              "Avillinguit",
+              "Axel Heiberg Island",
+              "Aylik",
+              "Bache Peninsula",
+              "Baillie Islands",
+              "Balaena",
+              "Baldwin Bay",
+              "Ballantyne Strait",
+              "Banks Island",
+              "Barff Peninsula",
+              "Barings Land",
+              "Barnet Inlet",
+              "Barrow Inlet",
+              "Barters Bay",
+              "Bathurst Inlet",
+              "Bathurst Island",
+              "Batty Bay",
+              "Bazalgette River",
+              "Beaufort Island",
+              "Beaumont Bay"
+            ]
+          },
+          {
+            "state": "Ontario",
+            "cities": [
+              "Ajax",
+              "Akwesasne",
+              "Alberton",
+              "Aldershot",
+              "Alderville",
+              "Alliston",
+              "Almonte",
+              "Alvinston",
+              "Amherst Island",
+              "Amherst Township",
+              "Amilton",
+              "Amityville",
+              "Amodeo",
+              "Anaheim",
+              "Anak",
+              "Ancaster",
+              "Anching",
+              "Andon",
+              "Andover",
+              "Angling Lake",
+              "Angora",
+              "Anguish",
+              "Anhalt",
+              "Annabel",
+              "Annacis",
+              "Annagrey",
+              "Annaheim",
+              "Annalee",
+              "Annaleise",
+              "Annalia",
+              "Annalise",
+              "Annalise",
+              "Annalla",
+              "Annallese",
+              "Annallie"
+            ]
+          },
+          {
+            "state": "Prince Edward Island",
+            "cities": [
+              "Alberton",
+              "Annandale-Little Pond-Howe Bay",
+              "Baligrove",
+              "Baltic",
+              "Barnley",
+              "Bedeque",
+              "Belmont",
+              "Benevolence",
+              "Bennington",
+              "Berwick",
+              "Bethel",
+              "Big Pond",
+              "Bingley",
+              "Birkdale",
+              "Bishops Mills",
+              "Blindside",
+              "Blockhouse",
+              "Bluff Head Meadows",
+              "Bluff Point",
+              "Bluffton",
+              "Boardmans Bridge",
+              "Boat Cove",
+              "Boatmans Corner",
+              "Boehmer",
+              "Bogside",
+              "Bonfield",
+              "Boonton",
+              "Bordertown",
+              "Bore",
+              "Borne",
+              "Borotough",
+              "Bosmere",
+              "Botsford",
+              "Boulderwood",
+              "Boulter",
+              "Boultham",
+              "Bournac",
+              "Bournbrook",
+              "Bournebrook"
+            ]
+          },
+          {
+            "state": "Quebec",
+            "cities": [
+              "Abercorn",
+              "Abitibi",
+              "Acton Vale",
+              "Adstock",
+              "Agincourt",
+              "Ahl",
+              "Ahmadabad",
+              "Ahunstic-Cartierville",
+              "Aigremont",
+              "Ailleboust",
+              "Aimers",
+              "Aintree",
+              "Air Canada",
+              "Aird",
+              "Airdrie",
+              "Airdrie",
+              "Airfield",
+              "Airol",
+              "Airth",
+              "Aisle",
+              "Aisne",
+              "Aisne",
+              "Aitch",
+              "Aix",
+              "Aix-la-Chapelle",
+              "Ajaccio",
+              "Ajangoua",
+              "Ajar",
+              "Ajax"
             ]
           },
           {
             "state": "Saskatchewan",
             "cities": [
-              "Saskatoon",
-              "Regina",
-              "Prince Albert",
-              "Moose Jaw",
-              "Swift Current",
-              "Yorkton"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "continent": "Central America & Caribbean",
-    "countries": [
-      {
-        "phone_code": "+52",
-        "iso_code": "MX",
-        "country_name": "Mexico",
-        "states": [
-          {
-            "state": "Mexico City",
-            "cities": [
-              "Iztapalapa",
-              "Gustavo A. Madero",
-              "Coyoacan",
-              "Tlalpan",
-              "Alvaro Obregon",
-              "Cuauhtemoc"
-            ]
-          },
-          {
-            "state": "Jalisco",
-            "cities": [
-              "Guadalajara",
-              "Zapopan",
-              "Tlaquepaque",
-              "Puerto Vallarta",
-              "Tonala",
-              "Tlajomulco"
-            ]
-          },
-          {
-            "state": "Nuevo Leon",
-            "cities": [
-              "Monterrey",
-              "Guadalupe",
-              "Apodaca",
-              "San Nicolas de los Garza",
-              "Santa Catarina",
-              "Escobedo"
-            ]
-          },
-          {
-            "state": "Puebla",
-            "cities": [
-              "Puebla",
-              "Tehuacan",
-              "Cholula",
-              "Atlixco",
-              "San Martin Texmelucan",
-              "Teziutlan"
-            ]
-          },
-          {
-            "state": "Baja California",
-            "cities": [
-              "Tijuana",
-              "Mexicali",
-              "Ensenada",
-              "Tecate",
-              "Rosarito",
-              "San Felipe"
-            ]
-          },
-          {
-            "state": "Yucatan",
-            "cities": [
-              "Merida",
-              "Valladolid",
-              "Tizimin",
-              "Progreso",
-              "Izamal",
-              "Ticul"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+502",
-        "iso_code": "GT",
-        "country_name": "Guatemala",
-        "states": [
-          {
-            "state": "Guatemala Department",
-            "cities": [
-              "Guatemala City",
-              "Mixco",
-              "Villa Nueva",
-              "San Juan Sacatepequez",
-              "Chinautla",
-              "Amatitlan"
-            ]
-          },
-          {
-            "state": "Quetzaltenango",
-            "cities": [
-              "Quetzaltenango",
-              "Coatepeque",
-              "Retalhuleu",
-              "San Marcos",
-              "Huehuetenango",
-              "Totonicapan"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+503",
-        "iso_code": "SV",
-        "country_name": "El Salvador",
-        "states": [
-          {
-            "state": "San Salvador",
-            "cities": [
-              "San Salvador",
-              "Soyapango",
-              "Santa Ana",
-              "San Miguel",
-              "Mejicanos",
-              "Apopa"
-            ]
-          },
-          {
-            "state": "Santa Ana",
-            "cities": [
-              "Santa Ana",
-              "Chalchuapa",
-              "Metapan",
-              "Coatepeque",
-              "El Congo",
-              "Texistepeque"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+504",
-        "iso_code": "HN",
-        "country_name": "Honduras",
-        "states": [
-          {
-            "state": "Francisco Morazan",
-            "cities": [
-              "Tegucigalpa",
-              "Comayaguela",
-              "Valle de Angeles",
-              "Santa Lucia",
-              "Talanga",
-              "Cedros"
-            ]
-          },
-          {
-            "state": "Cortes",
-            "cities": [
-              "San Pedro Sula",
-              "Choloma",
-              "La Lima",
-              "El Progreso",
-              "Villanueva",
-              "Puerto Cortes"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+505",
-        "iso_code": "NI",
-        "country_name": "Nicaragua",
-        "states": [
-          {
-            "state": "Managua",
-            "cities": [
-              "Managua",
-              "Ciudad Sandino",
-              "Tipitapa",
-              "Masaya",
-              "Mateare",
-              "Ticuantepe"
-            ]
-          },
-          {
-            "state": "Leon",
-            "cities": [
-              "Leon",
-              "Chinandega",
-              "Chichigalpa",
-              "Corinto",
-              "El Viejo",
-              "Telica"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+506",
-        "iso_code": "CR",
-        "country_name": "Costa Rica",
-        "states": [
-          {
-            "state": "San Jose",
-            "cities": [
-              "San Jose",
-              "Alajuela",
-              "Cartago",
-              "Heredia",
-              "Desamparados",
-              "San Carlos"
-            ]
-          },
-          {
-            "state": "Guanacaste",
-            "cities": [
-              "Liberia",
-              "Nicoya",
-              "Santa Cruz",
-              "Bagaces",
-              "Carrillo",
-              "Canas"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+507",
-        "iso_code": "PA",
-        "country_name": "Panama",
-        "states": [
-          {
-            "state": "Panama Province",
-            "cities": [
-              "Panama City",
-              "San Miguelito",
-              "Tocumen",
-              "La Chorrera",
-              "Arraijan",
-              "Chepo"
-            ]
-          },
-          {
-            "state": "Colon Province",
-            "cities": [
-              "Colon",
-              "Portobelo",
-              "Sabanitas",
-              "Chagres",
-              "Donoso",
-              "Nombre de Dios"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+53",
-        "iso_code": "CU",
-        "country_name": "Cuba",
-        "states": [
-          {
-            "state": "Havana",
-            "cities": [
-              "Havana",
-              "San Miguel del Padron",
-              "Boyeros",
-              "Arroyo Naranjo",
-              "Marianao",
-              "Guanabacoa"
-            ]
-          },
-          {
-            "state": "Santiago de Cuba",
-            "cities": [
-              "Santiago de Cuba",
-              "Palma Soriano",
-              "San Luis",
-              "Contramaestre",
-              "Bayamo",
-              "Manzanillo"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+1",
-        "iso_code": "JM",
-        "country_name": "Jamaica",
-        "states": [
-          {
-            "state": "Kingston",
-            "cities": [
-              "Kingston",
-              "Portmore",
-              "Spanish Town",
-              "Half Way Tree",
-              "Constant Spring",
-              "Duhaney Park"
-            ]
-          },
-          {
-            "state": "Saint James",
-            "cities": [
-              "Montego Bay",
-              "Falmouth",
-              "Lucea",
-              "Savanna-la-Mar",
-              "Black River",
-              "Ocho Rios"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+1",
-        "iso_code": "HT",
-        "country_name": "Haiti",
-        "states": [
-          {
-            "state": "Ouest",
-            "cities": [
-              "Port-au-Prince",
-              "Carrefour",
-              "Delmas",
-              "Petionville",
-              "Cite Soleil",
-              "Kenscoff"
-            ]
-          },
-          {
-            "state": "Artibonite",
-            "cities": [
-              "Gonaives",
-              "Saint-Marc",
-              "Dessalines",
-              "Verrettes",
-              "Terre-Neuve",
-              "Gros-Morne"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+1",
-        "iso_code": "DO",
-        "country_name": "Dominican Republic",
-        "states": [
-          {
-            "state": "Distrito Nacional",
-            "cities": [
-              "Santo Domingo",
-              "Los Alcarrizos",
-              "Pedro Brand",
-              "San Cristobal",
-              "Boca Chica",
-              "La Romana"
-            ]
-          },
-          {
-            "state": "Santiago",
-            "cities": [
-              "Santiago de los Caballeros",
-              "Villa Bisono",
-              "Moca",
-              "San Francisco de Macoris",
-              "Puerto Plata",
-              "Sosua"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+1",
-        "iso_code": "TT",
-        "country_name": "Trinidad and Tobago",
-        "states": [
-          {
-            "state": "Port of Spain",
-            "cities": [
-              "Port of Spain",
-              "Chaguanas",
-              "San Fernando",
-              "Arima",
-              "Point Fortin",
-              "Scarborough"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+1",
-        "iso_code": "BB",
-        "country_name": "Barbados",
-        "states": [
-          {
-            "state": "Saint Michael",
-            "cities": [
-              "Bridgetown",
-              "Speightstown",
-              "Oistins",
-              "Bathsheba",
-              "Holetown",
-              "Worthing"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+1",
-        "iso_code": "BS",
-        "country_name": "Bahamas",
-        "states": [
-          {
-            "state": "New Providence",
-            "cities": [
-              "Nassau",
-              "Freeport",
-              "Lucaya",
-              "Marsh Harbour",
-              "Andros Town",
-              "George Town"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "continent": "South America",
-    "countries": [
-      {
-        "phone_code": "+55",
-        "iso_code": "BR",
-        "country_name": "Brazil",
-        "states": [
-          {
-            "state": "Sao Paulo",
-            "cities": [
-              "Sao Paulo",
-              "Campinas",
-              "Guarulhos",
-              "Santo Andre",
-              "Sorocaba",
-              "Ribeirao Preto"
-            ]
-          },
-          {
-            "state": "Rio de Janeiro",
-            "cities": [
-              "Rio de Janeiro",
-              "Niteroi",
-              "Nova Iguacu",
-              "Duque de Caxias",
-              "Sao Goncalo",
-              "Petr opolis"
-            ]
-          },
-          {
-            "state": "Minas Gerais",
-            "cities": [
-              "Belo Horizonte",
-              "Uberlandia",
-              "Contagem",
-              "Juiz de Fora",
-              "Betim",
-              "Montes Claros"
-            ]
-          },
-          {
-            "state": "Bahia",
-            "cities": [
-              "Salvador",
-              "Feira de Santana",
-              "Vitoria da Conquista",
-              "Ilheus",
-              "Itabuna",
-              "Camacari"
-            ]
-          },
-          {
-            "state": "Rio Grande do Sul",
-            "cities": [
-              "Porto Alegre",
-              "Caxias do Sul",
-              "Canoas",
-              "Pelotas",
-              "Santa Maria",
-              "Gravatai"
-            ]
-          },
-          {
-            "state": "Parana",
-            "cities": [
-              "Curitiba",
-              "Londrina",
-              "Maringa",
-              "Ponta Grossa",
-              "Cascavel",
-              "Foz do Iguacu"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+54",
-        "iso_code": "AR",
-        "country_name": "Argentina",
-        "states": [
-          {
-            "state": "Buenos Aires Province",
-            "cities": [
-              "Buenos Aires",
-              "La Plata",
-              "Mar del Plata",
-              "Quilmes",
-              "Bahia Blanca",
-              "San Justo"
-            ]
-          },
-          {
-            "state": "Cordoba",
-            "cities": [
-              "Cordoba",
-              "Rio Cuarto",
-              "San Francisco",
-              "Villa Maria",
-              "Villa Carlos Paz",
-              "Cosquin"
-            ]
-          },
-          {
-            "state": "Santa Fe",
-            "cities": [
-              "Rosario",
-              "Santa Fe",
-              "Rafaela",
-              "Venado Tuerto",
-              "Reconquista",
-              "Esperanza"
-            ]
-          },
-          {
-            "state": "Mendoza",
-            "cities": [
-              "Mendoza",
-              "San Rafael",
-              "Godoy Cruz",
-              "Las Heras",
-              "Lujan de Cuyo",
-              "Maipu"
-            ]
-          },
-          {
-            "state": "Tucuman",
-            "cities": [
-              "San Miguel de Tucuman",
-              "Tafi Viejo",
-              "Yerba Buena",
-              "Concepcion",
-              "Monteros",
-              "Aguilares"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+57",
-        "iso_code": "CO",
-        "country_name": "Colombia",
-        "states": [
-          {
-            "state": "Cundinamarca",
-            "cities": [
-              "Bogota",
-              "Soacha",
-              "Facatativa",
-              "Zipaquira",
-              "Chia",
-              "Fusagasuga"
-            ]
-          },
-          {
-            "state": "Antioquia",
-            "cities": [
-              "Medellin",
-              "Bello",
-              "Itagui",
-              "Envigado",
-              "Turbo",
-              "Apartado"
-            ]
-          },
-          {
-            "state": "Valle del Cauca",
-            "cities": [
-              "Cali",
-              "Buenaventura",
-              "Palmira",
-              "Buga",
-              "Tulua",
-              "Cartago"
-            ]
-          },
-          {
-            "state": "Atlantico",
-            "cities": [
-              "Barranquilla",
-              "Soledad",
-              "Malambo",
-              "Sabanagrande",
-              "Puerto Colombia",
-              "Galapa"
-            ]
-          },
-          {
-            "state": "Bolivar",
-            "cities": [
-              "Cartagena",
-              "Magangue",
-              "Turbaco",
-              "El Carmen de Bolivar",
-              "Mompox",
-              "Maria la Baja"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+58",
-        "iso_code": "VE",
-        "country_name": "Venezuela",
-        "states": [
-          {
-            "state": "Distrito Capital",
-            "cities": [
-              "Caracas",
-              "Petare",
-              "El Hatillo",
-              "Baruta",
-              "Chacao",
-              "Libertador"
-            ]
-          },
-          {
-            "state": "Zulia",
-            "cities": [
-              "Maracaibo",
-              "Cabimas",
-              "Ciudad Ojeda",
-              "Machiques",
-              "Lagunillas",
-              "San Francisco"
-            ]
-          },
-          {
-            "state": "Carabobo",
-            "cities": [
-              "Valencia",
-              "Maracay",
-              "Guacara",
-              "Los Guayos",
-              "Guigue",
-              "Tocuyito"
-            ]
-          },
-          {
-            "state": "Miranda",
-            "cities": [
-              "Los Teques",
-              "Guarenas",
-              "Guatire",
-              "Ocumare",
-              "Charallave",
-              "Cua"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+51",
-        "iso_code": "PE",
-        "country_name": "Peru",
-        "states": [
-          {
-            "state": "Lima",
-            "cities": [
-              "Lima",
-              "Callao",
-              "Trujillo",
-              "Chiclayo",
-              "Piura",
-              "Iquitos"
-            ]
-          },
-          {
-            "state": "Arequipa",
-            "cities": [
-              "Arequipa",
-              "Camana",
-              "Mollendo",
-              "Yura",
-              "Majes",
-              "Pedregal"
-            ]
-          },
-          {
-            "state": "Cusco",
-            "cities": [
-              "Cusco",
-              "Urubamba",
-              "Quillabamba",
-              "Sicuani",
-              "Espinar",
-              "Calca"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+56",
-        "iso_code": "CL",
-        "country_name": "Chile",
-        "states": [
-          {
-            "state": "Santiago Metropolitan",
-            "cities": [
-              "Santiago",
-              "Puente Alto",
-              "Maipu",
-              "La Florida",
-              "Las Condes",
-              "Penalolen"
-            ]
-          },
-          {
-            "state": "Valparaiso",
-            "cities": [
-              "Valparaiso",
-              "Vina del Mar",
-              "Quilpue",
-              "Villa Alemana",
-              "San Antonio",
-              "Quillota"
-            ]
-          },
-          {
-            "state": "Biobio",
-            "cities": [
-              "Concepcion",
-              "Talcahuano",
-              "Chillan",
-              "Los Angeles",
-              "Coronel",
-              "Lota"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+593",
-        "iso_code": "EC",
-        "country_name": "Ecuador",
-        "states": [
-          {
-            "state": "Pichincha",
-            "cities": [
-              "Quito",
-              "Cayambe",
-              "Mejia",
-              "Rumiñahui",
-              "Pedro Moncayo",
-              "Machachi"
-            ]
-          },
-          {
-            "state": "Guayas",
-            "cities": [
-              "Guayaquil",
-              "Samborondon",
-              "Daule",
-              "Milagro",
-              "Duran",
-              "Naranjal"
-            ]
-          },
-          {
-            "state": "Azuay",
-            "cities": [
-              "Cuenca",
-              "Gualaceo",
-              "Chordeleg",
-              "Paute",
-              "Giron",
-              "Ona"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+591",
-        "iso_code": "BO",
-        "country_name": "Bolivia",
-        "states": [
-          {
-            "state": "La Paz",
-            "cities": [
-              "La Paz",
-              "El Alto",
-              "Viacha",
-              "Tiahuanaco",
-              "Achocalla",
-              "Mecapaca"
-            ]
-          },
-          {
-            "state": "Santa Cruz",
-            "cities": [
-              "Santa Cruz de la Sierra",
-              "Montero",
-              "Warnes",
-              "La Guardia",
-              "Camiri",
-              "Cotoca"
-            ]
-          },
-          {
-            "state": "Cochabamba",
-            "cities": [
-              "Cochabamba",
-              "Sacaba",
-              "Quillacollo",
-              "Tiquipaya",
-              "Vinto",
-              "Punata"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+595",
-        "iso_code": "PY",
-        "country_name": "Paraguay",
-        "states": [
-          {
-            "state": "Central",
-            "cities": [
-              "Asuncion",
-              "San Lorenzo",
-              "Luque",
-              "Capiata",
-              "Fernando de la Mora",
-              "Lambare"
-            ]
-          },
-          {
-            "state": "Alto Parana",
-            "cities": [
-              "Ciudad del Este",
-              "Presidente Franco",
-              "Hernandarias",
-              "Minga Guazu",
-              "Los Cedrales",
-              "Naranjal"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+598",
-        "iso_code": "UY",
-        "country_name": "Uruguay",
-        "states": [
-          {
-            "state": "Montevideo",
-            "cities": [
-              "Montevideo",
-              "Las Piedras",
-              "Ciudad de la Costa",
-              "Santiago Vazquez",
-              "Progreso",
-              "Canelones"
-            ]
-          },
-          {
-            "state": "Canelones",
-            "cities": [
-              "Canelones",
-              "La Paz",
-              "Pando",
-              "San Jacinto",
-              "Salinas",
-              "Sauce"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+592",
-        "iso_code": "GY",
-        "country_name": "Guyana",
-        "states": [
-          {
-            "state": "Demerara-Mahaica",
-            "cities": [
-              "Georgetown",
-              "Linden",
-              "New Amsterdam",
-              "Anna Regina",
-              "Bartica",
-              "Corriverton"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+597",
-        "iso_code": "SR",
-        "country_name": "Suriname",
-        "states": [
-          {
-            "state": "Paramaribo",
-            "cities": [
-              "Paramaribo",
-              "Lelydorp",
-              "Nieuw Nickerie",
-              "Moengo",
-              "Totness",
-              "Groningen"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "continent": "Europe",
-    "countries": [
-      {
-        "phone_code": "+44",
-        "iso_code": "GB",
-        "country_name": "United Kingdom",
-        "states": [
-          {
-            "state": "England",
-            "cities": [
-              "London",
-              "Birmingham",
-              "Manchester",
-              "Leeds",
-              "Liverpool",
-              "Bristol"
-            ]
-          },
-          {
-            "state": "Scotland",
-            "cities": [
-              "Glasgow",
-              "Edinburgh",
-              "Aberdeen",
-              "Dundee",
-              "Inverness",
-              "Perth"
-            ]
-          },
-          {
-            "state": "Wales",
-            "cities": [
-              "Cardiff",
-              "Swansea",
-              "Newport",
-              "Wrexham",
-              "Barry",
-              "Llanelli"
-            ]
-          },
-          {
-            "state": "Northern Ireland",
-            "cities": [
-              "Belfast",
-              "Londonderry",
-              "Lisburn",
-              "Newtownabbey",
-              "Bangor",
-              "Armagh"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+33",
-        "iso_code": "FR",
-        "country_name": "France",
-        "states": [
-          {
-            "state": "Ile-de-France",
-            "cities": [
-              "Paris",
-              "Versailles",
-              "Boulogne-Billancourt",
-              "Argenteuil",
-              "Montreuil",
-              "Nanterre"
-            ]
-          },
-          {
-            "state": "Auvergne-Rhone-Alpes",
-            "cities": [
-              "Lyon",
-              "Grenoble",
-              "Saint-Etienne",
-              "Clermont-Ferrand",
-              "Annecy",
-              "Chambery"
-            ]
-          },
-          {
-            "state": "Provence-Alpes-Cote d'Azur",
-            "cities": [
-              "Marseille",
-              "Nice",
-              "Toulon",
-              "Aix-en-Provence",
-              "Avignon",
-              "Cannes"
-            ]
-          },
-          {
-            "state": "Occitanie",
-            "cities": [
-              "Toulouse",
-              "Montpellier",
-              "Nimes",
-              "Perpignan",
-              "Beziers",
-              "Narbonne"
-            ]
-          },
-          {
-            "state": "Nouvelle-Aquitaine",
-            "cities": [
-              "Bordeaux",
-              "Limoges",
-              "Pau",
-              "Bayonne",
-              "La Rochelle",
-              "Poitiers"
-            ]
-          },
-          {
-            "state": "Hauts-de-France",
-            "cities": [
-              "Lille",
-              "Amiens",
-              "Roubaix",
-              "Tourcoing",
-              "Dunkerque",
-              "Calais"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+49",
-        "iso_code": "DE",
-        "country_name": "Germany",
-        "states": [
-          {
-            "state": "Bavaria",
-            "cities": [
-              "Munich",
-              "Nuremberg",
-              "Augsburg",
-              "Regensburg",
-              "Ingolstadt",
-              "Wurzburg"
-            ]
-          },
-          {
-            "state": "North Rhine-Westphalia",
-            "cities": [
-              "Cologne",
-              "Dusseldorf",
-              "Dortmund",
-              "Essen",
-              "Duisburg",
-              "Bonn"
-            ]
-          },
-          {
-            "state": "Baden-Wurttemberg",
-            "cities": [
-              "Stuttgart",
-              "Karlsruhe",
-              "Mannheim",
-              "Freiburg",
-              "Heidelberg",
-              "Ulm"
-            ]
-          },
-          {
-            "state": "Berlin",
-            "cities": [
-              "Berlin",
-              "Spandau",
-              "Pankow",
-              "Charlottenburg",
-              "Steglitz",
-              "Tempelhof"
-            ]
-          },
-          {
-            "state": "Hamburg",
-            "cities": [
-              "Hamburg",
-              "Harburg",
-              "Wandsbek",
-              "Altona",
-              "Eimsbüttel",
-              "Bergedorf"
-            ]
-          },
-          {
-            "state": "Saxony",
-            "cities": [
-              "Leipzig",
-              "Dresden",
-              "Chemnitz",
-              "Zwickau",
-              "Plauen",
-              "Gorlitz"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+39",
-        "iso_code": "IT",
-        "country_name": "Italy",
-        "states": [
-          {
-            "state": "Lombardy",
-            "cities": [
-              "Milan",
-              "Brescia",
-              "Bergamo",
-              "Monza",
-              "Como",
-              "Varese"
-            ]
-          },
-          {
-            "state": "Lazio",
-            "cities": [
-              "Rome",
-              "Latina",
-              "Frosinone",
-              "Viterbo",
-              "Civitavecchia",
-              "Rieti"
-            ]
-          },
-          {
-            "state": "Campania",
-            "cities": [
-              "Naples",
-              "Salerno",
-              "Caserta",
-              "Giugliano",
-              "Torre del Greco",
-              "Pozzuoli"
-            ]
-          },
-          {
-            "state": "Veneto",
-            "cities": [
-              "Venice",
-              "Verona",
-              "Padua",
-              "Vicenza",
-              "Treviso",
-              "Rovigo"
-            ]
-          },
-          {
-            "state": "Tuscany",
-            "cities": [
-              "Florence",
-              "Prato",
-              "Livorno",
-              "Arezzo",
-              "Pisa",
-              "Siena"
-            ]
-          },
-          {
-            "state": "Sicily",
-            "cities": [
-              "Palermo",
-              "Catania",
-              "Messina",
-              "Syracuse",
-              "Ragusa",
-              "Trapani"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+34",
-        "iso_code": "ES",
-        "country_name": "Spain",
-        "states": [
-          {
-            "state": "Community of Madrid",
-            "cities": [
-              "Madrid",
-              "Alcala de Henares",
-              "Leganes",
-              "Getafe",
-              "Alcorcon",
-              "Mostoles"
-            ]
-          },
-          {
-            "state": "Catalonia",
-            "cities": [
-              "Barcelona",
-              "Hospitalet de Llobregat",
-              "Badalona",
-              "Sabadell",
-              "Terrassa",
-              "Tarragona"
-            ]
-          },
-          {
-            "state": "Andalusia",
-            "cities": [
-              "Seville",
-              "Malaga",
-              "Cordoba",
-              "Granada",
-              "Almeria",
-              "Jerez"
-            ]
-          },
-          {
-            "state": "Valencia",
-            "cities": [
-              "Valencia",
-              "Alicante",
-              "Elche",
-              "Murcia",
-              "Castellon",
-              "Gandia"
-            ]
-          },
-          {
-            "state": "Basque Country",
-            "cities": [
-              "Bilbao",
-              "San Sebastian",
-              "Vitoria-Gasteiz",
-              "Barakaldo",
-              "Getxo",
-              "Irun"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+351",
-        "iso_code": "PT",
-        "country_name": "Portugal",
-        "states": [
-          {
-            "state": "Lisbon",
-            "cities": [
-              "Lisbon",
-              "Amadora",
-              "Almada",
-              "Setubal",
-              "Odivelas",
-              "Loures"
-            ]
-          },
-          {
-            "state": "Porto",
-            "cities": [
-              "Porto",
-              "Gaia",
-              "Braga",
-              "Gondomar",
-              "Matosinhos",
-              "Barcelos"
-            ]
-          },
-          {
-            "state": "Faro",
-            "cities": [
+              "Asquith",
+              "Assiniboia",
+              "Athabasca",
+              "Athabasca Tar Sands",
+              "Atikokan",
+              "Atkinson",
+              "Atlas",
+              "Atmore",
+              "Atoka",
+              "Atoka",
+              "Atokah",
+              "Atoll",
+              "Atom",
+              "Atoma",
+              "Atomic",
+              "Atonal",
+              "Atonality",
+              "Atone",
+              "Atoned",
+              "Atoner",
+              "Atones",
+              "Atonia",
+              "Atonic",
+              "Atonically",
+              "Atonies",
+              "Atoning",
+              "Atoningly",
+              "Atonly",
+              "Atony",
+              "Atop",
+              "Atopy"
+            ]
+          },
+          {
+            "state": "Yukon",
+            "cities": [
+              "Aklavik",
+              "Atlin",
+              "Beaver Creek",
+              "Burwash Landing",
+              "Caminita",
+              "Carmacks",
+              "Charlo",
+              "Completion",
+              "Dease Lake",
+              "Destruction Bay",
+              "Elsa",
               "Faro",
-              "Portimao",
-              "Loule",
-              "Olhao",
-              "Lagos",
-              "Albufeira"
+              "Fort Nelson",
+              "Gameti",
+              "Glennallen",
+              "Goose Bay",
+              "Gravel Lake",
+              "Hayden",
+              "Herschel Island",
+              "Hillcrest",
+              "Holtanna",
+              "Holy Cross",
+              "Hootalinqua",
+              "Hope",
+              "Horsefall",
+              "Horseshoe",
+              "Houghton Lake",
+              "Houston",
+              "Howe",
+              "Howley",
+              "Hoyle"
             ]
           }
         ]
       },
       {
-        "phone_code": "+31",
-        "iso_code": "NL",
-        "country_name": "Netherlands",
+        "phone_code": "+1",
+        "iso_code": "US",
+        "country_name": "United States",
         "states": [
           {
-            "state": "North Holland",
+            "state": "Alabama",
             "cities": [
-              "Amsterdam",
-              "Haarlem",
-              "Zaanstad",
-              "Alkmaar",
-              "Purmerend",
-              "Hilversum"
-            ]
-          },
-          {
-            "state": "South Holland",
-            "cities": [
-              "Rotterdam",
-              "The Hague",
-              "Leiden",
-              "Dordrecht",
-              "Delft",
-              "Zoetermeer"
-            ]
-          },
-          {
-            "state": "North Brabant",
-            "cities": [
-              "Eindhoven",
-              "Tilburg",
-              "Breda",
-              "Den Bosch",
-              "Helmond",
-              "Oss"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+32",
-        "iso_code": "BE",
-        "country_name": "Belgium",
-        "states": [
-          {
-            "state": "Brussels Capital",
-            "cities": [
-              "Brussels",
-              "Schaerbeek",
-              "Molenbeek",
-              "Saint-Gilles",
-              "Anderlecht",
-              "Ixelles"
-            ]
-          },
-          {
-            "state": "Antwerp",
-            "cities": [
-              "Antwerp",
-              "Ghent",
-              "Bruges",
-              "Mechelen",
-              "Leuven",
-              "Hasselt"
-            ]
-          },
-          {
-            "state": "Liege",
-            "cities": [
-              "Liege",
-              "Charleroi",
-              "Namur",
-              "Mons",
-              "La Louviere",
-              "Verviers"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+41",
-        "iso_code": "CH",
-        "country_name": "Switzerland",
-        "states": [
-          {
-            "state": "Zurich",
-            "cities": [
-              "Zurich",
-              "Winterthur",
-              "Uster",
-              "Dubendorf",
-              "Dietikon",
-              "Regensdorf"
-            ]
-          },
-          {
-            "state": "Geneva",
-            "cities": [
-              "Geneva",
-              "Lancy",
-              "Vernier",
-              "Meyrin",
-              "Carouge",
-              "Onex"
-            ]
-          },
-          {
-            "state": "Bern",
-            "cities": [
-              "Bern",
-              "Biel/Bienne",
-              "Thun",
-              "Köniz",
-              "Ostermundigen",
-              "Steffisburg"
-            ]
-          },
-          {
-            "state": "Vaud",
-            "cities": [
-              "Lausanne",
-              "Yverdon-les-Bains",
-              "Montreux",
-              "Renens",
-              "Nyon",
-              "Morges"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+43",
-        "iso_code": "AT",
-        "country_name": "Austria",
-        "states": [
-          {
-            "state": "Vienna",
-            "cities": [
-              "Vienna",
-              "Innere Stadt",
-              "Donaustadt",
-              "Favoriten",
-              "Floridsdorf",
-              "Simmering"
-            ]
-          },
-          {
-            "state": "Upper Austria",
-            "cities": [
-              "Linz",
-              "Wels",
-              "Steyr",
-              "Leonding",
-              "Traun",
-              "Salzburg"
-            ]
-          },
-          {
-            "state": "Styria",
-            "cities": [
-              "Graz",
-              "Leoben",
-              "Kapfenberg",
-              "Bruck an der Mur",
-              "Feldbach",
-              "Leibnitz"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+352",
-        "iso_code": "LU",
-        "country_name": "Luxembourg",
-        "states": [
-          {
-            "state": "Luxembourg District",
-            "cities": [
-              "Luxembourg City",
-              "Esch-sur-Alzette",
-              "Differdange",
-              "Dudelange",
-              "Ettelbruck",
-              "Diekirch"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+353",
-        "iso_code": "IE",
-        "country_name": "Ireland",
-        "states": [
-          {
-            "state": "Leinster",
-            "cities": [
-              "Dublin",
-              "Drogheda",
-              "Navan",
-              "Bray",
-              "Kilkenny",
-              "Naas"
-            ]
-          },
-          {
-            "state": "Munster",
-            "cities": [
-              "Cork",
-              "Limerick",
-              "Waterford",
-              "Tralee",
-              "Killarney",
-              "Ennis"
-            ]
-          },
-          {
-            "state": "Connacht",
-            "cities": [
-              "Galway",
-              "Castlebar",
-              "Ballina",
-              "Sligo",
-              "Roscommon",
-              "Tuam"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+354",
-        "iso_code": "IS",
-        "country_name": "Iceland",
-        "states": [
-          {
-            "state": "Capital Region",
-            "cities": [
-              "Reykjavik",
-              "Kopavogur",
-              "Hafnarfjordur",
-              "Akureyri",
-              "Gardabaer",
-              "Mosfellsbaer"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+47",
-        "iso_code": "NO",
-        "country_name": "Norway",
-        "states": [
-          {
-            "state": "Oslo",
-            "cities": [
-              "Oslo",
-              "Baerum",
-              "Lorenskog",
-              "Skedsmo",
-              "Drammen",
-              "Asker"
-            ]
-          },
-          {
-            "state": "Rogaland",
-            "cities": [
-              "Stavanger",
-              "Sandnes",
-              "Haugesund",
-              "Egersund",
-              "Bryne",
-              "Kopervik"
-            ]
-          },
-          {
-            "state": "Hordaland",
-            "cities": [
-              "Bergen",
-              "Askoy",
-              "Fjell",
-              "Os",
-              "Osteroy",
-              "Lindas"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+46",
-        "iso_code": "SE",
-        "country_name": "Sweden",
-        "states": [
-          {
-            "state": "Stockholm",
-            "cities": [
-              "Stockholm",
-              "Huddinge",
-              "Nacka",
-              "Jarfalla",
-              "Haninge",
-              "Botkyrka"
-            ]
-          },
-          {
-            "state": "Vastra Gotaland",
-            "cities": [
-              "Gothenburg",
-              "Boras",
-              "Molndal",
-              "Trollhattan",
-              "Alingsas",
-              "Skovde"
-            ]
-          },
-          {
-            "state": "Skane",
-            "cities": [
-              "Malmö",
-              "Helsingborg",
-              "Lund",
-              "Kristianstad",
-              "Trelleborg",
-              "Landskrona"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+45",
-        "iso_code": "DK",
-        "country_name": "Denmark",
-        "states": [
-          {
-            "state": "Capital Region",
-            "cities": [
-              "Copenhagen",
-              "Frederiksberg",
-              "Gladsaxe",
-              "Gentofte",
-              "Hvidovre",
-              "Roskilde"
-            ]
-          },
-          {
-            "state": "Central Denmark",
-            "cities": [
-              "Aarhus",
-              "Horsens",
-              "Herning",
-              "Silkeborg",
-              "Viborg",
-              "Ikast"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+358",
-        "iso_code": "FI",
-        "country_name": "Finland",
-        "states": [
-          {
-            "state": "Uusimaa",
-            "cities": [
-              "Helsinki",
-              "Espoo",
-              "Vantaa",
-              "Kirkkonummi",
-              "Porvoo",
-              "Lohja"
-            ]
-          },
-          {
-            "state": "Pirkanmaa",
-            "cities": [
-              "Tampere",
-              "Nokia",
-              "Ylojärvi",
-              "Lempäälä",
-              "Kangasala",
-              "Pirkkala"
-            ]
-          },
-          {
-            "state": "Southwest Finland",
-            "cities": [
-              "Turku",
-              "Raisio",
-              "Kaarina",
-              "Naantali",
-              "Salo",
-              "Uusikaupunki"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+48",
-        "iso_code": "PL",
-        "country_name": "Poland",
-        "states": [
-          {
-            "state": "Masovian",
-            "cities": [
-              "Warsaw",
-              "Radom",
-              "Plock",
-              "Siedlce",
-              "Ostroleka",
-              "Pruszków"
-            ]
-          },
-          {
-            "state": "Silesian",
-            "cities": [
-              "Katowice",
-              "Bytom",
-              "Gliwice",
-              "Zabrze",
-              "Sosnowiec",
-              "Czestochowa"
-            ]
-          },
-          {
-            "state": "Lesser Poland",
-            "cities": [
-              "Krakow",
-              "Tarnow",
-              "Nowy Sacz",
-              "Oswiecim",
-              "Nowy Targ",
-              "Wieliczka"
-            ]
-          },
-          {
-            "state": "Greater Poland",
-            "cities": [
-              "Poznan",
-              "Kalisz",
-              "Konin",
-              "Pila",
-              "Leszno",
-              "Gniezno"
-            ]
-          },
-          {
-            "state": "Pomeranian",
-            "cities": [
-              "Gdansk",
-              "Gdynia",
-              "Sopot",
-              "Slupsk",
-              "Wejherowo",
-              "Tczew"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+420",
-        "iso_code": "CZ",
-        "country_name": "Czech Republic",
-        "states": [
-          {
-            "state": "Prague",
-            "cities": [
-              "Prague",
-              "Kladno",
-              "Mlada Boleslav",
-              "Kralupy nad Vltavou",
-              "Beroun",
-              "Rakovnik"
-            ]
-          },
-          {
-            "state": "South Moravian",
-            "cities": [
-              "Brno",
-              "Zlin",
-              "Olomouc",
-              "Prostejov",
-              "Prerov",
-              "Jihlava"
-            ]
-          },
-          {
-            "state": "Moravian-Silesian",
-            "cities": [
-              "Ostrava",
-              "Havirov",
-              "Karvina",
-              "Frydek-Mistek",
-              "Opava",
-              "Trinec"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+421",
-        "iso_code": "SK",
-        "country_name": "Slovakia",
-        "states": [
-          {
-            "state": "Bratislava",
-            "cities": [
-              "Bratislava",
-              "Petrzalka",
-              "Ruzinov",
-              "Nove Mesto",
-              "Raca",
-              "Vajnory"
-            ]
-          },
-          {
-            "state": "Kosice",
-            "cities": [
-              "Kosice",
-              "Presov",
-              "Banska Bystrica",
-              "Zilina",
-              "Nitra",
-              "Trnava"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+36",
-        "iso_code": "HU",
-        "country_name": "Hungary",
-        "states": [
-          {
-            "state": "Budapest",
-            "cities": [
-              "Budapest",
-              "Budaors",
-              "Dunakeszi",
-              "Erd",
-              "Godollo",
-              "Pomaz"
-            ]
-          },
-          {
-            "state": "Hajdu-Bihar",
-            "cities": [
-              "Debrecen",
-              "Nyiregyhaza",
-              "Miskolc",
-              "Pecs",
-              "Gyor",
-              "Kecskemet"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+40",
-        "iso_code": "RO",
-        "country_name": "Romania",
-        "states": [
-          {
-            "state": "Bucharest-Ilfov",
-            "cities": [
-              "Bucharest",
-              "Voluntari",
-              "Popesti-Leordeni",
-              "Pantelimon",
-              "Buftea",
-              "Chitila"
-            ]
-          },
-          {
-            "state": "Cluj",
-            "cities": [
-              "Cluj-Napoca",
-              "Turda",
-              "Dej",
-              "Campia Turzii",
-              "Gherla",
-              "Huedin"
-            ]
-          },
-          {
-            "state": "Timis",
-            "cities": [
-              "Timisoara",
-              "Lugoj",
-              "Jimbolia",
-              "Sannicolau Mare",
-              "Gataia",
-              "Deta"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+359",
-        "iso_code": "BG",
-        "country_name": "Bulgaria",
-        "states": [
-          {
-            "state": "Sofia City",
-            "cities": [
-              "Sofia",
-              "Plovdiv",
-              "Varna",
-              "Burgas",
-              "Ruse",
-              "Stara Zagora"
-            ]
-          },
-          {
-            "state": "Plovdiv",
-            "cities": [
-              "Plovdiv",
-              "Asenovgrad",
-              "Karlovo",
-              "Parvomay",
-              "Perushtitsa",
-              "Kuklen"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+385",
-        "iso_code": "HR",
-        "country_name": "Croatia",
-        "states": [
-          {
-            "state": "Zagreb County",
-            "cities": [
-              "Zagreb",
-              "Velika Gorica",
-              "Samobor",
-              "Zapresic",
-              "Dugo Selo",
-              "Sveta Nedjelja"
-            ]
-          },
-          {
-            "state": "Split-Dalmatia",
-            "cities": [
-              "Split",
-              "Solin",
-              "Kastela",
-              "Sinj",
-              "Dubrovnik",
-              "Omis"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+381",
-        "iso_code": "RS",
-        "country_name": "Serbia",
-        "states": [
-          {
-            "state": "Belgrade",
-            "cities": [
-              "Belgrade",
-              "Novi Beograd",
-              "Zemun",
-              "Pancevo",
-              "Surčin",
-              "Grocka"
-            ]
-          },
-          {
-            "state": "South Backa",
-            "cities": [
-              "Novi Sad",
-              "Subotica",
-              "Nis",
-              "Kragujevac",
-              "Zrenjanin",
-              "Sombor"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+386",
-        "iso_code": "SI",
-        "country_name": "Slovenia",
-        "states": [
-          {
-            "state": "Ljubljana",
-            "cities": [
-              "Ljubljana",
-              "Maribor",
-              "Kranj",
-              "Celje",
-              "Koper",
-              "Velenje"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+30",
-        "iso_code": "GR",
-        "country_name": "Greece",
-        "states": [
-          {
-            "state": "Attica",
-            "cities": [
+              "Abbeville",
+              "Adamsville",
+              "Addison",
+              "Albertville",
+              "Alexander City",
+              "Aliceville",
+              "Anniston",
+              "Arab",
+              "Ardmore",
+              "Asbury",
+              "Ashford",
+              "Ashland",
+              "Atalla",
               "Athens",
-              "Piraeus",
-              "Peristeri",
-              "Kallithea",
-              "Nikaia",
-              "Glyfada"
+              "Atmore",
+              "Attalla",
+              "Auburn",
+              "Autauga",
+              "Autaugaville",
+              "Bainbridge",
+              "Baker Hill",
+              "Ballast",
+              "Bankhead",
+              "Bankston",
+              "Barfield",
+              "Bargain",
+              "Barksville",
+              "Barnwell",
+              "Barryton",
+              "Basham",
+              "Batesburg",
+              "Bay Minette",
+              "Bayou La Batre",
+              "Bays",
+              "Beatrice",
+              "Beaumont",
+              "Beauregard",
+              "Beaver",
+              "Beechwood",
+              "Beeson",
+              "Belcamp",
+              "Belfast",
+              "Belfry",
+              "Belgrade",
+              "Belk",
+              "Bell",
+              "Bellamy",
+              "Bellona",
+              "Belltown",
+              "Belmont",
+              "Belstow",
+              "Belvidere",
+              "Belview",
+              "Bemis",
+              "Bena",
+              "Bendelari",
+              "Bendix",
+              "Benevento",
+              "Benevolence",
+              "Benicia",
+              "Benicia Heights",
+              "Benitz",
+              "Benna",
+              "Bennett",
+              "Bennette",
+              "Bennie",
+              "Bennings",
+              "Bennington",
+              "Benoit",
+              "Bensan",
+              "Bensenville",
+              "Benson",
+              "Bentley",
+              "Benton"
             ]
           },
           {
-            "state": "Central Macedonia",
+            "state": "Alaska",
             "cities": [
-              "Thessaloniki",
-              "Kalamaria",
-              "Stavroupoli",
-              "Evosmos",
-              "Ampelokipoi",
-              "Neapoli"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+357",
-        "iso_code": "CY",
-        "country_name": "Cyprus",
-        "states": [
-          {
-            "state": "Nicosia",
-            "cities": [
-              "Nicosia",
-              "Limassol",
-              "Larnaca",
-              "Famagusta",
-              "Paphos",
-              "Kyrenia"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+356",
-        "iso_code": "MT",
-        "country_name": "Malta",
-        "states": [
-          {
-            "state": "Malta Island",
-            "cities": [
-              "Valletta",
-              "Birkirkara",
-              "Qormi",
-              "Mosta",
-              "Zabbar",
-              "San Gwann"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+372",
-        "iso_code": "EE",
-        "country_name": "Estonia",
-        "states": [
-          {
-            "state": "Harju County",
-            "cities": [
-              "Tallinn",
-              "Narva",
-              "Tartu",
-              "Parnu",
-              "Kohtla-Jarve",
-              "Viljandi"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+371",
-        "iso_code": "LV",
-        "country_name": "Latvia",
-        "states": [
-          {
-            "state": "Riga",
-            "cities": [
-              "Riga",
-              "Daugavpils",
-              "Liepaja",
-              "Jelgava",
-              "Jurmala",
-              "Ventspils"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+370",
-        "iso_code": "LT",
-        "country_name": "Lithuania",
-        "states": [
-          {
-            "state": "Vilnius County",
-            "cities": [
-              "Vilnius",
-              "Kaunas",
-              "Klaipeda",
-              "Siauliai",
-              "Panevezys",
-              "Alytus"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+375",
-        "iso_code": "BY",
-        "country_name": "Belarus",
-        "states": [
-          {
-            "state": "Minsk",
-            "cities": [
-              "Minsk",
-              "Gomel",
-              "Mogilev",
-              "Vitebsk",
-              "Grodno",
-              "Brest"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+380",
-        "iso_code": "UA",
-        "country_name": "Ukraine",
-        "states": [
-          {
-            "state": "Kyiv City",
-            "cities": [
-              "Kyiv",
-              "Brovary",
-              "Irpin",
-              "Boryspil",
-              "Vyshgorod",
-              "Bila Tserkva"
+              "Adak",
+              "Akiachak",
+              "Akiak",
+              "Akureyri",
+              "Alaksha",
+              "Alaskan",
+              "Alatna",
+              "Alava",
+              "Albee",
+              "Albright",
+              "Albrightton",
+              "Albuquerque",
+              "Alcan",
+              "Alcan",
+              "Alcantara",
+              "Alcaraz"
             ]
           },
           {
-            "state": "Kharkiv Oblast",
+            "state": "Arizona",
             "cities": [
-              "Kharkiv",
-              "Lozova",
-              "Chuhuiv",
-              "Balakliya",
-              "Izium",
-              "Kupyansk"
+              "Aba",
+              "Abajo",
+              "Abalone",
+              "Abanda",
+              "Abandon",
+              "Abandoned",
+              "Abandoner",
+              "Abandoners",
+              "Abandoning",
+              "Abandonment",
+              "Abandonments",
+              "Abandons",
+              "Abas",
+              "Abatable",
+              "Abatage",
+              "Abate",
+              "Abated",
+              "Abatement",
+              "Abatements",
+              "Abater",
+              "Abaters",
+              "Abates",
+              "Abating",
+              "Abatis",
+              "Abattage",
+              "Abattis",
+              "Abattoir"
             ]
           },
           {
-            "state": "Odessa Oblast",
+            "state": "Arkansas",
             "cities": [
-              "Odessa",
-              "Mykolaiv",
-              "Chornomorsk",
-              "Yuzhne",
-              "Bilhorod-Dnistrovskyi",
-              "Izmail"
+              "Abbeville",
+              "Abbot",
+              "Abbotsford",
+              "Abby",
+              "Abdel",
+              "Abdomen",
+              "Abdomens",
+              "Abdominal",
+              "Abdominally",
+              "Abducens",
+              "Abducent",
+              "Abduct",
+              "Abducted",
+              "Abducting",
+              "Abduction",
+              "Abductions",
+              "Abductor",
+              "Abductors",
+              "Abducts",
+              "Abeam",
+              "Abed"
             ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+373",
-        "iso_code": "MD",
-        "country_name": "Moldova",
-        "states": [
+          },
           {
-            "state": "Chisinau",
+            "state": "California",
             "cities": [
-              "Chisinau",
-              "Balti",
-              "Tiraspol",
-              "Bender",
-              "Ribnita",
-              "Cahul"
+              "Abbeville",
+              "Abbeyville",
+              "Abbotsford",
+              "Abbott",
+              "Abbottsburg",
+              "Abbottsville",
+              "Abby",
+              "Abd",
+              "Abdel",
+              "Abdel-Aziz",
+              "Abdel-Karim",
+              "Abdel-Krim",
+              "Abdel-Rahman",
+              "Abdel-Wahab",
+              "Abdelah",
+              "Abdelaziz",
+              "Abdelfattah",
+              "Abdelhamid",
+              "Abdelkader",
+              "Abdelkarim",
+              "Abdelkebir"
+            ]
+          },
+          {
+            "state": "Colorado",
+            "cities": [
+              "Aachen",
+              "Aadorf",
+              "Aadvark",
+              "Aalborg",
+              "Aalii",
+              "Aalmose",
+              "Aalst",
+              "Aargau",
+              "Aasee",
+              "Aassens",
+              "Aastermark",
+              "Aastrup",
+              "Aasum",
+              "Aatmasthan",
+              "Aatmastik",
+              "Aatter",
+              "Aaubaine",
+              "Aaubanchanty",
+              "Aaubannaye",
+              "Aaubepierre",
+              "Aaubepine",
+              "Aauberie",
+              "Aaubernon",
+              "Aaubertin",
+              "Aauberts",
+              "Aauberville",
+              "Aaubery",
+              "Aaubespine",
+              "Aaubet",
+              "Aaubeterre",
+              "Aaubette",
+              "Aaubier",
+              "Aaubiere",
+              "Aaubignade",
+              "Aaubignane",
+              "Aaubignane",
+              "Aaubigne",
+              "Aaubignon",
+              "Aaudenne",
+              "Aaudeville"
+            ]
+          },
+          {
+            "state": "Connecticut",
+            "cities": [
+              "Ababa",
+              "Abacan",
+              "Abacatus",
+              "Abacay",
+              "Abacay",
+              "Abacays",
+              "Abacea",
+              "Abacea",
+              "Abacea",
+              "Abaceac"
+            ]
+          },
+          {
+            "state": "Delaware",
+            "cities": [
+              "Bear",
+              "Dover",
+              "Georgetown",
+              "Lewes",
+              "Middletown",
+              "Milford",
+              "New Castle",
+              "Newark",
+              "Rehoboth Beach",
+              "Seaford",
+              "Smyrna",
+              "Wilmington"
+            ]
+          },
+          {
+            "state": "Florida",
+            "cities": [
+              "Aarons Pass",
+              "Abacos",
+              "Abalene",
+              "Abaltis",
+              "Abanda",
+              "Abandon",
+              "Abandoned",
+              "Abandoner",
+              "Abandoning",
+              "Abandonment",
+              "Abandons",
+              "Abanger",
+              "Abanicus",
+              "Abanigar",
+              "Abanis",
+              "Abannot",
+              "Abanosus",
+              "Abanot",
+              "Abanque",
+              "Abanqueiro",
+              "Abanquette",
+              "Abans",
+              "Abanser",
+              "Abansig",
+              "Abanster",
+              "Abanter",
+              "Abanters",
+              "Abanthe",
+              "Abantian",
+              "Abantic",
+              "Abantius",
+              "Abantos",
+              "Abantus",
+              "Abanuales",
+              "Abanualian",
+              "Abanue"
+            ]
+          },
+          {
+            "state": "Georgia",
+            "cities": [
+              "Acworth",
+              "Adairsville",
+              "Adel",
+              "Alpharetta",
+              "Athens",
+              "Atlanta",
+              "Augusta",
+              "Columbus",
+              "Dunwoody",
+              "Macon",
+              "Marietta",
+              "Milton",
+              "Roswell",
+              "Savannah"
+            ]
+          },
+          {
+            "state": "Hawaii",
+            "cities": [
+              "Hilo",
+              "Honolulu",
+              "Kahaluu",
+              "Kailua",
+              "Kaneohe",
+              "Kaunakakai",
+              "Kihei",
+              "Koloa",
+              "Kona",
+              "Lahaina",
+              "Lihue",
+              "Mililani",
+              "Pearl City",
+              "Wailuku",
+              "Waipahu"
+            ]
+          },
+          {
+            "state": "Idaho",
+            "cities": [
+              "Blackfoot",
+              "Boise",
+              "Caldwell",
+              "Coeur d'Alene",
+              "Hayden",
+              "Idaho Falls",
+              "Kootenai",
+              "Lewiston",
+              "Meridian",
+              "Nampa",
+              "Payette",
+              "Pocatello",
+              "Preston",
+              "Rexburg",
+              "Twin Falls"
+            ]
+          },
+          {
+            "state": "Illinois",
+            "cities": [
+              "Aurora",
+              "Bloomington",
+              "Champaign",
+              "Chicago",
+              "Elgin",
+              "Evanston",
+              "Gary",
+              "Hammond",
+              "Joliet",
+              "Mundelein",
+              "Naperville",
+              "Peoria",
+              "Rockford",
+              "Springfield",
+              "Waukegan"
+            ]
+          },
+          {
+            "state": "Indiana",
+            "cities": [
+              "Anderson",
+              "Bloomington",
+              "Carmel",
+              "Evansville",
+              "Fort Wayne",
+              "Gary",
+              "Hammond",
+              "Indianapolis",
+              "Kokomo",
+              "Lafayette",
+              "Muncie",
+              "South Bend",
+              "Terre Haute",
+              "Valparaiso",
+              "Warsaw"
+            ]
+          },
+          {
+            "state": "Iowa",
+            "cities": [
+              "Ames",
+              "Burlington",
+              "Cedar Falls",
+              "Cedar Rapids",
+              "Council Bluffs",
+              "Davenport",
+              "Des Moines",
+              "Dubuque",
+              "Fort Dodge",
+              "Iowa City",
+              "Marshalltown",
+              "Mason City",
+              "Ottumwa",
+              "Sioux City",
+              "Waterloo"
+            ]
+          },
+          {
+            "state": "Kansas",
+            "cities": [
+              "Emporia",
+              "Garden City",
+              "Hutchinson",
+              "Kansas City",
+              "Lawrence",
+              "Leavenworth",
+              "Leawood",
+              "Lenexa",
+              "Manhattan",
+              "Olathe",
+              "Overland Park",
+              "Salina",
+              "Shawnee",
+              "Topeka",
+              "Wichita"
+            ]
+          },
+          {
+            "state": "Kentucky",
+            "cities": [
+              "Ashland",
+              "Bowling Green",
+              "Campbellsville",
+              "Corbin",
+              "Covington",
+              "Danville",
+              "Elizabethtown",
+              "Frankfort",
+              "Georgetown",
+              "Henderson",
+              "Hopkinsville",
+              "Lexington",
+              "Louisville",
+              "Owensboro",
+              "Paducah"
+            ]
+          },
+          {
+            "state": "Louisiana",
+            "cities": [
+              "Alexandria",
+              "Baton Rouge",
+              "Bossier City",
+              "Gretna",
+              "Hammond",
+              "Houma",
+              "Kenner",
+              "Lafayette",
+              "Lake Charles",
+              "Laplace",
+              "Marrero",
+              "Monroe",
+              "Morgan City",
+              "New Orleans",
+              "Shreveport"
+            ]
+          },
+          {
+            "state": "Maine",
+            "cities": [
+              "Auburn",
+              "Augusta",
+              "Bangor",
+              "Bar Harbor",
+              "Belfast",
+              "Biddeford",
+              "Brewer",
+              "Calais",
+              "Camden",
+              "Lewiston",
+              "Portland",
+              "Presque Isle",
+              "Rockland",
+              "South Portland",
+              "Waterville"
+            ]
+          },
+          {
+            "state": "Maryland",
+            "cities": [
+              "Annapolis",
+              "Baltimore",
+              "Bethesda",
+              "Bowie",
+              "Chevy Chase",
+              "College Park",
+              "Columbia",
+              "Dundalk",
+              "Frederick",
+              "Gaithersburg",
+              "Glen Burnie",
+              "Hagerstown",
+              "Rockville",
+              "Silver Spring",
+              "Takoma Park"
+            ]
+          },
+          {
+            "state": "Massachusetts",
+            "cities": [
+              "Boston",
+              "Brockton",
+              "Cambridge",
+              "Fall River",
+              "Framingham",
+              "Lawrence",
+              "Lowell",
+              "Lynn",
+              "Malden",
+              "New Bedford",
+              "Newton",
+              "Quincy",
+              "Somerville",
+              "Springfield",
+              "Worcester"
+            ]
+          },
+          {
+            "state": "Michigan",
+            "cities": [
+              "Ann Arbor",
+              "Dearborn",
+              "Dearborn Heights",
+              "Detroit",
+              "Flint",
+              "Grand Rapids",
+              "Kalamazoo",
+              "Lansing",
+              "Livonia",
+              "Muskegon",
+              "Pontiac",
+              "Saginaw",
+              "Sterling Heights",
+              "Warren",
+              "Westland"
+            ]
+          },
+          {
+            "state": "Minnesota",
+            "cities": [
+              "Blaine",
+              "Bloomington",
+              "Burnsville",
+              "Coon Rapids",
+              "Duluth",
+              "Eden Prairie",
+              "Edina",
+              "Fridley",
+              "Maple Grove",
+              "Minneapolis",
+              "Minnetonka",
+              "Plymouth",
+              "Rochester",
+              "St. Cloud",
+              "St. Paul"
+            ]
+          },
+          {
+            "state": "Mississippi",
+            "cities": [
+              "Biloxi",
+              "Clarksdale",
+              "Columbus",
+              "Greenville",
+              "Greenwood",
+              "Gulfport",
+              "Hattiesburg",
+              "Jackson",
+              "Laurel",
+              "Meridian",
+              "Oxford",
+              "Pascagoula",
+              "Southaven",
+              "Tupelo",
+              "Vicksburg"
+            ]
+          },
+          {
+            "state": "Missouri",
+            "cities": [
+              "Cape Girardeau",
+              "Columbia",
+              "Independence",
+              "Joplin",
+              "Kansas City",
+              "Lee's Summit",
+              "O'Fallon",
+              "Rolla",
+              "Sedalia",
+              "Springfield",
+              "St. Charles",
+              "St. Joseph",
+              "St. Louis",
+              "St. Peters",
+              "Warrensburg"
+            ]
+          },
+          {
+            "state": "Montana",
+            "cities": [
+              "Anaconda",
+              "Billings",
+              "Bozeman",
+              "Butte",
+              "Great Falls",
+              "Havre",
+              "Helena",
+              "Kalispell",
+              "Livingston",
+              "Malta",
+              "Miles City",
+              "Missoula",
+              "Polson",
+              "Seeley Lake",
+              "Sidney"
+            ]
+          },
+          {
+            "state": "Nebraska",
+            "cities": [
+              "Beatrice",
+              "Bellevue",
+              "Columbus",
+              "Fremont",
+              "Grand Island",
+              "Hastings",
+              "Kearney",
+              "Lexington",
+              "Lincoln",
+              "McCook",
+              "Norfolk",
+              "North Platte",
+              "Omaha",
+              "Scottsbluff",
+              "South Sioux City"
+            ]
+          },
+          {
+            "state": "Nevada",
+            "cities": [
+              "Boulder City",
+              "Elko",
+              "Fallon",
+              "Fernley",
+              "Gardnerville",
+              "Gerlach",
+              "Glendale",
+              "Goldfield",
+              "Hawthorne",
+              "Henderson",
+              "Incline Village",
+              "Indian Springs",
+              "Las Vegas",
+              "Reno",
+              "Sparks"
+            ]
+          },
+          {
+            "state": "New Hampshire",
+            "cities": [
+              "Barre",
+              "Berlin",
+              "Claremont",
+              "Concord",
+              "Derry",
+              "Dover",
+              "Hampton",
+              "Keene",
+              "Laconia",
+              "Manchester",
+              "Nashua",
+              "Peterborough",
+              "Portsmouth",
+              "Rochester",
+              "Salem"
+            ]
+          },
+          {
+            "state": "New Jersey",
+            "cities": [
+              "Atlantic City",
+              "Camden",
+              "Clifton",
+              "East Orange",
+              "Elizabeth",
+              "Fort Lee",
+              "Garfield",
+              "Hackensack",
+              "Hoboken",
+              "Irvington",
+              "Jersey City",
+              "Kearny",
+              "Newark",
+              "Paterson",
+              "Trenton"
+            ]
+          },
+          {
+            "state": "New Mexico",
+            "cities": [
+              "Alamogordo",
+              "Albuquerque",
+              "Artesia",
+              "Belen",
+              "Carlsbad",
+              "Chama",
+              "Clayton",
+              "Clovis",
+              "Farmington",
+              "Gallup",
+              "Hobbs",
+              "Las Cruces",
+              "Rio Rancho",
+              "Roswell",
+              "Santa Fe"
+            ]
+          },
+          {
+            "state": "New York",
+            "cities": [
+              "Albany",
+              "Binghamton",
+              "Buffalo",
+              "Glens Falls",
+              "Mount Vernon",
+              "New Rochelle",
+              "New York City",
+              "Rochester",
+              "Schenectady",
+              "Syracuse",
+              "Troy",
+              "Utica",
+              "Watertown",
+              "White Plains",
+              "Yonkers"
+            ]
+          },
+          {
+            "state": "North Carolina",
+            "cities": [
+              "Asheville",
+              "Cary",
+              "Charlotte",
+              "Concord",
+              "Durham",
+              "Fayetteville",
+              "Gastonia",
+              "Greensboro",
+              "Greenville",
+              "High Point",
+              "Jacksonville",
+              "Raleigh",
+              "Rocky Mount",
+              "Wilmington",
+              "Winston-Salem"
+            ]
+          },
+          {
+            "state": "North Dakota",
+            "cities": [
+              "Beulah",
+              "Bismarck",
+              "Bottineau",
+              "Bowman",
+              "Devils Lake",
+              "Dickinson",
+              "Fargo",
+              "Grand Forks",
+              "Hazen",
+              "Jamestown",
+              "Killdeer",
+              "Mandan",
+              "Minot",
+              "Wahpeton",
+              "Williston"
+            ]
+          },
+          {
+            "state": "Ohio",
+            "cities": [
+              "Akron",
+              "Canton",
+              "Cincinnati",
+              "Cleveland",
+              "Columbus",
+              "Dayton",
+              "Elyria",
+              "Gahanna",
+              "Hamilton",
+              "Kettering",
+              "Lorain",
+              "Parma",
+              "Springfield",
+              "Toledo",
+              "Youngstown"
+            ]
+          },
+          {
+            "state": "Oklahoma",
+            "cities": [
+              "Ardmore",
+              "Bartlesville",
+              "Bixby",
+              "Broken Arrow",
+              "Catoosa",
+              "Chickasha",
+              "Claremore",
+              "Edmond",
+              "Enid",
+              "Lawton",
+              "Midwest City",
+              "Norman",
+              "Oklahoma City",
+              "Stillwater",
+              "Tulsa"
+            ]
+          },
+          {
+            "state": "Oregon",
+            "cities": [
+              "Beaverton",
+              "Bend",
+              "Corvallis",
+              "Eugene",
+              "Grants Pass",
+              "Gresham",
+              "Hillsboro",
+              "Keizer",
+              "Lake Oswego",
+              "Medford",
+              "Portland",
+              "Salem",
+              "Springfield",
+              "Tigard",
+              "Tualatin"
+            ]
+          },
+          {
+            "state": "Pennsylvania",
+            "cities": [
+              "Allentown",
+              "Altoona",
+              "Bethlehem",
+              "Chester",
+              "Erie",
+              "Harrisburg",
+              "Johnstown",
+              "Lancaster",
+              "Norriton",
+              "Philadelphia",
+              "Pittsburgh",
+              "Reading",
+              "Scranton",
+              "Wilkes-Barre",
+              "York"
+            ]
+          },
+          {
+            "state": "Rhode Island",
+            "cities": [
+              "Barrington",
+              "Bristol",
+              "Burrillville",
+              "Central Falls",
+              "Charlestown",
+              "Coventry",
+              "Cranston",
+              "East Providence",
+              "North Providence",
+              "Pawtucket",
+              "Providence",
+              "Warwick",
+              "West Warwick",
+              "Westerly",
+              "Woonsocket"
+            ]
+          },
+          {
+            "state": "South Carolina",
+            "cities": [
+              "Aiken",
+              "Anderson",
+              "Beaufort",
+              "Bluffton",
+              "Charleston",
+              "Clemson",
+              "Columbia",
+              "Conway",
+              "Darlington",
+              "Florence",
+              "Greenville",
+              "Greenwood",
+              "North Charleston",
+              "Spartanburg",
+              "Summerville"
+            ]
+          },
+          {
+            "state": "South Dakota",
+            "cities": [
+              "Aberdeen",
+              "Agar",
+              "Arlington",
+              "Armour",
+              "Artesian",
+              "Brookings",
+              "Huron",
+              "Pierre",
+              "Rapid City",
+              "Sioux Falls",
+              "Sisseton",
+              "Spearfish",
+              "Vermillion",
+              "Watertown",
+              "Yankton"
+            ]
+          },
+          {
+            "state": "Tennessee",
+            "cities": [
+              "Brentwood",
+              "Chattanooga",
+              "Clarksville",
+              "Cleveland",
+              "Collegedale",
+              "Franklin",
+              "Germantown",
+              "Hendersonville",
+              "Jackson",
+              "Johnson City",
+              "Kingsport",
+              "Knoxville",
+              "Memphis",
+              "Murfreesboro",
+              "Nashville"
+            ]
+          },
+          {
+            "state": "Texas",
+            "cities": [
+              "Arlington",
+              "Austin",
+              "Corpus Christi",
+              "Dallas",
+              "Fort Worth",
+              "Garland",
+              "Grapevine",
+              "Greenville",
+              "Groves",
+              "Houston",
+              "Irving",
+              "Laredo",
+              "Lubbock",
+              "Plano",
+              "San Antonio"
+            ]
+          },
+          {
+            "state": "Utah",
+            "cities": [
+              "American Fork",
+              "Cedar City",
+              "Farmington",
+              "Herriman",
+              "Layton",
+              "Lehi",
+              "Ogden",
+              "Orem",
+              "Provo",
+              "Salt Lake City",
+              "Sandy",
+              "South Jordan",
+              "St. George",
+              "Taylorsville",
+              "West Valley City"
+            ]
+          },
+          {
+            "state": "Vermont",
+            "cities": [
+              "Barre",
+              "Bellows Falls",
+              "Bennington",
+              "Brattleboro",
+              "Burlington",
+              "Colchester",
+              "Essex Junction",
+              "Middlebury",
+              "Montpelier",
+              "Newport",
+              "Rutland",
+              "South Burlington",
+              "Springfield",
+              "Williston",
+              "Winooski"
+            ]
+          },
+          {
+            "state": "Virginia",
+            "cities": [
+              "Abingdon",
+              "Alexandria",
+              "Arlington",
+              "Blacksburg",
+              "Charlottesville",
+              "Hampton",
+              "Leesburg",
+              "Lynchburg",
+              "Newport News",
+              "Norfolk",
+              "Richmond",
+              "Roanoke",
+              "Staunton",
+              "Virginia Beach",
+              "Winchester"
+            ]
+          },
+          {
+            "state": "Washington",
+            "cities": [
+              "Bellevue",
+              "Bellingham",
+              "Everett",
+              "Kennewick",
+              "Kent",
+              "Olympia",
+              "Puyallup",
+              "Renton",
+              "Sammamish",
+              "Seattle",
+              "Shoreline",
+              "Spokane",
+              "Tacoma",
+              "Vancouver",
+              "Yakima"
+            ]
+          },
+          {
+            "state": "West Virginia",
+            "cities": [
+              "Anmoore",
+              "Beckley",
+              "Bluefield",
+              "Bridgeport",
+              "Charleston",
+              "Fairmont",
+              "Huntington",
+              "Lewisburg",
+              "Martinsburg",
+              "Morgantown",
+              "Oak Hill",
+              "Parkersburg",
+              "Princeton",
+              "Weirton",
+              "Wheeling"
+            ]
+          },
+          {
+            "state": "Wisconsin",
+            "cities": [
+              "Appleton",
+              "Beloit",
+              "Eau Claire",
+              "Green Bay",
+              "Janesville",
+              "Kenosha",
+              "Madison",
+              "Milwaukee",
+              "Oshkosh",
+              "Racine",
+              "Rhinelander",
+              "Sheboygan",
+              "Watertown",
+              "Waukesha",
+              "Wausau"
+            ]
+          },
+          {
+            "state": "Wyoming",
+            "cities": [
+              "Buffalo",
+              "Casper",
+              "Cheyenne",
+              "Douglas",
+              "Evanston",
+              "Gillette",
+              "Green River",
+              "Jackson",
+              "Laramie",
+              "Riverton",
+              "Rock Springs",
+              "Sheridan",
+              "Thermopolis",
+              "Wheatland",
+              "Worland"
             ]
           }
         ]
@@ -2397,3071 +1673,839 @@
     ]
   },
   {
-    "continent": "Russia / Central Asia",
+    "continent": "Asia",
     "countries": [
       {
-        "phone_code": "+7",
-        "iso_code": "RU",
-        "country_name": "Russia",
+        "phone_code": "+91",
+        "iso_code": "IN",
+        "country_name": "India",
         "states": [
           {
-            "state": "Moscow Oblast",
+            "state": "Andaman and Nicobar Islands",
             "cities": [
-              "Moscow",
-              "Balashikha",
-              "Khimki",
-              "Podolsk",
-              "Korolev",
-              "Mytishchi"
+              "Car Nicobar",
+              "Kamorta",
+              "Katchall",
+              "Nancowry",
+              "Port Blair"
             ]
           },
           {
-            "state": "Saint Petersburg",
+            "state": "Andhra Pradesh",
             "cities": [
-              "Saint Petersburg",
-              "Kolpino",
-              "Pushkin",
-              "Gatchina",
-              "Kronstadt",
-              "Petrodvorets"
+              "Anantapuram",
+              "Chittoor",
+              "Cudappah",
+              "Guntur",
+              "Hyderabad",
+              "Kadapa",
+              "Kakinada",
+              "Kurnool",
+              "Machilipatnam",
+              "Nellore",
+              "Ongole",
+              "Rajahmundry",
+              "Srikakulam",
+              "Tirupati",
+              "Vijayawada",
+              "Visakhapatnam",
+              "Vizianagaram",
+              "Warangal"
             ]
           },
           {
-            "state": "Novosibirsk Oblast",
+            "state": "Arunachal Pradesh",
             "cities": [
-              "Novosibirsk",
-              "Berdsk",
-              "Iskitim",
-              "Ob",
-              "Koltsovo",
-              "Maslyanino"
+              "Along",
+              "Anini",
+              "Bomdila",
+              "Changlang",
+              "Itanagar",
+              "Naharlagun",
+              "Pasighat",
+              "Roing",
+              "Seppa",
+              "Tawang",
+              "Tezu",
+              "Ziro"
             ]
           },
           {
-            "state": "Sverdlovsk Oblast",
+            "state": "Assam",
             "cities": [
-              "Yekaterinburg",
-              "Nizhny Tagil",
-              "Pervouralsk",
-              "Kamensk-Uralsky",
-              "Serov",
-              "Asbest"
+              "Barpeta",
+              "Bongaigaon",
+              "Dhemaji",
+              "Dhubri",
+              "Dibrugarh",
+              "Golaghat",
+              "Guwahati",
+              "Jorhat",
+              "Karimganj",
+              "Kokrajhar",
+              "Lakhimpur",
+              "Nagaon",
+              "Nalbari",
+              "North Lakhimpur",
+              "Sibsagar",
+              "Silchar",
+              "Sonitpur",
+              "Tezpur"
             ]
           },
           {
-            "state": "Tatarstan",
+            "state": "Bihar",
             "cities": [
-              "Kazan",
-              "Naberezhnye Chelny",
-              "Nizhnekamsk",
-              "Almetyevsk",
-              "Zelenodolsk",
-              "Bugulma"
+              "Arrah",
+              "Begusarai",
+              "Bhagalpur",
+              "Bihar Sharif",
+              "Darbhanga",
+              "Gaya",
+              "Gopalganj",
+              "Hajipur",
+              "Jamui",
+              "Jehanabad",
+              "Madhepura",
+              "Madhubani",
+              "Madhupur",
+              "Motihari",
+              "Munger",
+              "Muzaffarpur",
+              "Nalanda",
+              "Patna",
+              "Purnea",
+              "Saharsa",
+              "Samastipur",
+              "Saran",
+              "Sheikhpura",
+              "Sheohar",
+              "Sitamarhi",
+              "Siwan",
+              "Supaul"
             ]
           },
           {
-            "state": "Krasnodar Krai",
+            "state": "Chhattisgarh",
             "cities": [
-              "Krasnodar",
-              "Sochi",
-              "Novorossiysk",
-              "Armavir",
-              "Essentuki",
-              "Anapa"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+7",
-        "iso_code": "KZ",
-        "country_name": "Kazakhstan",
-        "states": [
-          {
-            "state": "Nur-Sultan (Astana)",
-            "cities": [
-              "Astana",
-              "Almaty",
-              "Shymkent",
-              "Karaganda",
-              "Aktobe",
-              "Taraz"
+              "Bastar",
+              "Bhilai",
+              "Bilaspur",
+              "Dhamtari",
+              "Durg",
+              "Gariaband",
+              "Jagdalpur",
+              "Kawardha",
+              "Kondagaon",
+              "Mandir-Hasaud",
+              "Raigarh",
+              "Raipur",
+              "Rajnandgaon"
             ]
           },
           {
-            "state": "Almaty",
+            "state": "Dadra and Nagar Haveli",
             "cities": [
-              "Almaty",
-              "Talgar",
-              "Esik",
-              "Karasai",
-              "Ili",
-              "Kaskelen"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+998",
-        "iso_code": "UZ",
-        "country_name": "Uzbekistan",
-        "states": [
-          {
-            "state": "Tashkent",
-            "cities": [
-              "Tashkent",
-              "Samarkand",
-              "Namangan",
-              "Andijan",
-              "Bukhara",
-              "Fergana"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+993",
-        "iso_code": "TM",
-        "country_name": "Turkmenistan",
-        "states": [
-          {
-            "state": "Ahal",
-            "cities": [
-              "Ashgabat",
-              "Turkmenabat",
-              "Dashoguz",
-              "Mary",
-              "Balkanabat",
-              "Turkmenbashi"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+996",
-        "iso_code": "KG",
-        "country_name": "Kyrgyzstan",
-        "states": [
-          {
-            "state": "Chuy",
-            "cities": [
-              "Bishkek",
-              "Osh",
-              "Jalal-Abad",
-              "Karakol",
-              "Tokmok",
-              "Kara-Balta"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+992",
-        "iso_code": "TJ",
-        "country_name": "Tajikistan",
-        "states": [
-          {
-            "state": "Dushanbe",
-            "cities": [
-              "Dushanbe",
-              "Khujand",
-              "Kulob",
-              "Qurghonteppa",
-              "Istaravshan",
-              "Vahdat"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "continent": "Middle East",
-    "countries": [
-      {
-        "phone_code": "+90",
-        "iso_code": "TR",
-        "country_name": "Turkey",
-        "states": [
-          {
-            "state": "Istanbul",
-            "cities": [
-              "Istanbul",
-              "Kadikoy",
-              "Umraniye",
-              "Pendik",
-              "Maltepe",
-              "Uskudar"
+              "Dadra",
+              "Dudhni",
+              "Khanvel",
+              "Nagar Haveli",
+              "Silvassa",
+              "Tudkol",
+              "Vangaon"
             ]
           },
           {
-            "state": "Ankara",
+            "state": "Daman and Diu",
             "cities": [
-              "Ankara",
-              "Kecioren",
-              "Yenimahalle",
-              "Mamak",
-              "Sincan",
-              "Etimesgut"
+              "Banswada",
+              "Daman",
+              "Devka",
+              "Diu",
+              "Ghoghla",
+              "Nani Daman",
+              "Panikotha"
             ]
           },
           {
-            "state": "Izmir",
+            "state": "Delhi",
             "cities": [
-              "Izmir",
-              "Karsiyaka",
-              "Bornova",
-              "Buca",
-              "Cesme",
-              "Aliaqa"
+              "Central Delhi",
+              "Delhi",
+              "East Delhi",
+              "New Delhi",
+              "North Delhi",
+              "South Delhi",
+              "West Delhi"
             ]
           },
           {
-            "state": "Antalya",
+            "state": "Goa",
             "cities": [
-              "Antalya",
-              "Alanya",
-              "Kepez",
-              "Konyaalti",
-              "Manavgat",
-              "Serik"
+              "Belgaum",
+              "Bicholim",
+              "Colvale",
+              "Cortalim",
+              "Cuncolim",
+              "Londa",
+              "Margão",
+              "Panaji",
+              "Ponda",
+              "Quepem",
+              "Sanquelim",
+              "Sattari",
+              "Vasco da Gama"
             ]
           },
           {
-            "state": "Bursa",
+            "state": "Gujarat",
             "cities": [
-              "Bursa",
-              "Nilufer",
-              "Osmangazi",
-              "Yildirim",
-              "Inegol",
-              "Gemlik"
+              "Ahmedabad",
+              "Amreli",
+              "Anand",
+              "Bhavnagar",
+              "Botad",
+              "Dang",
+              "Gandhinagar",
+              "Godhra",
+              "Jamnagar",
+              "Junagadh",
+              "Kheda",
+              "Mehsana",
+              "Morbi",
+              "Nadiad",
+              "Navsari",
+              "Patan",
+              "Porbandar",
+              "Rajkot",
+              "Surendranagar",
+              "Vadodara",
+              "Valsad",
+              "Visnagar"
             ]
           },
           {
-            "state": "Gaziantep",
+            "state": "Haryana",
             "cities": [
-              "Gaziantep",
-              "Nizip",
-              "Islahiye",
-              "Nurdagi",
-              "Araban",
-              "Karkamis"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+966",
-        "iso_code": "SA",
-        "country_name": "Saudi Arabia",
-        "states": [
-          {
-            "state": "Riyadh Region",
-            "cities": [
-              "Riyadh",
-              "Al Kharj",
-              "Al Majmaah",
-              "Dawadmi",
-              "Zulfi",
-              "Shaqra"
+              "Ambala",
+              "Ballabgarh",
+              "Bhiwani",
+              "Charkhi Dadri",
+              "Faridabad",
+              "Fatehabad",
+              "Gurgaon",
+              "Hansi",
+              "Hisar",
+              "Jhajjar",
+              "Jind",
+              "Kaithal",
+              "Karnal",
+              "Kurukshetra",
+              "Panchkula",
+              "Panipat",
+              "Rohtak",
+              "Samalkha",
+              "Sonipat",
+              "Yamunanagar"
             ]
           },
           {
-            "state": "Makkah Region",
+            "state": "Himachal Pradesh",
             "cities": [
-              "Jeddah",
-              "Mecca",
-              "Taif",
-              "Rabigh",
-              "Al Jumum",
-              "Khulais"
+              "Baijnath",
+              "Balupur",
+              "Barmaur",
+              "Bharmour",
+              "Bilaspur",
+              "Chamba",
+              "Dalhousie",
+              "Dharampur",
+              "Dharamshala",
+              "Ghumarwin",
+              "Kangra",
+              "Kasauli",
+              "Kinnaur",
+              "Kullu",
+              "Mandi",
+              "Nahan",
+              "Nurpur",
+              "Palampur",
+              "Paonta Sahib",
+              "Rampur",
+              "Recong Peo",
+              "Sahu",
+              "Shimla",
+              "Solan",
+              "Sunni",
+              "Theog",
+              "Tissa"
             ]
           },
           {
-            "state": "Eastern Province",
+            "state": "Jharkhand",
             "cities": [
-              "Dammam",
-              "Al Khobar",
-              "Dhahran",
-              "Al Jubail",
-              "Al Ahsa",
-              "Qatif"
+              "Adityapur",
+              "Bokaro",
+              "Chaibasa",
+              "Chatra",
+              "Deoghar",
+              "Dhanbad",
+              "Dumka",
+              "East Singhbhum",
+              "Garhwa",
+              "Giridih",
+              "Godda",
+              "Gumla",
+              "Hazaribag",
+              "Jamshedpur",
+              "Jamtara",
+              "Jessore",
+              "Koderma",
+              "Latehar",
+              "Lohardaga",
+              "Madhupur",
+              "Munger",
+              "Pakur",
+              "Palamau",
+              "Palamu",
+              "Ranchi",
+              "Sahibganj",
+              "Simdega",
+              "West Singhbhum"
             ]
           },
           {
-            "state": "Medina Region",
+            "state": "Karnataka",
             "cities": [
-              "Medina",
-              "Yanbu",
-              "Al Ula",
-              "Mahd adh Dhahab",
+              "Belgaum",
+              "Bellary",
+              "Bengaluru",
+              "Bidar",
+              "Bijapur",
+              "Chikballapur",
+              "Chikmagalur",
+              "Chitradurga",
+              "Dakshina Kannada",
+              "Davanagere",
+              "Dharwad",
+              "Gadag",
+              "Gonikoppal",
+              "Gulbarga",
+              "Haveri",
+              "Kodagu",
+              "Kolar",
+              "Kolhapur",
+              "Koppal",
+              "Mandya",
+              "Mangaluru",
+              "Mysuru",
+              "Raichur",
+              "Ramanagaram",
+              "Ranebennur",
+              "Shimoga",
+              "Shivamogga",
+              "Sindhanur",
+              "Tumkur",
+              "Udupi",
+              "Uttara Kannada",
+              "Vijayapura",
+              "Vikarabad",
+              "Yadgir"
+            ]
+          },
+          {
+            "state": "Kerala",
+            "cities": [
+              "Alappuzha",
+              "Attingal",
+              "Calicut",
+              "Cannanore",
+              "Changanacherry",
+              "Cherthala",
+              "Cochin",
+              "Ernakulam",
+              "Idukki",
+              "Kannur",
+              "Kasaragod",
+              "Kayamkulam",
+              "Kochi",
+              "Kodungalloor",
+              "Kollam",
+              "Kottayam",
+              "Kozhikode",
+              "Kunnamkulam",
+              "Malappuram",
+              "Mattancherry",
+              "Mavelikara",
+              "Munnar",
+              "Neyyattinkara",
+              "Nilambur",
+              "Palai",
+              "Palghat",
+              "Pathanamthitta",
+              "Payyanur",
+              "Perintalmanna",
+              "Perumbavoor",
+              "Ponnani",
+              "Punalur",
+              "Thiruvalla",
+              "Thiruvananthapuram",
+              "Thodupuzha",
+              "Trichur",
+              "Trivandrum",
+              "Vaikom",
+              "Varkala",
+              "Vatakara",
+              "Wayanad"
+            ]
+          },
+          {
+            "state": "Madhya Pradesh",
+            "cities": [
+              "Ashoknagar",
+              "Balaghat",
+              "Barwani",
+              "Betul",
+              "Bhopal",
+              "Burhanpur",
+              "Chhindwara",
+              "Damoh",
+              "Datia",
+              "Dewas",
+              "Dhar",
+              "Dindori",
+              "Guna",
+              "Gwalior",
+              "Harda",
+              "Hoshangabad",
+              "Indore",
+              "Itarsi",
+              "Jabalpur",
+              "Jhabua",
+              "Khajuraho",
+              "Khargone",
+              "Khetia",
+              "Mandla",
+              "Mandsaur",
+              "Mhow",
+              "Morena",
+              "Murwara",
+              "Nagda",
+              "Neemuch",
+              "Nimar",
+              "Nowgong",
+              "Pachmarhi",
+              "Raisen",
+              "Rajgarh",
+              "Ratlam",
+              "Rewa",
+              "Sagar",
+              "Satna",
+              "Seoni",
+              "Setor",
+              "Shahdol",
+              "Shajapur",
+              "Shamshabad",
+              "Sheopur",
+              "Shivpuri",
+              "Sidhi",
+              "Sihora",
+              "Singrauli",
+              "Sivni",
+              "Suratwala",
+              "Tadoba",
+              "Tefla",
+              "Tendukheda",
+              "Tikamgarh",
+              "Ujjain",
+              "Umaria",
+              "Vidisha",
+              "Wardha",
+              "Yavatmal"
+            ]
+          },
+          {
+            "state": "Maharashtra",
+            "cities": [
+              "Ahmadnagar",
+              "Akola",
+              "Amravati",
+              "Aurangabad",
               "Badr",
-              "Khaybar"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+971",
-        "iso_code": "AE",
-        "country_name": "United Arab Emirates",
-        "states": [
-          {
-            "state": "Dubai",
-            "cities": [
-              "Dubai",
-              "Deira",
-              "Jumeirah",
-              "Bur Dubai",
-              "Jebel Ali",
-              "Al Quoz"
-            ]
-          },
-          {
-            "state": "Abu Dhabi",
-            "cities": [
-              "Abu Dhabi",
-              "Al Ain",
-              "Khalifa City",
-              "Mohammed Bin Zayed City",
-              "Al Reem Island",
-              "Al Mushrif"
-            ]
-          },
-          {
-            "state": "Sharjah",
-            "cities": [
-              "Sharjah",
-              "Khor Fakkan",
-              "Kalba",
-              "Dibba Al Hisn",
-              "Al Dhaid",
-              "Al Hamriyah"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+972",
-        "iso_code": "IL",
-        "country_name": "Israel",
-        "states": [
-          {
-            "state": "Tel Aviv District",
-            "cities": [
-              "Tel Aviv",
-              "Ramat Gan",
-              "Bnei Brak",
-              "Bat Yam",
-              "Holon",
-              "Givatayim"
+              "Baramati",
+              "Barbil",
+              "Barsi",
+              "Belagavi",
+              "Belgaum",
+              "Bellary",
+              "Besa",
+              "Bhagalpur",
+              "Bhayandar",
+              "Bhir",
+              "Bhiwandi",
+              "Bhusawal",
+              "Bijapur",
+              "Bir",
+              "Birar",
+              "Birisingi",
+              "Bithoor",
+              "Bjnaur",
+              "Blimora",
+              "Boharawada",
+              "Bolkhali",
+              "Bombay",
+              "Boparai",
+              "Borgaon",
+              "Bosavada",
+              "Bossalai",
+              "Bostagaon",
+              "Bothapur",
+              "Botipur",
+              "Boudh",
+              "Bowrihat",
+              "Bozpur",
+              "Brahmapur",
+              "Bralunda",
+              "Bramaram",
+              "Bramavath",
+              "Bramavati",
+              "Bramavati",
+              "Bramavati",
+              "Bramavati",
+              "Bramavati"
             ]
           },
           {
-            "state": "Jerusalem District",
+            "state": "Manipur",
             "cities": [
-              "Jerusalem",
-              "Maale Adumim",
-              "Beit Shemesh",
-              "Beitar Illit",
-              "Modi'in Illit",
-              "Efrat"
+              "Bishnupur",
+              "Chandel",
+              "Churachandpur",
+              "Imphal",
+              "Imphal East",
+              "Imphal West",
+              "Jiribam",
+              "Kakching",
+              "Kamjong",
+              "Kangpokpi",
+              "Kapotsang",
+              "Katpat",
+              "Keisampat",
+              "Khongdok",
+              "Khoupum",
+              "Khundrakpam",
+              "Khunou",
+              "Khurem",
+              "Kibyen",
+              "Kiloimakha",
+              "Kilyan",
+              "Kimpel",
+              "Kinema",
+              "Kinen",
+              "Kineng",
+              "Kinkhab",
+              "Kinley",
+              "Kinliang",
+              "Kinlung",
+              "Kinmat",
+              "Kino",
+              "Kinrei",
+              "Kinrei",
+              "Kinrei"
             ]
           },
           {
-            "state": "Haifa District",
+            "state": "Meghalaya",
             "cities": [
-              "Haifa",
-              "Acre",
-              "Nesher",
-              "Tirat Carmel",
-              "Krayot",
-              "Yokneam"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+962",
-        "iso_code": "JO",
-        "country_name": "Jordan",
-        "states": [
-          {
-            "state": "Amman",
-            "cities": [
-              "Amman",
-              "Zarqa",
-              "Irbid",
-              "Russeifa",
-              "Aqaba",
-              "Al-Salt"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+961",
-        "iso_code": "LB",
-        "country_name": "Lebanon",
-        "states": [
-          {
-            "state": "Beirut",
-            "cities": [
-              "Beirut",
-              "Tripoli",
-              "Sidon",
-              "Tyre",
-              "Zahle",
-              "Baalbek"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+964",
-        "iso_code": "IQ",
-        "country_name": "Iraq",
-        "states": [
-          {
-            "state": "Baghdad",
-            "cities": [
-              "Baghdad",
-              "Mosul",
-              "Basra",
-              "Erbil",
-              "Sulaymaniyah",
-              "Najaf"
+              "Baghmara",
+              "Bajengdoba",
+              "Baklung",
+              "Balat",
+              "Balidan",
+              "Balipara",
+              "Baliwara",
+              "Baljan",
+              "Balkhali",
+              "Balkhani",
+              "Balkra",
+              "Ballari",
+              "Ballasore",
+              "Ballavi",
+              "Ballipur",
+              "Ballipur",
+              "Ballipur",
+              "Ballipur",
+              "Ballipur",
+              "Ballipur"
             ]
           },
           {
-            "state": "Basra",
+            "state": "Mizoram",
             "cities": [
-              "Basra",
-              "Al Qurnah",
-              "Abu Al Khasib",
-              "Az Zubayr",
-              "Shatt al-Arab",
-              "Faw"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+98",
-        "iso_code": "IR",
-        "country_name": "Iran",
-        "states": [
-          {
-            "state": "Tehran",
-            "cities": [
-              "Tehran",
-              "Karaj",
-              "Shahriar",
-              "Qods",
-              "Shahr-e Rey",
-              "Pakdasht"
+              "Aaisii",
+              "Aaitnar",
+              "Aaitup",
+              "Aajangpui",
+              "Aakuang",
+              "Aalachung",
+              "Aaldan",
+              "Aaleng",
+              "Aali",
+              "Aalipur",
+              "Aalkhungpui",
+              "Aallengpui",
+              "Aalmuandawn",
+              "Aalnuam",
+              "Aalpi",
+              "Aalpi",
+              "Aalpi"
             ]
           },
           {
-            "state": "Isfahan",
+            "state": "Nagaland",
             "cities": [
-              "Isfahan",
-              "Kashan",
-              "Aran va Bidgol",
-              "Shahinshahr",
-              "Najafabad",
-              "Khomeini Shahr"
+              "Aban",
+              "Abang",
+              "Abangpat",
+              "Abangsang",
+              "Abangsem",
+              "Abangur",
+              "Abantibru",
+              "Abanura",
+              "Abanyiming",
+              "Abanyimlo",
+              "Abanyimlong",
+              "Abapu",
+              "Abara",
+              "Abaranda",
+              "Abardem",
+              "Abarelu",
+              "Abareng",
+              "Abariba",
+              "Abaring",
+              "Abaripem",
+              "Abarishem",
+              "Abaritsu",
+              "Abarkibr",
+              "Abarngei",
+              "Abarnim",
+              "Abarom",
+              "Abaronger",
+              "Abarongo",
+              "Abarosang",
+              "Abarsang",
+              "Abarsenla",
+              "Abarshela",
+              "Abarshen",
+              "Abarsheng",
+              "Abarsila",
+              "Abarsu",
+              "Abarsulem",
+              "Abartan",
+              "Abartang",
+              "Abartap"
             ]
           },
           {
-            "state": "Fars",
+            "state": "Odisha",
             "cities": [
-              "Shiraz",
-              "Marvdasht",
-              "Jahrom",
-              "Fasa",
-              "Kazerun",
-              "Lar"
+              "Balangir",
+              "Balasore",
+              "Bargarh",
+              "Barpali",
+              "Barua",
+              "Baud",
+              "Baudh",
+              "Bauri",
+              "Bayana",
+              "Bayung",
+              "Behrampur",
+              "Bela",
+              "Belara",
+              "Belaras",
+              "Belgaum",
+              "Belgaum",
+              "Belgaum"
             ]
           },
-          {
-            "state": "Khorasan Razavi",
-            "cities": [
-              "Mashhad",
-              "Nishapur",
-              "Sabzevar",
-              "Gonabad",
-              "Kashmar",
-              "Birjand"
-            ]
-          },
-          {
-            "state": "Azerbaijan East",
-            "cities": [
-              "Tabriz",
-              "Maragheh",
-              "Bonab",
-              "Sarab",
-              "Mianeh",
-              "Ahar"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+963",
-        "iso_code": "SY",
-        "country_name": "Syria",
-        "states": [
-          {
-            "state": "Damascus",
-            "cities": [
-              "Damascus",
-              "Aleppo",
-              "Homs",
-              "Hama",
-              "Latakia",
-              "Deir ez-Zor"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+967",
-        "iso_code": "YE",
-        "country_name": "Yemen",
-        "states": [
-          {
-            "state": "Sana'a",
-            "cities": [
-              "Sana'a",
-              "Aden",
-              "Taiz",
-              "Hodeidah",
-              "Ibb",
-              "Dhamar"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+968",
-        "iso_code": "OM",
-        "country_name": "Oman",
-        "states": [
-          {
-            "state": "Muscat",
-            "cities": [
-              "Muscat",
-              "Seeb",
-              "Matrah",
-              "Salalah",
-              "Sohar",
-              "Nizwa"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+974",
-        "iso_code": "QA",
-        "country_name": "Qatar",
-        "states": [
-          {
-            "state": "Ad Dawhah",
-            "cities": [
-              "Doha",
-              "Al Wakrah",
-              "Al Khor",
-              "Dukhan",
-              "Al Shamal",
-              "Al Rayyan"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+965",
-        "iso_code": "KW",
-        "country_name": "Kuwait",
-        "states": [
-          {
-            "state": "Al Asimah",
-            "cities": [
-              "Kuwait City",
-              "Salmiya",
-              "Hawalli",
-              "Jahra",
-              "Farwaniya",
-              "Fahaheel"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+973",
-        "iso_code": "BH",
-        "country_name": "Bahrain",
-        "states": [
-          {
-            "state": "Capital Governorate",
-            "cities": [
-              "Manama",
-              "Muharraq",
-              "Riffa",
-              "Hamad Town",
-              "Isa Town",
-              "Sitra"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+93",
-        "iso_code": "AF",
-        "country_name": "Afghanistan",
-        "states": [
-          {
-            "state": "Kabul",
-            "cities": [
-              "Kabul",
-              "Herat",
-              "Kandahar",
-              "Mazar-i-Sharif",
-              "Jalalabad",
-              "Kunduz"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+92",
-        "iso_code": "PK",
-        "country_name": "Pakistan",
-        "states": [
           {
             "state": "Punjab",
             "cities": [
-              "Lahore",
-              "Faisalabad",
-              "Rawalpindi",
-              "Gujranwala",
-              "Multan",
-              "Sialkot"
-            ]
-          },
-          {
-            "state": "Sindh",
-            "cities": [
-              "Karachi",
-              "Hyderabad",
-              "Sukkur",
-              "Larkana",
-              "Nawabshah",
-              "Mirpur Khas"
-            ]
-          },
-          {
-            "state": "Khyber Pakhtunkhwa",
-            "cities": [
-              "Peshawar",
-              "Mardan",
-              "Abbottabad",
-              "Mingora",
-              "Kohat",
-              "Dera Ismail Khan"
-            ]
-          },
-          {
-            "state": "Islamabad Capital Territory",
-            "cities": [
-              "Islamabad",
-              "Rawat",
-              "Kahuta",
-              "Taxila",
-              "Wah Cantonment",
-              "Attock"
-            ]
-          },
-          {
-            "state": "Balochistan",
-            "cities": [
-              "Quetta",
-              "Turbat",
-              "Khuzdar",
-              "Hub",
-              "Chaman",
-              "Gwadar"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "continent": "South Asia",
-    "countries": [
-      {
-        "phone_code": "+880",
-        "iso_code": "BD",
-        "country_name": "Bangladesh",
-        "states": [
-          {
-            "state": "Dhaka Division",
-            "cities": [
-              "Dhaka",
-              "Gazipur",
-              "Narayanganj",
-              "Tangail",
-              "Mymensingh",
-              "Munshiganj"
-            ]
-          },
-          {
-            "state": "Chittagong Division",
-            "cities": [
-              "Chittagong",
-              "Comilla",
-              "Cox's Bazar",
-              "Noakhali",
-              "Chandpur",
-              "Feni"
-            ]
-          },
-          {
-            "state": "Rajshahi Division",
-            "cities": [
-              "Rajshahi",
-              "Bogra",
-              "Pabna",
-              "Sirajganj",
-              "Naogaon",
-              "Chapai Nawabganj"
-            ]
-          },
-          {
-            "state": "Khulna Division",
-            "cities": [
-              "Khulna",
-              "Jessore",
-              "Satkhira",
-              "Kustia",
-              "Bagerhat",
-              "Narail"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+94",
-        "iso_code": "LK",
-        "country_name": "Sri Lanka",
-        "states": [
-          {
-            "state": "Western Province",
-            "cities": [
-              "Colombo",
-              "Dehiwala",
-              "Moratuwa",
-              "Sri Jayawardenepura Kotte",
-              "Negombo",
-              "Kalutara"
-            ]
-          },
-          {
-            "state": "Central Province",
-            "cities": [
-              "Kandy",
-              "Matale",
-              "Nuwara Eliya",
-              "Gampola",
-              "Nawalapitiya",
-              "Hatton"
-            ]
-          },
-          {
-            "state": "Southern Province",
-            "cities": [
-              "Galle",
-              "Matara",
-              "Hambantota",
-              "Weligama",
-              "Tangalle",
-              "Ambalangoda"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+977",
-        "iso_code": "NP",
-        "country_name": "Nepal",
-        "states": [
-          {
-            "state": "Bagmati Province",
-            "cities": [
-              "Kathmandu",
-              "Lalitpur",
-              "Bhaktapur",
-              "Kirtipur",
-              "Hetauda",
-              "Dhulikhel"
-            ]
-          },
-          {
-            "state": "Gandaki Province",
-            "cities": [
-              "Pokhara",
-              "Gorkha",
-              "Damauli",
-              "Besisahar",
-              "Baglung",
-              "Waling"
-            ]
-          },
-          {
-            "state": "Province No. 1",
-            "cities": [
-              "Biratnagar",
-              "Dharan",
-              "Itahari",
-              "Damak",
-              "Inaruwa",
-              "Urlabari"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+975",
-        "iso_code": "BT",
-        "country_name": "Bhutan",
-        "states": [
-          {
-            "state": "Thimphu",
-            "cities": [
-              "Thimphu",
-              "Phuntsholing",
-              "Punakha",
-              "Trongsa",
-              "Mongar",
-              "Samdrup Jongkhar"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+960",
-        "iso_code": "MV",
-        "country_name": "Maldives",
-        "states": [
-          {
-            "state": "Male Atoll",
-            "cities": [
-              "Male",
-              "Addu City",
-              "Fuvahmulah",
-              "Kulhudhuffushi",
-              "Thinadhoo",
-              "Naifaru"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "continent": "East Asia",
-    "countries": [
-      {
-        "phone_code": "+86",
-        "iso_code": "CN",
-        "country_name": "China",
-        "states": [
-          {
-            "state": "Beijing",
-            "cities": [
-              "Beijing",
-              "Changping",
-              "Tongzhou",
-              "Shunyi",
-              "Fangshan",
-              "Daxing"
-            ]
-          },
-          {
-            "state": "Shanghai",
-            "cities": [
-              "Shanghai",
-              "Jiading",
-              "Pudong",
-              "Minhang",
-              "Baoshan",
-              "Songjiang"
-            ]
-          },
-          {
-            "state": "Guangdong",
-            "cities": [
-              "Guangzhou",
-              "Shenzhen",
-              "Dongguan",
-              "Foshan",
-              "Zhuhai",
-              "Shantou"
-            ]
-          },
-          {
-            "state": "Sichuan",
-            "cities": [
-              "Chengdu",
-              "Mianyang",
-              "Deyang",
-              "Nanchong",
-              "Leshan",
-              "Yibin"
-            ]
-          },
-          {
-            "state": "Zhejiang",
-            "cities": [
-              "Hangzhou",
-              "Ningbo",
-              "Wenzhou",
-              "Jiaxing",
-              "Shaoxing",
-              "Huzhou"
-            ]
-          },
-          {
-            "state": "Jiangsu",
-            "cities": [
-              "Nanjing",
-              "Suzhou",
-              "Wuxi",
-              "Nantong",
-              "Xuzhou",
-              "Changzhou"
-            ]
-          },
-          {
-            "state": "Shandong",
-            "cities": [
-              "Jinan",
-              "Qingdao",
-              "Zibo",
-              "Yantai",
-              "Weifang",
-              "Jining"
-            ]
-          },
-          {
-            "state": "Hubei",
-            "cities": [
-              "Wuhan",
-              "Yichang",
-              "Xiangyang",
-              "Shiyan",
-              "Huangshi",
-              "Jingmen"
-            ]
-          },
-          {
-            "state": "Henan",
-            "cities": [
-              "Zhengzhou",
-              "Luoyang",
-              "Kaifeng",
-              "Nanyang",
-              "Xinxiang",
-              "Anyang"
-            ]
-          },
-          {
-            "state": "Liaoning",
-            "cities": [
-              "Shenyang",
-              "Dalian",
-              "Anshan",
-              "Fushun",
-              "Benxi",
-              "Dandong"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+81",
-        "iso_code": "JP",
-        "country_name": "Japan",
-        "states": [
-          {
-            "state": "Tokyo",
-            "cities": [
-              "Tokyo",
-              "Shinjuku",
-              "Hachioji",
-              "Machida",
-              "Tachikawa",
-              "Fuchu"
-            ]
-          },
-          {
-            "state": "Osaka",
-            "cities": [
-              "Osaka",
-              "Sakai",
-              "Higashiosaka",
-              "Hirakata",
-              "Toyonaka",
-              "Suita"
-            ]
-          },
-          {
-            "state": "Kanagawa",
-            "cities": [
-              "Yokohama",
-              "Kawasaki",
-              "Sagamihara",
-              "Fujisawa",
-              "Odawara",
-              "Hiratsuka"
-            ]
-          },
-          {
-            "state": "Aichi",
-            "cities": [
-              "Nagoya",
-              "Toyota",
-              "Okazaki",
-              "Ichinomiya",
-              "Kasugai",
-              "Toyohashi"
-            ]
-          },
-          {
-            "state": "Hokkaido",
-            "cities": [
-              "Sapporo",
-              "Hakodate",
-              "Asahikawa",
-              "Kushiro",
-              "Obihiro",
-              "Abashiri"
-            ]
-          },
-          {
-            "state": "Fukuoka",
-            "cities": [
-              "Fukuoka",
-              "Kitakyushu",
-              "Kurume",
-              "Omuta",
-              "Iizuka",
-              "Tagawa"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+82",
-        "iso_code": "KR",
-        "country_name": "South Korea",
-        "states": [
-          {
-            "state": "Seoul",
-            "cities": [
-              "Seoul",
-              "Gangnam-gu",
-              "Songpa-gu",
-              "Nowon-gu",
-              "Dobong-gu",
-              "Mapo-gu"
-            ]
-          },
-          {
-            "state": "Gyeonggi",
-            "cities": [
-              "Suwon",
-              "Seongnam",
-              "Bucheon",
-              "Ansan",
-              "Goyang",
-              "Yongin"
-            ]
-          },
-          {
-            "state": "North Gyeongsang",
-            "cities": [
-              "Daegu",
-              "Pohang",
-              "Gumi",
-              "Gyeongju",
-              "Andong",
-              "Gyeongsan"
-            ]
-          },
-          {
-            "state": "South Gyeongsang",
-            "cities": [
-              "Busan",
-              "Changwon",
-              "Jinju",
-              "Geoje",
-              "Gimhae",
-              "Tongyeong"
-            ]
-          },
-          {
-            "state": "Incheon",
-            "cities": [
-              "Incheon",
-              "Bupyeong-gu",
-              "Namdong-gu",
-              "Yeonsu-gu",
-              "Seo-gu",
-              "Michuhol-gu"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+886",
-        "iso_code": "TW",
-        "country_name": "Taiwan",
-        "states": [
-          {
-            "state": "Taipei City",
-            "cities": [
-              "Taipei",
-              "Zhongzheng",
-              "Da'an",
-              "Xinyi",
-              "Zhongshan",
-              "Shilin"
-            ]
-          },
-          {
-            "state": "New Taipei City",
-            "cities": [
-              "New Taipei",
-              "Sanchong",
-              "Xindian",
-              "Tucheng",
-              "Banciao",
-              "Yonghe"
-            ]
-          },
-          {
-            "state": "Taichung City",
-            "cities": [
-              "Taichung",
-              "Beitun",
-              "Xitun",
-              "Nantun",
-              "Dajia",
-              "Fongyuan"
-            ]
-          },
-          {
-            "state": "Kaohsiung City",
-            "cities": [
-              "Kaohsiung",
-              "Zuoying",
-              "Sanmin",
-              "Fengshan",
-              "Daliao",
-              "Qianzhen"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+976",
-        "iso_code": "MN",
-        "country_name": "Mongolia",
-        "states": [
-          {
-            "state": "Ulaanbaatar",
-            "cities": [
-              "Ulaanbaatar",
-              "Darkhan",
-              "Erdenet",
-              "Choibalsan",
-              "Mandalgovi",
-              "Khovd"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "continent": "Southeast Asia",
-    "countries": [
-      {
-        "phone_code": "+62",
-        "iso_code": "ID",
-        "country_name": "Indonesia",
-        "states": [
-          {
-            "state": "West Java",
-            "cities": [
-              "Bandung",
-              "Bekasi",
-              "Depok",
-              "Bogor",
-              "Cimahi",
-              "Sukabumi"
-            ]
-          },
-          {
-            "state": "East Java",
-            "cities": [
-              "Surabaya",
-              "Malang",
-              "Kediri",
-              "Blitar",
-              "Madiun",
-              "Mojokerto"
-            ]
-          },
-          {
-            "state": "Central Java",
-            "cities": [
-              "Semarang",
-              "Solo",
-              "Yogyakarta",
-              "Magelang",
-              "Salatiga",
-              "Pekalongan"
-            ]
-          },
-          {
-            "state": "Jakarta",
-            "cities": [
-              "Jakarta",
-              "Tangerang",
-              "South Jakarta",
-              "West Jakarta",
-              "North Jakarta",
-              "East Jakarta"
-            ]
-          },
-          {
-            "state": "North Sumatra",
-            "cities": [
-              "Medan",
-              "Binjai",
-              "Pematangsiantar",
-              "Tebing Tinggi",
-              "Tanjungbalai",
-              "Padangsidimpuan"
-            ]
-          },
-          {
-            "state": "Bali",
-            "cities": [
-              "Denpasar",
-              "Kuta",
-              "Ubud",
-              "Singaraja",
-              "Gianyar",
-              "Tabanan"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+63",
-        "iso_code": "PH",
-        "country_name": "Philippines",
-        "states": [
-          {
-            "state": "Metro Manila",
-            "cities": [
-              "Manila",
-              "Quezon City",
-              "Caloocan",
-              "Makati",
-              "Pasig",
-              "Taguig"
-            ]
-          },
-          {
-            "state": "Calabarzon",
-            "cities": [
-              "Antipolo",
-              "Bacoor",
-              "Dasmarinas",
-              "Imus",
-              "Binan",
-              "Sta. Rosa"
-            ]
-          },
-          {
-            "state": "Central Visayas",
-            "cities": [
-              "Cebu City",
-              "Mandaue",
-              "Lapu-Lapu",
-              "Toledo",
-              "Danao",
-              "Naga"
-            ]
-          },
-          {
-            "state": "Davao Region",
-            "cities": [
-              "Davao City",
-              "Tagum",
-              "Panabo",
-              "Digos",
-              "Mati",
-              "Nabunturan"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+84",
-        "iso_code": "VN",
-        "country_name": "Vietnam",
-        "states": [
-          {
-            "state": "Hanoi",
-            "cities": [
-              "Hanoi",
-              "Ha Dong",
-              "Dong Da",
-              "Cau Giay",
-              "Hoan Kiem",
-              "Long Bien"
-            ]
-          },
-          {
-            "state": "Ho Chi Minh City",
-            "cities": [
-              "Ho Chi Minh City",
-              "Thu Duc",
-              "Binh Tan",
-              "Go Vap",
-              "Tan Binh",
-              "Binh Thanh"
-            ]
-          },
-          {
-            "state": "Da Nang",
-            "cities": [
-              "Da Nang",
-              "Hoi An",
-              "Tam Ky",
-              "Quang Ngai",
-              "Hue",
-              "Dong Ha"
-            ]
-          },
-          {
-            "state": "Can Tho",
-            "cities": [
-              "Can Tho",
-              "Ninh Kieu",
-              "Binh Thuy",
-              "Vinh Long",
-              "My Tho",
-              "Ben Tre"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+66",
-        "iso_code": "TH",
-        "country_name": "Thailand",
-        "states": [
-          {
-            "state": "Bangkok Metropolis",
-            "cities": [
-              "Bangkok",
-              "Nonthaburi",
-              "Pak Kret",
-              "Lat Phrao",
-              "Bang Rak",
-              "Sathon"
-            ]
-          },
-          {
-            "state": "Chiang Mai",
-            "cities": [
-              "Chiang Mai",
-              "Mae Rim",
-              "San Sai",
-              "Hang Dong",
-              "Saraphi",
-              "Mae Taeng"
-            ]
-          },
-          {
-            "state": "Chon Buri",
-            "cities": [
-              "Pattaya",
-              "Chonburi",
-              "Si Racha",
-              "Laem Chabang",
-              "Bang Saen",
-              "Map Ta Phut"
-            ]
-          },
-          {
-            "state": "Nakhon Ratchasima",
-            "cities": [
-              "Nakhon Ratchasima",
-              "Pak Chong",
-              "Bua Yai",
-              "Chok Chai",
-              "Kham Thale So",
-              "Phimai"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+60",
-        "iso_code": "MY",
-        "country_name": "Malaysia",
-        "states": [
-          {
-            "state": "Selangor",
-            "cities": [
-              "Shah Alam",
-              "Petaling Jaya",
-              "Subang Jaya",
-              "Klang",
-              "Ampang Jaya",
-              "Kajang"
-            ]
-          },
-          {
-            "state": "Kuala Lumpur",
-            "cities": [
-              "Kuala Lumpur",
-              "Chow Kit",
-              "Bangsar",
-              "Mont Kiara",
-              "Kepong",
-              "Setapak"
-            ]
-          },
-          {
-            "state": "Johor",
-            "cities": [
-              "Johor Bahru",
-              "Muar",
-              "Batu Pahat",
-              "Kluang",
-              "Segamat",
-              "Kulai"
-            ]
-          },
-          {
-            "state": "Penang",
-            "cities": [
-              "George Town",
-              "Butterworth",
-              "Bukit Mertajam",
-              "Bayan Lepas",
-              "Nibong Tebal",
-              "Kepala Batas"
-            ]
-          },
-          {
-            "state": "Sabah",
-            "cities": [
-              "Kota Kinabalu",
-              "Sandakan",
-              "Tawau",
-              "Lahad Datu",
-              "Keningau",
-              "Beaufort"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+65",
-        "iso_code": "SG",
-        "country_name": "Singapore",
-        "states": [
-          {
-            "state": "Central Region",
-            "cities": [
-              "Singapore City",
-              "Orchard",
-              "Marina Bay",
-              "Chinatown",
-              "Little India",
-              "Toa Payoh"
-            ]
-          },
-          {
-            "state": "East Region",
-            "cities": [
-              "Tampines",
-              "Bedok",
-              "Pasir Ris",
-              "Changi",
-              "Geylang",
-              "Katong"
-            ]
-          },
-          {
-            "state": "West Region",
-            "cities": [
-              "Jurong East",
-              "Jurong West",
-              "Clementi",
-              "Buona Vista",
-              "Boon Lay",
-              "Pioneer"
-            ]
-          },
-          {
-            "state": "North Region",
-            "cities": [
-              "Woodlands",
-              "Yishun",
-              "Sembawang",
-              "Admiralty",
-              "Canberra",
-              "Marsiling"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+95",
-        "iso_code": "MM",
-        "country_name": "Myanmar",
-        "states": [
-          {
-            "state": "Yangon Region",
-            "cities": [
-              "Yangon",
-              "Mandalay",
-              "Naypyidaw",
-              "Mawlamyine",
-              "Bago",
-              "Pathein"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+855",
-        "iso_code": "KH",
-        "country_name": "Cambodia",
-        "states": [
-          {
-            "state": "Phnom Penh",
-            "cities": [
-              "Phnom Penh",
-              "Siem Reap",
-              "Sihanoukville",
-              "Battambang",
-              "Kampong Cham",
-              "Pursat"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+856",
-        "iso_code": "LA",
-        "country_name": "Laos",
-        "states": [
-          {
-            "state": "Vientiane",
-            "cities": [
-              "Vientiane",
-              "Pakse",
-              "Savannakhet",
-              "Luang Prabang",
-              "Xam Neua",
-              "Phonsavan"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+673",
-        "iso_code": "BN",
-        "country_name": "Brunei",
-        "states": [
-          {
-            "state": "Brunei-Muara",
-            "cities": [
-              "Bandar Seri Begawan",
-              "Kuala Belait",
-              "Seria",
-              "Tutong",
-              "Bangar",
-              "Muara"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "continent": "Africa",
-    "countries": [
-      {
-        "phone_code": "+234",
-        "iso_code": "NG",
-        "country_name": "Nigeria",
-        "states": [
-          {
-            "state": "Lagos State",
-            "cities": [
-              "Lagos",
-              "Ikeja",
-              "Epe",
-              "Badagry",
-              "Ikorodu",
-              "Mushin"
-            ]
-          },
-          {
-            "state": "Kano State",
-            "cities": [
-              "Kano",
-              "Dala",
-              "Gwale",
-              "Nasarawa",
-              "Tarauni",
-              "Fagge"
-            ]
-          },
-          {
-            "state": "FCT Abuja",
-            "cities": [
-              "Abuja",
-              "Gwagwalada",
-              "Kuje",
-              "Bwari",
-              "Abaji",
-              "Kwali"
-            ]
-          },
-          {
-            "state": "Rivers State",
-            "cities": [
-              "Port Harcourt",
-              "Obio-Akpor",
-              "Okrika",
-              "Eleme",
-              "Bonny",
-              "Degema"
-            ]
-          },
-          {
-            "state": "Oyo State",
-            "cities": [
-              "Ibadan",
-              "Ogbomoso",
-              "Oyo",
-              "Iseyin",
-              "Oyo Town",
-              "Saki"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+251",
-        "iso_code": "ET",
-        "country_name": "Ethiopia",
-        "states": [
-          {
-            "state": "Addis Ababa",
-            "cities": [
-              "Addis Ababa",
-              "Dire Dawa",
-              "Mekelle",
-              "Gondar",
-              "Bahir Dar",
-              "Hawassa"
-            ]
-          },
-          {
-            "state": "Oromia",
-            "cities": [
-              "Adama",
-              "Jimma",
-              "Shashamane",
-              "Bishoftu",
-              "Harar",
-              "Asella"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+20",
-        "iso_code": "EG",
-        "country_name": "Egypt",
-        "states": [
-          {
-            "state": "Cairo Governorate",
-            "cities": [
-              "Cairo",
-              "Giza",
-              "Heliopolis",
-              "Maadi",
-              "Nasr City",
-              "Zamalek"
-            ]
-          },
-          {
-            "state": "Alexandria",
-            "cities": [
-              "Alexandria",
-              "Kafr El Dawwar",
-              "Rashid",
-              "Borg El Arab",
-              "Abu Qir",
-              "Sidi Bishr"
-            ]
-          },
-          {
-            "state": "Dakahlia",
-            "cities": [
-              "Mansoura",
-              "Talkha",
-              "Mit Ghamr",
-              "Dekernes",
-              "Belqas",
-              "Aga"
-            ]
-          },
-          {
-            "state": "Sharkia",
-            "cities": [
-              "Zagazig",
-              "10th of Ramadan",
-              "Belbeis",
-              "Minya Al Qamh",
-              "Kafr Saqr",
-              "Faqous"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+27",
-        "iso_code": "ZA",
-        "country_name": "South Africa",
-        "states": [
-          {
-            "state": "Gauteng",
-            "cities": [
-              "Johannesburg",
-              "Pretoria",
-              "Ekurhuleni",
-              "Soweto",
-              "Centurion",
-              "Sandton"
-            ]
-          },
-          {
-            "state": "Western Cape",
-            "cities": [
-              "Cape Town",
-              "Stellenbosch",
-              "Paarl",
-              "George",
-              "Knysna",
-              "Mossel Bay"
-            ]
-          },
-          {
-            "state": "KwaZulu-Natal",
-            "cities": [
-              "Durban",
-              "Pietermaritzburg",
-              "Richards Bay",
-              "Newcastle",
-              "Ladysmith",
-              "Pinetown"
-            ]
-          },
-          {
-            "state": "Eastern Cape",
-            "cities": [
-              "Port Elizabeth",
-              "East London",
-              "Mthatha",
-              "Grahamstown",
-              "Uitenhage",
-              "Queenstown"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+254",
-        "iso_code": "KE",
-        "country_name": "Kenya",
-        "states": [
-          {
-            "state": "Nairobi County",
-            "cities": [
-              "Nairobi",
-              "Ruiru",
-              "Kikuyu",
-              "Kasarani",
-              "Embakasi",
-              "Westlands"
-            ]
-          },
-          {
-            "state": "Mombasa County",
-            "cities": [
-              "Mombasa",
-              "Kisumu",
-              "Nakuru",
-              "Eldoret",
-              "Thika",
-              "Malindi"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+255",
-        "iso_code": "TZ",
-        "country_name": "Tanzania",
-        "states": [
-          {
-            "state": "Dar es Salaam",
-            "cities": [
-              "Dar es Salaam",
-              "Dodoma",
-              "Mwanza",
-              "Arusha",
-              "Mbeya",
-              "Zanzibar City"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+233",
-        "iso_code": "GH",
-        "country_name": "Ghana",
-        "states": [
-          {
-            "state": "Greater Accra",
-            "cities": [
-              "Accra",
-              "Tema",
-              "Ashaiman",
-              "Kasoa",
-              "Madina",
-              "Nungua"
-            ]
-          },
-          {
-            "state": "Ashanti",
-            "cities": [
-              "Kumasi",
-              "Obuasi",
-              "Ejisu",
-              "Konongo",
-              "Mampong",
-              "Bekwai"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+225",
-        "iso_code": "CI",
-        "country_name": "Ivory Coast",
-        "states": [
-          {
-            "state": "Abidjan",
-            "cities": [
-              "Abidjan",
-              "Abobo",
-              "Adjame",
-              "Bouake",
-              "Yamoussoukro",
-              "Daloa"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+221",
-        "iso_code": "SN",
-        "country_name": "Senegal",
-        "states": [
-          {
-            "state": "Dakar",
-            "cities": [
-              "Dakar",
-              "Pikine",
-              "Touba",
-              "Thies",
-              "Rufisque",
-              "Kaolack"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+237",
-        "iso_code": "CM",
-        "country_name": "Cameroon",
-        "states": [
-          {
-            "state": "Centre",
-            "cities": [
-              "Yaounde",
-              "Douala",
-              "Bamenda",
-              "Bafoussam",
-              "Garoua",
-              "Maroua"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+212",
-        "iso_code": "MA",
-        "country_name": "Morocco",
-        "states": [
-          {
-            "state": "Grand Casablanca-Settat",
-            "cities": [
-              "Casablanca",
-              "Mohammedia",
-              "Berrechid",
-              "El Jadida",
-              "Settat",
-              "Khouribga"
-            ]
-          },
-          {
-            "state": "Rabat-Sale-Kenitra",
-            "cities": [
-              "Rabat",
-              "Sale",
-              "Kenitra",
-              "Temara",
-              "Skhirat",
-              "Sidi Kacem"
-            ]
-          },
-          {
-            "state": "Marrakesh-Safi",
-            "cities": [
-              "Marrakesh",
-              "Safi",
-              "Essaouira",
-              "El Kelaa",
-              "Youssoufia",
-              "Chichaoua"
-            ]
-          },
-          {
-            "state": "Tanger-Tetouan-Al Hoceima",
-            "cities": [
-              "Tangier",
-              "Tetouan",
-              "Larache",
-              "Al Hoceima",
-              "Assilah",
-              "Mdiq"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+216",
-        "iso_code": "TN",
-        "country_name": "Tunisia",
-        "states": [
-          {
-            "state": "Tunis",
-            "cities": [
-              "Tunis",
-              "Sfax",
-              "Sousse",
-              "Ettadhamen",
-              "Kairouan",
-              "Bizerte"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+213",
-        "iso_code": "DZ",
-        "country_name": "Algeria",
-        "states": [
-          {
-            "state": "Algiers",
-            "cities": [
-              "Algiers",
-              "Oran",
-              "Constantine",
-              "Annaba",
-              "Batna",
-              "Setif"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+218",
-        "iso_code": "LY",
-        "country_name": "Libya",
-        "states": [
-          {
-            "state": "Tripoli",
-            "cities": [
-              "Tripoli",
-              "Benghazi",
-              "Misrata",
-              "Tarhuna",
-              "Al Khums",
-              "Zawiya"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+249",
-        "iso_code": "SD",
-        "country_name": "Sudan",
-        "states": [
-          {
-            "state": "Khartoum",
-            "cities": [
-              "Khartoum",
-              "Omdurman",
-              "Kassala",
-              "Wad Madani",
-              "Port Sudan",
-              "Atbara"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+256",
-        "iso_code": "UG",
-        "country_name": "Uganda",
-        "states": [
-          {
-            "state": "Central Region",
-            "cities": [
-              "Kampala",
-              "Gulu",
-              "Lira",
-              "Mbarara",
-              "Jinja",
-              "Entebbe"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+244",
-        "iso_code": "AO",
-        "country_name": "Angola",
-        "states": [
-          {
-            "state": "Luanda Province",
-            "cities": [
-              "Luanda",
-              "Lubango",
-              "Huambo",
-              "Benguela",
-              "Kuito",
-              "Lobito"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+258",
-        "iso_code": "MZ",
-        "country_name": "Mozambique",
-        "states": [
-          {
-            "state": "Maputo Province",
-            "cities": [
-              "Maputo",
-              "Beira",
-              "Nampula",
-              "Quelimane",
-              "Chimoio",
-              "Nacala"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+261",
-        "iso_code": "MG",
-        "country_name": "Madagascar",
-        "states": [
-          {
-            "state": "Analamanga",
-            "cities": [
-              "Antananarivo",
-              "Toamasina",
-              "Antsirabe",
-              "Fianarantsoa",
-              "Mahajanga",
-              "Toliara"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+260",
-        "iso_code": "ZM",
-        "country_name": "Zambia",
-        "states": [
-          {
-            "state": "Lusaka Province",
-            "cities": [
-              "Lusaka",
-              "Kitwe",
-              "Ndola",
-              "Kabwe",
-              "Chingola",
-              "Livingstone"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+263",
-        "iso_code": "ZW",
-        "country_name": "Zimbabwe",
-        "states": [
-          {
-            "state": "Harare Province",
-            "cities": [
-              "Harare",
-              "Bulawayo",
-              "Chitungwiza",
-              "Mutare",
-              "Gweru",
-              "Masvingo"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+250",
-        "iso_code": "RW",
-        "country_name": "Rwanda",
-        "states": [
-          {
-            "state": "Kigali City",
-            "cities": [
-              "Kigali",
-              "Butare",
-              "Gisenyi",
-              "Musanze",
-              "Byumba",
-              "Cyangugu"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+223",
-        "iso_code": "ML",
-        "country_name": "Mali",
-        "states": [
-          {
-            "state": "Bamako",
-            "cities": [
-              "Bamako",
-              "Sikasso",
-              "Mopti",
-              "Segou",
-              "Kayes",
-              "Gao"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+226",
-        "iso_code": "BF",
-        "country_name": "Burkina Faso",
-        "states": [
-          {
-            "state": "Centre Region",
-            "cities": [
-              "Ouagadougou",
-              "Bobo-Dioulasso",
-              "Koudougou",
-              "Ouahigouya",
-              "Banfora",
-              "Dedougou"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+227",
-        "iso_code": "NE",
-        "country_name": "Niger",
-        "states": [
-          {
-            "state": "Niamey",
-            "cities": [
-              "Niamey",
-              "Zinder",
-              "Maradi",
-              "Agadez",
-              "Arlit",
-              "Dosso"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+235",
-        "iso_code": "TD",
-        "country_name": "Chad",
-        "states": [
-          {
-            "state": "N'Djamena",
-            "cities": [
-              "N'Djamena",
-              "Moundou",
-              "Sarh",
-              "Abeche",
-              "Kelo",
-              "Koumra"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+252",
-        "iso_code": "SO",
-        "country_name": "Somalia",
-        "states": [
-          {
-            "state": "Banaadir",
-            "cities": [
-              "Mogadishu",
-              "Hargeisa",
-              "Bosaso",
-              "Kismayo",
-              "Galkayo",
-              "Merca"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+257",
-        "iso_code": "BI",
-        "country_name": "Burundi",
-        "states": [
-          {
-            "state": "Bujumbura",
-            "cities": [
-              "Bujumbura",
-              "Gitega",
-              "Muyinga",
-              "Ngozi",
-              "Rumonge",
-              "Bururi"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+228",
-        "iso_code": "TG",
-        "country_name": "Togo",
-        "states": [
-          {
-            "state": "Maritime Region",
-            "cities": [
-              "Lome",
-              "Sokode",
-              "Kara",
-              "Atakpame",
-              "Dapaong",
-              "Mango"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+229",
-        "iso_code": "BJ",
-        "country_name": "Benin",
-        "states": [
-          {
-            "state": "Littoral",
-            "cities": [
-              "Cotonou",
-              "Porto-Novo",
-              "Parakou",
-              "Djougou",
-              "Bohicon",
-              "Abomey"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+224",
-        "iso_code": "GN",
-        "country_name": "Guinea",
-        "states": [
-          {
-            "state": "Conakry",
-            "cities": [
-              "Conakry",
-              "Nzerekore",
-              "Kindia",
-              "Kankan",
-              "Labe",
-              "Mamou"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+232",
-        "iso_code": "SL",
-        "country_name": "Sierra Leone",
-        "states": [
-          {
-            "state": "Western Area",
-            "cities": [
-              "Freetown",
-              "Bo",
-              "Kenema",
-              "Koidu",
-              "Makeni",
-              "Lunsar"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+231",
-        "iso_code": "LR",
-        "country_name": "Liberia",
-        "states": [
-          {
-            "state": "Montserrado County",
-            "cities": [
-              "Monrovia",
-              "Gbarnga",
-              "Buchanan",
-              "Voinjama",
-              "Tubmanburg",
-              "Kakata"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+220",
-        "iso_code": "GM",
-        "country_name": "Gambia",
-        "states": [
-          {
-            "state": "Banjul",
-            "cities": [
-              "Banjul",
-              "Serekunda",
-              "Brikama",
-              "Bakau",
-              "Farafenni",
-              "Lamin"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+245",
-        "iso_code": "GW",
-        "country_name": "Guinea-Bissau",
-        "states": [
-          {
-            "state": "Bissau",
-            "cities": [
-              "Bissau",
-              "Bafatá",
-              "Gabú",
-              "Bissorã",
-              "Canchungo",
-              "Mansoa"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+238",
-        "iso_code": "CV",
-        "country_name": "Cape Verde",
-        "states": [
-          {
-            "state": "Santiago",
-            "cities": [
-              "Praia",
-              "Mindelo",
-              "Santa Maria",
-              "Assomada",
-              "Pedra Badejo",
-              "Tarrafal"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+222",
-        "iso_code": "MR",
-        "country_name": "Mauritania",
-        "states": [
-          {
-            "state": "Nouakchott-Ouest",
-            "cities": [
-              "Nouakchott",
-              "Nouadhibou",
-              "Kiffa",
-              "Rosso",
-              "Kaedi",
-              "Selibabi"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+211",
-        "iso_code": "SS",
-        "country_name": "South Sudan",
-        "states": [
-          {
-            "state": "Central Equatoria",
-            "cities": [
-              "Juba",
-              "Malakal",
-              "Wau",
-              "Yei",
-              "Aweil",
-              "Torit"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+291",
-        "iso_code": "ER",
-        "country_name": "Eritrea",
-        "states": [
-          {
-            "state": "Maekel Region",
-            "cities": [
-              "Asmara",
-              "Keren",
-              "Massawa",
-              "Assab",
-              "Mendefera",
-              "Barentu"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+253",
-        "iso_code": "DJ",
-        "country_name": "Djibouti",
-        "states": [
-          {
-            "state": "Djibouti Region",
-            "cities": [
-              "Djibouti City",
-              "Ali Sabieh",
-              "Dikhil",
-              "Tadjourah",
-              "Obock",
-              "Arta"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+236",
-        "iso_code": "CF",
-        "country_name": "Central African Republic",
-        "states": [
-          {
-            "state": "Bangui",
-            "cities": [
-              "Bangui",
-              "Berberati",
-              "Carnot",
-              "Bambari",
-              "Bouar",
-              "Nola"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+242",
-        "iso_code": "CG",
-        "country_name": "Republic of Congo",
-        "states": [
-          {
-            "state": "Brazzaville",
-            "cities": [
-              "Brazzaville",
-              "Pointe-Noire",
-              "Dolisie",
-              "Nkayi",
-              "Impfondo",
-              "Owando"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+243",
-        "iso_code": "CD",
-        "country_name": "DR Congo",
-        "states": [
-          {
-            "state": "Kinshasa",
-            "cities": [
-              "Kinshasa",
-              "Lubumbashi",
-              "Mbuji-Mayi",
-              "Kananga",
-              "Kisangani",
-              "Bukavu"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+241",
-        "iso_code": "GA",
-        "country_name": "Gabon",
-        "states": [
-          {
-            "state": "Estuaire",
-            "cities": [
-              "Libreville",
-              "Port-Gentil",
-              "Franceville",
-              "Oyem",
-              "Moanda",
-              "Mouila"
-            ]
-          },
-          {
-            "state": "Khomas Region",
-            "cities": [
-              "Windhoek",
-              "Swakopmund",
-              "Walvis Bay",
-              "Rundu",
-              "Oshakati",
-              "Katima Mulilo"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+267",
-        "iso_code": "BW",
-        "country_name": "Botswana",
-        "states": [
-          {
-            "state": "South-East District",
-            "cities": [
-              "Gaborone",
-              "Francistown",
-              "Molepolole",
-              "Maun",
-              "Serowe",
-              "Kanye"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+266",
-        "iso_code": "LS",
-        "country_name": "Lesotho",
-        "states": [
-          {
-            "state": "Maseru",
-            "cities": [
-              "Maseru",
-              "Teyateyaneng",
-              "Mafeteng",
-              "Hlotse",
-              "Qacha's Nek",
-              "Mohale's Hoek"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+268",
-        "iso_code": "SZ",
-        "country_name": "Eswatini",
-        "states": [
-          {
-            "state": "Hhohho",
-            "cities": [
-              "Mbabane",
-              "Manzini",
-              "Lobamba",
-              "Nhlangano",
-              "Siteki",
-              "Big Bend"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+230",
-        "iso_code": "MU",
-        "country_name": "Mauritius",
-        "states": [
-          {
-            "state": "Port Louis",
-            "cities": [
-              "Port Louis",
-              "Beau Bassin-Rose Hill",
-              "Vacoas-Phoenix",
-              "Curepipe",
-              "Quatre Bornes",
-              "Triolet"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+248",
-        "iso_code": "SC",
-        "country_name": "Seychelles",
-        "states": [
-          {
-            "state": "Mahe",
-            "cities": [
-              "Victoria",
-              "Anse Boileau",
-              "Beau Vallon",
-              "Takamaka",
-              "Baie Lazare",
-              "Grand Anse"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+269",
-        "iso_code": "KM",
-        "country_name": "Comoros",
-        "states": [
-          {
-            "state": "Moroni",
-            "cities": [
-              "Moroni",
-              "Mutsamudu",
-              "Fomboni",
-              "Domoni",
-              "Tsimbeo",
-              "Mirontsi"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+265",
-        "iso_code": "MW",
-        "country_name": "Malawi",
-        "states": [
-          {
-            "state": "Central Region",
-            "cities": [
-              "Lilongwe",
-              "Blantyre",
-              "Mzuzu",
-              "Zomba",
-              "Kasungu",
-              "Mangochi"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "continent": "Oceania",
-    "countries": [
-      {
-        "phone_code": "+61",
-        "iso_code": "AU",
-        "country_name": "Australia",
-        "states": [
-          {
-            "state": "New South Wales",
-            "cities": [
-              "Sydney",
-              "Newcastle",
-              "Wollongong",
-              "Maitland",
-              "Wagga Wagga",
-              "Albury"
-            ]
-          },
-          {
-            "state": "Victoria",
-            "cities": [
-              "Melbourne",
-              "Geelong",
-              "Ballarat",
-              "Bendigo",
-              "Shepparton",
-              "Mildura"
-            ]
-          },
-          {
-            "state": "Queensland",
-            "cities": [
-              "Brisbane",
-              "Gold Coast",
-              "Sunshine Coast",
-              "Townsville",
-              "Cairns",
-              "Toowoomba"
-            ]
-          },
-          {
-            "state": "Western Australia",
-            "cities": [
-              "Perth",
-              "Mandurah",
-              "Bunbury",
-              "Albany",
-              "Geraldton",
-              "Kalgoorlie"
-            ]
-          },
-          {
-            "state": "South Australia",
-            "cities": [
-              "Adelaide",
-              "Mount Gambier",
-              "Whyalla",
-              "Port Augusta",
-              "Gawler",
-              "Murray Bridge"
-            ]
-          },
-          {
-            "state": "ACT",
-            "cities": [
-              "Canberra",
-              "Gungahlin",
-              "Belconnen",
-              "Tuggeranong",
-              "Woden",
-              "Weston Creek"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+64",
-        "iso_code": "NZ",
-        "country_name": "New Zealand",
-        "states": [
-          {
-            "state": "Auckland",
-            "cities": [
-              "Auckland",
-              "Manukau",
-              "North Shore",
-              "Waitakere",
-              "Papakura",
-              "Henderson"
-            ]
-          },
-          {
-            "state": "Wellington",
-            "cities": [
-              "Wellington",
-              "Lower Hutt",
-              "Upper Hutt",
-              "Porirua",
-              "Eastbourne",
-              "Petone"
-            ]
-          },
-          {
-            "state": "Canterbury",
-            "cities": [
-              "Christchurch",
-              "Ashburton",
-              "Timaru",
-              "Kaikoura",
-              "Rangiora",
-              "Rolleston"
-            ]
-          },
-          {
-            "state": "Waikato",
-            "cities": [
-              "Hamilton",
-              "Cambridge",
-              "Te Awamutu",
-              "Tokoroa",
-              "Matamata",
-              "Morrinsville"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+675",
-        "iso_code": "PG",
-        "country_name": "Papua New Guinea",
-        "states": [
-          {
-            "state": "National Capital District",
-            "cities": [
-              "Port Moresby",
-              "Lae",
-              "Mount Hagen",
-              "Madang",
-              "Goroka",
-              "Wewak"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+679",
-        "iso_code": "FJ",
-        "country_name": "Fiji",
-        "states": [
-          {
-            "state": "Central Division",
-            "cities": [
-              "Suva",
-              "Lautoka",
-              "Nadi",
-              "Labasa",
-              "Ba",
-              "Sigatoka"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+677",
-        "iso_code": "SB",
-        "country_name": "Solomon Islands",
-        "states": [
-          {
-            "state": "Guadalcanal",
-            "cities": [
-              "Honiara",
-              "Auki",
-              "Gizo",
-              "Munda",
-              "Tulagi",
-              "Kirakira"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+678",
-        "iso_code": "VU",
-        "country_name": "Vanuatu",
-        "states": [
-          {
-            "state": "Shefa Province",
-            "cities": [
-              "Port Vila",
-              "Luganville",
-              "Isangel",
-              "Sola",
-              "Lakatoro",
-              "Norsup"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+685",
-        "iso_code": "WS",
-        "country_name": "Samoa",
-        "states": [
-          {
-            "state": "Apia Urban Area",
-            "cities": [
-              "Apia",
-              "Faleolo",
-              "Salelologa",
-              "Asau",
-              "Falealupo",
-              "Mulifanua"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+676",
-        "iso_code": "TO",
-        "country_name": "Tonga",
-        "states": [
-          {
-            "state": "Tongatapu",
-            "cities": [
-              "Nukualofa",
-              "Neiafu",
-              "Pangai",
-              "Ohonua",
-              "Hihifo",
-              "Lapaha"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+686",
-        "iso_code": "KI",
-        "country_name": "Kiribati",
-        "states": [
-          {
-            "state": "South Tarawa",
-            "cities": [
-              "Tarawa",
-              "Betio",
-              "Bikenibeu",
-              "Bairiki",
-              "Bonriki",
-              "Nawerewere"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+691",
-        "iso_code": "FM",
-        "country_name": "Micronesia",
-        "states": [
-          {
-            "state": "Pohnpei",
-            "cities": [
-              "Palikir",
-              "Kolonia",
-              "Weno",
-              "Tofol",
-              "Kolonia Town",
-              "Nett"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+680",
-        "iso_code": "PW",
-        "country_name": "Palau",
-        "states": [
-          {
-            "state": "Ngerulmud",
-            "cities": [
-              "Ngerulmud",
-              "Koror",
-              "Airai",
-              "Peleliu",
-              "Angaur",
-              "Kayangel"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+692",
-        "iso_code": "MH",
-        "country_name": "Marshall Islands",
-        "states": [
-          {
-            "state": "Majuro Atoll",
-            "cities": [
-              "Majuro",
-              "Ebeye",
-              "Jaluit",
-              "Wotje",
-              "Mili Atoll",
-              "Arno Atoll"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+688",
-        "iso_code": "TV",
-        "country_name": "Tuvalu",
-        "states": [
-          {
-            "state": "Funafuti",
-            "cities": [
-              "Funafuti",
-              "Savave",
-              "Tanrake",
-              "Asau",
-              "Amatuku",
-              "Senala"
-            ]
-          }
-        ]
-      },
-      {
-        "phone_code": "+674",
-        "iso_code": "NR",
-        "country_name": "Nauru",
-        "states": [
-          {
-            "state": "Yaren District",
-            "cities": [
-              "Yaren",
-              "Aiwo",
-              "Anabar",
-              "Anetan",
-              "Anibare",
-              "Baiti"
+              "Abohar",
+              "Abrinpur",
+              "Achalpur",
+              "Adampur",
+              "Adhanpur",
+              "Adhli",
+              "Adiala",
+              "Adialpur",
+              "Adipur",
+              "Admal",
+              "Admopur",
+              "Adnana",
+              "Adorpur",
+              "Adpur",
+              "Adwana",
+              "Aeowal",
+              "Aera",
+              "Aerpur",
+              "Aerthal",
+              "Aethal",
+              "Aftwal",
+              "Agad",
+              "Agadpur",
+              "Agail",
+              "Agains",
+              "Agal",
+              "Agalthir",
+              "Agam",
+              "Agampur",
+              "Agamthir",
+              "Agandpur",
+              "Aganpur",
+              "Aganwali",
+              "Aganwali",
+              "Aganwali"
+            ]
+          },
+          {
+            "state": "Rajasthan",
+            "cities": [
+              "Ajmer",
+              "Alwar",
+              "Banasthali",
+              "Bandikui",
+              "Banswara",
+              "Baran",
+              "Baraut",
+              "Barmer",
+              "Barnawa",
+              "Baseri",
+              "Basni",
+              "Bassi",
+              "Bassinagar",
+              "Baswa",
+              "Batawar",
+              "Bateswar",
+              "Bateswar",
+              "Bateswar",
+              "Bateswar"
+            ]
+          },
+          {
+            "state": "Sikkim",
+            "cities": [
+              "Aritar",
+              "Bakhim",
+              "Baling",
+              "Barfung",
+              "Barking",
+              "Barmi",
+              "Barpak",
+              "Barsong",
+              "Bartak",
+              "Bartam",
+              "Bartang",
+              "Bartang",
+              "Bartang"
+            ]
+          },
+          {
+            "state": "Tamil Nadu",
+            "cities": [
+              "Addanki",
+              "Adoor",
+              "Adyar",
+              "Agaram",
+              "Agaramudi",
+              "Agaramudi",
+              "Agaramudi",
+              "Agaramudi"
+            ]
+          },
+          {
+            "state": "Telangana",
+            "cities": [
+              "Adilabad",
+              "Armoor",
+              "Ashok Nagar",
+              "Asifabad",
+              "Aurangabad",
+              "Babhulgaon",
+              "Bachraj",
+              "Badangpet",
+              "Badepalli",
+              "Badhwar",
+              "Badlapur",
+              "Badrabad",
+              "Badradri",
+              "Badrakh",
+              "Badrapalli",
+              "Badrawan",
+              "Badraya",
+              "Badrayan"
+            ]
+          },
+          {
+            "state": "Tripura",
+            "cities": [
+              "Aambasa",
+              "Aantapur",
+              "Aarabari",
+              "Aarabpur",
+              "Aarampara",
+              "Aarbad",
+              "Aarbadi",
+              "Aarbadibasti",
+              "Aarbakulam",
+              "Aarbala",
+              "Aarbalpur",
+              "Aarbamba",
+              "Aarbambapur",
+              "Aarbambas",
+              "Aarbambi",
+              "Aarbampur",
+              "Aarbamsi"
+            ]
+          },
+          {
+            "state": "Uttar Pradesh",
+            "cities": [
+              "Abadpur",
+              "Abahapur",
+              "Abahapur",
+              "Abahapur",
+              "Abahapur"
+            ]
+          },
+          {
+            "state": "Uttarakhand",
+            "cities": [
+              "Bageshwar",
+              "Baijnath",
+              "Bailpur",
+              "Baipanal",
+              "Bairagarh",
+              "Bairat",
+              "Bairauli",
+              "Baithpur",
+              "Bajpur",
+              "Bakain",
+              "Bakains",
+              "Bakaner",
+              "Bakaner",
+              "Bakaner"
+            ]
+          },
+          {
+            "state": "West Bengal",
+            "cities": [
+              "Aalambazar",
+              "Aalapal",
+              "Aalapur",
+              "Aalasoi",
+              "Aalbari",
+              "Aalbari"
             ]
           }
         ]
