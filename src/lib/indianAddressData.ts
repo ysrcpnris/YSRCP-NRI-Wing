@@ -855,47 +855,437 @@ export const indianAddressData: Record<
 
   Telangana: [
     {
+      name: "Adilabad",
+      constituencies: [
+        {
+          name: "Adilabad",
+          mandals: ["Adilabad Urban", "Adilabad Rural", "Jainad", "Bela", "Tamsi", "Talamadugu", "Mavala", "Gudihathnur"],
+        },
+        {
+          name: "Boath (ST)",
+          mandals: ["Boath", "Bazarhathnoor", "Ichoda", "Inderavelly", "Narnoor", "Kerameri", "Neradigonda", "Sirikonda"],
+        },
+      ],
+    },
+    {
+      name: "Komaram Bheem Asifabad",
+      constituencies: [
+        {
+          name: "Sirpur",
+          mandals: ["Sirpur (T)", "Kagaznagar", "Koutala", "Bejjur", "Dahegaon", "Penchikalpet", "Asifabad", "Wankidi", "Rebbena", "Tiryani", "Jainoor", "Sirpur (U)", "Lingapur", "Chintalamanepally"],
+        },
+      ],
+    },
+    {
+      name: "Mancherial",
+      constituencies: [
+        {
+          name: "Chennur (SC)",
+          mandals: ["Chennur", "Jaipur", "Kotapalli", "Luxettipet", "Kasipet", "Bheemini", "Dandepalli"],
+        },
+        {
+          name: "Bellampalli (SC)",
+          mandals: ["Bellampalli", "Mandamarri", "Nennel", "Bheemaram", "Tandur"],
+        },
+        {
+          name: "Mancherial",
+          mandals: ["Mancherial", "Naspur", "Hajipur", "Jannaram"],
+        },
+      ],
+    },
+    {
+      name: "Nirmal",
+      constituencies: [
+        {
+          name: "Nirmal",
+          mandals: ["Nirmal Urban", "Nirmal Rural", "Laxmanchanda", "Soan", "Sarangapur", "Dilawarpur", "Mamda"],
+        },
+        {
+          name: "Khanapur (ST)",
+          mandals: ["Khanapur", "Kadem", "Pembi", "Kuntala", "Kubeer"],
+        },
+        {
+          name: "Mudhole",
+          mandals: ["Mudhole", "Basara", "Lokeswaram", "Tanur", "Dahegaon"],
+        },
+      ],
+    },
+    {
+      name: "Nizamabad",
+      constituencies: [
+        {
+          name: "Armoor",
+          mandals: ["Armoor", "Mendora", "Jakranpally", "Mortad"],
+        },
+        {
+          name: "Bodhan",
+          mandals: ["Bodhan", "Kotagiri", "Rudrur", "Renjal", "Varni", "Yedapalli"],
+        },
+        {
+          name: "Nizamabad (Urban)",
+          mandals: ["Nizamabad North", "Nizamabad South"],
+        },
+        {
+          name: "Nizamabad (Rural)",
+          mandals: ["Sirkonda", "Dharpalli", "Makloor", "Dichpally"],
+        },
+        {
+          name: "Balkonda",
+          mandals: ["Balkonda", "Bheemgal", "Kammarpally", "Velpur", "Mupkal", "Nandipet"],
+        },
+      ],
+    },
+    {
+      name: "Jagtial",
+      constituencies: [
+        {
+          name: "Jagtial",
+          mandals: ["Jagtial Urban", "Jagtial Rural", "Raikal", "Mallial", "Beerpur", "Sarangapur"],
+        },
+        {
+          name: "Dharmapuri (SC)",
+          mandals: ["Dharmapuri", "Velgatoor", "Ibrahimpatnam", "Metpalli", "Kathlapur", "Pegadapalli"],
+        },
+        {
+          name: "Korutla",
+          mandals: ["Korutla", "Medipalli", "Mallapur"],
+        },
+      ],
+    },
+    {
+      name: "Rajanna Sircilla",
+      constituencies: [
+        {
+          name: "Sircilla",
+          mandals: ["Sircilla Urban", "Sircilla Rural", "Thangallapally", "Rudrangi", "Mustabad", "Konaraopeta", "Chandurthi"],
+        },
+        {
+          name: "Vemulawada",
+          mandals: ["Vemulawada Urban", "Vemulawada Rural", "Gambhiraopet", "Boinpally", "Yellareddipet", "Illanthakunta", "Veernapally"],
+        },
+      ],
+    },
+    {
+      name: "Karimnagar",
+      constituencies: [
+        {
+          name: "Karimnagar",
+          mandals: ["Karimnagar Urban", "Karimnagar Rural", "Kothapally", "Manakondur", "Thimmapur"],
+        },
+        {
+          name: "Choppadandi (SC)",
+          mandals: ["Choppadandi", "Chigurumamidi", "Ganneruvaram", "Ramadugu", "V. Saidapur"],
+        },
+        {
+          name: "Huzurabad",
+          mandals: ["Huzurabad", "Jammikunta", "Veenavanka", "Kamalapur", "Saidapur", "Illanthakunta"],
+        },
+      ],
+    },
+    {
+      name: "Peddapalli",
+      constituencies: [
+        {
+          name: "Peddapalli",
+          mandals: ["Peddapalli", "Sultanabad", "Odela", "Julapalli", "Kalva Srirampur"],
+        },
+        {
+          name: "Manthani",
+          mandals: ["Manthani", "Ramagiri", "Kataram", "Mahadevpur", "Mutharam", "Palakurthi"],
+        },
+        {
+          name: "Ramagundam",
+          mandals: ["Ramagundam", "Godavarikhani", "Antargaon", "Srirampur"],
+        },
+      ],
+    },
+    {
+      name: "Kamareddy",
+      constituencies: [
+        {
+          name: "Kamareddy",
+          mandals: ["Kamareddy", "Tadwai", "Sadasivanagar", "Bichkunda", "Pitlam", "Nizamsagar"],
+        },
+        {
+          name: "Yellareddy",
+          mandals: ["Yellareddy", "Gandhari", "Lingampet", "Nagireddypet", "Bhiknoor"],
+        },
+        {
+          name: "Banswada",
+          mandals: ["Banswada", "Birkoor", "Madnoor", "Jukkal"],
+        },
+      ],
+    },
+    {
+      name: "Jayashankar Bhupalpally",
+      constituencies: [
+        {
+          name: "Bhupalpally",
+          mandals: ["Bhupalpally", "Ghanpur (Mulug)", "Regonda", "Tekumatla", "Chityal", "Malhar Rao"],
+        },
+      ],
+    },
+    {
+      name: "Mulugu",
+      constituencies: [
+        {
+          name: "Mulugu (ST)",
+          mandals: ["Mulugu", "Govindaraopet", "Venkatapur", "Eturnagaram", "Mangapeta", "Tadvai"],
+        },
+      ],
+    },
+    {
+      name: "Warangal",
+      constituencies: [
+        {
+          name: "Parkal",
+          mandals: ["Parkal", "Shayampet", "Atmakur", "Geesukonda", "Nallabelly", "Nekkonda"],
+        },
+        {
+          name: "Wardhannapet (SC)",
+          mandals: ["Wardhannapet", "Sangem", "Raiparthy", "Duggondi", "Narsampet", "Chennaraopet"],
+        },
+      ],
+    },
+    {
+      name: "Hanumakonda",
+      constituencies: [
+        {
+          name: "Warangal East",
+          mandals: ["Warangal East", "Kazipet", "Hanumakonda (East)"],
+        },
+        {
+          name: "Warangal West",
+          mandals: ["Warangal West", "Hanumakonda (West)", "Hasanparthy", "Dharmasagar"],
+        },
+      ],
+    },
+    {
+      name: "Mahabubabad",
+      constituencies: [
+        {
+          name: "Mahabubabad (ST)",
+          mandals: ["Mahabubabad", "Kesamudram", "Nellikudur", "Chinnagudur", "Peddavangara", "Kuravi"],
+        },
+        {
+          name: "Dornakal (ST)",
+          mandals: ["Dornakal", "Gudur", "Thorrur", "Kuravi", "Danthalapally"],
+        },
+      ],
+    },
+    {
+      name: "Jangaon",
+      constituencies: [
+        {
+          name: "Jangaon",
+          mandals: ["Jangaon", "Raghunathpalle", "Lingalaghanpur", "Zafargadh"],
+        },
+        {
+          name: "Station Ghanpur",
+          mandals: ["Station Ghanpur", "Bachannapet", "Narmetta", "Kodakandla"],
+        },
+        {
+          name: "Palakurthi",
+          mandals: ["Palakurthi", "Devaruppula", "Maddur", "Tharigoppula"],
+        },
+      ],
+    },
+    {
+      name: "Bhadradri Kothagudem",
+      constituencies: [
+        {
+          name: "Kothagudem",
+          mandals: ["Kothagudem", "Palvoncha", "Laxmidevipalle", "Chunchupalle", "Tekulapalli"],
+        },
+        {
+          name: "Pinapaka (ST)",
+          mandals: ["Pinapaka", "Manuguru", "Aswapuram", "Burgampahad", "Cherla"],
+        },
+        {
+          name: "Yellandu (ST)",
+          mandals: ["Yellandu", "Bayyaram", "Garla", "Gundala", "Kamepalli"],
+        },
+        {
+          name: "Aswaraopeta (ST)",
+          mandals: ["Aswaraopeta", "Dammapeta", "Mulakalapalli", "Kukunoor", "Velairpad"],
+        },
+      ],
+    },
+    {
+      name: "Khammam",
+      constituencies: [
+        {
+          name: "Khammam",
+          mandals: ["Khammam Urban", "Khammam Rural", "Raghunadhapalem", "Mudigonda", "Konijerla", "Nelakondapally"],
+        },
+        {
+          name: "Palair",
+          mandals: ["Palair", "Kusumanchi", "Chintakani", "Tirumalayapalem", "Thallada"],
+        },
+        {
+          name: "Madhira (SC)",
+          mandals: ["Madhira", "Bonakal", "Yerrupalem", "Enkoor"],
+        },
+        {
+          name: "Wyra (ST)",
+          mandals: ["Wyra", "Julurpad", "Bayyaram", "Kamepally"],
+        },
+        {
+          name: "Sathupalli (SC)",
+          mandals: ["Sathupalli", "Vemsoor", "Penuballi", "Kallur"],
+        },
+      ],
+    },
+    {
+      name: "Suryapet",
+      constituencies: [
+        {
+          name: "Suryapet",
+          mandals: ["Suryapet", "Chivvemla", "Penpahad", "Mothey"],
+        },
+        {
+          name: "Thungathurthi (SC)",
+          mandals: ["Thungathurthi", "Thirumalagiri", "Mothkur", "Athmakur (S)", "Jajireddigudem"],
+        },
+        {
+          name: "Kodad",
+          mandals: ["Kodad", "Munagala", "Nadigudem", "Mellacheruvu"],
+        },
+        {
+          name: "Huzurnagar",
+          mandals: ["Huzurnagar", "Mellacheruvu", "Garidepally", "Mattampally", "Palakeedu"],
+        },
+      ],
+    },
+    {
+      name: "Nalgonda",
+      constituencies: [
+        {
+          name: "Nalgonda",
+          mandals: ["Nalgonda", "Kanagal", "Thipparthy", "Shaligouraram"],
+        },
+        {
+          name: "Miryalaguda",
+          mandals: ["Miryalaguda", "Damaracherla", "Tripuraram", "Adavidevulapally", "Nidamanoor"],
+        },
+        {
+          name: "Nakrekal (SC)",
+          mandals: ["Nakrekal", "Kethepally", "Chityala", "Narketpally", "Kattangur"],
+        },
+        {
+          name: "Munugode",
+          mandals: ["Munugode", "Marriguda", "Chandur", "Nampally", "Chinthapalli"],
+        },
+        {
+          name: "Devarakonda (ST)",
+          mandals: ["Devarakonda", "Peddavoora", "Chinthapalli", "Gundlapalli", "PA Pally"],
+        },
+        {
+          name: "Nagarjuna Sagar",
+          mandals: ["Nagarjunasagar", "Halia", "Tripuraram"],
+        },
+      ],
+    },
+    {
+      name: "Yadadri Bhuvanagiri",
+      constituencies: [
+        {
+          name: "Alair",
+          mandals: ["Alair", "Yadagirigutta", "Athmakur (M)", "Rajapet", "Motakondur"],
+        },
+        {
+          name: "Bhongir",
+          mandals: ["Bhongir", "Bibinagar", "Pochampally", "Valigonda", "Choutuppal", "Turkapally"],
+        },
+      ],
+    },
+    {
+      name: "Medchal-Malkajgiri",
+      constituencies: [
+        {
+          name: "Medchal",
+          mandals: ["Medchal", "Kompally", "Shamirpet", "Keesara", "Ghatkesar"],
+        },
+        {
+          name: "Malkajgiri",
+          mandals: ["Malkajgiri", "Alwal", "Neredmet"],
+        },
+        {
+          name: "Quthbullapur",
+          mandals: ["Quthbullapur", "Jeedimetla"],
+        },
+        {
+          name: "Kukatpally",
+          mandals: ["Kukatpally", "Balanagar"],
+        },
+        {
+          name: "Uppal",
+          mandals: ["Uppal", "Habsiguda", "Ramanthapur"],
+        },
+      ],
+    },
+    {
       name: "Hyderabad",
       constituencies: [
         {
-          name: "Khairatabad",
-          mandals: ["Khairatabad"],
+          name: "Secunderabad",
+          mandals: ["Secunderabad", "Tukaramgate", "Sitaphalmandi"],
         },
         {
-          name: "Jubilee Hills",
-          mandals: ["Jubilee Hills"],
+          name: "Secunderabad Cantonment (SC)",
+          mandals: ["Secunderabad Cantonment", "Trimulgherry", "Bowenpally"],
         },
         {
-          name: "Serilingampally",
-          mandals: ["Serilingampally"],
-        },
-        {
-          name: "Sanathnagar",
-          mandals: ["Sanathnagar"],
+          name: "Musheerabad",
+          mandals: ["Musheerabad", "Chilakalguda", "Ramnagar"],
         },
         {
           name: "Amberpet",
-          mandals: ["Amberpet"],
+          mandals: ["Amberpet", "Baghlingampally", "Kachiguda"],
         },
         {
-          name: "Malakpet",
-          mandals: ["Malakpet"],
+          name: "Khairatabad",
+          mandals: ["Khairatabad", "Somajiguda", "Banjara Hills"],
+        },
+        {
+          name: "Jubilee Hills",
+          mandals: ["Jubilee Hills", "Yousufguda", "Madhapur"],
+        },
+        {
+          name: "Sanathnagar",
+          mandals: ["Sanathnagar", "Erragadda", "Borabanda"],
+        },
+        {
+          name: "Nampally",
+          mandals: ["Nampally", "Mallepally", "Asifnagar"],
         },
         {
           name: "Karwan",
-          mandals: ["Karwan"],
+          mandals: ["Karwan", "Mehdipatnam", "Tolichowki"],
         },
         {
           name: "Goshamahal",
-          mandals: ["Goshamahal"],
+          mandals: ["Goshamahal", "Mangalhat"],
         },
         {
           name: "Charminar",
-          mandals: ["Charminar"],
+          mandals: ["Charminar", "Falaknuma", "Hussaini Alam"],
+        },
+        {
+          name: "Chandrayangutta",
+          mandals: ["Chandrayangutta", "Santoshnagar", "Saidabad"],
         },
         {
           name: "Yakutpura",
-          mandals: ["Yakutpura"],
+          mandals: ["Yakutpura", "Dabeerpura"],
+        },
+        {
+          name: "Bahadurpura",
+          mandals: ["Bahadurpura", "Shaheen Nagar", "Shahalibanda"],
+        },
+        {
+          name: "Malakpet",
+          mandals: ["Malakpet", "Chaderghat"],
         },
       ],
     },
@@ -903,28 +1293,173 @@ export const indianAddressData: Record<
       name: "Rangareddy",
       constituencies: [
         {
-          name: "Ibrahimpatnam",
-          mandals: ["Ibrahimpatnam"],
+          name: "Rajendranagar",
+          mandals: ["Rajendranagar", "Gandipet", "Shamshabad"],
         },
         {
-          name: "L.B. Nagar",
-          mandals: ["L.B. Nagar"],
+          name: "LB Nagar",
+          mandals: ["LB Nagar", "Saroornagar", "Hayathnagar"],
         },
         {
           name: "Maheshwaram",
-          mandals: ["Maheshwaram"],
+          mandals: ["Maheshwaram", "Kandukur", "Balapur"],
         },
         {
-          name: "Rajendranagar",
-          mandals: ["Rajendranagar"],
+          name: "Ibrahimpatnam",
+          mandals: ["Ibrahimpatnam", "Manchal", "Yacharam", "Abdullapurmet"],
         },
         {
           name: "Chevella",
-          mandals: ["Chevella"],
+          mandals: ["Chevella", "Moinabad", "Shabad", "Shankarpalle"],
+        },
+      ],
+    },
+    {
+      name: "Vikarabad",
+      constituencies: [
+        {
+          name: "Vikarabad (SC)",
+          mandals: ["Vikarabad", "Bantwaram", "Marpalle", "Kulkacherla", "Nawabpet"],
         },
         {
-          name: "Vikarabad",
-          mandals: ["Vikarabad"],
+          name: "Tandur",
+          mandals: ["Tandur", "Basheerabad", "Peddemul", "Yalal", "Doma"],
+        },
+        {
+          name: "Pargi",
+          mandals: ["Pargi", "Kulkacherla", "Bantwaram"],
+        },
+        {
+          name: "Kodangal",
+          mandals: ["Kodangal", "Bomraspet", "Kosgi", "Maddur", "Doulathabad"],
+        },
+      ],
+    },
+    {
+      name: "Sangareddy",
+      constituencies: [
+        {
+          name: "Sangareddy",
+          mandals: ["Sangareddy", "Kondapur", "Kangti"],
+        },
+        {
+          name: "Patancheru",
+          mandals: ["Patancheru", "Ramachandrapuram", "Ameenpur", "Hatnoor", "Gummadidala"],
+        },
+        {
+          name: "Narayankhed",
+          mandals: ["Narayankhed", "Kalher", "Manoor", "Sirgapur"],
+        },
+        {
+          name: "Andole (SC)",
+          mandals: ["Andole", "Jogipet", "Pulkal", "Raikode", "Alladurg"],
+        },
+        {
+          name: "Zaheerabad",
+          mandals: ["Zaheerabad", "Jharasangam", "Nyalkal", "Kohir", "Munpally"],
+        },
+      ],
+    },
+    {
+      name: "Medak",
+      constituencies: [
+        {
+          name: "Medak",
+          mandals: ["Medak", "Chegunta", "Ramayampet", "Shivampet", "Regode"],
+        },
+        {
+          name: "Gajwel",
+          mandals: ["Gajwel", "Jagdevpur", "Wargal", "Toopran", "Mulugu", "Kondapak"],
+        },
+        {
+          name: "Narsapur",
+          mandals: ["Narsapur", "Kowdipalle", "Kulcharam", "Nanganur", "Velduthy"],
+        },
+      ],
+    },
+    {
+      name: "Siddipet",
+      constituencies: [
+        {
+          name: "Siddipet",
+          mandals: ["Siddipet Urban", "Siddipet Rural", "Chinnakodur", "Nangnoor", "Komuravelly"],
+        },
+        {
+          name: "Dubbak",
+          mandals: ["Dubbak", "Doulatabad", "Mirdoddi", "Togarrai", "Raipole"],
+        },
+        {
+          name: "Husnabad",
+          mandals: ["Husnabad", "Koheda", "Akkannapet", "Bejjanki", "Cherial", "Gangadhara"],
+        },
+      ],
+    },
+    {
+      name: "Mahabubnagar",
+      constituencies: [
+        {
+          name: "Mahabubnagar",
+          mandals: ["Mahabubnagar Urban", "Mahabubnagar Rural", "Bhoothpur", "Addakal"],
+        },
+        {
+          name: "Jadcherla",
+          mandals: ["Jadcherla", "Balanagar", "Midjil", "Nawabpet"],
+        },
+        {
+          name: "Devarkadra",
+          mandals: ["Devarkadra", "Koilkonda", "Hanwada", "Kothakota", "Chinna Chintakunta"],
+        },
+      ],
+    },
+    {
+      name: "Nagarkurnool",
+      constituencies: [
+        {
+          name: "Nagarkurnool",
+          mandals: ["Nagarkurnool", "Thimmajipet", "Bijinapalli", "Telkapalli"],
+        },
+        {
+          name: "Achampet (SC)",
+          mandals: ["Achampet", "Amrabad", "Lingal", "Balmoor", "Uppununthala", "Tadur"],
+        },
+        {
+          name: "Kalwakurthy",
+          mandals: ["Kalwakurthy", "Kadthal", "Madgul", "Veldanda", "Thalakondapalli"],
+        },
+        {
+          name: "Kollapur",
+          mandals: ["Kollapur", "Pentlavelli", "Pangal", "Veepanagandla", "Peddakothapally"],
+        },
+      ],
+    },
+    {
+      name: "Wanaparthy",
+      constituencies: [
+        {
+          name: "Wanaparthy",
+          mandals: ["Wanaparthy", "Pebbair", "Srirangapur", "Atmakur", "Amarachintha", "Ghanpur"],
+        },
+      ],
+    },
+    {
+      name: "Jogulamba Gadwal",
+      constituencies: [
+        {
+          name: "Gadwal",
+          mandals: ["Gadwal", "Aiza", "Dharur", "Maldakal", "Waddepally"],
+        },
+        {
+          name: "Alampur (SC)",
+          mandals: ["Alampur", "Itikyal", "Manopad", "Ghattu", "Undavelli", "Kaloor Thimmanadoddi"],
+        },
+      ],
+    },
+    {
+      name: "Narayanpet",
+      constituencies: [
+        {
+          name: "Narayanpet",
+          mandals: ["Narayanpet", "Makthal", "Utkoor", "Dhanwada", "Maganoor", "Kosgi", "Narva"],
         },
       ],
     },
