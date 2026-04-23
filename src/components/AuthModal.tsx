@@ -937,6 +937,7 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                 .filter((country) =>
                                   country.toLowerCase().includes(countrySearch.toLowerCase())
                                 )
+                                .sort((a, b) => a.localeCompare(b))
                                 .map((country) => (
                                   <li
                                     key={country}
@@ -984,13 +985,14 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                           >
                             <option value="">Select State</option>
                             {formData.country_of_residence &&
-                              countryData[formData.country_of_residence]?.map(
-                                (state) => (
+                              countryData[formData.country_of_residence]
+                                ?.slice()
+                                .sort((a, b) => a.name.localeCompare(b.name))
+                                .map((state) => (
                                   <option key={state.name} value={state.name}>
                                     {state.name}
                                   </option>
-                                )
-                              )}
+                                ))}
                           </select>
                         </div>
 
@@ -1018,7 +1020,9 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                                   (state) =>
                                     state.name === formData.state_abroad
                                 )
-                                ?.cities.map((city) => (
+                                ?.cities.slice()
+                                .sort((a, b) => a.localeCompare(b))
+                                .map((city) => (
                                   <option key={city} value={city}>
                                     {city}
                                   </option>
@@ -1100,11 +1104,14 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           >
                             <option value="">Select State</option>
-                            {Object.keys(indianAddressData).map((state) => (
-                              <option key={state} value={state}>
-                                {state}
-                              </option>
-                            ))}
+                            {Object.keys(indianAddressData)
+                              .slice()
+                              .sort((a, b) => a.localeCompare(b))
+                              .map((state) => (
+                                <option key={state} value={state}>
+                                  {state}
+                                </option>
+                              ))}
                           </select>
                         </div>
 
@@ -1127,13 +1134,14 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                           >
                             <option value="">Select District</option>
                             {formData.indian_state &&
-                              indianAddressData[formData.indian_state]?.map(
-                                (d) => (
+                              indianAddressData[formData.indian_state]
+                                ?.slice()
+                                .sort((a, b) => a.name.localeCompare(b.name))
+                                .map((d) => (
                                   <option key={d.name} value={d.name}>
                                     {d.name}
                                   </option>
-                                )
-                              )}
+                                ))}
                           </select>
                         </div>
                       </div>
@@ -1163,11 +1171,20 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                               formData.district &&
                               indianAddressData[formData.indian_state]
                                 ?.find((d) => d.name === formData.district)
-                                ?.constituencies.map((c) => (
-                                  <option key={c} value={c}>
-                                    {c}
-                                  </option>
-                                ))}
+                                ?.constituencies.slice()
+                                .sort((a: any, b: any) =>
+                                  (typeof a === "string" ? a : a.name).localeCompare(
+                                    typeof b === "string" ? b : b.name
+                                  )
+                                )
+                                .map((c: any) => {
+                                  const name = typeof c === "string" ? c : c.name;
+                                  return (
+                                    <option key={name} value={name}>
+                                      {name}
+                                    </option>
+                                  );
+                                })}
                           </select>
                         </div>
 
@@ -1271,11 +1288,14 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-700 focus:border-transparent"
                           >
                             <option value="">Select Profession</option>
-                            {professions.map((prof) => (
-                              <option key={prof} value={prof}>
-                                {prof}
-                              </option>
-                            ))}
+                            {professions
+                              .slice()
+                              .sort((a, b) => a.localeCompare(b))
+                              .map((prof) => (
+                                <option key={prof} value={prof}>
+                                  {prof}
+                                </option>
+                              ))}
                           </select>
                         </div>
                       </div>
@@ -1330,9 +1350,12 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         >
                           <option value="">Select contribution</option>
-                          {contributions.map((c) => (
-                            <option key={c} value={c}>{c}</option>
-                          ))}
+                          {contributions
+                            .slice()
+                            .sort((a, b) => a.localeCompare(b))
+                            .map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
                         </select>
                       </div>
 

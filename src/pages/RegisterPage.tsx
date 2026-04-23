@@ -76,10 +76,12 @@ export default function RegisterPage() {
     // referred_by: '',
   });
 
-  const countryCodes = countriesData.map(country => ({
-    name: country.name,
-    code: '+' + country.code
-  }));
+  const countryCodes = countriesData
+    .map(country => ({
+      name: country.name,
+      code: '+' + country.code
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -728,11 +730,14 @@ return (
                     className="input-field"
                   >
                     <option value="">Select State</option>
-                    {Object.keys(indianAddressData).map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
+                    {Object.keys(indianAddressData)
+                      .slice()
+                      .sort((a, b) => a.localeCompare(b))
+                      .map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -755,11 +760,14 @@ return (
                   >
                     <option value="">Select District</option>
                     {formData.indian_state &&
-                      indianAddressData[formData.indian_state]?.map((d) => (
-                        <option key={d.name} value={d.name}>
-                          {d.name}
-                        </option>
-                      ))}
+                      indianAddressData[formData.indian_state]
+                        ?.slice()
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((d) => (
+                          <option key={d.name} value={d.name}>
+                            {d.name}
+                          </option>
+                        ))}
                   </select>
                 </div>
               </div>
@@ -787,7 +795,9 @@ return (
                       formData.district &&
                       indianAddressData[formData.indian_state]
                         ?.find((d) => d.name === formData.district)
-                        ?.constituencies.map((c) => (
+                        ?.constituencies.slice()
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((c) => (
                           <option key={c.name} value={c.name}>
                             {c.name}
                           </option>
@@ -818,7 +828,9 @@ return (
                       indianAddressData[formData.indian_state]
                         ?.find((d) => d.name === formData.district)
                         ?.constituencies.find((c) => c.name === formData.assembly_constituency)
-                        ?.mandals.map((m) => (
+                        ?.mandals.slice()
+                        .sort((a, b) => a.localeCompare(b))
+                        .map((m) => (
                           <option key={m} value={m}>
                             {m}
                           </option>
