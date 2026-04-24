@@ -10,6 +10,9 @@ import Assistance from "./Assistance";
 import Suggestions from "./Suggestions";
 // import ServiceInbox from "./ServiceInbox";
 import MasterData from "./MasterData";
+import SupportTeams from "./SupportTeams";
+import Credits from "./Credits";
+import Rewards from "./Rewards";
 import EventsNotifications from "./EventsNotifications";
 
 import ContentControl from "./ContentControl";
@@ -67,6 +70,8 @@ const CONTINENTS = [
 
 type Row = {
   id: string;
+  public_user_code?: string | null;
+  credits_balance?: number | null;
   first_name?: string | null;
   last_name?: string | null;
   full_name?: string | null;
@@ -259,6 +264,9 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Home} label="Dashboard" page="dashboard" />
             <Item icon={CalendarDays} label="Visited" page="visited" />
             <Item icon={Newspaper} label="Assistance" page="assistance" />
+            <Item icon={Users} label="Support Teams" page="supportTeams" />
+            <Item icon={BarChart3} label="Credits" page="credits" />
+            <Item icon={BarChart3} label="Rewards" page="rewards" />
             <Item icon={Users} label="Suggestions" page="suggestions" />
             {/* <Item icon={FolderKanban} label="Service Inbox" page="serviceInbox" /> */}
             <Item icon={Settings} label="Master Data" page="masterData" />
@@ -355,11 +363,13 @@ function MembersList({
             <table className="min-w-full border border-gray-200 rounded-lg">
               <thead className="bg-gradient-to-r from-primary-600 to-accent-600 text-white">
                 <tr>
+                  <th className="py-3 px-4 text-left text-sm font-semibold">User ID</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Name</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Email</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Mobile</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">WhatsApp</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Profession</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold">Credits</th>
                 </tr>
               </thead>
               <tbody>
@@ -368,11 +378,17 @@ function MembersList({
                     key={m.id}
                     className={`text-sm hover:bg-blue-50 ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
                   >
+                    <td className="py-2 px-4 font-mono text-xs" title={`UUID: ${m.id}`}>
+                      {(m as any).public_user_code || "-"}
+                    </td>
                     <td className="py-2 px-4">{[(m as any).first_name, (m as any).last_name].filter(Boolean).join(" ") || "-"}</td>
                     <td className="py-2 px-4">{(m as any).email || "-"}</td>
                     <td className="py-2 px-4">{(m as any).mobile_number || "-"}</td>
                     <td className="py-2 px-4">{(m as any).whatsapp_number || "-"}</td>
                     <td className="py-2 px-4">{(m as any).profession || "-"}</td>
+                    <td className="py-2 px-4 font-bold text-amber-700">
+                      ⚡ {(m as any).credits_balance ?? 0}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -572,7 +588,7 @@ export default function AdminDashboard() {
           const { data, error } = await supabase
             .from(TABLE_NAME)
             .select(
-              "id, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, created_at"
+              "id, public_user_code, credits_balance, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, created_at"
             )
             .range(offset, offset + batchSize - 1);
 
@@ -860,6 +876,9 @@ export default function AdminDashboard() {
         )}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
+      {currentPage === "supportTeams" && <SupportTeams />}
+      {currentPage === "credits" && <Credits />}
+      {currentPage === "rewards" && <Rewards />}
       {currentPage === "suggestions" && <Suggestions />}
       {/* {currentPage === "serviceInbox" && <ServiceInbox />} */}
       {currentPage === "masterData" && <MasterData />}

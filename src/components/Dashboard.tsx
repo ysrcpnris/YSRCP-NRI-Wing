@@ -1268,6 +1268,54 @@ const [selectedInner, setSelectedInner] = useState<string | null>(null);
   const [activeReferralCount, setActiveReferralCount] = useState<number>(0);
 
   const [submittingService, setSubmittingService] = useState(false);
+
+  // Current user's own service requests (for "My Service Requests" list)
+  type MyServiceRequest = {
+    id: string;
+    service_type: string;
+    service_category: string | null;
+    service_option: string | null;
+    description: string | null;
+    status: string;
+    assigned_to: string | null;
+    action_taken: string | null;
+    admin_comments: string | null;
+    created_at: string;
+  };
+  const [myRequests, setMyRequests] = useState<MyServiceRequest[]>([]);
+  const [loadingMyRequests, setLoadingMyRequests] = useState(false);
+
+  // Credit ledger (last N entries shown on Refer & Earn tab)
+  type CreditEntry = {
+    id: string;
+    delta: number;
+    reason: string;
+    note: string | null;
+    created_at: string;
+  };
+  const [creditLedger, setCreditLedger] = useState<CreditEntry[]>([]);
+
+  // Reward catalogue + user's own redemption history
+  type Perk = {
+    id: string;
+    name: string;
+    description: string | null;
+    cost_credits: number;
+    is_active: boolean;
+  };
+  type Redemption = {
+    id: string;
+    perk_name: string;
+    cost_credits: number;
+    status: "pending" | "approved" | "rejected";
+    admin_note: string | null;
+    created_at: string;
+    decided_at: string | null;
+  };
+  const [perks, setPerks] = useState<Perk[]>([]);
+  const [myRedemptions, setMyRedemptions] = useState<Redemption[]>([]);
+  const [redeemingPerkId, setRedeemingPerkId] = useState<string | null>(null);
+
 const [contributionTypes, setContributionTypes] = useState<
   { id: number; name: string }[]
 >([]);
@@ -1340,6 +1388,7 @@ const location = useLocation();
 
 useEffect(() => {
   if (location.state?.openProfile) {
+    setActiveTab("profile");
     setExpandedSection("profile");
   }
 }, [location.state]);
@@ -1938,6 +1987,145 @@ const toggleSection = async (section: SectionKey) => {
   }
 };
 
+const fetchMyServiceRequests = async () => {
+  if (!user) return;
+  setLoadingMyRequests(true);
+  const { data, error } = await supabase
+    .from("service_requests")
+    .select(
+      "id, service_type, service_category, service_option, description, status, assigned_to, action_taken, admin_comments, created_at"
+    )
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (!error && data) setMyRequests(data as MyServiceRequest[]);
+  setLoadingMyRequests(false);
+};
+
+useEffect(() => {
+  fetchMyServiceRequests();
+  fetchCreditLedger();
+  fetchRewardPerks();
+  fetchMyRedemptions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [user?.id]);
+
+// Realtime: credits arrive without a refresh.
+// Subscribes to INSERTs on credit_transactions for this user and to
+// UPDATEs on the user's profile row (so credits_balance ticks live).
+useEffect(() => {
+  if (!user?.id) return;
+
+  const channel = supabase
+    .channel(`credits-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "credit_transactions",
+        filter: `user_id=eq.${user.id}`,
+      },
+      () => {
+        fetchCreditLedger();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "profiles",
+        filter: `id=eq.${user.id}`,
+      },
+      () => {
+        refreshProfile();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "redemptions",
+        filter: `user_id=eq.${user.id}`,
+      },
+      () => {
+        fetchMyRedemptions();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [user?.id]);
+
+// Last 10 credit ledger entries for the current user.
+// Also refreshes the profile so the cached balance pill stays accurate.
+const fetchCreditLedger = async () => {
+  if (!user) return;
+  const { data } = await supabase
+    .from("credit_transactions")
+    .select("id, delta, reason, note, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (data) setCreditLedger(data as CreditEntry[]);
+  // also pull fresh credits_balance
+  refreshProfile();
+};
+
+// Active perks (catalogue). Admins manage these from the Rewards page.
+const fetchRewardPerks = async () => {
+  const { data } = await supabase
+    .from("reward_perks")
+    .select("id, name, description, cost_credits, is_active")
+    .eq("is_active", true)
+    .order("cost_credits", { ascending: true });
+  if (data) setPerks(data as Perk[]);
+};
+
+// User's own redemption history (status + admin note).
+const fetchMyRedemptions = async () => {
+  if (!user) return;
+  const { data } = await supabase
+    .from("redemptions")
+    .select("id, perk_name, cost_credits, status, admin_note, created_at, decided_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (data) setMyRedemptions(data as Redemption[]);
+};
+
+// User-initiated redeem: inserts a pending redemption row.
+// The admin approves it; the DB trigger posts the negative ledger entry
+// atomically with a balance check, so we don't trust the client here.
+const handleRedeemPerk = async (perk: Perk) => {
+  if (!user) return;
+  const balance = profile?.credits_balance ?? 0;
+  if (balance < perk.cost_credits) {
+    showToast(`Need ${perk.cost_credits - balance} more credits`, "info");
+    return;
+  }
+  setRedeemingPerkId(perk.id);
+  const { error } = await supabase.from("redemptions").insert({
+    user_id: user.id,
+    perk_id: perk.id,
+    perk_name: perk.name,
+    cost_credits: perk.cost_credits,
+    status: "pending",
+  });
+  setRedeemingPerkId(null);
+  if (error) {
+    console.error(error);
+    showToast("Could not submit redemption", "info");
+    return;
+  }
+  showToast("Redemption request submitted!", "success");
+  fetchMyRedemptions();
+};
+
 const handleSubmitService = async () => {
   const message = serviceMessageRef.current?.value.trim();
 
@@ -1978,6 +2166,7 @@ const handleSubmitService = async () => {
     setSelectedInner(null);
 
     showToast("Service request submitted successfully!", "success");
+    fetchMyServiceRequests();
   } catch (err) {
     console.error(err);
     showToast("Failed to submit request", "info");
@@ -3293,8 +3482,9 @@ const handleSubmitSuggestion = async () => {
         <div>
           <h4 className="font-black text-xl mb-1">Refer & Earn</h4>
           <p className="text-emerald-100 text-xs max-w-md">
-            Share your unique link. Top referrers get exclusive meeting invites with party
-            leadership.
+            Share your unique link. Earn <b>+50 credits</b> per direct sign-up and{" "}
+            <b>+10 credits</b> when your referrals bring in theirs. Top referrers get exclusive
+            meeting invites with party leadership.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20">
@@ -3337,6 +3527,195 @@ const handleSubmitSuggestion = async () => {
           >
             Copy
           </button>
+        </div>
+      </div>
+
+      {/* Credits widget: balance + recent ledger */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-2xl p-5">
+          <p className="text-[11px] font-bold tracking-wider text-amber-800 uppercase">
+            Current Balance
+          </p>
+          <p className="text-3xl font-extrabold text-amber-900 mt-1">
+            ⚡ {profile?.credits_balance ?? 0}
+          </p>
+          <p className="text-[11px] text-amber-700 mt-2">
+            +50 active · +10 passive · +25 signup
+          </p>
+        </div>
+        <div className="md:col-span-2 bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+              Recent Credit Activity
+            </p>
+            <button
+              onClick={fetchCreditLedger}
+              className="text-[11px] font-semibold text-primary-600 hover:text-primary-800"
+            >
+              Refresh
+            </button>
+          </div>
+          {creditLedger.length === 0 ? (
+            <p className="text-xs text-gray-500">
+              No activity yet — share your link to start earning.
+            </p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {creditLedger.map((e) => {
+                const label =
+                  e.reason === "active"
+                    ? "Active referral"
+                    : e.reason === "passive"
+                    ? "Passive referral"
+                    : e.reason === "signup"
+                    ? "Signup bonus"
+                    : e.reason === "admin_adjustment"
+                    ? "Admin adjustment"
+                    : e.reason === "redemption"
+                    ? "Redemption"
+                    : e.reason;
+                const isPositive = e.delta > 0;
+                return (
+                  <li
+                    key={e.id}
+                    className="py-2 flex items-center justify-between text-xs"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-800 truncate">{label}</p>
+                      {e.note && (
+                        <p className="text-[11px] text-gray-500 truncate">{e.note}</p>
+                      )}
+                      <p className="text-[11px] text-gray-400">
+                        {new Date(e.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span
+                      className={`font-bold text-sm ${
+                        isPositive ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {isPositive ? "+" : ""}
+                      {e.delta}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {/* Rewards catalogue + my redemptions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+              Rewards Catalogue
+            </p>
+            <button
+              onClick={fetchRewardPerks}
+              className="text-[11px] font-semibold text-primary-600 hover:text-primary-800"
+            >
+              Refresh
+            </button>
+          </div>
+          {perks.length === 0 ? (
+            <p className="text-xs text-gray-500">
+              No perks available right now. Check back soon.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {perks.map((p) => {
+                const balance = profile?.credits_balance ?? 0;
+                const canAfford = balance >= p.cost_credits;
+                const busy = redeemingPerkId === p.id;
+                return (
+                  <li
+                    key={p.id}
+                    className="border border-gray-100 rounded-lg p-3 flex items-start justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-gray-900">{p.name}</p>
+                      {p.description && (
+                        <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">
+                          {p.description}
+                        </p>
+                      )}
+                      <p className="text-[11px] text-amber-700 font-bold mt-1">
+                        ⚡ {p.cost_credits} credits
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleRedeemPerk(p)}
+                      disabled={!canAfford || busy}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap ${
+                        canAfford
+                          ? "bg-primary-600 text-white hover:bg-primary-700"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      {busy ? "..." : canAfford ? "Redeem" : "Not enough"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+              My Redemptions
+            </p>
+            <button
+              onClick={fetchMyRedemptions}
+              className="text-[11px] font-semibold text-primary-600 hover:text-primary-800"
+            >
+              Refresh
+            </button>
+          </div>
+          {myRedemptions.length === 0 ? (
+            <p className="text-xs text-gray-500">
+              You haven't redeemed anything yet.
+            </p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {myRedemptions.map((r) => {
+                const badge =
+                  r.status === "approved"
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : r.status === "rejected"
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-yellow-50 text-yellow-700 border-yellow-200";
+                return (
+                  <li key={r.id} className="py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {r.perk_name}
+                        </p>
+                        <p className="text-[11px] text-gray-500">
+                          ⚡ {r.cost_credits} ·{" "}
+                          {new Date(r.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border capitalize ${badge}`}
+                      >
+                        {r.status}
+                      </span>
+                    </div>
+                    {r.admin_note && (
+                      <p className="text-[11px] text-gray-600 mt-1 bg-gray-50 border border-gray-100 rounded p-2">
+                        {r.admin_note}
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
 
@@ -3779,6 +4158,93 @@ const renderServicesContent = () => (
         </button>
       </div>
     )}
+
+    {/* ================= MY SERVICE REQUESTS ================= */}
+    <div className="mt-10">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-bold text-gray-900">My Service Requests</h3>
+        <button
+          onClick={fetchMyServiceRequests}
+          className="text-xs font-semibold text-primary-600 hover:text-primary-800"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {loadingMyRequests ? (
+        <p className="text-xs text-gray-500">Loading...</p>
+      ) : myRequests.length === 0 ? (
+        <p className="text-xs text-gray-500">
+          You haven't submitted any requests yet.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {myRequests.map((r) => {
+            const statusStyle =
+              r.status === "resolved"
+                ? "bg-green-50 text-green-700 border-green-200"
+                : r.status === "rejected"
+                ? "bg-red-50 text-red-700 border-red-200"
+                : "bg-yellow-50 text-yellow-700 border-yellow-200";
+
+            return (
+              <div
+                key={r.id}
+                className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-gray-900 capitalize">
+                      {r.service_type}
+                      {r.service_category ? ` · ${r.service_category}` : ""}
+                      {r.service_option ? ` · ${r.service_option}` : ""}
+                    </p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      Submitted on {new Date(r.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border capitalize ${statusStyle}`}
+                  >
+                    {r.status}
+                  </span>
+                </div>
+
+                {r.description && (
+                  <p className="text-xs text-gray-700 mt-3 whitespace-pre-wrap">
+                    {r.description}
+                  </p>
+                )}
+
+                {/* Admin-assigned info */}
+                {(r.assigned_to || r.action_taken || r.admin_comments) && (
+                  <div className="mt-3 bg-blue-50/60 border border-blue-100 rounded-lg p-3 text-[12px] text-gray-800 space-y-1">
+                    {r.assigned_to && (
+                      <p>
+                        <span className="font-bold">Assigned to:</span>{" "}
+                        {r.assigned_to}
+                      </p>
+                    )}
+                    {r.action_taken && (
+                      <p>
+                        <span className="font-bold">Action taken:</span>{" "}
+                        {r.action_taken}
+                      </p>
+                    )}
+                    {r.admin_comments && (
+                      <p>
+                        <span className="font-bold">Admin notes:</span>{" "}
+                        {r.admin_comments}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   </div>
 );
   
@@ -3922,8 +4388,29 @@ const renderSuggestionsContent = () => (
           <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute -left-8 -bottom-8 w-40 h-40 bg-accent-500/20 rounded-full blur-3xl" />
           <div className="relative z-10">
-            <div className="mb-2">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold tracking-widest uppercase opacity-90">Welcome back</span>
+              {profile?.public_user_code && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(profile.public_user_code!);
+                      showToast("User ID copied");
+                    } catch {
+                      showToast("Copy failed", "info");
+                    }
+                  }}
+                  title="Click to copy your User ID"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 border border-white/25 text-[11px] font-mono font-semibold hover:bg-white/25 transition"
+                >
+                  <span className="opacity-80">ID:</span>
+                  <span>{profile.public_user_code}</span>
+                </button>
+              )}
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400/30 border border-amber-200/40 text-[11px] font-bold">
+                ⚡ {profile?.credits_balance ?? 0} credits
+              </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold mb-1">
               Hi {firstName}!

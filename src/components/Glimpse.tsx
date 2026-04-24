@@ -31,16 +31,12 @@ export default function GlimpseGallery() {
         <div className="overflow-hidden">
           <div className="flex animate-scroll gap-3 sm:gap-4 w-max">
             {[...images, ...images, ...images, ...images].map((img, index) => (
-              <div
+              <img
                 key={index}
-                className="flex-shrink-0 w-60 h-72 sm:w-72 sm:h-80 md:w-80 md:h-96 overflow-hidden rounded-xl relative group bg-white shadow-md"
-              >
-                <img
-                  src={img.src}
-                  alt={`Glimpse ${index + 1}`}
-                  className="w-full h-full object-contain object-center bg-blue-100 transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
+                src={img.src}
+                alt={`Glimpse ${index + 1}`}
+                className="flex-shrink-0 h-72 sm:h-80 md:h-96 w-auto rounded-2xl object-contain transition-transform duration-300 hover:scale-105"
+              />
             ))}
           </div>
         </div>

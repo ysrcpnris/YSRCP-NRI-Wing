@@ -49,6 +49,8 @@ export type Profile = {
   // Referral Information
   referred_by?: string;
   referral_code?: string;
+  public_user_code?: string;
+  credits_balance?: number;
   designation?: string;
 
   // Social Media Handles

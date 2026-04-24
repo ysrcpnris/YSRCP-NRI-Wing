@@ -11,6 +11,87 @@ import 'react-toastify/dist/ReactToastify.css';
 import { countriesData } from '../lib/countryCodes';
 import { getStates, getCities, hasStateData } from '../lib/locationData';
 import { indianAddressData } from '../lib/indianAddressData';
+
+/**
+ * Searchable input: users can type to filter the dropdown options
+ * OR type a custom value that isn't in the list (for missing entries).
+ */
+function SearchableInput({
+  value,
+  options,
+  onChange,
+  placeholder,
+  required,
+  disabled,
+}: {
+  value: string;
+  options: string[];
+  onChange: (val: string) => void;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const q = value.trim().toLowerCase();
+  const sorted = [...options].sort((a, b) => a.localeCompare(b));
+  const filtered = q
+    ? sorted.filter((o) => o.toLowerCase().includes(q))
+    : sorted;
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <input
+        type="text"
+        required={required}
+        disabled={disabled}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        className="input-field disabled:bg-gray-100 disabled:cursor-not-allowed"
+      />
+      {open && !disabled && filtered.length > 0 && (
+        <ul className="absolute z-40 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+          {filtered.map((opt) => (
+            <li
+              key={opt}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onChange(opt);
+                setOpen(false);
+              }}
+              className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
+                value === opt ? 'bg-primary-50 font-medium text-primary-700' : ''
+              }`}
+            >
+              {opt}
+            </li>
+          ))}
+        </ul>
+      )}
+      {open && !disabled && filtered.length === 0 && value.length > 0 && (
+        <p className="text-[11px] text-gray-500 mt-1">
+          No match — your typed value will be saved as-is.
+        </p>
+      )}
+    </div>
+  );
+}
 const getPasswordError = (password: string): string | null => {
   if (password.length < 8) return "Password must be at least 8 characters";
   if (!/[A-Z]/.test(password)) return "Must include at least one uppercase letter";
@@ -36,12 +117,15 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
   const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [stateSearch, setStateSearch] = useState('');
   const stateDropdownRef = useRef<HTMLDivElement>(null);
 
   const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
   const cityDropdownRef = useRef<HTMLDivElement>(null);
 
   const isMounted = useRef(true);
@@ -385,42 +469,63 @@ return (
                   <label className="input-label">
                     Country You Currently Live In <span className="text-red-500">*</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowCountryDropdown((v) => !v)}
-                    className="input-field text-left flex items-center justify-between"
-                  >
-                    <span className={formData.country_of_residence ? "text-gray-900" : "text-gray-400"}>
-                      {formData.country_of_residence
+                  <input
+                    type="text"
+                    value={
+                      showCountryDropdown
+                        ? countrySearch
+                        : formData.country_of_residence
                         ? `${formData.country_of_residence} (${getCurrentCountryCode()})`
-                        : "Select a country"}
-                    </span>
-                    <span className="text-gray-400 ml-2">▾</span>
-                  </button>
+                        : ''
+                    }
+                    onChange={(e) => {
+                      setCountrySearch(e.target.value);
+                      setShowCountryDropdown(true);
+                    }}
+                    onFocus={() => {
+                      setCountrySearch('');
+                      setShowCountryDropdown(true);
+                    }}
+                    placeholder="Search or type country"
+                    className="input-field"
+                  />
                   {showCountryDropdown && (
                     <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                      {countryCodes.map((country) => (
-                        <li
-                          key={country.name}
-                          onClick={() => {
-                            const countryCode = getCountryCodeFromCountryName(country.name);
-                            setFormData({
-                              ...formData,
-                              country_of_residence: country.name,
-                              mobile_number: countryCode,
-                              state_abroad: '',
-                              city_abroad: '',
-                            });
-                            setShowCountryDropdown(false);
-                            setPhoneError('');
-                          }}
-                          className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
-                            formData.country_of_residence === country.name ? 'bg-primary-50 font-medium text-primary-700' : ''
-                          }`}
-                        >
-                          {country.name} (+{country.code.replace('+', '')})
+                      {countryCodes
+                        .filter((c) =>
+                          c.name.toLowerCase().includes(countrySearch.toLowerCase())
+                        )
+                        .map((country) => (
+                          <li
+                            key={country.name}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              const countryCode = getCountryCodeFromCountryName(country.name);
+                              setFormData({
+                                ...formData,
+                                country_of_residence: country.name,
+                                mobile_number: countryCode,
+                                state_abroad: '',
+                                city_abroad: '',
+                              });
+                              setCountrySearch('');
+                              setShowCountryDropdown(false);
+                              setPhoneError('');
+                            }}
+                            className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
+                              formData.country_of_residence === country.name ? 'bg-primary-50 font-medium text-primary-700' : ''
+                            }`}
+                          >
+                            {country.name} (+{country.code.replace('+', '')})
+                          </li>
+                        ))}
+                      {countryCodes.filter((c) =>
+                        c.name.toLowerCase().includes(countrySearch.toLowerCase())
+                      ).length === 0 && (
+                        <li className="px-4 py-2 text-sm text-gray-400">
+                          No matching country — please pick the closest one.
                         </li>
-                      ))}
+                      )}
                     </ul>
                   )}
                 </div>
@@ -463,32 +568,55 @@ return (
 
                     return (
                       <>
-                        <button
-                          type="button"
-                          onClick={() => setShowStateDropdown((v) => !v)}
-                          className="input-field text-left flex items-center justify-between"
-                        >
-                          <span className={formData.state_abroad ? "text-gray-900" : "text-gray-400"}>
-                            {formData.state_abroad || "Select a state"}
-                          </span>
-                          <span className="text-gray-400 ml-2">▾</span>
-                        </button>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Search or type state / province"
+                          value={
+                            showStateDropdown
+                              ? stateSearch
+                              : formData.state_abroad
+                          }
+                          onChange={(e) => {
+                            setStateSearch(e.target.value);
+                            setFormData({ ...formData, state_abroad: e.target.value, city_abroad: '' });
+                            setShowStateDropdown(true);
+                          }}
+                          onFocus={() => {
+                            setStateSearch(formData.state_abroad || '');
+                            setShowStateDropdown(true);
+                          }}
+                          className="input-field"
+                        />
                         {showStateDropdown && (
                           <ul className="absolute z-40 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                            {stateList.map((s) => (
-                              <li
-                                key={s}
-                                onClick={() => {
-                                  setFormData({ ...formData, state_abroad: s, city_abroad: '' });
-                                  setShowStateDropdown(false);
-                                }}
-                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
-                                  formData.state_abroad === s ? 'bg-primary-50 font-medium text-primary-700' : ''
-                                }`}
-                              >
-                                {s}
+                            {stateList
+                              .filter((s) =>
+                                s.toLowerCase().includes(stateSearch.toLowerCase())
+                              )
+                              .map((s) => (
+                                <li
+                                  key={s}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    setFormData({ ...formData, state_abroad: s, city_abroad: '' });
+                                    setStateSearch('');
+                                    setShowStateDropdown(false);
+                                  }}
+                                  className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
+                                    formData.state_abroad === s ? 'bg-primary-50 font-medium text-primary-700' : ''
+                                  }`}
+                                >
+                                  {s}
+                                </li>
+                              ))}
+                            {stateList.filter((s) =>
+                              s.toLowerCase().includes(stateSearch.toLowerCase())
+                            ).length === 0 && stateSearch.length > 0 && (
+                              <li className="px-4 py-2 text-sm text-gray-400">
+                                No match — your typed value will be saved.
                               </li>
-                            ))}
+                            )}
                           </ul>
                         )}
                       </>
@@ -536,32 +664,55 @@ return (
 
                     return (
                       <>
-                        <button
-                          type="button"
-                          onClick={() => setShowCityDropdown((v) => !v)}
-                          className="input-field text-left flex items-center justify-between"
-                        >
-                          <span className={formData.city_abroad ? "text-gray-900" : "text-gray-400"}>
-                            {formData.city_abroad || "Select a city"}
-                          </span>
-                          <span className="text-gray-400 ml-2">▾</span>
-                        </button>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Search or type city"
+                          value={
+                            showCityDropdown
+                              ? citySearch
+                              : formData.city_abroad
+                          }
+                          onChange={(e) => {
+                            setCitySearch(e.target.value);
+                            setFormData({ ...formData, city_abroad: e.target.value });
+                            setShowCityDropdown(true);
+                          }}
+                          onFocus={() => {
+                            setCitySearch(formData.city_abroad || '');
+                            setShowCityDropdown(true);
+                          }}
+                          className="input-field"
+                        />
                         {showCityDropdown && (
                           <ul className="absolute z-40 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                            {cityList.map((c) => (
-                              <li
-                                key={c}
-                                onClick={() => {
-                                  setFormData({ ...formData, city_abroad: c });
-                                  setShowCityDropdown(false);
-                                }}
-                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
-                                  formData.city_abroad === c ? 'bg-primary-50 font-medium text-primary-700' : ''
-                                }`}
-                              >
-                                {c}
+                            {cityList
+                              .filter((c) =>
+                                c.toLowerCase().includes(citySearch.toLowerCase())
+                              )
+                              .map((c) => (
+                                <li
+                                  key={c}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    setFormData({ ...formData, city_abroad: c });
+                                    setCitySearch('');
+                                    setShowCityDropdown(false);
+                                  }}
+                                  className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
+                                    formData.city_abroad === c ? 'bg-primary-50 font-medium text-primary-700' : ''
+                                  }`}
+                                >
+                                  {c}
+                                </li>
+                              ))}
+                            {cityList.filter((c) =>
+                              c.toLowerCase().includes(citySearch.toLowerCase())
+                            ).length === 0 && citySearch.length > 0 && (
+                              <li className="px-4 py-2 text-sm text-gray-400">
+                                No match — your typed value will be saved.
                               </li>
-                            ))}
+                            )}
                           </ul>
                         )}
                       </>
@@ -716,59 +867,52 @@ return (
                   <label className="input-label">
                     State <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <SearchableInput
                     required
+                    placeholder="Search or type state"
                     value={formData.indian_state}
-                    onChange={(e) =>
+                    options={Object.keys(indianAddressData)}
+                    onChange={(val) =>
                       setFormData({
                         ...formData,
-                        indian_state: e.target.value,
+                        indian_state: val,
                         district: '',
                         assembly_constituency: '',
+                        mandal: '',
                       })
                     }
-                    className="input-field"
-                  >
-                    <option value="">Select State</option>
-                    {Object.keys(indianAddressData)
-                      .slice()
-                      .sort((a, b) => a.localeCompare(b))
-                      .map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
-                      ))}
-                  </select>
+                  />
                 </div>
 
                 <div>
                   <label className="input-label">
                     District <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <SearchableInput
                     required
+                    disabled={!formData.indian_state}
+                    placeholder={
+                      formData.indian_state
+                        ? 'Search or type district'
+                        : 'Select a state first'
+                    }
                     value={formData.district}
-                    onChange={(e) =>
+                    options={
+                      formData.indian_state
+                        ? (indianAddressData[formData.indian_state] || []).map(
+                            (d) => d.name
+                          )
+                        : []
+                    }
+                    onChange={(val) =>
                       setFormData({
                         ...formData,
-                        district: e.target.value,
+                        district: val,
                         assembly_constituency: '',
+                        mandal: '',
                       })
                     }
-                    disabled={!formData.indian_state}
-                    className="input-field"
-                  >
-                    <option value="">Select District</option>
-                    {formData.indian_state &&
-                      indianAddressData[formData.indian_state]
-                        ?.slice()
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map((d) => (
-                          <option key={d.name} value={d.name}>
-                            {d.name}
-                          </option>
-                        ))}
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -777,65 +921,62 @@ return (
                   <label className="input-label">
                     Assembly Constituency <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <SearchableInput
                     required
+                    disabled={!formData.district}
+                    placeholder={
+                      formData.district
+                        ? 'Search or type constituency'
+                        : 'Select a district first'
+                    }
                     value={formData.assembly_constituency}
-                    onChange={(e) =>
+                    options={
+                      formData.indian_state && formData.district
+                        ? (
+                            indianAddressData[formData.indian_state]?.find(
+                              (d) => d.name === formData.district
+                            )?.constituencies || []
+                          ).map((c) => c.name)
+                        : []
+                    }
+                    onChange={(val) =>
                       setFormData({
                         ...formData,
-                        assembly_constituency: e.target.value,
+                        assembly_constituency: val,
                         mandal: '',
                       })
                     }
-                    disabled={!formData.district}
-                    className="input-field"
-                  >
-                    <option value="">Select Constituency</option>
-                    {formData.indian_state &&
-                      formData.district &&
-                      indianAddressData[formData.indian_state]
-                        ?.find((d) => d.name === formData.district)
-                        ?.constituencies.slice()
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map((c) => (
-                          <option key={c.name} value={c.name}>
-                            {c.name}
-                          </option>
-                        ))}
-                  </select>
+                  />
                 </div>
 
                 <div>
                   <label className="input-label">
                     Mandal / Municipality <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <SearchableInput
                     required
-                    value={formData.mandal}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        mandal: e.target.value,
-                      })
-                    }
                     disabled={!formData.assembly_constituency}
-                    className="input-field"
-                  >
-                    <option value="">Select Mandal</option>
-                    {formData.indian_state &&
+                    placeholder={
+                      formData.assembly_constituency
+                        ? 'Search or type mandal'
+                        : 'Select a constituency first'
+                    }
+                    value={formData.mandal}
+                    options={
+                      formData.indian_state &&
                       formData.district &&
-                      formData.assembly_constituency &&
-                      indianAddressData[formData.indian_state]
-                        ?.find((d) => d.name === formData.district)
-                        ?.constituencies.find((c) => c.name === formData.assembly_constituency)
-                        ?.mandals.slice()
-                        .sort((a, b) => a.localeCompare(b))
-                        .map((m) => (
-                          <option key={m} value={m}>
-                            {m}
-                          </option>
-                        ))}
-                  </select>
+                      formData.assembly_constituency
+                        ? indianAddressData[formData.indian_state]
+                            ?.find((d) => d.name === formData.district)
+                            ?.constituencies.find(
+                              (c) => c.name === formData.assembly_constituency
+                            )?.mandals || []
+                        : []
+                    }
+                    onChange={(val) =>
+                      setFormData({ ...formData, mandal: val })
+                    }
+                  />
                 </div>
               </div>
             </fieldset>

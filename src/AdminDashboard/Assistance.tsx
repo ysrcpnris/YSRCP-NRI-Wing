@@ -18,17 +18,6 @@ type AssistanceItem = {
   admin_comments?: string;
 };
 
-/* ---------------- TEAM MAP ---------------- */
-// Maps locations to assigned support teams for request allocation
-const TeamsByLocation: Record<string, string[]> = {
-  India: ["Education Cell AP", "Health Cell AP", "Legal Cell AP"],
-  USA: ["NRI USA Education Team", "Legal Advisors USA"],
-  UK: ["UK NRI Team", "Scholarship UK"],
-  UAE: ["Dubai Coordination Team", "Embassy Support UAE"],
-  NewZealand: ["NZ Student Support Team"],
-  Italy: ["Europe Legal Cell"],
-};
-
 /* ---------------- COMPONENT ---------------- */
 // Admin dashboard for managing assistance/service requests: allocate teams, track status, resolve tickets
 export default function Assistance() {
@@ -38,6 +27,9 @@ export default function Assistance() {
     useState<"total" | "pending" | "resolved" | null>(null);
 
   const [loading, setLoading] = useState(false);
+
+  // Support teams (loaded from DB — admins manage them in the Support Teams page)
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
 
   /* -------- Modals -------- */
   // Modal states for allocation form and description viewer
@@ -83,8 +75,19 @@ export default function Assistance() {
     setLoading(false);
   };
 
+  // Fetch active support teams for the Assign Team dropdown
+  const fetchTeams = async () => {
+    const { data, error } = await supabase
+      .from("support_teams")
+      .select("id, name")
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+    if (!error && data) setTeams(data);
+  };
+
   useEffect(() => {
     fetchRequests();
+    fetchTeams();
   }, []);
 
   /* ---------------- COUNTS ---------------- */
@@ -266,19 +269,28 @@ export default function Assistance() {
               <h3 className="text-lg font-semibold text-primary-600">{`Resolve – ${selectedRequest.applicant_name}`}</h3>
               <button onClick={() => setAllocateModalOpen(false)} className="text-xl font-bold">×</button>
             </div>
-            {/* Team assignment dropdown */}
+            {/* Team assignment dropdown (populated from support_teams table) */}
             <select
               className="w-full border p-2 rounded mb-3"
               value={assignedTo}
               onChange={(e) => setAssignedTo(e.target.value)}
             >
               <option value="">Assign Team</option>
-              {(TeamsByLocation[selectedRequest.current_location] || ["General Support Team"]).map(
-                (t) => (
-                  <option key={t}>{t}</option>
-                )
+              {teams.length === 0 ? (
+                <option value="General Support Team">General Support Team</option>
+              ) : (
+                teams.map((t) => (
+                  <option key={t.id} value={t.name}>
+                    {t.name}
+                  </option>
+                ))
               )}
             </select>
+            {teams.length === 0 && (
+              <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded mb-3">
+                No teams configured yet. Add teams in the "Support Teams" page.
+              </p>
+            )}
 
             {/* Action taken by team */}
             <input

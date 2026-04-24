@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { User, Lock, LogOut, ChevronLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -28,20 +29,51 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
   const [passwordError, setPasswordError] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
+  // Position the portaled dropdown below the button
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+    if (!isOpen) return;
+    const updatePos = () => {
+      const btn = buttonRef.current;
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      setMenuPos({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    };
+    updatePos();
+    window.addEventListener('resize', updatePos);
+    window.addEventListener('scroll', updatePos, true);
+    return () => {
+      window.removeEventListener('resize', updatePos);
+      window.removeEventListener('scroll', updatePos, true);
+    };
+  }, [isOpen]);
+
+  // Close dropdown when clicking outside the button AND the portaled menu
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (buttonRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setIsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setPasswordError('');
     setPasswordSuccess('');
 
@@ -60,11 +92,23 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
       return;
     }
 
+    if (newPassword === currentPassword) {
+      setPasswordError('New password must be different from current password');
+      return;
+    }
+
+    const email = profile?.email || user?.email;
+    if (!email) {
+      setPasswordError('Unable to identify your account. Please sign in again.');
+      return;
+    }
+
     setPasswordLoading(true);
 
     try {
+      // Verify current password
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: profile?.email || '',
+        email,
         password: currentPassword,
       });
 
@@ -73,22 +117,26 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
         return;
       }
 
+      // Update to new password
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (updateError) {
-        setPasswordError(updateError.message);
-      } else {
-        setPasswordSuccess('Password changed successfully!');
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        setTimeout(() => {
-          setShowChangePassword(false);
-          setPasswordSuccess('');
-        }, 2000);
+        setPasswordError(updateError.message || 'Failed to update password');
+        return;
       }
+
+      setPasswordSuccess('Password changed successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => {
+        setShowChangePassword(false);
+        setPasswordSuccess('');
+      }, 2000);
+    } catch (err: any) {
+      setPasswordError(err?.message || 'Something went wrong. Please try again.');
     } finally {
       setPasswordLoading(false);
     }
@@ -136,10 +184,135 @@ const initials =
     .toUpperCase() || 'U';
 
 
+  const dropdownMenu = isOpen && menuPos ? (
+    <div
+      ref={menuRef}
+      style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
+      className="w-72 bg-white rounded-2xl shadow-2xl border border-blue-200 z-[9999] overflow-hidden"
+    >
+      {/* Header */}
+      <div className="px-6 py-5 bg-gradient-to-r from-blue-700 to-green-600 text-white border-b border-green-300">
+        <p className="font-bold text-lg truncate">{fullName || 'User'}</p>
+        <p className="text-xs opacity-90 truncate">{profile?.email}</p>
+      </div>
+
+      {/* Menu */}
+      <div className="py-2">
+        <button
+          onClick={() => {
+            setIsOpen(false);
+            navigate("/dashboard", {
+              state: { openProfile: true },
+            });
+          }}
+          className="w-full px-6 py-4 flex items-center gap-4 text-gray-800 hover:bg-blue-50 transition font-semibold"
+        >
+          <User size={20} className="text-primary-700" />
+          My Profile
+        </button>
+
+        <button
+          onClick={() => {
+            setShowChangePassword(true);
+            setIsOpen(false);
+          }}
+          className="w-full px-6 py-4 flex items-center gap-4 text-gray-800 hover:bg-green-50 transition font-semibold"
+        >
+          <Lock size={20} className="text-green-700" />
+          Change Password
+        </button>
+
+        <div className="border-t border-gray-200">
+          <button
+            onClick={handleLogout}
+            className="w-full px-6 py-4 flex items-center gap-4 text-red-700 hover:bg-red-50 transition font-semibold"
+          >
+            <LogOut size={20} />
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  const changePasswordModal = showChangePassword ? (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="px-6 py-4 bg-gradient-to-r from-blue-700 to-green-600 text-white flex items-center justify-between">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <Lock size={20} /> Change Password
+          </h2>
+          <button
+            onClick={() => {
+              setShowChangePassword(false);
+              setCurrentPassword('');
+              setNewPassword('');
+              setConfirmPassword('');
+              setPasswordError('');
+              setPasswordSuccess('');
+            }}
+            className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+            title="Back to Dashboard"
+          >
+            <ChevronLeft size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleChangePassword} className="p-6 space-y-4">
+          <input
+            type="password"
+            autoComplete="current-password"
+            placeholder="Current password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+          />
+          <input
+            type="password"
+            autoComplete="new-password"
+            placeholder="New password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none"
+          />
+          <input
+            type="password"
+            autoComplete="new-password"
+            placeholder="Confirm password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none"
+          />
+
+          {passwordError && (
+            <p className="text-sm font-bold text-red-700 bg-red-50 p-3 rounded-lg border border-red-300">
+              {passwordError}
+            </p>
+          )}
+
+          {passwordSuccess && (
+            <p className="text-sm font-bold text-green-700 bg-green-50 p-3 rounded-lg border border-green-300">
+              {passwordSuccess}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={passwordLoading}
+            className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-blue-700 to-green-600 text-white rounded-lg font-bold hover:opacity-90 transition"
+          >
+            {passwordLoading ? 'Updating...' : 'Update Password'}
+          </button>
+        </form>
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div ref={dropdownRef} className="relative">
+    <>
       {/* Profile Button */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 px-4 py-2 rounded-xl border border-blue-300 hover:bg-blue-50 transition-all"
       >
@@ -166,126 +339,9 @@ const initials =
         </div>
       </button>
 
-      {/* Dropdown */}
-      {isOpen && (
-        <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-blue-200 z-[150] overflow-hidden">
-          {/* Header */}
-          <div className="px-6 py-5 bg-gradient-to-r from-blue-700 to-green-600 text-white border-b border-green-300">
-            <p className="font-bold text-lg truncate">{fullName || 'User'}</p>
-            <p className="text-xs opacity-90 truncate">{profile?.email}</p>
-          </div>
-
-          {/* Menu */}
-          <div className="py-2">
-       <button
-  onClick={() => {
-    setIsOpen(false);
-    navigate("/dashboard", {
-      state: { openProfile: true },
-    });
-  }}
-  className="w-full px-6 py-4 flex items-center gap-4 text-gray-800 hover:bg-blue-50 transition font-semibold"
->
-  <User size={20} className="text-primary-700" />
-  My Profile
-</button>
-
-
-            <button
-              onClick={() => {
-                setShowChangePassword(true);
-                setIsOpen(false);
-              }}
-              className="w-full px-6 py-4 flex items-center gap-4 text-gray-800 hover:bg-green-50 transition font-semibold"
-            >
-              <Lock size={20} className="text-green-700" />
-              Change Password
-            </button>
-
-            <div className="border-t border-gray-200">
-              <button
-                onClick={handleLogout}
-                className="w-full px-6 py-4 flex items-center gap-4 text-red-700 hover:bg-red-50 transition font-semibold"
-              >
-                <LogOut size={20} />
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Change Password Modal */}
-      {showChangePassword && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-blue-700 to-green-600 text-white flex items-center justify-between">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <Lock size={20} /> Change Password
-              </h2>
-              <button
-                onClick={() => {
-                  setShowChangePassword(false);
-                  setCurrentPassword('');
-                  setNewPassword('');
-                  setConfirmPassword('');
-                  setPasswordError('');
-                  setPasswordSuccess('');
-                }}
-                className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-                title="Back to Dashboard"
-              >
-                <ChevronLeft size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleChangePassword} className="p-6 space-y-4">
-              <input
-                type="password"
-                placeholder="Current password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-600"
-              />
-              <input
-                type="password"
-                placeholder="New password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600"
-              />
-              <input
-                type="password"
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600"
-              />
-
-              {passwordError && (
-                <p className="text-sm font-bold text-red-700 bg-red-50 p-3 rounded-lg border border-red-300">
-                  {passwordError}
-                </p>
-              )}
-
-              {passwordSuccess && (
-                <p className="text-sm font-bold text-green-700 bg-green-50 p-3 rounded-lg border border-green-300">
-                  {passwordSuccess}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={passwordLoading}
-                className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-blue-700 to-green-600 text-white rounded-lg font-bold hover:opacity-90 transition"
-              >
-                {passwordLoading ? 'Updating...' : 'Update Password'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+      {dropdownMenu && createPortal(dropdownMenu, document.body)}
+      {changePasswordModal && createPortal(changePasswordModal, document.body)}
+    </>
   );
 };
 
