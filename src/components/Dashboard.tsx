@@ -1089,7 +1089,8 @@ type LeaderAssignmentRow = {
     id: string;
     name: string;
     whatsapp_number: string | null;
-    is_active: boolean;   
+    whatsapp_number_2: string | null;
+    is_active: boolean;
   };
 };
 
@@ -1929,6 +1930,7 @@ useEffect(() => {
       id: string;
       name: string;
       whatsapp_number: string | null;
+      whatsapp_number_2: string | null;
     }[]
   >
 >({});
@@ -2464,9 +2466,46 @@ if (passiveError) {
 setPassiveReferrals((passiveData || []).map((r: any) => buildReferral(r, "passive")));
 
      // 2. Leaders (NEW NORMALIZED LOGIC)
-    // 🔒 Clear leaders if district or assembly missing - do NOT return early
+    // Even when the user has no Indian district/assembly (e.g., NRIs abroad),
+    // we still fetch the GLOBAL coordinator(s) so they appear on every user's
+    // Leadership Connect tab. Location-scoped leaders are added on top when
+    // district + constituency are both available.
 if (!district || !assembly) {
-  setLeadersByRole({});
+  const { data: globalOnly } = await supabase
+    .from("leader_assignments")
+    .select(`
+      role,
+      sort_order,
+      district,
+      constituency,
+      leaders_master (
+        id,
+        name,
+        whatsapp_number,
+        whatsapp_number_2,
+        is_active
+      )
+    `)
+    .eq("role", "Global Coordinator")
+    .is("district", null)
+    .eq("is_active", true);
+
+  const globalGrouped: Record<
+    string,
+    { id: string; name: string; whatsapp_number: string | null; whatsapp_number_2: string | null }[]
+  > = {};
+  ((globalOnly as unknown as LeaderAssignmentRow[]) || []).forEach((item) => {
+    if (!item.leaders_master?.is_active) return;
+    if (!globalGrouped[item.role]) globalGrouped[item.role] = [];
+    if (globalGrouped[item.role].some((l) => l.id === item.leaders_master.id)) return;
+    globalGrouped[item.role].push({
+      id: item.leaders_master.id,
+      name: item.leaders_master.name,
+      whatsapp_number: item.leaders_master.whatsapp_number,
+      whatsapp_number_2: item.leaders_master.whatsapp_number_2,
+    });
+  });
+  setLeadersByRole(globalGrouped);
 } else {
   const normDistrict = normalizeDistrict(district).trim();
   const normConstituency = normalizeAssembly(assembly).trim();
@@ -2478,8 +2517,8 @@ if (!district || !assembly) {
     normalizedConstituency: normConstituency,
   });
 
-  // Use ilike for case-insensitive exact match (ilike with no % wildcards = case-insensitive =)
-  const { data, error } = await supabase
+  // Location-scoped leaders (RC / DP / AC) — match the user's district + constituency.
+  const { data: locData, error: locErr } = await supabase
     .from("leader_assignments")
     .select(`
       role,
@@ -2490,6 +2529,7 @@ if (!district || !assembly) {
         id,
         name,
         whatsapp_number,
+        whatsapp_number_2,
         is_active
       )
     `)
@@ -2498,33 +2538,61 @@ if (!district || !assembly) {
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
-  console.log("LEADERS QUERY RESULT", { data, error });
+  // Global leaders (e.g., "Aluru Sambasiva Reddy — Global Coordinator, YSRCP NRI Wing")
+  // are stored with district = NULL and shown to every user regardless of address.
+  const { data: globalData, error: globalErr } = await supabase
+    .from("leader_assignments")
+    .select(`
+      role,
+      sort_order,
+      district,
+      constituency,
+      leaders_master (
+        id,
+        name,
+        whatsapp_number,
+        whatsapp_number_2,
+        is_active
+      )
+    `)
+    .eq("role", "Global Coordinator")
+    .is("district", null)
+    .eq("is_active", true);
 
-  if (error) {
-    console.error("Leaders fetch error:", error);
-  } else {
-    const grouped = (data as unknown as LeaderAssignmentRow[]).reduce(
-      (acc, item) => {
-        if (!item.leaders_master?.is_active) return acc;
+  if (locErr)    console.error("Leaders fetch error (location):", locErr);
+  if (globalErr) console.error("Leaders fetch error (global):", globalErr);
 
-        if (!acc[item.role]) acc[item.role] = [];
+  const combined = [
+    ...((globalData as unknown as LeaderAssignmentRow[]) || []),
+    ...((locData    as unknown as LeaderAssignmentRow[]) || []),
+  ];
 
-        acc[item.role].push({
-          id: item.leaders_master.id,
-          name: item.leaders_master.name,
-          whatsapp_number: item.leaders_master.whatsapp_number,
-        });
+  const grouped = combined.reduce(
+    (acc, item) => {
+      if (!item.leaders_master?.is_active) return acc;
 
-        return acc;
-      },
-      {} as Record<
-        string,
-        { id: string; name: string; whatsapp_number: string | null }[]
-      >
-    );
+      if (!acc[item.role]) acc[item.role] = [];
 
-    setLeadersByRole(grouped);
-  }
+      // Skip if same leader_id is already in this role (prevents dupes if a
+      // leader somehow has multiple matching assignment rows).
+      if (acc[item.role].some((l) => l.id === item.leaders_master.id)) return acc;
+
+      acc[item.role].push({
+        id: item.leaders_master.id,
+        name: item.leaders_master.name,
+        whatsapp_number: item.leaders_master.whatsapp_number,
+        whatsapp_number_2: item.leaders_master.whatsapp_number_2,
+      });
+
+      return acc;
+    },
+    {} as Record<
+      string,
+      { id: string; name: string; whatsapp_number: string | null; whatsapp_number_2: string | null }[]
+    >
+  );
+
+  setLeadersByRole(grouped);
 }
 
       // =======================
@@ -4080,18 +4148,21 @@ const renderConnectContent = () => {
     "District President",
     "Assembly Coordinator",
   ];
+  // Global Coordinator(s) are always rendered first, regardless of address.
+  const FULL_ROLE_ORDER = ["Global Coordinator", ...roleOrder];
 
   // 🔹 Create ordered array of leaders based on roleOrder
   const orderedLeaders: Array<{
     id: string;
     name: string;
     whatsapp_number: string | null;
+    whatsapp_number_2?: string | null;
     role: string;
     phone?: string | null;
     email?: string | null;
   }> = [];
 
-  roleOrder.forEach((role) => {
+  FULL_ROLE_ORDER.forEach((role) => {
     // Add any leaders for this role if they exist
     if (leadersByRole[role] && leadersByRole[role].length > 0) {
       leadersByRole[role].forEach((leader) => {
@@ -4168,29 +4239,43 @@ const renderConnectContent = () => {
                   {leader.name || "Leader"}
                 </h4>
 
-                {/* WHATSAPP BUTTON */}
-                <button
-                  onClick={() => {
-                    if (!leader.whatsapp_number) {
-                      showToast("WhatsApp contact not available", "info");
-                      return;
-                    }
+                {/* WHATSAPP BUTTONS — primary always, secondary only when set */}
+                <div className="w-full space-y-1.5">
+                  <button
+                    onClick={() => {
+                      if (!leader.whatsapp_number) {
+                        showToast("WhatsApp contact not available", "info");
+                        return;
+                      }
+                      const phone = leader.whatsapp_number.replace(/\D/g, "");
+                      window.open(`https://wa.me/${phone}`, "_blank");
+                      showToast(`Opening WhatsApp with ${leader.name}`, "info");
+                    }}
+                    className="w-full py-2 rounded-lg bg-whatsapp-500
+                               hover:bg-whatsapp-600 text-white font-bold
+                               text-xs flex items-center justify-center
+                               gap-1.5 transition-colors shadow-sm"
+                  >
+                    <MessageSquare size={14} fill="white" /> WhatsApp
+                  </button>
 
-                    const phone = leader.whatsapp_number.replace(/\D/g, "");
-                    window.open(`https://wa.me/${phone}`, "_blank");
-
-                    showToast(
-                      `Opening WhatsApp with ${leader.name}`,
-                      "info"
-                    );
-                  }}
-                  className="w-full py-2 rounded-lg bg-whatsapp-500
-                             hover:bg-whatsapp-600 text-white font-bold
-                             text-xs flex items-center justify-center
-                             gap-1.5 transition-colors shadow-sm"
-                >
-                  <MessageSquare size={14} fill="white" /> WhatsApp
-                </button>
+                  {leader.whatsapp_number_2 && (
+                    <button
+                      onClick={() => {
+                        const phone = leader.whatsapp_number_2!.replace(/\D/g, "");
+                        window.open(`https://wa.me/${phone}`, "_blank");
+                        showToast(`Opening WhatsApp with ${leader.name}`, "info");
+                      }}
+                      className="w-full py-2 rounded-lg bg-white border
+                                 border-whatsapp-500 text-whatsapp-600
+                                 hover:bg-whatsapp-50 font-bold text-xs
+                                 flex items-center justify-center gap-1.5
+                                 transition-colors"
+                    >
+                      <MessageSquare size={14} /> Alt. WhatsApp
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}

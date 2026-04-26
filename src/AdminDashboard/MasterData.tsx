@@ -10,6 +10,7 @@ type LeaderMaster = {
   id: string;
   name: string;
   whatsapp_number: string;
+  whatsapp_number_2?: string | null;
   is_active: boolean;
 };
 
@@ -17,13 +18,23 @@ type LeaderAssignment = {
   id: string;
   leader_id: string;
   role: string;
-  district: string;
-  constituency: string;
+  district: string | null;
+  constituency: string | null;
   is_active: boolean;
   leader: LeaderMaster;
 };
 
-const ROLES = ["Regional Coordinator", "District President", "Assembly Coordinator"];
+// Global Coordinator → visible to ALL users (district/constituency are NULL).
+// The other three are scoped by location.
+const ROLES = [
+  "Global Coordinator",
+  "Regional Coordinator",
+  "District President",
+  "Assembly Coordinator",
+];
+
+// Roles that don't need a state/district/constituency (apply globally).
+const isGlobalRole = (r: string) => r === "Global Coordinator";
 
 /* ======================================================
    COMPONENT
@@ -46,6 +57,7 @@ export default function MasterData() {
   /* ---------------- FORM ---------------- */
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [phone2, setPhone2] = useState("");           // optional second number
   const [formRole, setFormRole] = useState("");
   const [formState, setFormState] = useState("");
   const [formDistrict, setFormDistrict] = useState("");
@@ -91,6 +103,7 @@ export default function MasterData() {
           id,
           name,
           whatsapp_number,
+          whatsapp_number_2,
           is_active
         )
       `
@@ -136,6 +149,7 @@ export default function MasterData() {
     setEditItem(null);
     setName("");
     setPhone("");
+    setPhone2("");
     setFormRole("");
     setFormState(state);
     setFormDistrict(district);
@@ -147,11 +161,12 @@ export default function MasterData() {
     setEditItem(item);
     setName(item.leader?.name || "");
     setPhone(item.leader?.whatsapp_number || "");
+    setPhone2(item.leader?.whatsapp_number_2 || "");
     setFormRole(item.role);
-    const resolvedState = findStateForDistrict(item.district);
+    const resolvedState = findStateForDistrict(item.district || "");
     setFormState(resolvedState);
-    setFormDistrict(item.district);
-    setFormConstituency(item.constituency);
+    setFormDistrict(item.district || "");
+    setFormConstituency(item.constituency || "");
     setShowModal(true);
   };
 
@@ -159,17 +174,32 @@ export default function MasterData() {
      SAVE
   ====================================================== */
   const saveLeader = async () => {
-    if (!name.trim() || !phone.trim() || !formRole || !formState || !formDistrict || !formConstituency) {
-      alert("Please fill all fields: name, WhatsApp, role, state, district, constituency.");
+    // Global Coordinators apply everywhere → no state/district/constituency.
+    // Other roles require all three.
+    const isGlobal = isGlobalRole(formRole);
+    if (!name.trim() || !phone.trim() || !formRole) {
+      alert("Please fill name, WhatsApp number, and role.");
       return;
     }
+    if (!isGlobal && (!formState || !formDistrict || !formConstituency)) {
+      alert("Please fill state, district and constituency.");
+      return;
+    }
+
+    const phoneNorm  = phone.trim();
+    const phone2Norm = phone2.trim() || null;
 
     let leaderId = editItem?.leader?.id;
 
     if (!leaderId) {
       const { data, error } = await supabase
         .from("leaders_master")
-        .insert({ name, whatsapp_number: phone, is_active: true })
+        .insert({
+          name,
+          whatsapp_number: phoneNorm,
+          whatsapp_number_2: phone2Norm,
+          is_active: true,
+        })
         .select()
         .single();
 
@@ -181,7 +211,11 @@ export default function MasterData() {
     } else {
       const { error } = await supabase
         .from("leaders_master")
-        .update({ name, whatsapp_number: phone })
+        .update({
+          name,
+          whatsapp_number: phoneNorm,
+          whatsapp_number_2: phone2Norm,
+        })
         .eq("id", leaderId);
       if (error) {
         alert("Failed to update leader: " + error.message);
@@ -189,13 +223,17 @@ export default function MasterData() {
       }
     }
 
+    // For Global Coordinator: store district + constituency as NULL.
+    const assignmentDistrict     = isGlobal ? null : formDistrict;
+    const assignmentConstituency = isGlobal ? null : formConstituency;
+
     if (editItem) {
       const { error } = await supabase
         .from("leader_assignments")
         .update({
           role: formRole,
-          district: formDistrict,
-          constituency: formConstituency,
+          district: assignmentDistrict,
+          constituency: assignmentConstituency,
         })
         .eq("id", editItem.id);
       if (error) {
@@ -206,8 +244,8 @@ export default function MasterData() {
       const { error } = await supabase.from("leader_assignments").insert({
         leader_id: leaderId,
         role: formRole,
-        district: formDistrict,
-        constituency: formConstituency,
+        district: assignmentDistrict,
+        constituency: assignmentConstituency,
         is_active: true,
       });
       if (error) {
@@ -218,7 +256,7 @@ export default function MasterData() {
 
     setShowModal(false);
     // If we just added in a different state/district/constituency than the filter, switch to it
-    if (formState && formDistrict && formConstituency) {
+    if (!isGlobal && formState && formDistrict && formConstituency) {
       setState(formState);
       setDistrict(formDistrict);
       setConstituency(formConstituency);
@@ -372,37 +410,55 @@ export default function MasterData() {
                   </td>
                 </tr>
               ) : (
-                assignments.map((a) => (
-                  <tr key={a.id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3 font-medium text-gray-900">{a.leader?.name || "—"}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-primary-50 text-primary-700 border border-primary-100 font-medium whitespace-nowrap">
-                        {a.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">{a.district || "—"}</td>
-                    <td className="px-4 py-3 text-gray-700">{a.constituency || "—"}</td>
-                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{a.leader?.whatsapp_number || "—"}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          onClick={() => openEditModal(a)}
-                          className="p-2 rounded-lg text-primary-600 hover:bg-primary-50 transition"
-                          title="Edit"
+                assignments.map((a) => {
+                  const isGlobal = isGlobalRole(a.role);
+                  return (
+                    <tr key={a.id} className="hover:bg-gray-50 transition">
+                      <td className="px-4 py-3 font-medium text-gray-900">{a.leader?.name || "—"}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium whitespace-nowrap ${
+                            isGlobal
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-primary-50 text-primary-700 border border-primary-100"
+                          }`}
                         >
-                          <Edit3 size={16} />
-                        </button>
-                        <button
-                          onClick={() => deleteAssignment(a.id)}
-                          className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition"
-                          title="Deactivate"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {isGlobal ? "🌐 " : ""}{a.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">
+                        {isGlobal ? <span className="text-gray-400 italic">all districts</span> : (a.district || "—")}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">
+                        {isGlobal ? <span className="text-gray-400 italic">—</span> : (a.constituency || "—")}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
+                        <div>{a.leader?.whatsapp_number || "—"}</div>
+                        {a.leader?.whatsapp_number_2 && (
+                          <div className="text-[11px] text-gray-500">{a.leader.whatsapp_number_2}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => openEditModal(a)}
+                            className="p-2 rounded-lg text-primary-600 hover:bg-primary-50 transition"
+                            title="Edit"
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button
+                            onClick={() => deleteAssignment(a.id)}
+                            className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition"
+                            title="Deactivate"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -443,6 +499,19 @@ export default function MasterData() {
               </div>
 
               <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">
+                  Secondary WhatsApp number{" "}
+                  <span className="text-gray-400 font-normal italic">(optional)</span>
+                </label>
+                <input
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                  placeholder="+919876543210"
+                  value={phone2}
+                  onChange={(e) => setPhone2(e.target.value)}
+                />
+              </div>
+
+              <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Role</label>
                 <select
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white"
@@ -456,56 +525,62 @@ export default function MasterData() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 mb-1 block">State</label>
-                  <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white"
-                    value={formState}
-                    onChange={(e) => {
-                      setFormState(e.target.value);
-                      setFormDistrict("");
-                      setFormConstituency("");
-                    }}
-                  >
-                    <option value="">Select State</option>
-                    {allStates.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
+              {isGlobalRole(formRole) ? (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800">
+                  🌐 <span className="font-semibold">Global Coordinator</span> — this leader will be visible to <b>every user</b> regardless of their address. State / district / constituency aren't needed.
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 mb-1 block">District</label>
-                  <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white disabled:bg-gray-100"
-                    value={formDistrict}
-                    onChange={(e) => {
-                      setFormDistrict(e.target.value);
-                      setFormConstituency("");
-                    }}
-                    disabled={!formState}
-                  >
-                    <option value="">Select District</option>
-                    {districtsFor(formState).map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 mb-1 block">State</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white"
+                      value={formState}
+                      onChange={(e) => {
+                        setFormState(e.target.value);
+                        setFormDistrict("");
+                        setFormConstituency("");
+                      }}
+                    >
+                      <option value="">Select State</option>
+                      {allStates.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 mb-1 block">District</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white disabled:bg-gray-100"
+                      value={formDistrict}
+                      onChange={(e) => {
+                        setFormDistrict(e.target.value);
+                        setFormConstituency("");
+                      }}
+                      disabled={!formState}
+                    >
+                      <option value="">Select District</option>
+                      {districtsFor(formState).map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 mb-1 block">Constituency</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white disabled:bg-gray-100"
+                      value={formConstituency}
+                      onChange={(e) => setFormConstituency(e.target.value)}
+                      disabled={!formDistrict}
+                    >
+                      <option value="">Select Constituency</option>
+                      {constituenciesFor(formState, formDistrict).map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Constituency</label>
-                  <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white disabled:bg-gray-100"
-                    value={formConstituency}
-                    onChange={(e) => setFormConstituency(e.target.value)}
-                    disabled={!formDistrict}
-                  >
-                    <option value="">Select Constituency</option>
-                    {constituenciesFor(formState, formDistrict).map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              )}
             </div>
 
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
