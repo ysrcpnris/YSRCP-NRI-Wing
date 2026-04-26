@@ -118,7 +118,7 @@ export default function Users() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search anything — e.g. NRI-8K3P-2M, Saketh, +9198, Hyderabad, Doctor..."
+            placeholder="Search by User ID, name, email, mobile, city, profession, family relation..."
             className="flex-1 border-0 outline-none text-sm font-medium placeholder:text-gray-400"
             autoFocus
           />
