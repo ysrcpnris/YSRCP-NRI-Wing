@@ -6,6 +6,7 @@ const cspDev = `
   connect-src
     'self'
     https://rcpcmjrahhzayqxexpkv.supabase.co
+    wss://rcpcmjrahhzayqxexpkv.supabase.co
     https://api.supabase.io
     ws://localhost:*
     https://www.googleapis.com
