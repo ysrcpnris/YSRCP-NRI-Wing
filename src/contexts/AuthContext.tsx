@@ -544,13 +544,28 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
   });
 
   if (error) {
+    // Surface the real cause to the console so we can diagnose 500s from the
+    // Supabase auth-side triggers (e.g. handle_new_user), instead of hiding
+    // them behind a generic "Unable to register" message.
+    console.error("[signUp] auth.signUp error:", error, { meta });
+
     const msg = error.message.toLowerCase();
 
-    if (msg.includes("already registered")) {
+    if (msg.includes("already registered") || msg.includes("user already registered")) {
       throw new Error("User already registered. Please login.");
     }
+    if (msg.includes("rate limit")) {
+      throw new Error("Too many signup attempts. Please wait a few minutes.");
+    }
+    if (msg.includes("password")) {
+      throw new Error(`Password issue: ${error.message}`);
+    }
+    if (msg.includes("invalid email") || msg.includes("email")) {
+      throw new Error(`Email issue: ${error.message}`);
+    }
 
-    throw new Error("Unable to register. Please try again.");
+    // Pass the underlying error up so the user (and us) can see the cause.
+    throw new Error(`Registration failed: ${error.message || "unknown error"}`);
   }
 
   if (!data.user) {
