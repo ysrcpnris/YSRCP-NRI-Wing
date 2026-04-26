@@ -30,7 +30,14 @@ export default function Credits() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [ledgerLoading, setLedgerLoading] = useState(false);
 
-  const [delta, setDelta] = useState<number>(0);
+  // Adjustment form: explicit modes for the three valid admin operations.
+  //   add     -> grant N more credits
+  //   reduce  -> deduct N credits (capped at current balance, never below 0)
+  //   reset   -> single click: deducts the entire balance, taking it to 0
+  // Using modes instead of a signed delta avoids the UX trap where admins
+  // didn't realise they could type a negative number into the input.
+  const [mode, setMode] = useState<"add" | "reduce" | "reset">("add");
+  const [amount, setAmount] = useState<number>(0);
   const [note, setNote] = useState("");
   const [posting, setPosting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -54,21 +61,33 @@ export default function Credits() {
     setSearching(false);
   };
 
-  const loadLedger = async (u: UserRow) => {
-    setSelected(u);
+  // Fetch the ledger only (no setSelected). Used both on first user pick and
+  // for refreshes after an admin adjustment.
+  const fetchLedger = async (userId: string) => {
     setLedgerLoading(true);
-    setErr(null);
-    setInfo(null);
     const { data } = await supabase
       .from("credit_transactions")
       .select("id, user_id, delta, reason, note, ref_id, created_at")
-      .eq("user_id", u.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(50);
     setLedger((data || []) as LedgerEntry[]);
     setLedgerLoading(false);
   };
 
+  // Selecting a user from the search results: set as selected + load ledger.
+  const loadLedger = async (u: UserRow) => {
+    setSelected(u);
+    setErr(null);
+    setInfo(null);
+    await fetchLedger(u.id);
+  };
+
+  // Re-fetch BOTH the selected profile (so credits_balance updates) and the
+  // ledger. Previously this also called loadLedger(selected) which would
+  // setSelected back to the stale value — that's why the balance card
+  // wasn't updating after add / reduce / reset. Now we update them
+  // independently so the freshly-fetched profile always wins.
   const refreshSelected = async () => {
     if (!selected) return;
     const { data } = await supabase
@@ -77,45 +96,71 @@ export default function Credits() {
       .eq("id", selected.id)
       .single();
     if (data) setSelected(data as UserRow);
-    await loadLedger(selected);
+    await fetchLedger(selected.id);
   };
 
   const postAdjustment = async () => {
     if (!selected) return;
     setErr(null);
     setInfo(null);
-    if (!Number.isFinite(delta) || delta === 0) {
-      setErr("Enter a non-zero credit amount (can be negative).");
-      return;
-    }
-    // Client-side guard: DB also enforces via a CHECK constraint, but we give
-    // a friendlier message here than the raw constraint error.
+
     const current = selected.credits_balance ?? 0;
-    if (delta < 0 && current + delta < 0) {
-      setErr(
-        `Not enough credits: user has ${current}, this would drop balance to ${current + delta}.`
-      );
-      return;
+    let delta = 0;
+    let successMessage = "";
+    let txReason: "admin_adjustment" | "admin_reset" = "admin_adjustment";
+    let txNote: string | null = note.trim() || null;
+
+    if (mode === "reset") {
+      // Reset to 0: post a single negative entry equal to the current balance.
+      // The ledger keeps the audit trail (no rows deleted) — only the cached
+      // balance hits zero via the existing trigger. We use a distinct reason
+      // ('admin_reset') so the user sees a clear "Balance reset" line in
+      // their activity instead of a generic "Admin adjustment".
+      if (current === 0) {
+        setErr("Balance is already 0 — nothing to reset.");
+        return;
+      }
+      if (!confirm(`Reset balance to 0 by deducting ${current} credits? This cannot be undone.`)) {
+        return;
+      }
+      delta = -current;
+      txReason = "admin_reset";
+      txNote = txNote || "Balance reset to 0 by admin";
+      successMessage = `Reset balance to 0 (deducted ${current} credits).`;
+    } else {
+      const amt = Math.abs(Math.floor(Number(amount) || 0));
+      if (!amt) {
+        setErr("Enter an amount greater than zero.");
+        return;
+      }
+      if (mode === "reduce" && amt > current) {
+        setErr(
+          `Cannot reduce by ${amt} — user only has ${current} credits. Use Reset to 0 to clear them all.`
+        );
+        return;
+      }
+      delta = mode === "reduce" ? -amt : amt;
+      successMessage = mode === "reduce"
+        ? `Reduced ${amt} credits.`
+        : `Added ${amt} credits.`;
     }
+
     setPosting(true);
     const { error } = await supabase.from("credit_transactions").insert({
       user_id: selected.id,
       delta,
-      reason: "admin_adjustment",
-      note: note.trim() || null,
+      reason: txReason,
+      note: txNote,
     });
     if (error) {
-      // Translate the DB CHECK message into something human-readable.
       if (/profiles_credits_nonneg/i.test(error.message)) {
-        setErr(
-          "Not enough credits for this adjustment — balance cannot go below zero."
-        );
+        setErr("Balance cannot go below zero.");
       } else {
         setErr(error.message);
       }
     } else {
-      setInfo(`Posted ${delta > 0 ? "+" : ""}${delta} credits.`);
-      setDelta(0);
+      setInfo(successMessage);
+      setAmount(0);
       setNote("");
       await refreshSelected();
     }
@@ -192,9 +237,18 @@ export default function Credits() {
               <p className="text-[11px] text-gray-400">{selected.email}</p>
             </div>
             <div className="text-right">
-              <p className="text-[11px] text-gray-500 uppercase tracking-wider font-bold">
-                Current balance
-              </p>
+              <div className="flex items-center justify-end gap-2">
+                <p className="text-[11px] text-gray-500 uppercase tracking-wider font-bold">
+                  Current balance
+                </p>
+                <button
+                  onClick={refreshSelected}
+                  className="text-[11px] font-semibold text-primary-600 hover:text-primary-800 inline-flex items-center gap-1"
+                  title="Refresh balance and ledger"
+                >
+                  ↻ Refresh
+                </button>
+              </div>
               <p className="text-3xl font-extrabold text-amber-700">
                 ⚡ {selected.credits_balance ?? 0}
               </p>
@@ -202,56 +256,161 @@ export default function Credits() {
           </div>
 
           {/* ADJUSTMENT FORM */}
-          <div className="bg-gray-50 border rounded-lg p-4 mb-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">
-              Post adjustment
-            </p>
-            <div className="flex flex-wrap gap-2 items-center">
-              <button
-                onClick={() => setDelta((d) => d - 10)}
-                className="p-2 border rounded hover:bg-white"
-                title="-10"
-              >
-                <Minus size={14} />
-              </button>
-              <input
-                type="number"
-                className="border p-2 rounded w-28 text-center font-bold"
-                value={delta}
-                onChange={(e) => setDelta(Number(e.target.value))}
-              />
-              <button
-                onClick={() => setDelta((d) => d + 10)}
-                className="p-2 border rounded hover:bg-white"
-                title="+10"
-              >
-                <Plus size={14} />
-              </button>
-              <input
-                className="flex-1 min-w-[200px] border p-2 rounded"
-                placeholder="Reason / note (shown to the user)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-              />
-              <button
-                onClick={postAdjustment}
-                disabled={posting || delta === 0}
-                className="bg-primary-600 text-white px-4 py-2 rounded disabled:opacity-50"
-              >
-                {posting ? "Posting…" : "Post"}
-              </button>
-            </div>
-            {err && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200 p-2 rounded mt-2">
-                {err}
-              </p>
-            )}
-            {info && (
-              <p className="text-xs text-green-700 bg-green-50 border border-green-200 p-2 rounded mt-2">
-                {info}
-              </p>
-            )}
-          </div>
+          {(() => {
+            const current = selected.credits_balance ?? 0;
+            // For reduce mode, cap the input at the current balance — admin
+            // literally cannot type a number larger than what the user has.
+            const maxForMode = mode === "reduce" ? current : 1_000_000;
+            const cappedAmount = Math.min(amount, maxForMode);
+            const newBalance =
+              mode === "reset"
+                ? 0
+                : mode === "reduce"
+                ? current - cappedAmount
+                : current + cappedAmount;
+
+            const accent =
+              mode === "reduce"
+                ? "bg-red-600 hover:bg-red-700"
+                : mode === "reset"
+                ? "bg-gray-800 hover:bg-gray-900"
+                : "bg-emerald-600 hover:bg-emerald-700";
+
+            return (
+              <div className="bg-gray-50 border rounded-lg p-4 mb-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-3">
+                  Adjust credits
+                </p>
+
+                {/* MODE TOGGLE — three clear modes */}
+                <div className="inline-flex rounded-lg border border-gray-300 bg-white overflow-hidden mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setMode("add")}
+                    className={`px-4 py-2 text-sm font-bold inline-flex items-center gap-1 transition ${
+                      mode === "add"
+                        ? "bg-emerald-600 text-white"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Plus size={14} /> Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("reduce")}
+                    disabled={current === 0}
+                    className={`px-4 py-2 text-sm font-bold inline-flex items-center gap-1 transition border-l border-gray-300 disabled:opacity-40 ${
+                      mode === "reduce"
+                        ? "bg-red-600 text-white"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                    title={current === 0 ? "User has no credits to reduce" : ""}
+                  >
+                    <Minus size={14} /> Reduce
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("reset")}
+                    disabled={current === 0}
+                    className={`px-4 py-2 text-sm font-bold inline-flex items-center gap-1 transition border-l border-gray-300 disabled:opacity-40 ${
+                      mode === "reset"
+                        ? "bg-gray-800 text-white"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                    title={current === 0 ? "Already at 0" : "Wipe all credits to 0"}
+                  >
+                    Reset to 0
+                  </button>
+                </div>
+
+                {/* AMOUNT INPUT (hidden in reset mode) + LIVE PREVIEW */}
+                {mode === "reset" ? (
+                  <div className="text-sm text-gray-700 bg-white border border-gray-200 rounded p-3 mb-3">
+                    This will deduct{" "}
+                    <span className="font-bold text-amber-700">⚡ {current}</span>{" "}
+                    credits, taking the balance to{" "}
+                    <span className="font-bold text-gray-900">⚡ 0</span>. The
+                    ledger entry is preserved for audit.
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2 items-center mb-3">
+                    <input
+                      type="number"
+                      min={1}
+                      max={maxForMode}
+                      step={1}
+                      className="border p-2 rounded w-32 text-center font-bold"
+                      placeholder="Amount"
+                      value={amount || ""}
+                      onChange={(e) => {
+                        const raw = Math.abs(Math.floor(Number(e.target.value) || 0));
+                        // Hard cap on reduce mode so admins never type more than the user has.
+                        setAmount(mode === "reduce" ? Math.min(raw, current) : raw);
+                      }}
+                    />
+                    {(mode === "reduce"
+                      ? [10, 25, 50, current].filter((n) => n > 0 && n <= current)
+                      : [10, 25, 50, 100]
+                    ).map((n, i) => (
+                      <button
+                        key={`${n}-${i}`}
+                        type="button"
+                        onClick={() => setAmount(n)}
+                        className="px-2.5 py-1 text-xs font-semibold border border-gray-300 rounded hover:bg-white"
+                      >
+                        {n}
+                        {mode === "reduce" && n === current ? " (all)" : ""}
+                      </button>
+                    ))}
+                    {amount > 0 && (
+                      <span className="text-xs text-gray-600 ml-2">
+                        New balance:{" "}
+                        <b className="text-amber-700">⚡ {newBalance}</b>
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* NOTE + SUBMIT */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <input
+                    className="flex-1 min-w-[200px] border p-2 rounded"
+                    placeholder="Reason / note (shown to the user)"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                  />
+                  <button
+                    onClick={postAdjustment}
+                    disabled={
+                      posting ||
+                      (mode !== "reset" && !amount) ||
+                      (mode === "reset" && current === 0)
+                    }
+                    className={`px-4 py-2 rounded text-white font-semibold disabled:opacity-50 ${accent}`}
+                  >
+                    {posting
+                      ? "Posting…"
+                      : mode === "reset"
+                      ? "Reset to 0"
+                      : mode === "reduce"
+                      ? `Reduce ${amount || 0}`
+                      : `Add ${amount || 0}`}
+                  </button>
+                </div>
+
+                {err && (
+                  <p className="text-xs text-red-600 bg-red-50 border border-red-200 p-2 rounded mt-2">
+                    {err}
+                  </p>
+                )}
+                {info && (
+                  <p className="text-xs text-green-700 bg-green-50 border border-green-200 p-2 rounded mt-2">
+                    {info}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
 
           {/* LEDGER */}
           <p className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">

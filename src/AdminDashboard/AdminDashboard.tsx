@@ -13,6 +13,7 @@ import MasterData from "./MasterData";
 import SupportTeams from "./SupportTeams";
 import Credits from "./Credits";
 import Rewards from "./Rewards";
+import UsersPage from "./Users";
 import EventsNotifications from "./EventsNotifications";
 
 import ContentControl from "./ContentControl";
@@ -92,6 +93,12 @@ type Row = {
   assembly_constituency?: string | null;
   mandal?: string | null;
   village?: string | null;
+  // Active family member (only filled if user identifies as an active member)
+  family_relation?: string | null;
+  family_name?: string | null;
+  family_mobile?: string | null;
+  family_village?: string | null;
+  family_designation?: string | null;
   created_at?: string | null;
 };
 
@@ -137,6 +144,11 @@ const exportToExcel = (data: any[], filename: string = "registrations.xlsx") => 
     "Profession": row.profession || "-",
     "Organization": row.organization || "-",
     "Designation": row.designation || "-",
+    "Family Relation": row.family_relation || "-",
+    "Family Name": row.family_name || "-",
+    "Family Mobile": row.family_mobile || "-",
+    "Family Village": row.family_village || "-",
+    "Family Designation": row.family_designation || "-",
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -262,6 +274,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
           </div>
           <nav className="space-y-2">
             <Item icon={Home} label="Dashboard" page="dashboard" />
+            <Item icon={Users} label="All Users" page="users" />
             <Item icon={CalendarDays} label="Visited" page="visited" />
             <Item icon={Newspaper} label="Assistance" page="assistance" />
             <Item icon={Users} label="Support Teams" page="supportTeams" />
@@ -343,6 +356,9 @@ function MembersList({
   const paginated = members.slice(start, end);
   const totalPages = Math.max(1, Math.ceil(members.length / pageSize));
 
+  // Family-member modal state — clicking the pill opens it with full details.
+  const [familyModalUser, setFamilyModalUser] = useState<Row | null>(null);
+
   return (
     <div className="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm p-6">
       <div className="flex justify-between items-center mb-5">
@@ -369,28 +385,50 @@ function MembersList({
                   <th className="py-3 px-4 text-left text-sm font-semibold">Mobile</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">WhatsApp</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Profession</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold">Family Member</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Credits</th>
                 </tr>
               </thead>
               <tbody>
-                {paginated.map((m, i) => (
-                  <tr
-                    key={m.id}
-                    className={`text-sm hover:bg-blue-50 ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
-                  >
-                    <td className="py-2 px-4 font-mono text-xs" title={`UUID: ${m.id}`}>
-                      {(m as any).public_user_code || "-"}
-                    </td>
-                    <td className="py-2 px-4">{[(m as any).first_name, (m as any).last_name].filter(Boolean).join(" ") || "-"}</td>
-                    <td className="py-2 px-4">{(m as any).email || "-"}</td>
-                    <td className="py-2 px-4">{(m as any).mobile_number || "-"}</td>
-                    <td className="py-2 px-4">{(m as any).whatsapp_number || "-"}</td>
-                    <td className="py-2 px-4">{(m as any).profession || "-"}</td>
-                    <td className="py-2 px-4 font-bold text-amber-700">
-                      ⚡ {(m as any).credits_balance ?? 0}
-                    </td>
-                  </tr>
-                ))}
+                {paginated.map((m, i) => {
+                  const fam = m as any;
+                  const hasFamily =
+                    fam.family_relation || fam.family_name || fam.family_mobile;
+
+                  return (
+                    <tr
+                      key={m.id}
+                      className={`text-sm hover:bg-blue-50 ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
+                    >
+                      <td className="py-2 px-4 font-mono text-xs" title={`UUID: ${m.id}`}>
+                        {fam.public_user_code || "-"}
+                      </td>
+                      <td className="py-2 px-4">{[fam.first_name, fam.last_name].filter(Boolean).join(" ") || "-"}</td>
+                      <td className="py-2 px-4">{fam.email || "-"}</td>
+                      <td className="py-2 px-4">{fam.mobile_number || "-"}</td>
+                      <td className="py-2 px-4">{fam.whatsapp_number || "-"}</td>
+                      <td className="py-2 px-4">{fam.profession || "-"}</td>
+                      <td className="py-2 px-4">
+                        {hasFamily ? (
+                          <button
+                            type="button"
+                            onClick={() => setFamilyModalUser(m)}
+                            className="inline-flex items-center bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold px-2 py-0.5 rounded-full max-w-[180px] truncate hover:bg-emerald-100 transition"
+                            title="Click to view full family details"
+                          >
+                            👪 {fam.family_relation || "—"}
+                            {fam.family_name ? ` · ${fam.family_name}` : ""}
+                          </button>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-4 font-bold text-amber-700">
+                        ⚡ {fam.credits_balance ?? 0}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -428,6 +466,87 @@ function MembersList({
           )}
         </>
       )}
+
+      {/* Family member popup */}
+      {familyModalUser && (
+        <FamilyModal
+          user={familyModalUser}
+          onClose={() => setFamilyModalUser(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+
+/* ---------- Family Member Modal ---------- */
+function FamilyModal({ user, onClose }: { user: any; onClose: () => void }) {
+  const fields: { label: string; value: string | null | undefined }[] = [
+    { label: "Relation", value: user.family_relation },
+    { label: "Name", value: user.family_name },
+    { label: "Mobile Number", value: user.family_mobile },
+    { label: "Village", value: user.family_village },
+    { label: "Designation", value: user.family_designation },
+  ];
+  const userLabel =
+    [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+    user.email ||
+    "User";
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white flex items-center justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wider opacity-90">
+              Active Family Member
+            </p>
+            <p className="text-sm font-bold truncate">{userLabel}</p>
+            {user.public_user_code && (
+              <p className="text-[10px] font-mono opacity-90">
+                {user.public_user_code}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-white/20 transition"
+            aria-label="Close"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-5 space-y-3">
+          {fields.map(({ label, value }) => (
+            <div key={label} className="flex items-start justify-between gap-3 text-sm">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[110px] pt-0.5">
+                {label}
+              </span>
+              <span className="text-gray-900 font-semibold break-words text-right">
+                {value || <span className="text-gray-300 font-normal">—</span>}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100"
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -443,7 +562,33 @@ export default function AdminDashboard() {
   const [err, setErr] = useState<string>("");
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState("dashboard");
+  // Active sidebar page is mirrored to the URL hash (e.g. /admin#credits) so
+  // a page refresh keeps the admin where they were instead of bouncing back
+  // to the Dashboard tab.
+  const VALID_ADMIN_PAGES = [
+    "dashboard","users","visited","assistance","supportTeams","credits",
+    "rewards","suggestions","masterData","eventsnotifications","news",
+    "contentControl",
+  ];
+  const getInitialAdminPage = () => {
+    if (typeof window === "undefined") return "dashboard";
+    const hash = window.location.hash.replace(/^#/, "");
+    return VALID_ADMIN_PAGES.includes(hash) ? hash : "dashboard";
+  };
+  const [currentPage, setCurrentPage] = useState(getInitialAdminPage);
+
+  // Mirror the active page into the URL hash (without polluting history).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const next = `#${currentPage}`;
+    if (window.location.hash !== next) {
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}${next}`
+      );
+    }
+  }, [currentPage]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [countryContinentMap, setCountryContinentMap] = useState<Record<string, string>>({});
   
@@ -588,7 +733,7 @@ export default function AdminDashboard() {
           const { data, error } = await supabase
             .from(TABLE_NAME)
             .select(
-              "id, public_user_code, credits_balance, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, created_at"
+              "id, public_user_code, credits_balance, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, created_at"
             )
             .range(offset, offset + batchSize - 1);
 
@@ -874,6 +1019,7 @@ export default function AdminDashboard() {
           </>
         
         )}
+      {currentPage === "users" && <UsersPage />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
       {currentPage === "supportTeams" && <SupportTeams />}

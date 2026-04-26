@@ -11,7 +11,7 @@ type PageState =
   | "redirecting";
 
 export default function EmailVerifiedPage() {
-  const { loading, signOut } = useAuth();
+  const { loading, signOut, user, isVerified } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -123,9 +123,25 @@ export default function EmailVerifiedPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading) {
-    return null;
-  }
+  // While the auth context is still initializing (mobile networks can take a
+  // few seconds), show a verifying state instead of a blank screen.
+  // The previous `return null` here was the cause of the "blank page after
+  // verification" bug clients reported on mobile.
+
+  // If the magic link signed the user in successfully, fast-path them straight
+  // to their dashboard once auth has finished initializing — no need to send
+  // them through the login modal again.
+  useEffect(() => {
+    if (loading) return;
+    if (user && isVerified) {
+      const t = window.setTimeout(() => {
+        if (mountedRef.current) {
+          navigate("/dashboard", { replace: true });
+        }
+      }, 600);
+      return () => window.clearTimeout(t);
+    }
+  }, [loading, user, isVerified, navigate]);
 
   // Provide a manual way to sign-out & open the login modal (keeps your original UX)
   const goToLogin = async () => {

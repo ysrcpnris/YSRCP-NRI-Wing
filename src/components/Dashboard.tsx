@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo ,useRef} from 'react';
+import { createPortal } from 'react-dom';
 import { Listbox } from "@headlessui/react";
 import { ProfileDropdown } from './ProfileDropdown';
 import nriLogo from './nrilogo.png';
@@ -1073,9 +1074,11 @@ type SectionKey =
 
 
 type Referral = {
-  id: number;
+  id: string | number;
   member_name: string;
+  mobile_number?: string | null;
   location: string | null;
+  public_user_code?: string | null;
   type: 'active' | 'passive';
   created_at: string;
 };
@@ -1095,8 +1098,10 @@ type EventItem = {
   id: string;          // uuid
   title: React.ReactNode;
 
-  info: string | null; // admin message
-  status: string;      // Draft | Sent
+  info: string | null;       // admin message
+  status: string;            // Draft | Sent
+  date: string | null;       // event date (decides active vs previous)
+  venue?: string | null;
   created_at: string;
 };
 
@@ -1228,11 +1233,47 @@ const Dashboard: React.FC = () => {
   const [expandedSection, setExpandedSection] =
     useState<SectionKey | null>("profile");
 
-  // New tab-based navigation state (overview is the landing tab)
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "profile" | "referrals" | "services" | "events" | "connect" | "suggestions"
-  >("overview");
+  // New tab-based navigation state (overview is the landing tab).
+  // The active tab is mirrored to the URL hash (e.g. /dashboard#services) so
+  // a page refresh keeps the user where they were instead of bouncing them
+  // back to the Overview tab.
+  type Tab =
+    | "overview"
+    | "profile"
+    | "referrals"
+    | "services"
+    | "events"
+    | "connect"
+    | "suggestions";
+  const VALID_TABS: readonly Tab[] = [
+    "overview",
+    "profile",
+    "referrals",
+    "services",
+    "events",
+    "connect",
+    "suggestions",
+  ];
+
+  const getInitialTab = (): Tab => {
+    if (typeof window === "undefined") return "overview";
+    const hash = window.location.hash.replace(/^#/, "") as Tab;
+    return (VALID_TABS as readonly string[]).includes(hash) ? hash : "overview";
+  };
+
+  const [activeTab, setActiveTab] = useState<Tab>(getInitialTab);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Whenever the active tab changes, write it to the URL hash without adding
+  // a history entry. Refresh now restores the tab; back-button still works
+  // correctly because we use replaceState (no spurious history bloat).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const next = `#${activeTab}`;
+    if (window.location.hash !== next) {
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${next}`);
+    }
+  }, [activeTab]);
 
   /**
    * ═══════════════════════════════════════════════════════════════
@@ -1294,6 +1335,7 @@ const [selectedInner, setSelectedInner] = useState<string | null>(null);
     created_at: string;
   };
   const [creditLedger, setCreditLedger] = useState<CreditEntry[]>([]);
+  const [showLedgerModal, setShowLedgerModal] = useState(false);
 
   // Reward catalogue + user's own redemption history
   type Perk = {
@@ -1333,34 +1375,55 @@ const [unseenEventsCount, setUnseenEventsCount] = useState(0);
  * - Improves engagement by highlighting new content
  */
 
-useEffect(() => {
+// Reusable so we can also call it after creating/refreshing events.
+const loadUnseenEvents = async () => {
   if (!user || !profile?.id) return;
 
-  const loadUnseenEvents = async () => {
-    // 1️⃣ Get last seen event timestamp from profile
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("events_last_seen_at")
-      .eq("id", profile.id)
-      .single();
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("events_last_seen_at")
+    .eq("id", profile.id)
+    .single();
 
-    const lastSeenAt =
-      profileData?.events_last_seen_at || "1970-01-01";
+  const lastSeenAt = profileData?.events_last_seen_at || "1970-01-01";
 
-    // 2️⃣ Count unseen events created after last seen timestamp
-    const { count, error } = await supabase
-      .from("events")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "Sent")
-      .gt("created_at", lastSeenAt);
+  // Only count UNSEEN + STILL ACTIVE events (date in the future, or undated).
+  // Past events shouldn't keep flashing as "new notifications".
+  const todayIso = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-    if (!error) {
-      setUnseenEventsCount(count ?? 0);
-    }
-  };
+  const { count, error } = await supabase
+    .from("events")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "Sent")
+    .gt("created_at", lastSeenAt)
+    .or(`date.is.null,date.gte.${todayIso}`);
 
+  if (!error) {
+    setUnseenEventsCount(count ?? 0);
+  }
+};
+
+useEffect(() => {
+  if (!user || !profile?.id) return;
   loadUnseenEvents();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [user, profile?.id]);
+
+// Clear the badge whenever the user lands on the Events tab — no matter which
+// button got them there (sidebar accordion, dashboard tile, mobile nav).
+useEffect(() => {
+  if (activeTab !== "events") return;
+  if (!user || !profile?.id) return;
+
+  (async () => {
+    await supabase
+      .from("profiles")
+      .update({ events_last_seen_at: new Date().toISOString() })
+      .eq("id", profile.id);
+    setUnseenEventsCount(0);
+  })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [activeTab, user?.id, profile?.id]);
 
 /**
  * ═══════════════════════════════════════════════════════════════
@@ -1684,6 +1747,13 @@ const [district, setDistrict] = useState("");
 const [assembly, setAssembly] = useState("");
 const [mandal, setMandal] = useState("");
 
+// Active family member in the party (optional — only filled if user is an active member)
+const [familyRelation, setFamilyRelation] = useState("");
+const [familyName, setFamilyName] = useState("");
+const [familyMobile, setFamilyMobile] = useState("");
+const [familyVillage, setFamilyVillage] = useState("");
+const [familyDesignation, setFamilyDesignation] = useState("");
+
   /**
    * ═══════════════════════════════════════════════════════════════
    * PROFESSIONAL DETAILS STATE
@@ -1814,6 +1884,13 @@ useEffect(() => {
       : ""
   );
   setMandal(profile.mandal ? normalizeMandal(profile.mandal) : "");
+
+  // Hydrate active-family-member fields (optional — may be null)
+  setFamilyRelation((profile as any).family_relation || "");
+  setFamilyName((profile as any).family_name || "");
+  setFamilyMobile((profile as any).family_mobile || "");
+  setFamilyVillage((profile as any).family_village || "");
+  setFamilyDesignation((profile as any).family_designation || "");
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
@@ -2334,6 +2411,28 @@ useEffect(() => {
 
     try {
 
+// Build a referral row for display: name + mobile + address (abroad first,
+// then Indian fallback) + join date. The same shape works for both lists.
+const buildReferral = (r: any, type: "active" | "passive") => {
+  const first = r.profiles?.first_name ?? "";
+  const last = r.profiles?.last_name ?? "";
+  const abroad = [r.profiles?.city_abroad, r.profiles?.country_of_residence]
+    .filter(Boolean)
+    .join(", ");
+  const indian = [r.profiles?.assembly_constituency, r.profiles?.district, r.profiles?.indian_state]
+    .filter(Boolean)
+    .join(", ");
+  return {
+    id: r.id,
+    member_name: last && last !== first ? `${first} ${last}` : first || "Member",
+    mobile_number: r.profiles?.mobile_number ?? null,
+    location: abroad || indian || "—",
+    public_user_code: r.profiles?.public_user_code ?? null,
+    type,
+    created_at: r.created_at,
+  };
+};
+
 // ---------------- ACTIVE REFERRALS ----------------
 const { data: activeData, error: activeError } = await supabase
   .from("referrals")
@@ -2344,7 +2443,14 @@ const { data: activeData, error: activeError } = await supabase
     profiles:referred_id (
       first_name,
       last_name,
-      country_of_residence
+      mobile_number,
+      country_of_residence,
+      state_abroad,
+      city_abroad,
+      indian_state,
+      district,
+      assembly_constituency,
+      public_user_code
     )
   `)
   .eq("referrer_id", profile.id)
@@ -2355,20 +2461,7 @@ if (activeError) {
   console.error("Active referral error:", activeError);
 }
 
-setActiveReferrals(
-  (activeData || []).map((r: any) => {
-    const first = r.profiles?.first_name ?? "";
-    const last = r.profiles?.last_name ?? "";
-
-    return {
-      id: r.id,
-      member_name: last && last !== first ? `${first} ${last}` : first,
-      location: r.profiles?.country_of_residence ?? "—",
-      type: "active",
-      created_at: r.created_at,
-    };
-  })
-);
+setActiveReferrals((activeData || []).map((r: any) => buildReferral(r, "active")));
 
 
 // ---------------- PASSIVE REFERRALS ----------------
@@ -2380,7 +2473,14 @@ const { data: passiveData, error: passiveError } = await supabase
     profiles:referred_id (
       first_name,
       last_name,
-      country_of_residence
+      mobile_number,
+      country_of_residence,
+      state_abroad,
+      city_abroad,
+      indian_state,
+      district,
+      assembly_constituency,
+      public_user_code
     )
   `)
   .eq("referrer_id", profile.id)
@@ -2391,20 +2491,7 @@ if (passiveError) {
   console.error("Passive referral error:", passiveError);
 }
 
-setPassiveReferrals(
-  (passiveData || []).map((r: any) => {
-    const first = r.profiles?.first_name ?? "";
-    const last = r.profiles?.last_name ?? "";
-
-    return {
-      id: r.id,
-      member_name: last && last !== first ? `${first} ${last}` : first,
-      location: r.profiles?.country_of_residence ?? "—",
-      type: "passive",
-      created_at: r.created_at,
-    };
-  })
-);
+setPassiveReferrals((passiveData || []).map((r: any) => buildReferral(r, "passive")));
 
      // 2. Leaders (NEW NORMALIZED LOGIC)
     // 🔒 Clear leaders if district or assembly missing - do NOT return early
@@ -2494,9 +2581,9 @@ if (!district || !assembly) {
       // =======================
   const { data: eventsData, error: eventsError } = await supabase
   .from("events")
-  .select("id, title, info, status, created_at")
+  .select("id, title, info, status, date, venue, created_at")
   .eq("status", "Sent")
-  .order("created_at", { ascending: false });
+  .order("date", { ascending: false, nullsFirst: false });
 
 if (eventsError) {
   console.error("Events fetch error:", eventsError);
@@ -2972,6 +3059,14 @@ const updates = {
   twitter_id: twitter,
   linkedin_id: linkedin,
   instagram_id: instagram,
+
+  // Active family member (optional — empty strings persisted as NULL)
+  family_relation:    familyRelation || null,
+  family_name:        familyName.trim() || null,
+  family_mobile:      familyMobile.trim() || null,
+  family_village:     familyVillage.trim() || null,
+  family_designation: familyDesignation.trim() || null,
+
   updated_at: new Date().toISOString(),
 };
 
@@ -3324,7 +3419,101 @@ const handleSubmitSuggestion = async () => {
     </div>
   </div>
 </div>
-          </div>  
+
+{/* ============== ACTIVE FAMILY MEMBER (optional) ============== */}
+<div className="p-5 bg-white rounded-xl border border-gray-200 mt-5">
+  <div className="flex items-baseline justify-between flex-wrap gap-2 mb-1">
+    <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider">
+      Active Family Member in the Party
+    </h4>
+    <span className="text-[10px] font-semibold text-gray-400 italic">
+      Optional — fill only if you have an active YSRCP family member
+    </span>
+  </div>
+  <p className="text-[11px] text-gray-500 mb-4">
+    These details help the party's NRI Wing connect you to your local network faster.
+  </p>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+        Relation
+      </label>
+      <select
+        value={familyRelation}
+        onChange={(e) => setFamilyRelation(e.target.value)}
+        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+                   text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+      >
+        <option value="">— Select relation —</option>
+        <option value="Father">Father</option>
+        <option value="Mother">Mother</option>
+        <option value="Brother">Brother</option>
+        <option value="Sister">Sister</option>
+        <option value="Uncle">Uncle</option>
+        <option value="Cousin">Cousin</option>
+        <option value="Others">Others</option>
+      </select>
+    </div>
+
+    <div>
+      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+        Name
+      </label>
+      <input
+        type="text"
+        value={familyName}
+        onChange={(e) => setFamilyName(e.target.value)}
+        placeholder="Family member's full name"
+        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+                   text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+      />
+    </div>
+
+    <div>
+      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+        Mobile Number
+      </label>
+      <input
+        type="tel"
+        value={familyMobile}
+        onChange={(e) => setFamilyMobile(e.target.value)}
+        placeholder="+91XXXXXXXXXX"
+        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+                   text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+      />
+    </div>
+
+    <div>
+      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+        Village
+      </label>
+      <input
+        type="text"
+        value={familyVillage}
+        onChange={(e) => setFamilyVillage(e.target.value)}
+        placeholder="Native village"
+        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+                   text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+      />
+    </div>
+
+    <div className="md:col-span-2">
+      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+        Designation <span className="font-normal text-gray-400 italic normal-case">(optional)</span>
+      </label>
+      <input
+        type="text"
+        value={familyDesignation}
+        onChange={(e) => setFamilyDesignation(e.target.value)}
+        placeholder="e.g. Mandal President, Sarpanch, Party Worker"
+        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+                   text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+      />
+    </div>
+  </div>
+</div>
+          </div>
 
 
     <div
@@ -3530,9 +3719,9 @@ const handleSubmitSuggestion = async () => {
         </div>
       </div>
 
-      {/* Credits widget: balance + recent ledger */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-2xl p-5">
+      {/* Credits widget: balance card with a button to open the activity popup */}
+      <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
           <p className="text-[11px] font-bold tracking-wider text-amber-800 uppercase">
             Current Balance
           </p>
@@ -3543,66 +3732,20 @@ const handleSubmitSuggestion = async () => {
             +50 active · +10 passive · +25 signup
           </p>
         </div>
-        <div className="md:col-span-2 bg-white border border-gray-200 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
-              Recent Credit Activity
-            </p>
-            <button
-              onClick={fetchCreditLedger}
-              className="text-[11px] font-semibold text-primary-600 hover:text-primary-800"
-            >
-              Refresh
-            </button>
-          </div>
-          {creditLedger.length === 0 ? (
-            <p className="text-xs text-gray-500">
-              No activity yet — share your link to start earning.
-            </p>
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {creditLedger.map((e) => {
-                const label =
-                  e.reason === "active"
-                    ? "Active referral"
-                    : e.reason === "passive"
-                    ? "Passive referral"
-                    : e.reason === "signup"
-                    ? "Signup bonus"
-                    : e.reason === "admin_adjustment"
-                    ? "Admin adjustment"
-                    : e.reason === "redemption"
-                    ? "Redemption"
-                    : e.reason;
-                const isPositive = e.delta > 0;
-                return (
-                  <li
-                    key={e.id}
-                    className="py-2 flex items-center justify-between text-xs"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-800 truncate">{label}</p>
-                      {e.note && (
-                        <p className="text-[11px] text-gray-500 truncate">{e.note}</p>
-                      )}
-                      <p className="text-[11px] text-gray-400">
-                        {new Date(e.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span
-                      className={`font-bold text-sm ${
-                        isPositive ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {isPositive ? "+" : ""}
-                      {e.delta}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+        <button
+          onClick={() => {
+            fetchCreditLedger();
+            setShowLedgerModal(true);
+          }}
+          className="self-stretch sm:self-center inline-flex items-center justify-center gap-2 bg-white text-amber-800 border border-amber-300 hover:bg-amber-50 transition px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm"
+        >
+          📜 View Recent Activity
+          {creditLedger.length > 0 && (
+            <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
+              {creditLedger.length}
+            </span>
           )}
-        </div>
+        </button>
       </div>
 
       {/* Rewards catalogue + my redemptions */}
@@ -3735,33 +3878,44 @@ const handleSubmitSuggestion = async () => {
             {activeReferrals.length === 0 ? (
               <div className="p-4 text-xs text-gray-500">No active referrals yet.</div>
             ) : (
-              <table className="w-full text-xs text-left">
-                <thead className="bg-white text-gray-400 border-b border-gray-100 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-4 py-2 font-bold bg-gray-50/90">Name</th>
-                    <th className="px-4 py-2 font-bold bg-gray-50/90">Location</th>
-                    <th className="px-4 py-2 font-bold bg-gray-50/90">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeReferrals.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="hover:bg-gray-50 border-b border-gray-50 last:border-0"
-                    >
-                      <td className="px-4 py-2.5 font-bold text-gray-700">
-                        {r.member_name || 'Member'}
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-500">
-                        {r.location || '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-400">
+              <ul className="divide-y divide-gray-50">
+                {activeReferrals.map((r) => (
+                  <li key={r.id} className="px-4 py-3 hover:bg-gray-50">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm text-gray-800 truncate">
+                          {r.member_name || 'Member'}
+                        </p>
+                        {r.public_user_code && (
+                          <p className="text-[10px] font-mono text-gray-400">
+                            {r.public_user_code}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">
                         {formatDate(r.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </span>
+                    </div>
+                    {r.mobile_number && (
+                      <p className="text-[11px] text-gray-600 mt-1 inline-flex items-center gap-1">
+                        <span aria-hidden>📞</span>
+                        <a
+                          href={`tel:${r.mobile_number}`}
+                          className="hover:text-primary-700 underline-offset-2 hover:underline"
+                        >
+                          {r.mobile_number}
+                        </a>
+                      </p>
+                    )}
+                    {r.location && r.location !== '—' && (
+                      <p className="text-[11px] text-gray-500 mt-0.5 inline-flex items-center gap-1">
+                        <span aria-hidden>📍</span>
+                        <span className="truncate">{r.location}</span>
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
@@ -3780,37 +3934,172 @@ const handleSubmitSuggestion = async () => {
             {passiveReferrals.length === 0 ? (
               <div className="p-4 text-xs text-gray-500">No passive referrals yet.</div>
             ) : (
-              <table className="w-full text-xs text-left">
-                <thead className="bg-white text-gray-400 border-b border-gray-100 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-4 py-2 font-bold bg-gray-50/90">Name</th>
-                    <th className="px-4 py-2 font-bold bg-gray-50/90">Location</th>
-                    <th className="px-4 py-2 font-bold bg-gray-50/90">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {passiveReferrals.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="hover:bg-gray-50 border-b border-gray-50 last:border-0"
-                    >
-                      <td className="px-4 py-2.5 font-bold text-gray-700">
-                        {r.member_name || 'Member'}
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-500">
-                        {r.location || '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-400">
+              <ul className="divide-y divide-gray-50">
+                {passiveReferrals.map((r) => (
+                  <li key={r.id} className="px-4 py-3 hover:bg-gray-50">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm text-gray-800 truncate">
+                          {r.member_name || 'Member'}
+                        </p>
+                        {r.public_user_code && (
+                          <p className="text-[10px] font-mono text-gray-400">
+                            {r.public_user_code}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">
                         {formatDate(r.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </span>
+                    </div>
+                    {r.mobile_number && (
+                      <p className="text-[11px] text-gray-600 mt-1 inline-flex items-center gap-1">
+                        <span aria-hidden>📞</span>
+                        <a
+                          href={`tel:${r.mobile_number}`}
+                          className="hover:text-primary-700 underline-offset-2 hover:underline"
+                        >
+                          {r.mobile_number}
+                        </a>
+                      </p>
+                    )}
+                    {r.location && r.location !== '—' && (
+                      <p className="text-[11px] text-gray-500 mt-0.5 inline-flex items-center gap-1">
+                        <span aria-hidden>📍</span>
+                        <span className="truncate">{r.location}</span>
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
       </div>
+
+      {/* RECENT CREDIT ACTIVITY — popup, fixed height, internal scroll */}
+      {showLedgerModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4"
+            onClick={() => setShowLedgerModal(false)}
+          >
+            <div
+              className="w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+              style={{ maxHeight: "min(640px, 85vh)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* HEADER */}
+              <div className="px-5 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider opacity-90">
+                    Your activity
+                  </p>
+                  <p className="text-base font-bold">Recent Credit Activity</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={fetchCreditLedger}
+                    className="text-[11px] font-semibold bg-white/15 hover:bg-white/25 px-2.5 py-1 rounded-lg transition"
+                  >
+                    ↻ Refresh
+                  </button>
+                  <button
+                    onClick={() => setShowLedgerModal(false)}
+                    className="p-1.5 rounded-lg hover:bg-white/20 transition"
+                    aria-label="Close"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* BALANCE STRIP */}
+              <div className="px-5 py-3 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                  Current balance
+                </span>
+                <span className="text-xl font-extrabold text-amber-900">
+                  ⚡ {profile?.credits_balance ?? 0}
+                </span>
+              </div>
+
+              {/* SCROLLABLE LEDGER */}
+              <div className="flex-1 overflow-y-auto px-5 py-3">
+                {creditLedger.length === 0 ? (
+                  <p className="text-xs text-gray-500 py-6 text-center">
+                    No activity yet — share your link to start earning.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-gray-100">
+                    {creditLedger.map((e) => {
+                      const label =
+                        e.reason === "active"
+                          ? "Active referral"
+                          : e.reason === "passive"
+                          ? "Passive referral"
+                          : e.reason === "signup"
+                          ? "Signup bonus"
+                          : e.reason === "admin_adjustment"
+                          ? "Admin adjustment"
+                          : e.reason === "admin_reset"
+                          ? "Balance reset"
+                          : e.reason === "redemption"
+                          ? "Redemption"
+                          : e.reason;
+                      const isPositive = e.delta > 0;
+                      return (
+                        <li
+                          key={e.id}
+                          className="py-2.5 flex items-start justify-between gap-3 text-xs"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-800 truncate">
+                              {label}
+                            </p>
+                            {e.note && (
+                              <p className="text-[11px] text-gray-500 break-words">
+                                {e.note}
+                              </p>
+                            )}
+                            <p className="text-[11px] text-gray-400 mt-0.5">
+                              {new Date(e.created_at).toLocaleDateString()}{" "}
+                              {new Date(e.created_at).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                          <span
+                            className={`font-bold text-sm whitespace-nowrap ${
+                              isPositive ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            {isPositive ? "+" : ""}
+                            {e.delta}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              {/* FOOTER */}
+              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+                <button
+                  onClick={() => setShowLedgerModal(false)}
+                  className="px-4 py-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 
@@ -4248,41 +4537,121 @@ const renderServicesContent = () => (
   </div>
 );
   
-const renderEventsContent = () => (
-  <div className="pt-4">
-    {events.length === 0 ? (
-      <div className="text-xs text-gray-500">No events or notifications.</div>
-    ) : (
-      events.map((event) => (
-        <div
-          key={event.id}
-          className={`rounded-xl border p-4 mb-3 ${
-            event.status === "Sent"
-              ? "bg-red-50 border-red-200"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex justify-between items-start">
-            <h4 className="font-bold text-sm text-gray-900">
-              {event.title}
-            </h4>
-            <span className="text-[10px] font-bold text-gray-500">
-              {formatDate(event.created_at)}
-            </span>
-          </div>
+const renderEventsContent = () => {
+  // An event is "active" if it has a future date OR no date at all
+  // (treat undated announcements as still-relevant general notifications).
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
 
-          {event.info && (
-            <p className="text-xs text-gray-600 mt-1">
-              {event.info}
+  const isActive = (e: EventItem) => {
+    if (!e.date) return true;
+    return new Date(e.date).getTime() >= todayMidnight.getTime();
+  };
+
+  const activeEvents = events.filter(isActive);
+  const previousEvents = events
+    .filter((e) => !isActive(e))
+    .sort(
+      (a, b) =>
+        new Date(b.date || b.created_at).getTime() -
+        new Date(a.date || a.created_at).getTime()
+    );
+
+  const card = (event: EventItem, faded = false) => {
+    const accent = faded
+      ? {
+          bar: "bg-gray-300",
+          dateChip: "bg-gray-100 text-gray-600 border-gray-200",
+          ring: "border-gray-200",
+        }
+      : {
+          bar: "bg-emerald-500",
+          dateChip: "bg-emerald-50 text-emerald-700 border-emerald-200",
+          ring: "border-gray-200",
+        };
+
+    return (
+      <div
+        key={event.id}
+        className={`relative bg-white rounded-xl border ${accent.ring} shadow-sm hover:shadow transition pl-4 pr-4 py-3.5 mb-3 overflow-hidden ${
+          faded ? "opacity-90" : ""
+        }`}
+      >
+        {/* left accent bar */}
+        <span
+          className={`absolute left-0 top-0 bottom-0 w-1 ${accent.bar}`}
+          aria-hidden
+        />
+
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <h4 className="font-bold text-sm text-gray-900 leading-snug min-w-0 break-words">
+            {event.title}
+          </h4>
+          {event.date && (
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${accent.dateChip}`}
+            >
+              {formatDate(event.date)}
+            </span>
+          )}
+        </div>
+
+        {event.info && (
+          <p className="text-xs text-gray-600 mt-1.5 leading-relaxed whitespace-pre-wrap break-words">
+            {event.info}
+          </p>
+        )}
+
+        {event.venue && (
+          <p className="text-[11px] text-gray-500 mt-2 inline-flex items-center gap-1">
+            <span aria-hidden>📍</span>
+            <span className="truncate">{event.venue}</span>
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="pt-4 max-w-3xl">
+      {events.length === 0 ? (
+        <div className="text-xs text-gray-500">No events or notifications.</div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-gray-900">
+              Active Events
+              <span className="ml-2 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                {activeEvents.length}
+              </span>
+            </h3>
+          </div>
+          {activeEvents.length === 0 ? (
+            <p className="text-xs text-gray-500 mb-6">
+              No active events at the moment.
             </p>
+          ) : (
+            <div className="mb-6">{activeEvents.map((e) => card(e))}</div>
           )}
 
-         
-        </div>
-      ))
-    )}
-  </div>
-);
+          {previousEvents.length > 0 && (
+            <>
+              <div className="flex items-center justify-between mb-3 pt-2 border-t border-gray-100">
+                <h3 className="text-sm font-bold text-gray-700 mt-3">
+                  Previous Events
+                  <span className="ml-2 text-[11px] font-bold text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
+                    {previousEvents.length}
+                  </span>
+                </h3>
+              </div>
+              <div>{previousEvents.map((e) => card(e, true))}</div>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
 const renderSuggestionsContent = () => (
   <div className="pt-4">
@@ -4378,7 +4747,16 @@ const renderSuggestionsContent = () => (
     const firstName = profile?.first_name || "there";
     const activeCount = activeReferrals?.length || 0;
     const passiveCount = passiveReferrals?.length || 0;
-    const eventsCount = events?.length || 0;
+    // Only count events that haven't already happened (or have no date) —
+    // past events shouldn't be advertised as "active" on the dashboard tile.
+    const _today = (() => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      return d.getTime();
+    })();
+    const eventsCount =
+      events?.filter((e) => !e.date || new Date(e.date).getTime() >= _today)
+        .length || 0;
     const unseen = unseenEventsCount || 0;
 
     return (

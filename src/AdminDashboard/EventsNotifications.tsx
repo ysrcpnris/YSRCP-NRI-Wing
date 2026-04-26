@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Plus, Edit3, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
-// Notification item structure with title, content, and delivery status
+// Notification item structure with title, content, date, venue, and delivery status
 type NotificationItem = {
   id: string;
   title: string;
   info: string;
+  date: string | null;          // YYYY-MM-DD (or null for general notifications)
+  venue: string | null;
   status: "Draft" | "Sent";
 };
 
@@ -19,9 +21,11 @@ export default function EventsNotifications() {
   // Current item being edited (null if creating new)
   const [editItem, setEditItem] = useState<NotificationItem | null>(null);
 
-  // Form field states for notification title, content, and status
+  // Form field states for notification title, content, date, venue, and status
   const [title, setTitle] = useState("");
   const [info, setInfo] = useState("");
+  const [date, setDate] = useState<string>("");      // YYYY-MM-DD; empty = general notification
+  const [venue, setVenue] = useState<string>("");
   const [status, setStatus] = useState<"Draft" | "Sent">("Draft");
 
   // Load all notifications on component mount
@@ -44,6 +48,9 @@ export default function EventsNotifications() {
     setEditItem(item || null);
     setTitle(item?.title || "");
     setInfo(item?.info || "");
+    // events.date in DB is timestamptz — slice to YYYY-MM-DD for the <input type=date>
+    setDate(item?.date ? String(item.date).slice(0, 10) : "");
+    setVenue(item?.venue || "");
     setStatus(item?.status || "Draft");
     setModalOpen(true);
   };
@@ -52,13 +59,18 @@ export default function EventsNotifications() {
   const saveEvent = async () => {
     if (!title || !info) return;
 
+    const payload: any = {
+      title,
+      info,
+      status,
+      date: date ? date : null,           // empty string -> null (general notification)
+      venue: venue.trim() || null,
+    };
+
     if (editItem) {
-      await supabase
-        .from("events")
-        .update({ title, info, status })
-        .eq("id", editItem.id);
+      await supabase.from("events").update(payload).eq("id", editItem.id);
     } else {
-      await supabase.from("events").insert({ title, info, status });
+      await supabase.from("events").insert(payload);
     }
 
     setModalOpen(false);
@@ -96,53 +108,88 @@ export default function EventsNotifications() {
     {/* GRID */}
     {/*Card grid displaying all notifications with edit/delete actions*/}
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {events.map((e) => (
-        <div
-          key={e.id}
-          className="bg-white rounded-xl border shadow-sm hover:shadow-md transition p-5 flex flex-col justify-between"
-        >
-          {/* TITLE + STATUS */}
-          <div>
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-semibold text-lg text-gray-800">
-                {e.title}
-              </h3>
+      {events.map((e) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const isPast = e.date
+          ? new Date(e.date as string).getTime() < today.getTime()
+          : false;
 
-              <span
-                className={`text-xs px-3 py-1 rounded-full font-medium ${
-                  e.status === "Sent"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
-              >
-                {e.status}
-              </span>
+        return (
+          <div
+            key={e.id}
+            className="bg-white rounded-xl border shadow-sm hover:shadow-md transition p-5 flex flex-col justify-between"
+          >
+            {/* TITLE + STATUS */}
+            <div>
+              <div className="flex justify-between items-start mb-2 gap-2">
+                <h3 className="font-semibold text-lg text-gray-800">
+                  {e.title}
+                </h3>
+
+                <span
+                  className={`text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap ${
+                    e.status === "Sent"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}
+                >
+                  {e.status}
+                </span>
+              </div>
+
+              {/* DATE + ACTIVE/PAST + VENUE */}
+              <div className="flex flex-wrap items-center gap-2 mb-2 text-[11px]">
+                {e.date && (
+                  <span className="font-mono text-gray-700 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
+                    📅 {new Date(e.date as string).toLocaleDateString()}
+                  </span>
+                )}
+                {e.date ? (
+                  <span
+                    className={`px-2 py-0.5 rounded font-bold ${
+                      isPast
+                        ? "bg-gray-100 text-gray-600"
+                        : "bg-blue-50 text-blue-700"
+                    }`}
+                  >
+                    {isPast ? "Past" : "Active"}
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded font-bold bg-purple-50 text-purple-700">
+                    General
+                  </span>
+                )}
+                {e.venue && (
+                  <span className="text-gray-500 truncate max-w-[180px]">
+                    📍 {e.venue}
+                  </span>
+                )}
+              </div>
+
+              {/* INFO */}
+              <p className="text-sm text-gray-600 line-clamp-3">{e.info}</p>
             </div>
 
-            {/* INFO */}
-            <p className="text-sm text-gray-600 line-clamp-3">
-              {e.info}
-            </p>
-          </div>
+            {/* ACTIONS */}
+            <div className="flex justify-between items-center mt-4 pt-4 border-t">
+              <button
+                onClick={() => openModal(e)}
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
+              >
+                <Edit3 size={16} /> Edit
+              </button>
 
-          {/* ACTIONS */}
-          <div className="flex justify-between items-center mt-4 pt-4 border-t">
-            <button
-              onClick={() => openModal(e)}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
-            >
-              <Edit3 size={16} /> Edit
-            </button>
-
-            <button
-              onClick={() => deleteEvent(e.id)}
-              className="flex items-center gap-2 text-red-600 hover:text-red-800 text-sm"
-            >
-              <Trash2 size={16} /> Delete
-            </button>
+              <button
+                onClick={() => deleteEvent(e.id)}
+                className="flex items-center gap-2 text-red-600 hover:text-red-800 text-sm"
+              >
+                <Trash2 size={16} /> Delete
+              </button>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
 
 
@@ -177,6 +224,35 @@ export default function EventsNotifications() {
             value={info}
             onChange={(e) => setInfo(e.target.value)}
           />
+
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-[11px] font-bold text-gray-500 uppercase">
+                Event date
+              </label>
+              <input
+                type="date"
+                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-400"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+              <p className="text-[10px] text-gray-400 mt-1">
+                Leave empty for a general notification (always active).
+              </p>
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-gray-500 uppercase">
+                Venue (optional)
+              </label>
+              <input
+                type="text"
+                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-400"
+                placeholder="e.g. Hyderabad Convention Center"
+                value={venue}
+                onChange={(e) => setVenue(e.target.value)}
+              />
+            </div>
+          </div>
 
           <select
             className="w-full border rounded-lg p-2 mb-4"

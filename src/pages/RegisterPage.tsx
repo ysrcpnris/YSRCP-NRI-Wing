@@ -348,6 +348,19 @@ if (pwdError) {
       );
     }
 
+    // Pull the referral code from localStorage (set by /ref/:code redirect).
+    // Pass it through to signUp so it lives in auth.users.user_metadata and
+    // survives the email-verification round-trip — even when the user opens
+    // the verification email on a different device where localStorage isn't
+    // available. processReferralIfNeeded() falls back to this on first login.
+    const referredByCode = (() => {
+      try {
+        return localStorage.getItem("referral_code") || undefined;
+      } catch {
+        return undefined;
+      }
+    })();
+
     const profilePayload = {
       first_name: formData.first_name,
       last_name: formData.last_name,
@@ -359,6 +372,7 @@ if (pwdError) {
       district: formData.district,
       assembly_constituency: formData.assembly_constituency,
       mandal: formData.mandal,
+      referred_by: referredByCode,
     };
 
     // SIGN UP
@@ -424,6 +438,35 @@ return (
         </div>
 
         <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-5 sm:p-8">
+          {/* REFERRAL BANNER — visible only when arriving via /ref/:code.
+              Same form, but the user knows they're under a referral so they
+              don't worry about "did the link work?". The actual code is
+              already saved to localStorage by ReferralRedirect and will be
+              passed through signUp in the submit handler below. */}
+          {(() => {
+            let refCode = "";
+            try {
+              refCode = localStorage.getItem("referral_code") || "";
+            } catch {}
+            if (!refCode) return null;
+            return (
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl px-4 py-3 mb-5 flex items-start gap-3">
+                <span className="text-xl" aria-hidden>🎉</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-emerald-800">
+                    You're registering via a referral
+                  </p>
+                  <p className="text-xs text-emerald-700 mt-0.5">
+                    Code:{" "}
+                    <span className="font-mono font-semibold">{refCode}</span>{" "}
+                    · You'll get <b>+25 signup credits</b>, and your referrer
+                    will earn <b>+50</b> once you verify your email.
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm">
               {error}

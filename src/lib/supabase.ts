@@ -53,6 +53,14 @@ export type Profile = {
   credits_balance?: number;
   designation?: string;
 
+  // Active family member in the party (optional — only filled when the user
+  // identifies as an active YSRCP family). At most one per profile.
+  family_relation?: string;
+  family_name?: string;
+  family_mobile?: string;
+  family_village?: string;
+  family_designation?: string;
+
   // Social Media Handles
   instagram_id?: string;
   facebook_id?: string;
