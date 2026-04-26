@@ -102,6 +102,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     currentUser?: User | null
   ) => {
     try {
+      // Admins should never be inserted into anyone's referral tree — they
+      // don't count as "referred members" and we don't want them showing up
+      // in the user's Active Referrals list or earning the referrer credits.
+      if (p?.role === "admin") {
+        try {
+          localStorage.removeItem("referral_code");
+        } catch {
+          // ignore
+        }
+        return;
+      }
+
       // Resolve the referrer's code from any source we have. Order:
       //   1. localStorage          (fresh from /ref/:code redirect this session)
       //   2. user_metadata         (survives the email round-trip)
