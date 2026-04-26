@@ -2412,50 +2412,37 @@ useEffect(() => {
     try {
 
 // Build a referral row for display: name + mobile + address (abroad first,
-// then Indian fallback) + join date. The same shape works for both lists.
+// then Indian fallback) + join date. The RPC returns flattened columns
+// (no embedded `profiles` object) because it joins server-side under
+// SECURITY DEFINER — that's how it bypasses the strict per-user RLS on
+// profiles without leaking anything beyond the caller's referral tree.
 const buildReferral = (r: any, type: "active" | "passive") => {
-  const first = r.profiles?.first_name ?? "";
-  const last = r.profiles?.last_name ?? "";
-  const abroad = [r.profiles?.city_abroad, r.profiles?.country_of_residence]
+  const first = r.first_name ?? "";
+  const last = r.last_name ?? "";
+  const abroad = [r.city_abroad, r.country_of_residence]
     .filter(Boolean)
     .join(", ");
-  const indian = [r.profiles?.assembly_constituency, r.profiles?.district, r.profiles?.indian_state]
+  const indian = [r.assembly_constituency, r.district, r.indian_state]
     .filter(Boolean)
     .join(", ");
   return {
     id: r.id,
     member_name: last && last !== first ? `${first} ${last}` : first || "Member",
-    mobile_number: r.profiles?.mobile_number ?? null,
+    mobile_number: r.mobile_number ?? null,
     location: abroad || indian || "—",
-    public_user_code: r.profiles?.public_user_code ?? null,
+    public_user_code: r.public_user_code ?? null,
     type,
     created_at: r.created_at,
   };
 };
 
 // ---------------- ACTIVE REFERRALS ----------------
-const { data: activeData, error: activeError } = await supabase
-  .from("referrals")
-  .select(`
-    id,
-    created_at,
-    source,
-    profiles:referred_id (
-      first_name,
-      last_name,
-      mobile_number,
-      country_of_residence,
-      state_abroad,
-      city_abroad,
-      indian_state,
-      district,
-      assembly_constituency,
-      public_user_code
-    )
-  `)
-  .eq("referrer_id", profile.id)
-  .in("source", ["direct", "active"])
-  .order("created_at", { ascending: false });
+// Use the SECURITY DEFINER RPC instead of an embedded join. Profiles RLS
+// would otherwise null-out every joined column for users other than self.
+const { data: activeData, error: activeError } = await supabase.rpc(
+  "get_my_referrals",
+  { p_source: ["direct", "active"] }
+);
 
 if (activeError) {
   console.error("Active referral error:", activeError);
@@ -2465,27 +2452,10 @@ setActiveReferrals((activeData || []).map((r: any) => buildReferral(r, "active")
 
 
 // ---------------- PASSIVE REFERRALS ----------------
-const { data: passiveData, error: passiveError } = await supabase
-  .from("referrals")
-  .select(`
-    id,
-    created_at,
-    profiles:referred_id (
-      first_name,
-      last_name,
-      mobile_number,
-      country_of_residence,
-      state_abroad,
-      city_abroad,
-      indian_state,
-      district,
-      assembly_constituency,
-      public_user_code
-    )
-  `)
-  .eq("referrer_id", profile.id)
-  .eq("source", "passive")
-  .order("created_at", { ascending: false });
+const { data: passiveData, error: passiveError } = await supabase.rpc(
+  "get_my_referrals",
+  { p_source: ["passive"] }
+);
 
 if (passiveError) {
   console.error("Passive referral error:", passiveError);

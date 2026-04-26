@@ -96,13 +96,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * This runs after we've verified the session and fetched the profile.
    * We also attempt referral processing here (idempotent check).
    */
-  const processReferralIfNeeded = async (currentUserId: string, p: Profile | null) => {
+  const processReferralIfNeeded = async (
+    currentUserId: string,
+    p: Profile | null,
+    currentUser?: User | null
+  ) => {
     try {
       // Resolve the referrer's code from any source we have. Order:
       //   1. localStorage          (fresh from /ref/:code redirect this session)
-      //   2. user_metadata          (survives the email round-trip)
+      //   2. user_metadata         (survives the email round-trip)
       //   3. profile.referred_by   (persisted on first login — survives forever)
       // If all three are empty, there's no referral to process.
+      //
+      // IMPORTANT: we accept currentUser as a parameter rather than reading
+      // from the React `user` state. At the time this is called from
+      // applyVerifiedSession, setUser(session.user) was just dispatched but
+      // not yet committed — so the closured `user` is still the previous
+      // (null) value. Using session.user directly fixes that silently-broken
+      // metadata fallback.
       let referralCode = "";
       try {
         referralCode = localStorage.getItem("referral_code") || "";
@@ -110,7 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // localStorage may be unavailable (private mode, mobile webviews)
       }
       if (!referralCode) {
-        const meta = (user?.user_metadata as Record<string, unknown> | undefined) || {};
+        const sourceUser = currentUser ?? user;
+        const meta = (sourceUser?.user_metadata as Record<string, unknown> | undefined) || {};
         if (typeof meta.referred_by === "string") {
           referralCode = meta.referred_by;
         }
@@ -286,8 +298,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(p);
     setAdminFlag(p);
 
-    // After profile exists, try processing referral (idempotent)
-    await processReferralIfNeeded(session.user.id, p);
+    // After profile exists, try processing referral (idempotent).
+    // Pass session.user explicitly so metadata fallback works even on the
+    // first signup, when React's `user` state hasn't committed yet.
+    await processReferralIfNeeded(session.user.id, p, session.user);
   };
 
   /**
