@@ -1,18 +1,46 @@
 import React, { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 type HeroProps = {
   onJoinNow: () => void;
 };
 
 const Hero: React.FC<HeroProps> = () => {
-  const desktopSlides = [
+  // Bundled defaults — these always exist so the hero never goes blank.
+  const baseDesktopSlides = [
     { img: "/Slider/simg1.jpeg" },
     { img: "/Slider/simg2.jpeg" },
     { img: "/Slider/simg3.jpeg" },
     { img: "/Slider/simg4.png" },
   ];
+  const baseMobileSlides = [{ img: "/Slider/msimg1.jpeg" }];
 
-  const mobileSlides = [{ img: "/Slider/msimg1.jpeg" }];
+  // Admin-uploaded banners from homepage_banners table. Active rows are
+  // appended to the slideshow; deleted/hidden rows simply don't appear.
+  const [adminBanners, setAdminBanners] = useState<{ img: string }[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data } = await supabase
+        .from("homepage_banners")
+        .select("image_url, sort_order")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (!alive) return;
+      setAdminBanners(
+        (data || [])
+          .map((b: any) => ({ img: b.image_url as string }))
+          .filter((b) => !!b.img)
+      );
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const desktopSlides = [...baseDesktopSlides, ...adminBanners];
+  const mobileSlides = [...baseMobileSlides, ...adminBanners];
 
   const [current, setCurrent] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -29,16 +57,22 @@ const Hero: React.FC<HeroProps> = () => {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // Autoplay only for desktop
+  // Autoplay only for desktop. Depends on slide count so newly uploaded
+  // admin banners are picked up live without a remount.
   useEffect(() => {
     if (isMobile) return;
+    if (desktopSlides.length <= 1) return;
+
+    // If the current index is now out of range (admin removed a banner),
+    // clamp back to 0 before starting the timer.
+    setCurrent((prev) => (prev >= desktopSlides.length ? 0 : prev));
 
     const id = setInterval(() => {
       setCurrent((prev) => (prev + 1) % desktopSlides.length);
     }, 4500);
 
     return () => clearInterval(id);
-  }, [isMobile]);
+  }, [isMobile, desktopSlides.length]);
 
   const slides = isMobile ? mobileSlides : desktopSlides;
 

@@ -76,49 +76,106 @@ export default function ContentControl() {
   ===================================================== */
   // Store and manage press meet live broadcast URL
   const [liveLink, setLiveLink] = useState("");
+  const [savedLiveLink, setSavedLiveLink] = useState("");   // last value persisted
+  const [liveLinkRowId, setLiveLinkRowId] = useState<string | null>(null);
+  const [liveSaving, setLiveSaving] = useState(false);
+  const [liveMessage, setLiveMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   // Fetch active live link from database on component mount
   useEffect(() => {
     const fetchLiveLink = async () => {
       const { data, error } = await supabase
         .from("content_live_links")
-        .select("live_url")
+        .select("id, live_url")
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Live link fetch error:", error);
         return;
       }
 
-      if (data) setLiveLink(data.live_url);
+      if (data) {
+        setLiveLink(data.live_url || "");
+        setSavedLiveLink(data.live_url || "");
+        setLiveLinkRowId(data.id);
+      }
     };
 
     fetchLiveLink();
   }, []);
 
-  // Update live link in database
+  const isValidLink = (s: string) => {
+    if (!s.trim()) return false;
+    try {
+      const u = new URL(s.trim());
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
+  // Save (insert if no row, update if existing). Works whether or not a row
+  // currently exists — fixes the original bug where Save did nothing on a
+  // fresh DB because UPDATE ... WHERE is_active = true matched zero rows.
   const saveLiveLink = async () => {
-    if (!liveLink.trim()) {
-      alert("Live link cannot be empty");
+    setLiveMessage(null);
+    const url = liveLink.trim();
+    if (!isValidLink(url)) {
+      setLiveMessage({ type: "err", text: "Enter a valid http(s) URL." });
       return;
     }
+    setLiveSaving(true);
+    let error;
+    if (liveLinkRowId) {
+      ({ error } = await supabase
+        .from("content_live_links")
+        .update({ live_url: url, is_active: true, updated_at: new Date().toISOString() })
+        .eq("id", liveLinkRowId));
+    } else {
+      const { data, error: insertErr } = await supabase
+        .from("content_live_links")
+        .insert({ live_url: url, is_active: true })
+        .select("id")
+        .single();
+      error = insertErr;
+      if (data?.id) setLiveLinkRowId(data.id);
+    }
+    setLiveSaving(false);
+    if (error) {
+      setLiveMessage({ type: "err", text: error.message });
+      return;
+    }
+    setSavedLiveLink(url);
+    setLiveMessage({ type: "ok", text: "Live link saved. The LIVE pill will now appear in the navbar." });
+  };
 
+  // Clear the live link (deactivate the row). The navbar pill disappears
+  // without deleting the row — admin can re-save later to reactivate.
+  const clearLiveLink = async () => {
+    if (!liveLinkRowId) {
+      setLiveLink("");
+      setSavedLiveLink("");
+      setLiveMessage({ type: "ok", text: "Live link cleared." });
+      return;
+    }
+    if (!confirm("Hide the LIVE pill from the homepage? You can re-enter the link any time.")) {
+      return;
+    }
+    setLiveSaving(true);
     const { error } = await supabase
       .from("content_live_links")
-      .update({
-        live_url: liveLink,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("is_active", true);
-
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq("id", liveLinkRowId);
+    setLiveSaving(false);
     if (error) {
-      console.error("Live link save error:", error);
-      alert("Failed to save live link");
+      setLiveMessage({ type: "err", text: error.message });
       return;
     }
-
-    alert("Live link updated successfully");
+    setLiveLink("");
+    setSavedLiveLink("");
+    setLiveLinkRowId(null);
+    setLiveMessage({ type: "ok", text: "Live link cleared. The LIVE pill is now hidden." });
   };
 
   /* =====================================================
@@ -127,6 +184,8 @@ export default function ContentControl() {
   // Store gallery images with visibility state
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const [galleryMessage, setGalleryMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   // Fetch all gallery images from database
   const fetchGallery = async () => {
@@ -157,15 +216,15 @@ export default function ContentControl() {
   const handleGalleryUpload = async (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setGalleryMessage(null);
 
     const { data: auth } = await supabase.auth.getUser();
-    console.log("AUTH USER 👉", auth.user);
-
     if (!auth.user) {
-      alert("Admin not authenticated");
+      setGalleryMessage({ type: "err", text: "Admin not authenticated. Please re-login." });
       return;
     }
 
+    setGalleryUploading(true);
     const ext = file.name.split(".").pop();
     const filePath = `gallery/${Date.now()}.${ext}`;
 
@@ -174,8 +233,8 @@ export default function ContentControl() {
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
-      console.error("GALLERY UPLOAD ERROR 👉", uploadError);
-      alert(uploadError.message);
+      setGalleryUploading(false);
+      setGalleryMessage({ type: "err", text: uploadError.message });
       return;
     }
 
@@ -190,12 +249,15 @@ export default function ContentControl() {
         is_active: true,
       });
 
+    setGalleryUploading(false);
     if (dbError) {
-      console.error("Gallery DB insert error:", dbError);
-      alert("Image uploaded but DB insert failed");
+      setGalleryMessage({ type: "err", text: "Image uploaded but DB insert failed: " + dbError.message });
       return;
     }
 
+    setGalleryMessage({ type: "ok", text: "Image added to gallery." });
+    // reset input so the same file can be re-selected if needed
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
     fetchGallery();
   };
 
@@ -215,8 +277,14 @@ export default function ContentControl() {
 
   // Remove gallery image from database
   const deleteGalleryItem = async (id: string) => {
-    await supabase.from("gallery_images").delete().eq("id", id);
+    if (!confirm("Delete this gallery image? This cannot be undone.")) return;
+    const { error } = await supabase.from("gallery_images").delete().eq("id", id);
+    if (error) {
+      setGalleryMessage({ type: "err", text: error.message });
+      return;
+    }
     setGallery((prev) => prev.filter((g) => g.id !== id));
+    setGalleryMessage({ type: "ok", text: "Image deleted." });
   };
 
   /* =====================================================
@@ -225,6 +293,8 @@ export default function ContentControl() {
   // Store homepage banners with title and visibility state
   const [banners, setBanners] = useState<BannerItem[]>([]);
   const bannerInputRef = useRef<HTMLInputElement | null>(null);
+  const [bannerUploading, setBannerUploading] = useState(false);
+  const [bannerMessage, setBannerMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   // Fetch all homepage banners from database
   const fetchBanners = async () => {
@@ -256,13 +326,15 @@ export default function ContentControl() {
   const handleBannerUpload = async (e: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setBannerMessage(null);
 
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) {
-      alert("Admin not authenticated");
+      setBannerMessage({ type: "err", text: "Admin not authenticated. Please re-login." });
       return;
     }
 
+    setBannerUploading(true);
     const ext = file.name.split(".").pop();
     const filePath = `banners/${Date.now()}.${ext}`;
 
@@ -271,8 +343,8 @@ export default function ContentControl() {
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
-      console.error("BANNER UPLOAD ERROR 👉", uploadError);
-      alert(uploadError.message);
+      setBannerUploading(false);
+      setBannerMessage({ type: "err", text: uploadError.message });
       return;
     }
 
@@ -280,13 +352,21 @@ export default function ContentControl() {
       .from("homepage-banners")
       .getPublicUrl(filePath);
 
-    await supabase.from("homepage_banners").insert({
+    const { error: dbError } = await supabase.from("homepage_banners").insert({
       title: "New Banner",
       image_url: publicUrl.publicUrl,
       is_active: true,
       sort_order: banners.length + 1,
     });
 
+    setBannerUploading(false);
+    if (dbError) {
+      setBannerMessage({ type: "err", text: "Image uploaded but DB insert failed: " + dbError.message });
+      return;
+    }
+
+    setBannerMessage({ type: "ok", text: "Banner added. Use the pencil icon to rename it." });
+    if (bannerInputRef.current) bannerInputRef.current.value = "";
     fetchBanners();
   };
 
@@ -306,8 +386,14 @@ export default function ContentControl() {
 
   // Remove banner from database
   const deleteBanner = async (id: string) => {
-    await supabase.from("homepage_banners").delete().eq("id", id);
+    if (!confirm("Delete this banner? This cannot be undone.")) return;
+    const { error } = await supabase.from("homepage_banners").delete().eq("id", id);
+    if (error) {
+      setBannerMessage({ type: "err", text: error.message });
+      return;
+    }
     setBanners((prev) => prev.filter((b) => b.id !== id));
+    setBannerMessage({ type: "ok", text: "Banner deleted." });
   };
 
   /* =====================================================
@@ -381,29 +467,98 @@ export default function ContentControl() {
       <div className="bg-white rounded-xl border shadow p-6">
 
         {/* LIVE LINK */}
-        <h2 className="text-xl font-semibold mb-3">📡 Press Meet Live Link</h2>
-        <div className="flex gap-3 mb-6">
-          <input
-            value={liveLink}
-            onChange={(e) => setLiveLink(e.target.value)}
-            className="w-full px-3 py-2 border rounded bg-gray-50"
-          />
-          <button
-            onClick={saveLiveLink}
-            className="px-5 bg-blue-600 text-white rounded-lg"
-          >
-            Save
-          </button>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <h2 className="text-xl font-semibold">📡 Press Meet Live Link</h2>
+            <span
+              className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                savedLiveLink
+                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                  : "bg-gray-100 text-gray-500 border-gray-200"
+              }`}
+            >
+              {savedLiveLink ? "● LIVE pill is visible on homepage" : "Hidden — no link saved"}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mb-3">
+            Paste a YouTube / X / Facebook live URL. Save it and a small "LIVE"
+            pill appears in the homepage navbar that opens the stream when
+            tapped. Clear it (or hit Clear below) to hide the pill again.
+          </p>
+          <div className="flex flex-wrap gap-2 mb-2">
+            <input
+              type="url"
+              value={liveLink}
+              onChange={(e) => setLiveLink(e.target.value)}
+              placeholder="https://youtube.com/live/abc123"
+              className="flex-1 min-w-[220px] px-3 py-2 border rounded bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-400 outline-none"
+            />
+            <button
+              onClick={saveLiveLink}
+              disabled={liveSaving || !liveLink.trim() || liveLink.trim() === savedLiveLink}
+              className="px-5 bg-blue-600 text-white rounded-lg font-semibold disabled:opacity-50"
+            >
+              {liveSaving
+                ? "Saving…"
+                : savedLiveLink
+                ? "Update"
+                : "Save"}
+            </button>
+            {savedLiveLink && (
+              <button
+                onClick={clearLiveLink}
+                disabled={liveSaving}
+                className="px-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 disabled:opacity-50"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          {savedLiveLink && (
+            <p className="text-[11px] text-gray-500 mt-1">
+              Currently saved:{" "}
+              <a
+                href={savedLiveLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline break-all"
+              >
+                {savedLiveLink}
+              </a>
+            </p>
+          )}
+          {liveMessage && (
+            <p
+              className={`text-xs mt-2 p-2 rounded border ${
+                liveMessage.type === "ok"
+                  ? "bg-green-50 border-green-200 text-green-700"
+                  : "bg-red-50 border-red-200 text-red-700"
+              }`}
+            >
+              {liveMessage.text}
+            </p>
+          )}
         </div>
 
         {/* GALLERY */}
-        <div className="flex justify-between items-center mt-6">
-          <h2 className="text-xl font-semibold">🖼 Gallery Images</h2>
+        <div className="mt-6 flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h2 className="text-xl font-semibold">🖼 Gallery Images</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Appear in the homepage scrolling gallery (above the footer).{" "}
+              <span className="text-gray-700 font-semibold">
+                {gallery.filter((g) => g.visible).length} visible
+              </span>{" "}
+              · {gallery.length} total
+            </p>
+          </div>
           <button
             onClick={() => galleryInputRef.current?.click()}
-            className="text-blue-600 flex gap-1"
+            disabled={galleryUploading}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold disabled:opacity-50"
           >
-            <ImagePlus size={18} /> Upload
+            <ImagePlus size={16} />
+            {galleryUploading ? "Uploading…" : "Upload Image"}
           </button>
           <input
             type="file"
@@ -413,6 +568,17 @@ export default function ContentControl() {
             onChange={handleGalleryUpload}
           />
         </div>
+        {galleryMessage && (
+          <p
+            className={`text-xs mt-2 p-2 rounded border ${
+              galleryMessage.type === "ok"
+                ? "bg-green-50 border-green-200 text-green-700"
+                : "bg-red-50 border-red-200 text-red-700"
+            }`}
+          >
+            {galleryMessage.text}
+          </p>
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
           {gallery.map((img) => (
@@ -435,13 +601,25 @@ export default function ContentControl() {
         </div>
 
         {/* BANNERS */}
-        <div className="flex justify-between items-center mt-10">
-          <h2 className="text-xl font-semibold">🏠 Homepage Banners</h2>
+        <div className="mt-10 flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h2 className="text-xl font-semibold">🏠 Homepage Banners</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Appear in the homepage hero slideshow alongside the default
+              banners.{" "}
+              <span className="text-gray-700 font-semibold">
+                {banners.filter((b) => b.visible).length} visible
+              </span>{" "}
+              · {banners.length} total
+            </p>
+          </div>
           <button
             onClick={() => bannerInputRef.current?.click()}
-            className="text-blue-600 flex gap-1"
+            disabled={bannerUploading}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold disabled:opacity-50"
           >
-            <Upload size={18} /> Add Banner
+            <Upload size={16} />
+            {bannerUploading ? "Uploading…" : "Add Banner"}
           </button>
           <input
             type="file"
@@ -451,6 +629,17 @@ export default function ContentControl() {
             onChange={handleBannerUpload}
           />
         </div>
+        {bannerMessage && (
+          <p
+            className={`text-xs mt-2 p-2 rounded border ${
+              bannerMessage.type === "ok"
+                ? "bg-green-50 border-green-200 text-green-700"
+                : "bg-red-50 border-red-200 text-red-700"
+            }`}
+          >
+            {bannerMessage.text}
+          </p>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           {banners.map((b) => (

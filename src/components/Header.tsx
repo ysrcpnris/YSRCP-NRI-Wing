@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import nriLogo from "./nrilogo.png";
 import AuthModal from "./AuthModal";
+import { supabase } from "../lib/supabase";
 
 type HeaderProps = {
   onSignUp?: () => void;
@@ -14,6 +15,28 @@ export default function Header({ onSignUp }: HeaderProps) {
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [showAuth, setShowAuth] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Live press-meet link, set by admin in Content Control. When present we
+  // show a pulsing "Watch Live" pill in the navbar that opens the URL in a
+  // new tab. When the active row is empty/null, the pill is hidden.
+  const [liveLink, setLiveLink] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data } = await supabase
+        .from("content_live_links")
+        .select("live_url")
+        .eq("is_active", true)
+        .maybeSingle();
+      if (!alive) return;
+      const url = (data?.live_url || "").trim();
+      setLiveLink(url || null);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -119,6 +142,23 @@ export default function Header({ onSignUp }: HeaderProps) {
                 Gallery
               </button>
 
+              {/* Watch Live — only when admin has configured a live URL */}
+              {liveLink && (
+                <a
+                  href={liveLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Watch live press meet"
+                  className="group inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-full hover:bg-rose-100 hover:border-rose-300 transition"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-60"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                  </span>
+                  <span>LIVE</span>
+                </a>
+              )}
+
               {/* Desktop Login/Register Buttons */}
               <button
                 onClick={() => {
@@ -185,6 +225,22 @@ export default function Header({ onSignUp }: HeaderProps) {
               >
                 Gallery
               </button>
+
+              {liveLink && (
+                <a
+                  href={liveLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-60"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                  </span>
+                  <span>LIVE — Watch press meet</span>
+                </a>
+              )}
 
               <div className="flex gap-2 pt-3">
                 <button

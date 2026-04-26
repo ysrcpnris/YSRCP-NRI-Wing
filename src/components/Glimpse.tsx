@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import nriLogo from "./nrilogo.png";
+import { supabase } from "../lib/supabase";
 
-// Images array
-const images = [
+// Bundled defaults — always present so the gallery is never empty.
+const baseImages = [
   { src: "/images/jagan1.jpg.jpg" },
   { src: "/images/jagan2.jpg.jpg" },
   { src: "/images/jagan3.jpg.jpg" },
@@ -10,6 +11,32 @@ const images = [
 ];
 
 export default function GlimpseGallery() {
+  // Admin-uploaded gallery images from gallery_images table. Active rows
+  // are appended to the carousel; hidden/deleted rows simply don't appear.
+  const [adminImages, setAdminImages] = useState<{ src: string }[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data } = await supabase
+        .from("gallery_images")
+        .select("image_url, created_at")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      if (!alive) return;
+      setAdminImages(
+        (data || [])
+          .map((g: any) => ({ src: g.image_url as string }))
+          .filter((g) => !!g.src)
+      );
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const images = [...baseImages, ...adminImages];
+
   return (
     <section id="glimpse" className="py-12 sm:py-16 bg-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
