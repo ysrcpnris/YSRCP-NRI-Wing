@@ -55,6 +55,17 @@
 
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Inter font: preconnect kicks off the TLS handshake in parallel with HTML
+         parsing; the stylesheet link triggers the font fetch immediately instead
+         of waiting for the CSS @import in index.css to be discovered. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    />
+
     <title>YSRCP NRI Wing Portal</title>
   </head>
   <body>

@@ -3054,11 +3054,12 @@ const handleSubmitSuggestion = async () => {
 
  
   const renderProfileContent = () => (
-    <div className="pt-4 " style={{ overflowAnchor: "none" }}>
+    <div className="pt-4" style={{ overflowAnchor: "none" }}>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Progress & Stats */}
-        <div className="lg:col-span-1 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+        {/* Left Column: Progress & Stats — sticks to the top while the form
+            scrolls so we don't leak empty space below this short column. */}
+        <div className="lg:col-span-1 space-y-4 lg:sticky lg:top-4 lg:self-start">
           {/* Profile Photo Block */}
           <div
   ref={profilePhotoRef}
@@ -3210,143 +3211,147 @@ const handleSubmitSuggestion = async () => {
         </div>
 
         {/* Right Column: Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
 
-          <div ref={personalInfoRef}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                First Name <span className="text-gray-300">🔒</span>
-              </label>
-              <input
-                id="firstName"
-                type="text"
-                readOnly
-                value={profile?.first_name || ''}
-                className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
-              />
+          {/* ========== ACCOUNT INFORMATION (locked) ========== */}
+          <div ref={personalInfoRef} className="p-5 bg-white rounded-xl border border-gray-200">
+            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
+              Account Information <span className="text-gray-300">🔒</span>
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  First Name
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  readOnly
+                  value={profile?.first_name || ''}
+                  className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Last Name
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  readOnly
+                  value={profile?.last_name || ''}
+                  className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  readOnly
+                  value={profile?.email ?? ''}
+                  className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Mobile Number
+                </label>
+                <input
+                  id="mobile_number"
+                  type="tel"
+                  readOnly
+                  value={profile?.mobile_number || ""}
+                  className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Date of Birth
+                </label>
+                <input
+                  id="dob"
+                  type="date"
+                  defaultValue={profile?.dob || ""}
+                  max={new Date().toISOString().split("T")[0]}
+                  min="1900-01-01"
+                  className="w-full p-3 bg-gray-50 border border-gray-200
+                             rounded-lg text-sm font-bold text-gray-700
+                             focus:bg-white focus:ring-2 focus:ring-primary-500
+                             outline-none transition-all"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                Last Name <span className="text-gray-300">🔒</span>
-              </label>
-              <input
-                id="lastName"
-                type="text"
-                readOnly
-                value={profile?.last_name || ''}
-                className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                Email <span className="text-gray-300">🔒</span>
-              </label>
-              <input
-                id="email"
-                type="email"
-                readOnly
-                value={profile?.email ?? ''}
-                className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                Mobile Number <span className="text-gray-300">🔒</span>
-              </label>
-              <input
-                id="mobile_number"
-                type="tel"
-                readOnly
-                value={profile?.mobile_number || ""}
-                className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
-              />
-            </div>
-<div>
-  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-    Date of Birth
-  </label>
-  <input
-    id="dob"
-    type="date"
-    defaultValue={profile?.dob || ""}
-    max={new Date().toISOString().split("T")[0]}
-    min="1900-01-01"
-    className="w-full p-3 bg-gray-50 border border-gray-200
-               rounded-lg text-sm font-bold text-gray-700
-               focus:bg-white focus:ring-2 focus:ring-primary-500
-               outline-none transition-all"
-  />
-</div>
-
-{/* 🌍 Current Residency — LOCKED (filled during registration) */}
-<div ref={residencyRef} className="md:col-span-2 mt-4">
-  <label className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-    Current Residency <span className="text-gray-300">🔒</span>
-  </label>
-
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-    <div>
-      <label className="text-[10px] font-medium text-gray-500 mb-1 block">Country</label>
-      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-        {countryOfResidence || "—"}
-      </div>
-    </div>
-    {countryOfResidence !== "India" && (
-      <>
-        <div>
-          <label className="text-[10px] font-medium text-gray-500 mb-1 block">State / Province</label>
-          <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-            {stateAbroad || "—"}
           </div>
-        </div>
-        <div>
-          <label className="text-[10px] font-medium text-gray-500 mb-1 block">City</label>
-          <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-            {cityAbroad || "—"}
+
+          {/* ========== CURRENT RESIDENCY (locked) ========== */}
+          <div ref={residencyRef} className="p-5 bg-white rounded-xl border border-gray-200">
+            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
+              Current Residency <span className="text-gray-300">🔒</span>
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-[10px] font-medium text-gray-500 mb-1 block">Country</label>
+                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+                  {countryOfResidence || "—"}
+                </div>
+              </div>
+              {countryOfResidence !== "India" && (
+                <>
+                  <div>
+                    <label className="text-[10px] font-medium text-gray-500 mb-1 block">State / Province</label>
+                    <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+                      {stateAbroad || "—"}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-medium text-gray-500 mb-1 block">City</label>
+                    <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+                      {cityAbroad || "—"}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      </>
-    )}
-  </div>
-</div>
 
-{/* 📍 India Address — LOCKED (filled during registration) */}
-<div ref={indianAddressRef} className="md:col-span-2 mt-4 ">
-  <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-    India Address <span className="text-gray-300">🔒</span>
-  </h4>
+          {/* ========== INDIA ADDRESS (locked) ========== */}
+          <div ref={indianAddressRef} className="p-5 bg-white rounded-xl border border-gray-200">
+            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
+              India Address <span className="text-gray-300">🔒</span>
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-medium text-gray-500 mb-1 block">State</label>
+                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+                  {indianState || "—"}
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-medium text-gray-500 mb-1 block">District</label>
+                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+                  {district || "—"}
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-medium text-gray-500 mb-1 block">Assembly Constituency</label>
+                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+                  {assembly || "—"}
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-medium text-gray-500 mb-1 block">Mandal</label>
+                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
+                  {mandal || "—"}
+                </div>
+              </div>
+            </div>
+          </div>
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <div>
-      <label className="text-[10px] font-medium text-gray-500 mb-1 block">State</label>
-      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-        {indianState || "—"}
-      </div>
-    </div>
-    <div>
-      <label className="text-[10px] font-medium text-gray-500 mb-1 block">District</label>
-      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-        {district || "—"}
-      </div>
-    </div>
-    <div>
-      <label className="text-[10px] font-medium text-gray-500 mb-1 block">Assembly Constituency</label>
-      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-        {assembly || "—"}
-      </div>
-    </div>
-    <div>
-      <label className="text-[10px] font-medium text-gray-500 mb-1 block">Mandal</label>
-      <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-        {mandal || "—"}
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* ============== ACTIVE FAMILY MEMBER (optional) ============== */}
-<div className="p-5 bg-white rounded-xl border border-gray-200 mt-5">
+          {/* ============== ACTIVE FAMILY MEMBER (optional) ============== */}
+          <div className="p-5 bg-white rounded-xl border border-gray-200">
   <div className="flex items-baseline justify-between flex-wrap gap-2 mb-1">
     <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider">
       Active Family Member in the Party
@@ -3438,13 +3443,11 @@ const handleSubmitSuggestion = async () => {
     </div>
   </div>
 </div>
-          </div>
 
-
-    <div
-  ref={professionalRef}
-  className="p-5 bg-white rounded-xl border border-gray-200"
->
+          <div
+            ref={professionalRef}
+            className="p-5 bg-white rounded-xl border border-gray-200"
+          >
 
             <h4 className="text-xs font-black text-gray-500 mb-3 uppercase tracking-wider">
               Professional & Social
@@ -3542,48 +3545,39 @@ const handleSubmitSuggestion = async () => {
             </div>
           </div>
 
-<div ref={contributionRef} className="mt-6">
-  <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-2">
-    I want to contribute via:
-  </h4>
+          <div ref={contributionRef} className="p-5 bg-white rounded-xl border border-gray-200">
+            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
+              I want to contribute via
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {contributionTypes.map((opt) => (
+                <label
+                  key={opt.id}
+                  className="flex items-center gap-2 px-3 py-2
+                             border border-gray-200 rounded-lg cursor-pointer
+                             hover:border-primary-500 hover:bg-primary-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedContributions.includes(Number(opt.id))}
+                    onChange={(e) =>
+                      toggleContribution(Number(opt.id), e.target.checked)
+                    }
+                  />
+                  <span className="text-xs font-bold">{opt.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-  <div className="flex flex-wrap gap-2">
-    {contributionTypes.map((opt) => {
-      console.log(
-        "OPT ID:", opt.id,
-        "SELECTED:", selectedContributions
-      );
-
-      return (
-        <label
-          key={opt.id}
-          className="flex items-center gap-2 px-3 py-2
-                     border border-gray-200 rounded-lg cursor-pointer
-                     hover:border-primary-500 hover:bg-primary-50"
-        >
-          <input
-            type="checkbox"
-            checked={selectedContributions.includes(Number(opt.id))}
-            onChange={(e) =>
-              toggleContribution(Number(opt.id), e.target.checked)
-            }
-          />
-          <span className="text-xs font-bold">{opt.name}</span>
-        </label>
-      );
-    })}
-  </div>
-</div>
-
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-1">
             <button
-  onClick={handleSaveProfile}
+              onClick={handleSaveProfile}
               className="px-6 py-2.5 bg-gray-900 text-white font-bold rounded-lg shadow-lg hover:bg-black transition-all flex items-center gap-2 text-xs uppercase tracking-wider"
             >
               <Check size={14} /> Save Details
             </button>
           </div>
-        </div>
         </div>
       </div>
     </div>
@@ -3592,8 +3586,8 @@ const handleSubmitSuggestion = async () => {
   const renderReferralsContent = () => (
     <div className="space-y-6">
       {/* Top Row */}
-      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
-        <div>
+      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-5 md:p-6 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 shadow-lg">
+        <div className="min-w-0">
           <h4 className="font-black text-xl mb-1">Grow the Network</h4>
           <p className="text-emerald-100 text-xs max-w-md">
             Share your unique link. Every direct sign-up shows up here as an{" "}
@@ -3602,8 +3596,8 @@ const handleSubmitSuggestion = async () => {
             invites with party leadership.
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20">
-          <code className="text-xs font-mono text-white px-2 truncate max-w-[200px]">
+        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20 w-full md:w-auto md:shrink-0">
+          <code className="flex-1 min-w-0 text-xs font-mono text-white px-2 truncate md:max-w-[220px]">
             {referralLink}
           </code>
           <button
@@ -3657,7 +3651,7 @@ const handleSubmitSuggestion = async () => {
               <button
                 onClick={fetchReferrals}
                 disabled={referralsLoading}
-                className="text-[11px] font-semibold text-primary-600 hover:text-primary-800 disabled:opacity-50"
+                className="text-[11px] font-semibold text-primary-600 hover:text-primary-800 disabled:opacity-50 px-2 py-1 rounded hover:bg-primary-50"
                 title="Refresh referrals"
               >
                 {referralsLoading ? "Refreshing…" : "Refresh"}
@@ -3717,13 +3711,13 @@ const handleSubmitSuggestion = async () => {
         <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm flex flex-col max-h-[400px]">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center shrink-0">
             <h4 className="font-bold text-xs text-gray-700 uppercase tracking-wider">
-              Passive Tree
+              Passive Referrals
             </h4>
             <div className="flex items-center gap-2">
               <button
                 onClick={fetchReferrals}
                 disabled={referralsLoading}
-                className="text-[11px] font-semibold text-primary-600 hover:text-primary-800 disabled:opacity-50"
+                className="text-[11px] font-semibold text-primary-600 hover:text-primary-800 disabled:opacity-50 px-2 py-1 rounded hover:bg-primary-50"
                 title="Refresh referrals"
               >
                 {referralsLoading ? "Refreshing…" : "Refresh"}
@@ -4517,7 +4511,7 @@ const renderSuggestionsContent = () => (
             <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
               <User size={18} />
             </div>
-            <p className="text-2xl md:text-3xl font-black text-gray-900 leading-none">
+            <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
               {profileCompletion}%
             </p>
             <p className="text-xs text-gray-500 mt-1.5">Profile complete</p>
@@ -4530,7 +4524,7 @@ const renderSuggestionsContent = () => (
             <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
               <Users size={18} />
             </div>
-            <p className="text-2xl md:text-3xl font-black text-gray-900 leading-none">
+            <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
               {activeCount}
             </p>
             <p className="text-xs text-gray-500 mt-1.5">Active referrals</p>
@@ -4543,7 +4537,7 @@ const renderSuggestionsContent = () => (
             <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
               <TrendingUp size={18} />
             </div>
-            <p className="text-2xl md:text-3xl font-black text-gray-900 leading-none">
+            <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
               {passiveCount}
             </p>
             <p className="text-xs text-gray-500 mt-1.5">Passive network</p>
@@ -4561,7 +4555,7 @@ const renderSuggestionsContent = () => (
             <div className="w-10 h-10 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
               <Bell size={18} />
             </div>
-            <p className="text-2xl md:text-3xl font-black text-gray-900 leading-none">
+            <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
               {eventsCount}
             </p>
             <p className="text-xs text-gray-500 mt-1.5">Events & updates</p>
