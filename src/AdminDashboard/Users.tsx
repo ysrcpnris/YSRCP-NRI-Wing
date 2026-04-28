@@ -5,7 +5,6 @@ import { supabase } from "../lib/supabase";
 type Row = {
   id: string;
   public_user_code?: string | null;
-  credits_balance?: number | null;
   first_name?: string | null;
   last_name?: string | null;
   full_name?: string | null;
@@ -92,7 +91,7 @@ export default function Users() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, public_user_code, credits_balance, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, created_at"
+        "id, public_user_code, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, created_at"
       )
       .order("created_at", { ascending: false });
     if (!error && data) setRows(data as Row[]);
@@ -156,7 +155,6 @@ export default function Users() {
                   <th className="py-2.5 px-3 text-left font-semibold">Location</th>
                   <th className="py-2.5 px-3 text-left font-semibold">Profession</th>
                   <th className="py-2.5 px-3 text-left font-semibold">Family</th>
-                  <th className="py-2.5 px-3 text-left font-semibold">Credits</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,9 +200,6 @@ export default function Users() {
                         ) : (
                           <span className="text-gray-300">—</span>
                         )}
-                      </td>
-                      <td className="py-2 px-3 font-bold text-amber-700">
-                        ⚡ {r.credits_balance ?? 0}
                       </td>
                     </tr>
                   );
@@ -312,10 +307,6 @@ function UserDetailModal({ user, onClose }: { user: Row; onClose: () => void }) 
         { label: "Village", value: user.family_village },
         { label: "Designation", value: user.family_designation },
       ],
-    },
-    {
-      title: "Credits",
-      rows: [{ label: "Balance", value: `⚡ ${user.credits_balance ?? 0}` }],
     },
   ];
 

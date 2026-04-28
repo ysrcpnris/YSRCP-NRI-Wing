@@ -141,7 +141,7 @@ const BottomCards: React.FC = () => {
               <Code size={20} />
             </div>
             <span className="bg-blue-400 text-ysrcp-green px-2 py-0.5 text-[10px] font-black rounded">
-              APPLY
+              JOIN
             </span>
           </div>
           <h4 className="mt-3 text-sm font-black text-center">App Building Team</h4>
@@ -173,7 +173,7 @@ const BottomCards: React.FC = () => {
 
             {/* Coming Soon / Action Section */}
             {modalContent.title === "Contribute for ORM" ? (
-              <div className="flex flex-col items-center justify-center gap-4">
+              <div className="flex flex-col items-center justify-center gap-3">
                 <div className="text-6xl animate-bounce">🚀</div>
                 <span className="text-lg sm:text-xl font-semibold text-gray-500 tracking-wide">Join the team</span>
                 <button
@@ -185,9 +185,18 @@ const BottomCards: React.FC = () => {
                 >
                   Register Now
                 </button>
+                <button
+                  onClick={() => {
+                    setOpenModal(false);
+                    navigate('/', { state: { openLogin: true } });
+                  }}
+                  className="text-primary-700 bg-white border-2 border-primary-200 hover:border-primary-400 hover:bg-primary-50 px-8 py-3 rounded-full font-bold transition"
+                >
+                  Already have an account? Log In
+                </button>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-4">
+              <div className="flex flex-col items-center justify-center gap-3">
                 <div className="text-6xl animate-bounce">🚀</div>
                 <span className="text-lg sm:text-xl font-semibold text-gray-500 tracking-wide">Join the App Building Team</span>
                 <button
@@ -198,6 +207,15 @@ const BottomCards: React.FC = () => {
                   className="mt-4 bg-primary-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-500"
                 >
                   Register Now
+                </button>
+                <button
+                  onClick={() => {
+                    setOpenModal(false);
+                    navigate('/', { state: { openLogin: true } });
+                  }}
+                  className="text-primary-700 bg-white border-2 border-primary-200 hover:border-primary-400 hover:bg-primary-50 px-8 py-3 rounded-full font-bold transition"
+                >
+                  Already have an account? Log In
                 </button>
               </div>
             )}

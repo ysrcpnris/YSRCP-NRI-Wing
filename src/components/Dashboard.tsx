@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useMemo ,useRef} from 'react';
-import { createPortal } from 'react-dom';
 import { Listbox } from "@headlessui/react";
 import { ProfileDropdown } from './ProfileDropdown';
 import nriLogo from './nrilogo.png';
@@ -1327,37 +1326,6 @@ const [selectedInner, setSelectedInner] = useState<string | null>(null);
   const [myRequests, setMyRequests] = useState<MyServiceRequest[]>([]);
   const [loadingMyRequests, setLoadingMyRequests] = useState(false);
 
-  // Credit ledger (last N entries shown on Refer & Earn tab)
-  type CreditEntry = {
-    id: string;
-    delta: number;
-    reason: string;
-    note: string | null;
-    created_at: string;
-  };
-  const [creditLedger, setCreditLedger] = useState<CreditEntry[]>([]);
-  const [showLedgerModal, setShowLedgerModal] = useState(false);
-
-  // Reward catalogue + user's own redemption history
-  type Perk = {
-    id: string;
-    name: string;
-    description: string | null;
-    cost_credits: number;
-    is_active: boolean;
-  };
-  type Redemption = {
-    id: string;
-    perk_name: string;
-    cost_credits: number;
-    status: "pending" | "approved" | "rejected";
-    admin_note: string | null;
-    created_at: string;
-    decided_at: string | null;
-  };
-  const [perks, setPerks] = useState<Perk[]>([]);
-  const [myRedemptions, setMyRedemptions] = useState<Redemption[]>([]);
-  const [redeemingPerkId, setRedeemingPerkId] = useState<string | null>(null);
 
 const [contributionTypes, setContributionTypes] = useState<
   { id: number; name: string }[]
@@ -1911,6 +1879,7 @@ useEffect(() => {
 
   const [activeReferrals, setActiveReferrals] = useState<Referral[]>([]);
   const [passiveReferrals, setPassiveReferrals] = useState<Referral[]>([]);
+  const [referralsLoading, setReferralsLoading] = useState(false);
 
   /**
    * ═══════════════════════════════════════════════════════════════
@@ -2082,32 +2051,18 @@ const fetchMyServiceRequests = async () => {
 
 useEffect(() => {
   fetchMyServiceRequests();
-  fetchCreditLedger();
-  fetchRewardPerks();
-  fetchMyRedemptions();
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [user?.id]);
 
-// Realtime: credits arrive without a refresh.
-// Subscribes to INSERTs on credit_transactions for this user and to
-// UPDATEs on the user's profile row (so credits_balance ticks live).
+// Realtime: keep My Network in sync the moment a referral row is inserted
+// (referrer_id matches the current user for both direct/active children
+// and grandparent/passive grandchildren), and reflect server-side profile
+// updates in the cached profile so dependent UI doesn't go stale.
 useEffect(() => {
   if (!user?.id) return;
 
   const channel = supabase
-    .channel(`credits-${user.id}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "credit_transactions",
-        filter: `user_id=eq.${user.id}`,
-      },
-      () => {
-        fetchCreditLedger();
-      }
-    )
+    .channel(`user-realtime-${user.id}`)
     .on(
       "postgres_changes",
       {
@@ -2123,13 +2078,13 @@ useEffect(() => {
     .on(
       "postgres_changes",
       {
-        event: "*",
+        event: "INSERT",
         schema: "public",
-        table: "redemptions",
-        filter: `user_id=eq.${user.id}`,
+        table: "referrals",
+        filter: `referrer_id=eq.${user.id}`,
       },
       () => {
-        fetchMyRedemptions();
+        fetchReferrals();
       }
     )
     .subscribe();
@@ -2140,69 +2095,49 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [user?.id]);
 
-// Last 10 credit ledger entries for the current user.
-// Also refreshes the profile so the cached balance pill stays accurate.
-const fetchCreditLedger = async () => {
+// Fetches the user's active + passive referrals via the SECURITY DEFINER RPC.
+// Called on mount, on a Realtime INSERT into the referrals table for this
+// user, and from the manual "Refresh" buttons on the My Network tab.
+const fetchReferrals = async () => {
   if (!user) return;
-  const { data } = await supabase
-    .from("credit_transactions")
-    .select("id, delta, reason, note, created_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(10);
-  if (data) setCreditLedger(data as CreditEntry[]);
-  // also pull fresh credits_balance
-  refreshProfile();
-};
+  setReferralsLoading(true);
+  try {
+    const buildReferral = (r: any, type: "active" | "passive") => {
+      const first = r.first_name ?? "";
+      const last = r.last_name ?? "";
+      const abroad = [r.city_abroad, r.country_of_residence]
+        .filter(Boolean)
+        .join(", ");
+      const indian = [r.assembly_constituency, r.district, r.indian_state]
+        .filter(Boolean)
+        .join(", ");
+      return {
+        id: r.id,
+        member_name: last && last !== first ? `${first} ${last}` : first || "Member",
+        mobile_number: r.mobile_number ?? null,
+        location: abroad || indian || "—",
+        public_user_code: r.public_user_code ?? null,
+        type,
+        created_at: r.created_at,
+      };
+    };
 
-// Active perks (catalogue). Admins manage these from the Rewards page.
-const fetchRewardPerks = async () => {
-  const { data } = await supabase
-    .from("reward_perks")
-    .select("id, name, description, cost_credits, is_active")
-    .eq("is_active", true)
-    .order("cost_credits", { ascending: true });
-  if (data) setPerks(data as Perk[]);
-};
+    const { data: activeData, error: activeError } = await supabase.rpc(
+      "get_my_referrals",
+      { p_source: ["direct", "active"] }
+    );
+    if (activeError) console.error("Active referral error:", activeError);
+    setActiveReferrals((activeData || []).map((r: any) => buildReferral(r, "active")));
 
-// User's own redemption history (status + admin note).
-const fetchMyRedemptions = async () => {
-  if (!user) return;
-  const { data } = await supabase
-    .from("redemptions")
-    .select("id, perk_name, cost_credits, status, admin_note, created_at, decided_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(10);
-  if (data) setMyRedemptions(data as Redemption[]);
-};
-
-// User-initiated redeem: inserts a pending redemption row.
-// The admin approves it; the DB trigger posts the negative ledger entry
-// atomically with a balance check, so we don't trust the client here.
-const handleRedeemPerk = async (perk: Perk) => {
-  if (!user) return;
-  const balance = profile?.credits_balance ?? 0;
-  if (balance < perk.cost_credits) {
-    showToast(`Need ${perk.cost_credits - balance} more credits`, "info");
-    return;
+    const { data: passiveData, error: passiveError } = await supabase.rpc(
+      "get_my_referrals",
+      { p_source: ["passive"] }
+    );
+    if (passiveError) console.error("Passive referral error:", passiveError);
+    setPassiveReferrals((passiveData || []).map((r: any) => buildReferral(r, "passive")));
+  } finally {
+    setReferralsLoading(false);
   }
-  setRedeemingPerkId(perk.id);
-  const { error } = await supabase.from("redemptions").insert({
-    user_id: user.id,
-    perk_id: perk.id,
-    perk_name: perk.name,
-    cost_credits: perk.cost_credits,
-    status: "pending",
-  });
-  setRedeemingPerkId(null);
-  if (error) {
-    console.error(error);
-    showToast("Could not submit redemption", "info");
-    return;
-  }
-  showToast("Redemption request submitted!", "success");
-  fetchMyRedemptions();
 };
 
 const handleSubmitService = async () => {
@@ -2413,57 +2348,9 @@ useEffect(() => {
 
     try {
 
-// Build a referral row for display: name + mobile + address (abroad first,
-// then Indian fallback) + join date. The RPC returns flattened columns
-// (no embedded `profiles` object) because it joins server-side under
-// SECURITY DEFINER — that's how it bypasses the strict per-user RLS on
-// profiles without leaking anything beyond the caller's referral tree.
-const buildReferral = (r: any, type: "active" | "passive") => {
-  const first = r.first_name ?? "";
-  const last = r.last_name ?? "";
-  const abroad = [r.city_abroad, r.country_of_residence]
-    .filter(Boolean)
-    .join(", ");
-  const indian = [r.assembly_constituency, r.district, r.indian_state]
-    .filter(Boolean)
-    .join(", ");
-  return {
-    id: r.id,
-    member_name: last && last !== first ? `${first} ${last}` : first || "Member",
-    mobile_number: r.mobile_number ?? null,
-    location: abroad || indian || "—",
-    public_user_code: r.public_user_code ?? null,
-    type,
-    created_at: r.created_at,
-  };
-};
-
-// ---------------- ACTIVE REFERRALS ----------------
-// Use the SECURITY DEFINER RPC instead of an embedded join. Profiles RLS
-// would otherwise null-out every joined column for users other than self.
-const { data: activeData, error: activeError } = await supabase.rpc(
-  "get_my_referrals",
-  { p_source: ["direct", "active"] }
-);
-
-if (activeError) {
-  console.error("Active referral error:", activeError);
-}
-
-setActiveReferrals((activeData || []).map((r: any) => buildReferral(r, "active")));
-
-
-// ---------------- PASSIVE REFERRALS ----------------
-const { data: passiveData, error: passiveError } = await supabase.rpc(
-  "get_my_referrals",
-  { p_source: ["passive"] }
-);
-
-if (passiveError) {
-  console.error("Passive referral error:", passiveError);
-}
-
-setPassiveReferrals((passiveData || []).map((r: any) => buildReferral(r, "passive")));
+// Active + passive referrals — load via the shared fetcher so the manual
+// Refresh button and the Realtime listener can reuse the same logic.
+await fetchReferrals();
 
      // 2. Leaders (NEW NORMALIZED LOGIC)
     // Even when the user has no Indian district/assembly (e.g., NRIs abroad),
@@ -3707,11 +3594,12 @@ const handleSubmitSuggestion = async () => {
       {/* Top Row */}
       <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
         <div>
-          <h4 className="font-black text-xl mb-1">Refer & Earn</h4>
+          <h4 className="font-black text-xl mb-1">Grow the Network</h4>
           <p className="text-emerald-100 text-xs max-w-md">
-            Share your unique link. Earn <b>+50 credits</b> per direct sign-up and{" "}
-            <b>+10 credits</b> when your referrals bring in theirs. Top referrers get exclusive
-            meeting invites with party leadership.
+            Share your unique link. Every direct sign-up shows up here as an{" "}
+            <b>active referral</b>; when they refer their own contacts those count as{" "}
+            <b>passive referrals</b> in your network. Top referrers get exclusive meeting
+            invites with party leadership.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20">
@@ -3757,149 +3645,6 @@ const handleSubmitSuggestion = async () => {
         </div>
       </div>
 
-      {/* Credits widget: balance card with a button to open the activity popup */}
-      <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-bold tracking-wider text-amber-800 uppercase">
-            Current Balance
-          </p>
-          <p className="text-3xl font-extrabold text-amber-900 mt-1">
-            ⚡ {profile?.credits_balance ?? 0}
-          </p>
-          <p className="text-[11px] text-amber-700 mt-2">
-            +50 active · +10 passive · +25 signup
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            fetchCreditLedger();
-            setShowLedgerModal(true);
-          }}
-          className="self-stretch sm:self-center inline-flex items-center justify-center gap-2 bg-white text-amber-800 border border-amber-300 hover:bg-amber-50 transition px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm"
-        >
-          📜 View Recent Activity
-          {creditLedger.length > 0 && (
-            <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
-              {creditLedger.length}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Rewards catalogue + my redemptions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-gray-200 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
-              Rewards Catalogue
-            </p>
-            <button
-              onClick={fetchRewardPerks}
-              className="text-[11px] font-semibold text-primary-600 hover:text-primary-800"
-            >
-              Refresh
-            </button>
-          </div>
-          {perks.length === 0 ? (
-            <p className="text-xs text-gray-500">
-              No perks available right now. Check back soon.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {perks.map((p) => {
-                const balance = profile?.credits_balance ?? 0;
-                const canAfford = balance >= p.cost_credits;
-                const busy = redeemingPerkId === p.id;
-                return (
-                  <li
-                    key={p.id}
-                    className="border border-gray-100 rounded-lg p-3 flex items-start justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-gray-900">{p.name}</p>
-                      {p.description && (
-                        <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">
-                          {p.description}
-                        </p>
-                      )}
-                      <p className="text-[11px] text-amber-700 font-bold mt-1">
-                        ⚡ {p.cost_credits} credits
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleRedeemPerk(p)}
-                      disabled={!canAfford || busy}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap ${
-                        canAfford
-                          ? "bg-primary-600 text-white hover:bg-primary-700"
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      {busy ? "..." : canAfford ? "Redeem" : "Not enough"}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
-              My Redemptions
-            </p>
-            <button
-              onClick={fetchMyRedemptions}
-              className="text-[11px] font-semibold text-primary-600 hover:text-primary-800"
-            >
-              Refresh
-            </button>
-          </div>
-          {myRedemptions.length === 0 ? (
-            <p className="text-xs text-gray-500">
-              You haven't redeemed anything yet.
-            </p>
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {myRedemptions.map((r) => {
-                const badge =
-                  r.status === "approved"
-                    ? "bg-green-50 text-green-700 border-green-200"
-                    : r.status === "rejected"
-                    ? "bg-red-50 text-red-700 border-red-200"
-                    : "bg-yellow-50 text-yellow-700 border-yellow-200";
-                return (
-                  <li key={r.id} className="py-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                          {r.perk_name}
-                        </p>
-                        <p className="text-[11px] text-gray-500">
-                          ⚡ {r.cost_credits} ·{" "}
-                          {new Date(r.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border capitalize ${badge}`}
-                      >
-                        {r.status}
-                      </span>
-                    </div>
-                    {r.admin_note && (
-                      <p className="text-[11px] text-gray-600 mt-1 bg-gray-50 border border-gray-100 rounded p-2">
-                        {r.admin_note}
-                      </p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      </div>
-
       {/* Tables - SCROLLABLE for large lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Active Referrals */}
@@ -3908,9 +3653,19 @@ const handleSubmitSuggestion = async () => {
             <h4 className="font-bold text-xs text-gray-700 uppercase tracking-wider">
               Active Referrals
             </h4>
-            <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
-              {activeReferrals.length} Members
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchReferrals}
+                disabled={referralsLoading}
+                className="text-[11px] font-semibold text-primary-600 hover:text-primary-800 disabled:opacity-50"
+                title="Refresh referrals"
+              >
+                {referralsLoading ? "Refreshing…" : "Refresh"}
+              </button>
+              <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
+                {activeReferrals.length} Members
+              </span>
+            </div>
           </div>
           <div className="overflow-y-auto custom-scrollbar">
             {activeReferrals.length === 0 ? (
@@ -3964,9 +3719,19 @@ const handleSubmitSuggestion = async () => {
             <h4 className="font-bold text-xs text-gray-700 uppercase tracking-wider">
               Passive Tree
             </h4>
-            <span className="text-[10px] bg-blue-100 text-primary-700 px-2 py-0.5 rounded-full font-bold">
-              {passiveReferrals.length} Members
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchReferrals}
+                disabled={referralsLoading}
+                className="text-[11px] font-semibold text-primary-600 hover:text-primary-800 disabled:opacity-50"
+                title="Refresh referrals"
+              >
+                {referralsLoading ? "Refreshing…" : "Refresh"}
+              </button>
+              <span className="text-[10px] bg-blue-100 text-primary-700 px-2 py-0.5 rounded-full font-bold">
+                {passiveReferrals.length} Members
+              </span>
+            </div>
           </div>
           <div className="overflow-y-auto custom-scrollbar">
             {passiveReferrals.length === 0 ? (
@@ -4015,129 +3780,6 @@ const handleSubmitSuggestion = async () => {
         </div>
       </div>
 
-      {/* RECENT CREDIT ACTIVITY — popup, fixed height, internal scroll */}
-      {showLedgerModal &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4"
-            onClick={() => setShowLedgerModal(false)}
-          >
-            <div
-              className="w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-              style={{ maxHeight: "min(640px, 85vh)" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* HEADER */}
-              <div className="px-5 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider opacity-90">
-                    Your activity
-                  </p>
-                  <p className="text-base font-bold">Recent Credit Activity</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={fetchCreditLedger}
-                    className="text-[11px] font-semibold bg-white/15 hover:bg-white/25 px-2.5 py-1 rounded-lg transition"
-                  >
-                    ↻ Refresh
-                  </button>
-                  <button
-                    onClick={() => setShowLedgerModal(false)}
-                    className="p-1.5 rounded-lg hover:bg-white/20 transition"
-                    aria-label="Close"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* BALANCE STRIP */}
-              <div className="px-5 py-3 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
-                  Current balance
-                </span>
-                <span className="text-xl font-extrabold text-amber-900">
-                  ⚡ {profile?.credits_balance ?? 0}
-                </span>
-              </div>
-
-              {/* SCROLLABLE LEDGER */}
-              <div className="flex-1 overflow-y-auto px-5 py-3">
-                {creditLedger.length === 0 ? (
-                  <p className="text-xs text-gray-500 py-6 text-center">
-                    No activity yet — share your link to start earning.
-                  </p>
-                ) : (
-                  <ul className="divide-y divide-gray-100">
-                    {creditLedger.map((e) => {
-                      const label =
-                        e.reason === "active"
-                          ? "Active referral"
-                          : e.reason === "passive"
-                          ? "Passive referral"
-                          : e.reason === "signup"
-                          ? "Signup bonus"
-                          : e.reason === "admin_adjustment"
-                          ? "Admin adjustment"
-                          : e.reason === "admin_reset"
-                          ? "Balance reset"
-                          : e.reason === "redemption"
-                          ? "Redemption"
-                          : e.reason;
-                      const isPositive = e.delta > 0;
-                      return (
-                        <li
-                          key={e.id}
-                          className="py-2.5 flex items-start justify-between gap-3 text-xs"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-gray-800 truncate">
-                              {label}
-                            </p>
-                            {e.note && (
-                              <p className="text-[11px] text-gray-500 break-words">
-                                {e.note}
-                              </p>
-                            )}
-                            <p className="text-[11px] text-gray-400 mt-0.5">
-                              {new Date(e.created_at).toLocaleDateString()}{" "}
-                              {new Date(e.created_at).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
-                          </div>
-                          <span
-                            className={`font-bold text-sm whitespace-nowrap ${
-                              isPositive ? "text-green-600" : "text-red-600"
-                            }`}
-                          >
-                            {isPositive ? "+" : ""}
-                            {e.delta}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-
-              {/* FOOTER */}
-              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
-                <button
-                  onClick={() => setShowLedgerModal(false)}
-                  className="px-4 py-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
     </div>
   );
 
@@ -4841,9 +4483,6 @@ const renderSuggestionsContent = () => (
                   <span>{profile.public_user_code}</span>
                 </button>
               )}
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400/30 border border-amber-200/40 text-[11px] font-bold">
-                ⚡ {profile?.credits_balance ?? 0} credits
-              </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold mb-1">
               Hi {firstName}!
@@ -4863,7 +4502,7 @@ const renderSuggestionsContent = () => (
                 onClick={() => setActiveTab("referrals")}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white border border-white/20 backdrop-blur-sm rounded-lg font-semibold text-sm hover:bg-white/20 transition"
               >
-                Invite friends <ArrowUpRight size={14} />
+                Invite Members <ArrowUpRight size={14} />
               </button>
             </div>
           </div>

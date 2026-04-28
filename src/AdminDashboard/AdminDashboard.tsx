@@ -11,8 +11,6 @@ import Suggestions from "./Suggestions";
 // import ServiceInbox from "./ServiceInbox";
 import MasterData from "./MasterData";
 import SupportTeams from "./SupportTeams";
-import Credits from "./Credits";
-import Rewards from "./Rewards";
 import UsersPage from "./Users";
 import EventsNotifications from "./EventsNotifications";
 
@@ -72,7 +70,6 @@ const CONTINENTS = [
 type Row = {
   id: string;
   public_user_code?: string | null;
-  credits_balance?: number | null;
   first_name?: string | null;
   last_name?: string | null;
   full_name?: string | null;
@@ -278,8 +275,6 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={CalendarDays} label="Visited" page="visited" />
             <Item icon={Newspaper} label="Assistance" page="assistance" />
             <Item icon={Users} label="Support Teams" page="supportTeams" />
-            <Item icon={BarChart3} label="Credits" page="credits" />
-            <Item icon={BarChart3} label="Rewards" page="rewards" />
             <Item icon={Users} label="Suggestions" page="suggestions" />
             {/* <Item icon={FolderKanban} label="Service Inbox" page="serviceInbox" /> */}
             <Item icon={Settings} label="Master Data" page="masterData" />
@@ -386,7 +381,6 @@ function MembersList({
                   <th className="py-3 px-4 text-left text-sm font-semibold">WhatsApp</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Profession</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Family Member</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold">Credits</th>
                 </tr>
               </thead>
               <tbody>
@@ -422,9 +416,6 @@ function MembersList({
                         ) : (
                           <span className="text-gray-300">—</span>
                         )}
-                      </td>
-                      <td className="py-2 px-4 font-bold text-amber-700">
-                        ⚡ {fam.credits_balance ?? 0}
                       </td>
                     </tr>
                   );
@@ -566,8 +557,8 @@ export default function AdminDashboard() {
   // a page refresh keeps the admin where they were instead of bouncing back
   // to the Dashboard tab.
   const VALID_ADMIN_PAGES = [
-    "dashboard","users","visited","assistance","supportTeams","credits",
-    "rewards","suggestions","masterData","eventsnotifications","news",
+    "dashboard","users","visited","assistance","supportTeams",
+    "suggestions","masterData","eventsnotifications","news",
     "contentControl",
   ];
   const getInitialAdminPage = () => {
@@ -733,7 +724,7 @@ export default function AdminDashboard() {
           const { data, error } = await supabase
             .from(TABLE_NAME)
             .select(
-              "id, public_user_code, credits_balance, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, created_at"
+              "id, public_user_code, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, created_at"
             )
             .range(offset, offset + batchSize - 1);
 
@@ -1023,8 +1014,6 @@ export default function AdminDashboard() {
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
       {currentPage === "supportTeams" && <SupportTeams />}
-      {currentPage === "credits" && <Credits />}
-      {currentPage === "rewards" && <Rewards />}
       {currentPage === "suggestions" && <Suggestions />}
       {/* {currentPage === "serviceInbox" && <ServiceInbox />} */}
       {currentPage === "masterData" && <MasterData />}

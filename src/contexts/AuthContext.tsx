@@ -144,84 +144,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (!referralCode) return;
 
-      // Check if a referral already exists for this user (prevent duplicates)
-      const { data: existingReferral, error: existingErr } = await supabase
-        .from("referrals")
-        .select("id")
-        .eq("referred_id", currentUserId)
-        .limit(1)
-        .maybeSingle();
+      // Delegate the entire flow to the SECURITY DEFINER RPC. The RPC:
+      //   - looks up the referrer by code (profiles RLS would otherwise
+      //     block a brand-new user from seeing anyone else's profile),
+      //   - inserts the active row (which fires the +50 credit trigger),
+      //   - inserts the passive row for the grandparent if applicable,
+      //   - is idempotent (no-op if a referrals row already exists for me).
+      // We pass `currentUserId` explicitly via auth context — auth.uid()
+      // inside the RPC resolves to the calling user's id.
+      const { data: rpcResult, error: rpcError } = await supabase.rpc(
+        "process_my_referral",
+        { p_code: referralCode }
+      );
 
-      if (existingErr) {
-        console.error("error checking existing referral:", existingErr);
-        return;
-      }
-      if (existingReferral) {
-        // referral already exists, clean up and return
-        localStorage.removeItem("referral_code");
-        return;
-      }
-
-      // find direct referrer by referral_code
-      const { data: referrerProfile, error: referrerErr } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("referral_code", referralCode)
-        .single();
-
-      if (referrerErr || !referrerProfile?.id) {
-        // no valid referrer found, just clear and return
-        localStorage.removeItem("referral_code");
-        return;
-      }
-
-      const directReferrerId = referrerProfile.id;
-
-      // Block self-referral: a user can't credit themselves by using
-      // their own link. DB also enforces this via a CHECK constraint;
-      // this client-side short-circuit just avoids a round-trip and a
-      // noisy server error in the console.
-      if (directReferrerId === currentUserId) {
-        localStorage.removeItem("referral_code");
-        return;
-      }
-
-      // insert direct referral (active)
-      const { error: insertDirectErr } = await supabase.from("referrals").insert({
-        referrer_id: directReferrerId,
-        referred_id: currentUserId,
-        source: "active",
-      });
-
-      if (insertDirectErr) {
-        console.error("error inserting direct referral:", insertDirectErr);
-      }
-
-      // attempt to find parent referral (one level up) and insert passive
-      const { data: parentReferral, error: parentErr } = await supabase
-        .from("referrals")
-        .select("referrer_id")
-        .eq("referred_id", directReferrerId)
-        .limit(1)
-        .maybeSingle();
-
-      // Skip passive if the grandparent is the current user (breaks any
-      // cycle), if missing, or on error.
-      if (
-        !parentErr &&
-        parentReferral?.referrer_id &&
-        parentReferral.referrer_id !== currentUserId
-      ) {
-        const { error: insertPassiveErr } = await supabase.from("referrals").insert({
-          referrer_id: parentReferral.referrer_id,
-          referred_id: currentUserId,
-          source: "passive",
-        });
-
-        if (insertPassiveErr) {
-          console.error("error inserting passive referral:", insertPassiveErr);
+      if (rpcError) {
+        console.error("process_my_referral error:", rpcError);
+      } else if (rpcResult && rpcResult.ok === false) {
+        // Reasons: not_authenticated | no_code | caller_is_admin |
+        //          unknown_code | self_referral | referrer_is_admin
+        // Most of these are normal early-returns (e.g. unknown_code), so
+        // we don't want to spam the console. Log only unexpected ones.
+        if (
+          rpcResult.reason !== "self_referral" &&
+          rpcResult.reason !== "unknown_code" &&
+          rpcResult.reason !== "caller_is_admin"
+        ) {
+          console.warn("process_my_referral skipped:", rpcResult.reason);
         }
       }
+
+      // Suppress the unused-variable warning while keeping the value
+      // available for ad-hoc debugging in dev tools.
+      void currentUserId;
 
       // cleanup localstorage
       localStorage.removeItem("referral_code");

@@ -199,6 +199,15 @@ export default function Initiatives() {
               >
                 Register Now
               </button>
+              <button
+                onClick={() => {
+                  setSelectedService(null);
+                  navigate("/", { state: { openLogin: true } });
+                }}
+                className="mt-3 w-full py-3 rounded-xl font-semibold text-primary-700 bg-white border-2 border-primary-200 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200"
+              >
+                Already have an account? Log In
+              </button>
             </div>
           </div>
         </div>

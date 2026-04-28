@@ -54,7 +54,6 @@ export default function PoliticalJourneyDetail({ setAuthMode, setShowAuthModal }
               <div className="md:w-3/5 p-6 sm:p-8 md:p-10">
                 <h1
                   className="text-xl sm:text-2xl md:text-3xl font-bold text-[#063A7A] mb-5 underline underline-offset-4 decoration-accent-500"
-                  style={{ fontFamily: "Times New Roman, serif" }}
                 >
                   {data.title}
                 </h1>

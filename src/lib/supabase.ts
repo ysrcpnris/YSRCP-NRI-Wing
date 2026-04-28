@@ -50,7 +50,6 @@ export type Profile = {
   referred_by?: string;
   referral_code?: string;
   public_user_code?: string;
-  credits_balance?: number;
   designation?: string;
 
   // Active family member in the party (optional — only filled when the user

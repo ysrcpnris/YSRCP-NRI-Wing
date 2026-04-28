@@ -145,7 +145,6 @@ const Testimonials = () => {
       <div className="text-center mb-6 sm:mb-8 px-4">
         <h2
           className="text-lg sm:text-2xl md:text-3xl font-black uppercase text-primary-600 leading-tight"
-          style={{ fontFamily: "Times New Roman, serif" }}
         >
           Voices of Our Global Community
         </h2>

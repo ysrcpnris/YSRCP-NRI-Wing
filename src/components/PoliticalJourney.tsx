@@ -75,7 +75,6 @@ export default function PoliticalJourney() {
       >
         <h2
           className="text-center text-2xl sm:text-3xl md:text-4xl font-extrabold mb-6"
-          style={{ fontFamily: "Times New Roman, serif" }}
         >
           Our Political Journey: The Path to People's Trust
         </h2>
@@ -100,8 +99,7 @@ export default function PoliticalJourney() {
           <div className="w-full md:w-2/5">
             <h3
               className="text-xl sm:text-2xl md:text-3xl font-bold text-[#063A7A] mb-3 underline underline-offset-4 decoration-accent-500 text-justify"
-              style={{ fontFamily: "Times New Roman, serif" }}
-            >
+                >
               {selected.title}
             </h3>
 
@@ -138,8 +136,7 @@ export default function PoliticalJourney() {
                       : "border border-white text-white hover:bg-white hover:text-[#063A7A]"
                   }
                 `}
-                style={{ fontFamily: "Times New Roman, serif" }}
-              >
+                    >
                 {year}
               </button>
             );
@@ -183,7 +180,6 @@ export default function PoliticalJourney() {
 
       <h2
         className="text-center text-lg sm:text-xl md:text-2xl font-extrabold mb-1 relative z-10"
-        style={{ fontFamily: "Times New Roman, serif" }}
       >
         Our Political Journey: The Path to People's Trust
       </h2>
@@ -216,8 +212,7 @@ export default function PoliticalJourney() {
                       : "border-2 border-white/60 text-white hover:border-white"
                   }
                 `}
-                style={{ fontFamily: "Times New Roman, serif" }}
-              >
+                    >
                 {year}
               </button>
 
@@ -234,8 +229,7 @@ export default function PoliticalJourney() {
                     <div className="p-4">
                       <h3
                         className="text-sm font-bold text-[#063A7A] mb-2 leading-tight"
-                        style={{ fontFamily: "Times New Roman, serif" }}
-                      >
+                                    >
                         {data.title}
                       </h3>
                       <p className="text-xs text-gray-600 leading-relaxed mb-3">
