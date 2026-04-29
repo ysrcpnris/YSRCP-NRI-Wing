@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Video,
   Calendar,
@@ -101,23 +100,27 @@ function DriveCarousel({ videos = DRIVE_VIDEOS }: { videos?: Array<{ id: string;
 }
 
 const BottomCards: React.FC = () => {
-  const [openModal, setOpenModal] = useState(false);
-  const [modalContent, setModalContent] = useState<{ title: string; description: string }>({ title: "", description: "" });
-  const navigate = useNavigate();
-
-  const handleCardClick = (title: string, description: string) => {
-    setModalContent({ title, description });
-    setOpenModal(true);
+  // Both cards now route straight to the Jagananna Tech Force portal —
+  // it owns the actual ORM / App-Building team applications.
+  const TECH_FORCE_URL = "https://jaganannatechforce.org/";
+  const goToTechForce = () => {
+    window.open(TECH_FORCE_URL, "_blank", "noopener,noreferrer");
   };
 
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
         <div
-          className="bg-gradient-to-br from-[#004AAD] to-[#00897B] rounded-xl p-4 text-white shadow cursor-pointer"
-          onClick={() =>
-            handleCardClick("Contribute for ORM", "Join the Digital Defense Team and help manage digital outreach, monitor social platforms, and support online campaigns.")
-          }
+          role="button"
+          tabIndex={0}
+          onClick={goToTechForce}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              goToTechForce();
+            }
+          }}
+          className="bg-gradient-to-br from-[#004AAD] to-[#00897B] rounded-xl p-4 text-white shadow cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition"
         >
           <div className="flex justify-between items-center">
             <div className="bg-white/20 p-2 rounded-lg">
@@ -132,10 +135,16 @@ const BottomCards: React.FC = () => {
         </div>
 
         <div
-          className="bg-gradient-to-br from-[#004AAD] to-[#00897B] rounded-xl p-4 text-white shadow cursor-pointer"
-          onClick={() =>
-            handleCardClick("App Building Team", "Tech volunteers needed to develop apps, automate workflows, and enhance user engagement.")
-          }
+          role="button"
+          tabIndex={0}
+          onClick={goToTechForce}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              goToTechForce();
+            }
+          }}
+          className="bg-gradient-to-br from-[#004AAD] to-[#00897B] rounded-xl p-4 text-white shadow cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition"
         >
           <div className="flex justify-between items-center">
             <div className="bg-green-900/30 p-2 rounded-lg">
@@ -149,80 +158,6 @@ const BottomCards: React.FC = () => {
           <p className="text-[10px] text-green-100 text-center">Tech volunteers needed.</p>
         </div>
       </div>
-
-      {openModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 px-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl relative animate-fadeIn">
-            {/* Close Button */}
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl font-bold transition"
-              onClick={() => setOpenModal(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-
-            {/* Title */}
-            <h2 className="text-3xl sm:text-4xl font-extrabold mb-3 text-gray-900 text-center">
-              {modalContent.title}
-            </h2>
-
-            {/* Description */}
-            <p className="text-sm sm:text-md text-gray-600 mb-8 text-center max-w-2xl mx-auto">
-              {modalContent.description}
-            </p>
-
-            {/* Coming Soon / Action Section */}
-            {modalContent.title === "Contribute for ORM" ? (
-              <div className="flex flex-col items-center justify-center gap-3">
-                <div className="text-6xl animate-bounce">🚀</div>
-                <span className="text-lg sm:text-xl font-semibold text-gray-500 tracking-wide">Join the team</span>
-                <button
-                  onClick={() => {
-                    setOpenModal(false);
-                    navigate('/register');
-                  }}
-                  className="mt-4 bg-primary-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-500"
-                >
-                  Register Now
-                </button>
-                <button
-                  onClick={() => {
-                    setOpenModal(false);
-                    navigate('/', { state: { openLogin: true } });
-                  }}
-                  className="text-primary-700 bg-white border-2 border-primary-200 hover:border-primary-400 hover:bg-primary-50 px-8 py-3 rounded-full font-bold transition"
-                >
-                  Already have an account? Log In
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-3">
-                <div className="text-6xl animate-bounce">🚀</div>
-                <span className="text-lg sm:text-xl font-semibold text-gray-500 tracking-wide">Join the App Building Team</span>
-                <button
-                  onClick={() => {
-                    setOpenModal(false);
-                    navigate('/register');
-                  }}
-                  className="mt-4 bg-primary-600 text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-500"
-                >
-                  Register Now
-                </button>
-                <button
-                  onClick={() => {
-                    setOpenModal(false);
-                    navigate('/', { state: { openLogin: true } });
-                  }}
-                  className="text-primary-700 bg-white border-2 border-primary-200 hover:border-primary-400 hover:bg-primary-50 px-8 py-3 rounded-full font-bold transition"
-                >
-                  Already have an account? Log In
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

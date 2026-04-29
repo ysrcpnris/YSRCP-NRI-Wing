@@ -10,7 +10,6 @@ const Hero: React.FC<HeroProps> = () => {
   const baseDesktopSlides = [
     { img: "/Slider/simg1.jpeg" },
     { img: "/Slider/simg2.jpeg" },
-    { img: "/Slider/simg3.jpeg" },
     { img: "/Slider/simg4.png" },
   ];
   const baseMobileSlides = [{ img: "/Slider/msimg1.jpeg" }];
@@ -101,7 +100,7 @@ const Hero: React.FC<HeroProps> = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40 pointer-events-none" />
 
         {/* Text Content */}
-        <div className="absolute inset-0 flex items-end justify-center text-center text-white pb-16 sm:pb-20 md:pb-24 px-4">
+        <div className="absolute inset-0 flex items-end justify-center text-center text-white pb-8 sm:pb-10 md:pb-12 px-4">
           <div className="max-w-4xl">
             <h1
               className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-tight tracking-tight"
@@ -113,7 +112,6 @@ const Hero: React.FC<HeroProps> = () => {
               Connecting <span className="text-accent-400">NRIs</span> with the Vision of a{" "}
               <span className="text-accent-400">Progressive</span> Andhra Pradesh
             </h1>
-            <div className="h-1 w-20 sm:w-28 bg-accent-500 mx-auto mt-4 sm:mt-5 rounded-full shadow-lg" />
           </div>
         </div>
 

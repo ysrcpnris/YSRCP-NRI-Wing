@@ -97,6 +97,11 @@ type Row = {
   family_mobile?: string | null;
   family_village?: string | null;
   family_designation?: string | null;
+  // Referral fields — `referral_code` is this user's own share code,
+  // `referred_by` is the code of whoever referred them (if any).
+  referral_code?: string | null;
+  referred_by?: string | null;
+  role?: string | null;
   created_at?: string | null;
 };
 
@@ -121,42 +126,106 @@ const calculateAge = (dob: string | null | undefined): number | string => {
   }
 };
 
-// Exports member data to Excel with formatted columns and auto-fit widths
-const exportToExcel = (data: any[], filename: string = "registrations.xlsx") => {
-  const exportData = data.map((row: any) => ({
-    "First Name": row.first_name || "-",
-    "Last Name": row.last_name || "-",
-    "Email": row.email || "-",
-    "Mobile Number": row.mobile_number || "-",
-    "WhatsApp Number": row.whatsapp_number || "-",
-    "Gender": row.gender || "-",
-    "Age": calculateAge(row.dob),
-    "Contribution": row.contribution || "-",
-    "Country of Residence": row.country_of_residence || "-",
-    "City Abroad": row.city_abroad || "-",
-    "Indian State": row.indian_state || "-",
-    "District": row.district || "-",
-    "Assembly Constituency": row.assembly_constituency || "-",
-    "Mandal": row.mandal || "-",
-    "Village": row.village || "-",
-    "Profession": row.profession || "-",
-    "Organization": row.organization || "-",
-    "Designation": row.designation || "-",
-    "Family Relation": row.family_relation || "-",
-    "Family Name": row.family_name || "-",
-    "Family Mobile": row.family_mobile || "-",
-    "Family Village": row.family_village || "-",
-    "Family Designation": row.family_designation || "-",
-  }));
+// Exports member data to Excel with formatted columns and auto-fit widths.
+// Async because we also pull referral aggregates from the `referrals` table
+// (direct + passive counts per user, plus the referrer's name lookup) so
+// the Excel sheet captures the full referral picture, not just the profile.
+const exportToExcel = async (
+  data: Row[],
+  filename: string = "registrations.xlsx"
+) => {
+  if (data.length === 0) {
+    XLSX.writeFile(XLSX.utils.book_new(), filename);
+    return;
+  }
+
+  // 1. Map referral_code → "First Last" so we can fill in "Referred By Name"
+  //    for users whose referred_by code matches someone in `data`.
+  const codeToName: Record<string, string> = {};
+  for (const r of data) {
+    if (r.referral_code) {
+      const nm =
+        [r.first_name, r.last_name].filter(Boolean).join(" ") ||
+        r.full_name ||
+        r.email ||
+        "";
+      if (nm) codeToName[r.referral_code] = nm;
+    }
+  }
+
+  // 2. Fetch every referrals row in one go and bucket by referrer_id.
+  //    Direct + 'active' both map to the "Direct Referrals" count
+  //    (the column was renamed in the user-facing UI; data values stay
+  //    'direct' / 'active' for back-compat). 'passive' goes to its own col.
+  const counts: Record<string, { direct: number; passive: number }> = {};
+  try {
+    const { data: refRows, error: refErr } = await supabase
+      .from("referrals")
+      .select("referrer_id, source");
+    if (refErr) {
+      console.error("referrals fetch (export):", refErr);
+    } else if (refRows) {
+      for (const r of refRows as Array<{ referrer_id: string; source: string }>) {
+        if (!r.referrer_id) continue;
+        if (!counts[r.referrer_id]) counts[r.referrer_id] = { direct: 0, passive: 0 };
+        if (r.source === "passive") counts[r.referrer_id].passive++;
+        else counts[r.referrer_id].direct++;
+      }
+    }
+  } catch (e) {
+    console.error("referrals aggregation failed:", e);
+  }
+
+  // 3. Build the export rows.
+  const exportData = data.map((row) => {
+    const c = counts[row.id] || { direct: 0, passive: 0 };
+    return {
+      "Member ID": row.public_user_code || "-",
+      "First Name": row.first_name || "-",
+      "Last Name": row.last_name || "-",
+      "Email": row.email || "-",
+      "Mobile Number": row.mobile_number || "-",
+      "WhatsApp Number": row.whatsapp_number || "-",
+      "Gender": row.gender || "-",
+      "Age": calculateAge(row.dob),
+      "Contribution": row.contribution || "-",
+      "Country of Residence": row.country_of_residence || "-",
+      "City Abroad": row.city_abroad || "-",
+      "Indian State": row.indian_state || "-",
+      "District": row.district || "-",
+      "Assembly Constituency": row.assembly_constituency || "-",
+      "Mandal": row.mandal || "-",
+      "Village": row.village || "-",
+      "Profession": row.profession || "-",
+      "Organization": row.organization || "-",
+      "Designation": row.designation || "-",
+      "Family Relation": row.family_relation || "-",
+      "Family Name": row.family_name || "-",
+      "Family Mobile": row.family_mobile || "-",
+      "Family Village": row.family_village || "-",
+      "Family Designation": row.family_designation || "-",
+      // Referral data
+      "My Referral Code": row.referral_code || "-",
+      "Referred By (Code)": row.referred_by || "-",
+      "Referred By (Name)": (row.referred_by && codeToName[row.referred_by]) || "-",
+      "Direct Referrals": c.direct,
+      "Passive Referrals": c.passive,
+      "Total Referrals": c.direct + c.passive,
+      "Role": row.role || "-",
+      "Joined": row.created_at
+        ? new Date(row.created_at).toISOString().slice(0, 10)
+        : "-",
+    };
+  });
 
   const worksheet = XLSX.utils.json_to_sheet(exportData);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
-  
+
   // Auto-fit column widths
   const colWidths = Object.keys(exportData[0] || {}).map(() => ({ wch: 20 }));
   worksheet["!cols"] = colWidths;
-  
+
   XLSX.writeFile(workbook, filename);
 };
 
@@ -585,12 +654,12 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [countryContinentMap, setCountryContinentMap] = useState<Record<string, string>>({});
   
-  // Auto-logout after 2 minutes inactivity (shows warning at 1.5 min)
+  // Auto-logout after 1 hour inactivity (shows warning 5 min before).
   const idleTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const warningTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [showIdleWarning, setShowIdleWarning] = useState(false);
-  const IDLE_TIME_LIMIT = 2 * 60 * 1000; // 2 minutes in milliseconds
-  const WARNING_TIME = 1.5 * 60 * 1000; // Show warning at 1.5 minutes
+  const IDLE_TIME_LIMIT = 60 * 60 * 1000;       // 1 hour
+  const WARNING_TIME    = 55 * 60 * 1000;       // Warn 5 minutes before logout
 
   // String normalization helpers
   const norm = (v: string | null | undefined) => (v || "").trim();
@@ -726,7 +795,7 @@ export default function AdminDashboard() {
           const { data, error } = await supabase
             .from(TABLE_NAME)
             .select(
-              "id, public_user_code, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, created_at"
+              "id, public_user_code, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, referral_code, referred_by, role, created_at"
             )
             .range(offset, offset + batchSize - 1);
 

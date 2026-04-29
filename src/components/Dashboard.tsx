@@ -1060,6 +1060,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import Cropper from 'react-easy-crop';
 import { getCroppedBlob, PixelCrop } from '../lib/cropImage';
+import { useIdleLogout } from '../hooks/useIdleLogout';
 
 
 type SectionKey =
@@ -1225,6 +1226,18 @@ const AccordionItem = ({
 
 const Dashboard: React.FC = () => {
   const { user, refreshProfile, profile, signOut } = useAuth();
+
+  // Auto sign-out after 1 hour idle. Active only when a user is signed in.
+  useIdleLogout({
+    enabled: !!user,
+    onLogout: async () => {
+      try {
+        await signOut();
+      } finally {
+        window.location.href = "/";
+      }
+    },
+  });
 
   // 🔐 IMPORTANT: instant redirect after logout
   if (!user) {
@@ -3686,8 +3699,8 @@ const handleSubmitSuggestion = async () => {
         <div className="min-w-0">
           <h4 className="font-black text-xl mb-1">Grow the Network</h4>
           <p className="text-emerald-100 text-xs max-w-md">
-            Share your unique link. Every direct sign-up shows up here as an{" "}
-            <b>active referral</b>; when they refer their own contacts those count as{" "}
+            Share your unique link. Every direct sign-up appears here as a{" "}
+            <b>direct referral</b>; when they refer their own contacts those count as{" "}
             <b>passive referrals</b> in your network. Top referrers get exclusive meeting
             invites with party leadership.
           </p>
@@ -3737,11 +3750,11 @@ const handleSubmitSuggestion = async () => {
 
       {/* Tables - SCROLLABLE for large lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Active Referrals */}
+        {/* Direct Referrals (formerly "Active") — every direct sign-up via your link */}
         <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm flex flex-col max-h-[400px]">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center shrink-0">
             <h4 className="font-bold text-xs text-gray-700 uppercase tracking-wider">
-              Active Referrals
+              Direct Referrals
             </h4>
             <div className="flex items-center gap-2">
               <button
@@ -3759,7 +3772,7 @@ const handleSubmitSuggestion = async () => {
           </div>
           <div className="overflow-y-auto custom-scrollbar">
             {activeReferrals.length === 0 ? (
-              <div className="p-4 text-xs text-gray-500">No active referrals yet.</div>
+              <div className="p-4 text-xs text-gray-500">No direct referrals yet.</div>
             ) : (
               <ul className="divide-y divide-gray-50">
                 {activeReferrals.map((r) => (
@@ -4678,7 +4691,7 @@ const renderSuggestionsContent = () => (
             <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
               {activeCount}
             </p>
-            <p className="text-xs text-gray-500 mt-1.5">Active referrals</p>
+            <p className="text-xs text-gray-500 mt-1.5">Direct referrals</p>
           </button>
 
           <button

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
+import { useIdleLogout } from "../hooks/useIdleLogout";
 
 type AssignedRequest = {
   id: string;
@@ -57,6 +58,18 @@ type TeamSeat = {
 export default function SupportTeamDashboard() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+
+  // Auto sign-out after 1 hour idle.
+  useIdleLogout({
+    enabled: !!user,
+    onLogout: async () => {
+      try {
+        await signOut();
+      } finally {
+        navigate("/support-teams", { replace: true });
+      }
+    },
+  });
 
   const [team, setTeam] = useState<TeamSeat | null>(null);
   const [requests, setRequests] = useState<AssignedRequest[]>([]);
