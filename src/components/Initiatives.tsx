@@ -119,38 +119,40 @@ export default function Initiatives() {
         </div>
 
         {/* RIGHT — Services */}
-        <div className="bg-gradient-to-br from-gray-50 via-white to-primary-50/40 rounded-3xl p-6 sm:p-8 md:p-10 border border-gray-100 shadow-card relative overflow-hidden">
+        <div className="bg-gradient-to-br from-gray-50 via-white to-primary-50/40 rounded-3xl p-4 sm:p-8 md:p-10 border border-gray-100 shadow-card relative overflow-hidden">
           <div className="absolute -top-16 -right-16 w-40 h-40 bg-primary-200/40 rounded-full blur-3xl" />
 
-          <div className="relative z-10 text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">
+          <div className="relative z-10 text-center mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900">
               Our Services
             </h2>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-gray-500 text-[11px] sm:text-sm mt-1">
               Comprehensive support ecosystem for NRIs
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+          {/* 2-up on every screen — keeps the section short on mobile */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 relative z-10">
             {services.map((s, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedService(s)}
-                className="group text-left bg-white p-5 rounded-2xl border border-gray-100 shadow-sm
+                className="group text-left bg-white p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm
                            hover:shadow-card-hover hover:-translate-y-1 hover:border-primary-200
                            transition-all duration-300"
               >
                 <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${s.accent}
-                              group-hover:scale-110 transition-transform duration-300`}
+                  className={`w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md ${s.accent}
+                              group-hover:scale-110 transition-transform duration-300
+                              [&>svg]:w-5 [&>svg]:h-5 sm:[&>svg]:w-7 sm:[&>svg]:h-7`}
                 >
                   {s.icon}
                 </div>
-                <h3 className="font-bold text-gray-900 mt-4 text-sm md:text-base">
+                <h3 className="font-bold text-gray-900 mt-2 sm:mt-4 text-[12px] sm:text-sm md:text-base leading-tight">
                   {s.title}
                 </h3>
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">{s.short}</p>
-                <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                <p className="hidden sm:block text-xs text-gray-500 mt-1 leading-relaxed">{s.short}</p>
+                <div className="mt-2 sm:mt-3 hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-primary-600 opacity-0 group-hover:opacity-100 transition-opacity">
                   Learn more <ArrowRight size={12} />
                 </div>
               </button>
