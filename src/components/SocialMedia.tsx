@@ -14,7 +14,6 @@ import {
   Send,
   Shield,
   Code,
-  ArrowUpRight,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -120,11 +119,13 @@ const BottomCards: React.FC = () => {
             handleCardClick("Contribute for ORM", "Join the Digital Defense Team and help manage digital outreach, monitor social platforms, and support online campaigns.")
           }
         >
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <div className="bg-white/20 p-2 rounded-lg">
               <Shield size={20} />
             </div>
-            <ArrowUpRight size={16} />
+            <span className="bg-blue-400 text-ysrcp-green px-2 py-0.5 text-[10px] font-black rounded">
+              JOIN
+            </span>
           </div>
           <h4 className="mt-3 text-sm font-black text-center">Contribute for ORM</h4>
           <p className="text-[10px] text-blue-100 text-center">Join the Digital Defense Team.</p>

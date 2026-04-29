@@ -1089,6 +1089,7 @@ type LeaderAssignmentRow = {
     name: string;
     whatsapp_number: string | null;
     whatsapp_number_2: string | null;
+    photo_url: string | null;
     is_active: boolean;
   };
 };
@@ -1294,6 +1295,60 @@ const [selectedInner, setSelectedInner] = useState<string | null>(null);
     setSelectedInner(null);
   }, [selectedService]);
 
+  // Service taxonomy (categories + options per service_type) — admin-managed
+  // in the DB. Shape: { student: { "Education Guidance": ["Course Selection", ...] } }
+  // Replaces what used to live in SERVICE_CONFIG.subs.
+  const [serviceSubs, setServiceSubs] = useState<Record<string, Record<string, string[]>>>({});
+
+  const fetchServiceTaxonomy = async () => {
+    const [{ data: cats }, { data: opts }] = await Promise.all([
+      supabase
+        .from("service_categories")
+        .select("id, service_type, name, sort_order")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("service_options")
+        .select("id, category_id, name, sort_order")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
+    ]);
+
+    const grouped: Record<string, Record<string, string[]>> = {};
+    const catById: Record<string, { service_type: string; name: string }> = {};
+    for (const c of cats || []) {
+      grouped[c.service_type] ??= {};
+      grouped[c.service_type][c.name] = [];
+      catById[c.id] = { service_type: c.service_type, name: c.name };
+    }
+    for (const o of opts || []) {
+      const c = catById[o.category_id];
+      if (!c) continue;
+      grouped[c.service_type]?.[c.name]?.push(o.name);
+    }
+    setServiceSubs(grouped);
+  };
+
+  useEffect(() => {
+    fetchServiceTaxonomy();
+    const channel = supabase
+      .channel("service-taxonomy")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "service_categories" },
+        () => fetchServiceTaxonomy()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "service_options" },
+        () => fetchServiceTaxonomy()
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   /**
    * ═══════════════════════════════════════════════════════════════
    * STATE VARIABLES - DATA & COUNTERS
@@ -1317,10 +1372,13 @@ const [selectedInner, setSelectedInner] = useState<string | null>(null);
     service_category: string | null;
     service_option: string | null;
     description: string | null;
+    // 'pending' | 'in_progress' | 'resolved' | 'rejected'
     status: string;
     assigned_to: string | null;
     action_taken: string | null;
     admin_comments: string | null;
+    team_reply: string | null;
+    team_resolved_at: string | null;
     created_at: string;
   };
   const [myRequests, setMyRequests] = useState<MyServiceRequest[]>([]);
@@ -1900,6 +1958,7 @@ useEffect(() => {
       name: string;
       whatsapp_number: string | null;
       whatsapp_number_2: string | null;
+      photo_url: string | null;
     }[]
   >
 >({});
@@ -2041,7 +2100,7 @@ const fetchMyServiceRequests = async () => {
   const { data, error } = await supabase
     .from("service_requests")
     .select(
-      "id, service_type, service_category, service_option, description, status, assigned_to, action_taken, admin_comments, created_at"
+      "id, service_type, service_category, service_option, description, status, assigned_to, action_taken, admin_comments, team_reply, team_resolved_at, created_at"
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
@@ -2051,6 +2110,26 @@ const fetchMyServiceRequests = async () => {
 
 useEffect(() => {
   fetchMyServiceRequests();
+  // Realtime: when admin assigns a team or the team replies / resolves,
+  // the user's list should update without a manual refresh. Filter by
+  // user_id so we only listen to our own rows.
+  if (!user?.id) return;
+  const channel = supabase
+    .channel(`my-service-requests-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "service_requests",
+        filter: `user_id=eq.${user.id}`,
+      },
+      () => fetchMyServiceRequests()
+    )
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [user?.id]);
 
@@ -2370,6 +2449,7 @@ if (!district || !assembly) {
         name,
         whatsapp_number,
         whatsapp_number_2,
+        photo_url,
         is_active
       )
     `)
@@ -2379,7 +2459,13 @@ if (!district || !assembly) {
 
   const globalGrouped: Record<
     string,
-    { id: string; name: string; whatsapp_number: string | null; whatsapp_number_2: string | null }[]
+    {
+      id: string;
+      name: string;
+      whatsapp_number: string | null;
+      whatsapp_number_2: string | null;
+      photo_url: string | null;
+    }[]
   > = {};
   ((globalOnly as unknown as LeaderAssignmentRow[]) || []).forEach((item) => {
     if (!item.leaders_master?.is_active) return;
@@ -2390,6 +2476,7 @@ if (!district || !assembly) {
       name: item.leaders_master.name,
       whatsapp_number: item.leaders_master.whatsapp_number,
       whatsapp_number_2: item.leaders_master.whatsapp_number_2,
+      photo_url: item.leaders_master.photo_url,
     });
   });
   setLeadersByRole(globalGrouped);
@@ -2417,6 +2504,7 @@ if (!district || !assembly) {
         name,
         whatsapp_number,
         whatsapp_number_2,
+        photo_url,
         is_active
       )
     `)
@@ -2439,6 +2527,7 @@ if (!district || !assembly) {
         name,
         whatsapp_number,
         whatsapp_number_2,
+        photo_url,
         is_active
       )
     `)
@@ -2469,13 +2558,20 @@ if (!district || !assembly) {
         name: item.leaders_master.name,
         whatsapp_number: item.leaders_master.whatsapp_number,
         whatsapp_number_2: item.leaders_master.whatsapp_number_2,
+        photo_url: item.leaders_master.photo_url,
       });
 
       return acc;
     },
     {} as Record<
       string,
-      { id: string; name: string; whatsapp_number: string | null; whatsapp_number_2: string | null }[]
+      {
+        id: string;
+        name: string;
+        whatsapp_number: string | null;
+        whatsapp_number_2: string | null;
+        photo_url: string | null;
+      }[]
     >
   );
 
@@ -3793,6 +3889,7 @@ const renderConnectContent = () => {
     name: string;
     whatsapp_number: string | null;
     whatsapp_number_2?: string | null;
+    photo_url?: string | null;
     role: string;
     phone?: string | null;
     email?: string | null;
@@ -3863,11 +3960,22 @@ const renderConnectContent = () => {
                 <div
                   className="w-16 h-16 rounded-full bg-gray-100
                              border border-gray-300 flex items-center
-                             justify-center mb-3"
+                             justify-center mb-3 overflow-hidden"
                 >
-                  <span className="text-lg font-black text-gray-600">
-                    {leader.name?.charAt(0) || "L"}
-                  </span>
+                  {leader.photo_url ? (
+                    <img
+                      src={leader.photo_url}
+                      alt={leader.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <span className="text-lg font-black text-gray-600">
+                      {leader.name?.charAt(0) || "L"}
+                    </span>
+                  )}
                 </div>
 
                 {/* NAME */}
@@ -4045,7 +4153,7 @@ const renderServicesContent = () => (
                    rounded-lg bg-white border border-gray-200
                    shadow-lg text-sm"
       >
-        {Object.keys(SERVICE_CONFIG[selectedService].subs as Record<string, string[]>)
+        {Object.keys(serviceSubs[selectedService] || {})
           .filter((sub) => sub !== selectedSub) // ⭐ same trick
           .map((sub) => (
             <Listbox.Option
@@ -4097,7 +4205,7 @@ const renderServicesContent = () => (
                            shadow-lg text-sm"
               >
                 {selectedSub &&
-                  ((SERVICE_CONFIG[selectedService].subs as Record<string, string[]>)[selectedSub] || [])
+                  ((serviceSubs[selectedService] || {})[selectedSub] || [])
                     .filter((opt: string) => opt !== selectedInner) // ⭐ KEY LINE
                     .map((opt: string) => (
                       <Listbox.Option
@@ -4158,68 +4266,111 @@ const renderServicesContent = () => (
           You haven't submitted any requests yet.
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {myRequests.map((r) => {
+            const statusLabel =
+              r.status === "resolved"
+                ? "Resolved"
+                : r.status === "rejected"
+                ? "Rejected"
+                : r.status === "in_progress"
+                ? "In progress"
+                : "Pending";
             const statusStyle =
               r.status === "resolved"
-                ? "bg-green-50 text-green-700 border-green-200"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : r.status === "rejected"
                 ? "bg-red-50 text-red-700 border-red-200"
-                : "bg-yellow-50 text-yellow-700 border-yellow-200";
+                : r.status === "in_progress"
+                ? "bg-blue-50 text-blue-700 border-blue-200"
+                : "bg-amber-50 text-amber-700 border-amber-200";
+
+            const hasAdminContext = r.assigned_to || r.action_taken || r.admin_comments;
 
             return (
-              <div
+              <article
                 key={r.id}
-                className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+                className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
               >
-                <div className="flex items-start justify-between gap-3 flex-wrap">
+                {/* HEADER strip */}
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/60 flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-900 capitalize">
+                    <p className="text-sm font-extrabold text-gray-900 capitalize truncate">
                       {r.service_type}
                       {r.service_category ? ` · ${r.service_category}` : ""}
                       {r.service_option ? ` · ${r.service_option}` : ""}
                     </p>
                     <p className="text-[11px] text-gray-500 mt-0.5">
-                      Submitted on {new Date(r.created_at).toLocaleDateString()}
+                      Submitted {new Date(r.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border capitalize ${statusStyle}`}
+                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusStyle}`}
                   >
-                    {r.status}
+                    {statusLabel}
                   </span>
                 </div>
 
-                {r.description && (
-                  <p className="text-xs text-gray-700 mt-3 whitespace-pre-wrap">
-                    {r.description}
-                  </p>
-                )}
+                {/* BODY */}
+                <div className="p-4 space-y-3">
+                  {r.description && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
+                        Your message
+                      </p>
+                      <p className="text-[13px] text-gray-800 whitespace-pre-wrap">
+                        {r.description}
+                      </p>
+                    </div>
+                  )}
 
-                {/* Admin-assigned info */}
-                {(r.assigned_to || r.action_taken || r.admin_comments) && (
-                  <div className="mt-3 bg-blue-50/60 border border-blue-100 rounded-lg p-3 text-[12px] text-gray-800 space-y-1">
-                    {r.assigned_to && (
-                      <p>
-                        <span className="font-bold">Assigned to:</span>{" "}
-                        {r.assigned_to}
+                  {/* Admin context — shown once admin has routed / annotated. */}
+                  {hasAdminContext && (
+                    <div className="bg-blue-50/60 border border-blue-100 rounded-lg p-3 space-y-1.5">
+                      {r.assigned_to && (
+                        <p className="text-[12px] text-gray-800">
+                          <span className="font-bold">Routed to:</span> {r.assigned_to}
+                        </p>
+                      )}
+                      {r.action_taken && (
+                        <p className="text-[12px] text-gray-800">
+                          <span className="font-bold">Action:</span> {r.action_taken}
+                        </p>
+                      )}
+                      {r.admin_comments && (
+                        <p className="text-[12px] text-gray-800">
+                          <span className="font-bold">Notes:</span> {r.admin_comments}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Team reply — shown distinctly so it reads as a real response. */}
+                  {r.team_reply && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-1">
+                        Reply from {r.assigned_to || "the support team"}
                       </p>
-                    )}
-                    {r.action_taken && (
-                      <p>
-                        <span className="font-bold">Action taken:</span>{" "}
-                        {r.action_taken}
+                      <p className="text-[13px] text-gray-900 whitespace-pre-wrap">
+                        {r.team_reply}
                       </p>
-                    )}
-                    {r.admin_comments && (
-                      <p>
-                        <span className="font-bold">Admin notes:</span>{" "}
-                        {r.admin_comments}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
+                      {r.team_resolved_at && r.status === "resolved" && (
+                        <p className="text-[11px] text-emerald-700 mt-2">
+                          ✓ Marked resolved on{" "}
+                          {new Date(r.team_resolved_at).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Empty hint when admin hasn't done anything yet */}
+                  {!hasAdminContext && !r.team_reply && (
+                    <p className="text-[12px] text-gray-400 italic">
+                      Awaiting review by the admin.
+                    </p>
+                  )}
+                </div>
+              </article>
             );
           })}
         </div>

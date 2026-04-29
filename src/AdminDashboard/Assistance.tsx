@@ -12,10 +12,17 @@ type AssistanceItem = {
   current_location: string;
   description: string;
   created_at: string;
-  status: "pending" | "resolved" | "rejected";
+  // 'pending'      = no admin action yet
+  // 'in_progress'  = admin assigned to a team, team hasn't resolved
+  // 'resolved'     = team marked it resolved (or admin resolved directly)
+  // 'rejected'     = admin rejected
+  status: "pending" | "in_progress" | "resolved" | "rejected";
   assigned_to?: string;
+  assigned_team_id?: string | null;
   action_taken?: string;
   admin_comments?: string;
+  team_reply?: string | null;
+  team_resolved_at?: string | null;
 };
 
 /* ---------------- COMPONENT ---------------- */
@@ -24,7 +31,7 @@ export default function Assistance() {
   // Service request data and filtering state
   const [data, setData] = useState<AssistanceItem[]>([]);
   const [selected, setSelected] =
-    useState<"total" | "pending" | "resolved" | null>(null);
+    useState<"total" | "pending" | "in_progress" | "resolved" | null>(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -64,8 +71,11 @@ export default function Assistance() {
         description,
         status,
         assigned_to,
+        assigned_team_id,
         action_taken,
         admin_comments,
+        team_reply,
+        team_resolved_at,
         created_at
       `
       )
@@ -91,15 +101,20 @@ export default function Assistance() {
   }, []);
 
   /* ---------------- COUNTS ---------------- */
-  // Calculate request counts by status
+  // Calculate request counts by status. 'in_progress' is the new state
+  // entered when an admin routes a request to a support team — the team
+  // owns it from there until they call support_team_mark_resolved().
   const total = data.length;
   const pending = data.filter((d) => d.status === "pending").length;
+  const inProgress = data.filter((d) => d.status === "in_progress").length;
   const resolved = data.filter((d) => d.status === "resolved").length;
 
   // Filter table data based on selected status
   const tableData =
     selected === "pending"
       ? data.filter((d) => d.status === "pending")
+      : selected === "in_progress"
+      ? data.filter((d) => d.status === "in_progress")
       : selected === "resolved"
       ? data.filter((d) => d.status === "resolved")
       : selected === "total"
@@ -107,24 +122,35 @@ export default function Assistance() {
       : [];
 
   /* ---------------- HANDLERS ---------------- */
-  // Opens allocation form with current request details
+  // Opens allocation form with current request details. We store the
+  // team UUID in `assignedTo` here (was the team name before) because
+  // the dropdown <option> values are now uuids.
   const openAllocationForm = (req: AssistanceItem) => {
     setSelectedRequest(req);
     setAllocateModalOpen(true);
-    setAssignedTo(req.assigned_to || "");
+    setAssignedTo(req.assigned_team_id || "");
     setActionTaken(req.action_taken || "");
     setComments(req.admin_comments || "");
   };
 
-  // Updates request status to resolved with team assignment and comments
+  // Routes the request to the chosen support team. Sets status to
+  // 'in_progress' so the team picks it up — they're the ones who flip
+  // it to 'resolved' once they reply via support_team_mark_resolved().
+  // The dropdown carries the team uuid; we also store the human-readable
+  // team name in `assigned_to` for legacy display in old places.
   const handleResolve = async () => {
     if (!selectedRequest) return;
+
+    // The dropdown's <option value> is the team UUID. Lookup name for the
+    // legacy `assigned_to` text snapshot.
+    const team = teams.find((t) => t.id === assignedTo);
 
     const { error } = await supabase
       .from("service_requests")
       .update({
-        status: "resolved",
-        assigned_to: assignedTo,
+        status: "in_progress",
+        assigned_to: team?.name || null,
+        assigned_team_id: assignedTo || null,
         action_taken: actionTaken,
         admin_comments: comments,
       })
@@ -148,11 +174,12 @@ export default function Assistance() {
         Allocate and resolve NRI service requests efficiently.
       </p>
 
-      {/* STATS CARDS - Total, Pending, and Resolved counts */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total Requests" value={total} onClick={() => setSelected(selected === "total" ? null : "total")} active={selected === "total"} />
-        <StatCard title="Pending Requests" value={pending} onClick={() => setSelected(selected === "pending" ? null : "pending")} active={selected === "pending"} />
-        <StatCard title="Resolved Requests" value={resolved} onClick={() => setSelected(selected === "resolved" ? null : "resolved")} active={selected === "resolved"} />
+      {/* STATS CARDS - Total / Pending / In Progress / Resolved */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <StatCard title="Total Requests"   value={total}      onClick={() => setSelected(selected === "total"       ? null : "total")}       active={selected === "total"} />
+        <StatCard title="Pending"          value={pending}    onClick={() => setSelected(selected === "pending"     ? null : "pending")}     active={selected === "pending"} />
+        <StatCard title="In Progress"      value={inProgress} onClick={() => setSelected(selected === "in_progress" ? null : "in_progress")} active={selected === "in_progress"} />
+        <StatCard title="Resolved"         value={resolved}   onClick={() => setSelected(selected === "resolved"    ? null : "resolved")}    active={selected === "resolved"} />
       </div>
 
       {/* TABLE - Displays requests based on selected status filter */}
@@ -200,15 +227,21 @@ export default function Assistance() {
                     <td className="px-3 py-2">
                       {new Date(item.created_at).toLocaleDateString()}
                     </td>
-                    {/* Status with color coding: yellow for pending, green for resolved */}
-                    <td
-                      className={`px-3 py-2 font-medium ${
-                        item.status === "pending"
-                          ? "text-yellow-600"
-                          : "text-green-600"
-                      }`}
-                    >
-                      {item.status}
+                    {/* Status with color coding */}
+                    <td className="px-3 py-2 font-medium">
+                      <span
+                        className={
+                          item.status === "pending"
+                            ? "text-yellow-600"
+                            : item.status === "in_progress"
+                            ? "text-blue-600"
+                            : item.status === "rejected"
+                            ? "text-red-600"
+                            : "text-green-600"
+                        }
+                      >
+                        {item.status === "in_progress" ? "in progress" : item.status}
+                      </span>
                     </td>
 
                     {/* View request description in modal */}
@@ -224,18 +257,30 @@ export default function Assistance() {
                       </button>
                     </td>
 
-                    {/* Resolve button for pending requests or show assigned team */}
+                    {/* Action: route to team (pending) or reassign / show team status */}
                     <td className="px-3 py-2">
                       {item.status === "pending" ? (
                         <button
                           onClick={() => openAllocationForm(item)}
                           className="bg-primary-600 text-white px-3 py-1 rounded"
                         >
-                          Resolve
+                          Assign team
                         </button>
+                      ) : item.status === "in_progress" ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-blue-700 text-xs font-semibold">
+                            With {item.assigned_to || "team"}
+                          </span>
+                          <button
+                            onClick={() => openAllocationForm(item)}
+                            className="text-[11px] text-primary-700 hover:underline self-start"
+                          >
+                            Reassign
+                          </button>
+                        </div>
                       ) : (
                         <span className="text-green-600 text-xs">
-                          {item.assigned_to}
+                          {item.assigned_to || "Resolved"}
                         </span>
                       )}
                     </td>
@@ -276,15 +321,11 @@ export default function Assistance() {
               onChange={(e) => setAssignedTo(e.target.value)}
             >
               <option value="">Assign Team</option>
-              {teams.length === 0 ? (
-                <option value="General Support Team">General Support Team</option>
-              ) : (
-                teams.map((t) => (
-                  <option key={t.id} value={t.name}>
-                    {t.name}
-                  </option>
-                ))
-              )}
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
             </select>
             {teams.length === 0 && (
               <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded mb-3">

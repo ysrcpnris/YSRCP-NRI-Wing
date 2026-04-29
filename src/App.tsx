@@ -53,6 +53,10 @@ import ChangePassword from "./AdminDashboard/ChangePassword";
 
 import Dashboard from "./components/Dashboard";
 
+import SupportTeamAuthPage from "./pages/SupportTeamAuthPage";
+import SupportTeamDashboard from "./pages/SupportTeamDashboard";
+import SupportTeamRoute from "./routes/SupportTeamRoute";
+
 function MainLandingPage({
   setAuthMode,
   setShowAuthModal,
@@ -247,6 +251,18 @@ function AppContent() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
+
+        {/* Support team auth (unified login + register) */}
+        <Route path="/support-teams" element={<SupportTeamAuthPage />} />
+        {/* Support team dashboard */}
+        <Route
+          path="/support-team/dashboard"
+          element={
+            <SupportTeamRoute>
+              <SupportTeamDashboard />
+            </SupportTeamRoute>
+          }
+        />
       </Routes>
 
       {showAuthModal && (

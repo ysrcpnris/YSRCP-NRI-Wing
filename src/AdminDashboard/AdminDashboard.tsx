@@ -7,6 +7,7 @@ import { Globe } from "lucide-react";
 import * as XLSX from "xlsx";
 import Visited from "./Visited";
 import Assistance from "./Assistance";
+import ServiceCategories from "./ServiceCategories";
 import Suggestions from "./Suggestions";
 // import ServiceInbox from "./ServiceInbox";
 import MasterData from "./MasterData";
@@ -274,6 +275,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Users} label="All Users" page="users" />
             <Item icon={CalendarDays} label="Visited" page="visited" />
             <Item icon={Newspaper} label="Assistance" page="assistance" />
+            <Item icon={FolderKanban} label="Service Categories" page="serviceCategories" />
             <Item icon={Users} label="Support Teams" page="supportTeams" />
             <Item icon={Users} label="Suggestions" page="suggestions" />
             {/* <Item icon={FolderKanban} label="Service Inbox" page="serviceInbox" /> */}
@@ -557,7 +559,7 @@ export default function AdminDashboard() {
   // a page refresh keeps the admin where they were instead of bouncing back
   // to the Dashboard tab.
   const VALID_ADMIN_PAGES = [
-    "dashboard","users","visited","assistance","supportTeams",
+    "dashboard","users","visited","assistance","serviceCategories","supportTeams",
     "suggestions","masterData","eventsnotifications","news",
     "contentControl",
   ];
@@ -1013,6 +1015,7 @@ export default function AdminDashboard() {
       {currentPage === "users" && <UsersPage />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
+      {currentPage === "serviceCategories" && <ServiceCategories />}
       {currentPage === "supportTeams" && <SupportTeams />}
       {currentPage === "suggestions" && <Suggestions />}
       {/* {currentPage === "serviceInbox" && <ServiceInbox />} */}

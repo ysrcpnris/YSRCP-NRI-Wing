@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Edit3, Trash2 } from "lucide-react";
+import { Plus, Edit3, Trash2, Upload, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { indianAddressData } from "../lib/indianAddressData";
 
@@ -11,8 +11,11 @@ type LeaderMaster = {
   name: string;
   whatsapp_number: string;
   whatsapp_number_2?: string | null;
+  photo_url?: string | null;
   is_active: boolean;
 };
+
+const LEADER_PHOTO_BUCKET = "leader-photos";
 
 type LeaderAssignment = {
   id: string;
@@ -63,6 +66,18 @@ export default function MasterData() {
   const [formDistrict, setFormDistrict] = useState("");
   const [formConstituency, setFormConstituency] = useState("");
 
+  // Optional leader profile photo. `existingPhotoUrl` holds the URL already on
+  // the leader (when editing) so we can show it before any new file is picked.
+  // `photoFile` is a freshly-picked File the admin wants to upload on Save.
+  // `photoPreview` is an objectURL for the preview (revoked when modal closes).
+  // `photoCleared` flags an explicit "remove" so Save will null out the column
+  // and delete the storage object.
+  const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoCleared, setPhotoCleared] = useState(false);
+  const [savingLeader, setSavingLeader] = useState(false);
+
   /* ======================================================
      STATIC DATA (all states from shared file)
   ====================================================== */
@@ -104,6 +119,7 @@ export default function MasterData() {
           name,
           whatsapp_number,
           whatsapp_number_2,
+          photo_url,
           is_active
         )
       `
@@ -145,6 +161,18 @@ export default function MasterData() {
     return "";
   };
 
+  // Common reset for the photo controls — used by both modal openers and
+  // when closing/cancelling so a stale objectURL never leaks across opens.
+  const resetPhotoState = () => {
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setPhotoCleared(false);
+    setExistingPhotoUrl(null);
+  };
+
   const openAddModal = () => {
     setEditItem(null);
     setName("");
@@ -154,6 +182,7 @@ export default function MasterData() {
     setFormState(state);
     setFormDistrict(district);
     setFormConstituency(constituency);
+    resetPhotoState();
     setShowModal(true);
   };
 
@@ -167,7 +196,73 @@ export default function MasterData() {
     setFormState(resolvedState);
     setFormDistrict(item.district || "");
     setFormConstituency(item.constituency || "");
+    resetPhotoState();
+    setExistingPhotoUrl(item.leader?.photo_url || null);
     setShowModal(true);
+  };
+
+  const closeModal = () => {
+    resetPhotoState();
+    setShowModal(false);
+  };
+
+  // File picker handler. Validates type/size, then makes a local objectURL
+  // for preview so the admin sees the new image before clicking Save.
+  const handlePickPhoto = (file: File | null) => {
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+      alert("Photo must be a JPEG, PNG, or WEBP image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Photo must be under 5 MB.");
+      return;
+    }
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    const url = URL.createObjectURL(file);
+    setPhotoFile(file);
+    setPhotoPreview(url);
+    setPhotoCleared(false);
+  };
+
+  // Mark the existing photo for removal on Save (we don't delete from
+  // storage immediately so a Cancel still leaves the original photo intact).
+  const handleClearPhoto = () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setPhotoCleared(true);
+  };
+
+  // Storage helpers.
+  // Path key: leader_id/<timestamp>.<ext>. Same leader gets one photo
+  // path-prefix so we can clean up old objects predictably.
+  const uploadLeaderPhoto = async (leaderId: string, file: File): Promise<string> => {
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${leaderId}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from(LEADER_PHOTO_BUCKET)
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (error) throw error;
+    const { data } = supabase.storage.from(LEADER_PHOTO_BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  // Best-effort delete of the previous storage object given its public URL.
+  // Failing here doesn't block the leader update — the orphan can be cleaned
+  // up later. We only attempt if the URL points at our bucket.
+  const tryDeleteLeaderPhotoByUrl = async (url: string | null) => {
+    if (!url) return;
+    const marker = `/storage/v1/object/public/${LEADER_PHOTO_BUCKET}/`;
+    const idx = url.indexOf(marker);
+    if (idx === -1) return;
+    const objectPath = url.substring(idx + marker.length);
+    if (!objectPath) return;
+    try {
+      await supabase.storage.from(LEADER_PHOTO_BUCKET).remove([objectPath]);
+    } catch (err) {
+      console.warn("Could not remove old leader photo:", err);
+    }
   };
 
   /* ======================================================
@@ -189,6 +284,8 @@ export default function MasterData() {
     const phoneNorm  = phone.trim();
     const phone2Norm = phone2.trim() || null;
 
+    setSavingLeader(true);
+
     let leaderId = editItem?.leader?.id;
 
     if (!leaderId) {
@@ -204,6 +301,7 @@ export default function MasterData() {
         .single();
 
       if (error || !data) {
+        setSavingLeader(false);
         alert("Failed to create leader: " + (error?.message || "unknown error"));
         return;
       }
@@ -218,9 +316,46 @@ export default function MasterData() {
         })
         .eq("id", leaderId);
       if (error) {
+        setSavingLeader(false);
         alert("Failed to update leader: " + error.message);
         return;
       }
+    }
+
+    // Photo handling — runs after the leader row exists so we have its id
+    // for the storage path. Three paths:
+    //   1. New file picked → upload, write photo_url, drop the previous file.
+    //   2. "Remove" clicked  → null the column, delete the old object.
+    //   3. Nothing changed   → leave photo_url alone.
+    try {
+      if (photoFile && leaderId) {
+        const newUrl = await uploadLeaderPhoto(leaderId, photoFile);
+        const { error: photoErr } = await supabase
+          .from("leaders_master")
+          .update({ photo_url: newUrl })
+          .eq("id", leaderId);
+        if (photoErr) throw photoErr;
+        // Best-effort cleanup of the prior photo (if any).
+        if (existingPhotoUrl && existingPhotoUrl !== newUrl) {
+          await tryDeleteLeaderPhotoByUrl(existingPhotoUrl);
+        }
+      } else if (photoCleared && leaderId) {
+        const { error: photoErr } = await supabase
+          .from("leaders_master")
+          .update({ photo_url: null })
+          .eq("id", leaderId);
+        if (photoErr) throw photoErr;
+        await tryDeleteLeaderPhotoByUrl(existingPhotoUrl);
+      }
+    } catch (err: any) {
+      console.error("photo update failed:", err);
+      alert(
+        "Leader saved, but photo update failed: " +
+          (err?.message || "unknown error")
+      );
+      // Don't bail — leader text data is already saved, just continue.
+    } finally {
+      setSavingLeader(false);
     }
 
     // For Global Coordinator: store district + constituency as NULL.
@@ -254,7 +389,7 @@ export default function MasterData() {
       }
     }
 
-    setShowModal(false);
+    closeModal();
     // If we just added in a different state/district/constituency than the filter, switch to it
     if (!isGlobal && formState && formDistrict && formConstituency) {
       setState(formState);
@@ -414,7 +549,27 @@ export default function MasterData() {
                   const isGlobal = isGlobalRole(a.role);
                   return (
                     <tr key={a.id} className="hover:bg-gray-50 transition">
-                      <td className="px-4 py-3 font-medium text-gray-900">{a.leader?.name || "—"}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                            {a.leader?.photo_url ? (
+                              <img
+                                src={a.leader.photo_url}
+                                alt={a.leader.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <span className="text-[10px] text-gray-400 font-semibold">
+                                {(a.leader?.name || "?").charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <span className="truncate">{a.leader?.name || "—"}</span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium whitespace-nowrap ${
@@ -496,6 +651,64 @@ export default function MasterData() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
+              </div>
+
+              {/* Profile photo (optional). Shown above WhatsApp #2 so admins
+                  see it as a primary detail of the leader. */}
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-2 block">
+                  Profile photo{" "}
+                  <span className="text-gray-400 font-normal italic">(optional)</span>
+                </label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
+                    ) : !photoCleared && existingPhotoUrl ? (
+                      <img
+                        src={existingPhotoUrl}
+                        alt="current"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <span className="text-[10px] text-gray-400 uppercase tracking-wider">
+                        No photo
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg text-xs font-semibold cursor-pointer hover:bg-primary-100 transition">
+                      <Upload size={14} />
+                      {photoFile || (existingPhotoUrl && !photoCleared)
+                        ? "Change photo"
+                        : "Upload photo"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => handlePickPhoto(e.target.files?.[0] || null)}
+                      />
+                    </label>
+
+                    {(photoFile || (existingPhotoUrl && !photoCleared)) && (
+                      <button
+                        type="button"
+                        onClick={handleClearPhoto}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-semibold hover:bg-red-100 transition"
+                      >
+                        <X size={14} /> Remove
+                      </button>
+                    )}
+
+                    <p className="text-[10px] text-gray-400">
+                      JPEG / PNG / WEBP, up to 5 MB.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -585,16 +798,22 @@ export default function MasterData() {
 
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
               <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition"
+                onClick={closeModal}
+                disabled={savingLeader}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 transition disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={saveLeader}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 transition"
+                disabled={savingLeader}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 transition disabled:opacity-60"
               >
-                {editItem ? "Save Changes" : "Add Leader"}
+                {savingLeader
+                  ? "Saving…"
+                  : editItem
+                  ? "Save Changes"
+                  : "Add Leader"}
               </button>
             </div>
           </div>

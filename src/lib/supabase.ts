@@ -81,7 +81,7 @@ export type Profile = {
   current_state?: string;
   current_city?: string;
 
-  role: 'member' | 'coordinator' | 'admin';
+  role: 'member' | 'coordinator' | 'admin' | 'support_team' | 'user';
   status: 'pending' | 'verified' | 'rejected';
   created_at: string;
   updated_at: string;

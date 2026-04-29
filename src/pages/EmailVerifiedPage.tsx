@@ -11,9 +11,37 @@ type PageState =
   | "redirecting";
 
 export default function EmailVerifiedPage() {
-  const { loading, signOut, user, isVerified } = useAuth();
+  const { loading, signOut, user, profile, isVerified } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Resolve where the just-verified user should land.
+  //   support_team → /support-team/dashboard (their dedicated portal)
+  //   admin        → /admin/dashboard
+  //   else         → /dashboard
+  // Source of truth order: profile.role (loaded by AuthContext) → falls
+  // back to user.user_metadata.role (set on signup, available before
+  // the profile query completes).
+  const resolvePostVerifyTarget = (): string => {
+    const profileRole = profile?.role;
+    const metaRole =
+      (user?.user_metadata as Record<string, unknown> | undefined)?.role;
+    const role = profileRole || metaRole;
+    if (role === "support_team") return "/support-team/dashboard";
+    if (role === "admin") return "/admin/dashboard";
+    return "/dashboard";
+  };
+
+  // Where the "Go to Login" fallback button should send them — same role
+  // logic but to the auth page, not the dashboard.
+  const resolveLoginTarget = (): { path: string; state?: { openLogin: boolean } } => {
+    const profileRole = profile?.role;
+    const metaRole =
+      (user?.user_metadata as Record<string, unknown> | undefined)?.role;
+    const role = profileRole || metaRole;
+    if (role === "support_team") return { path: "/support-teams" };
+    return { path: "/", state: { openLogin: true } };
+  };
 
   const [state, setState] = useState<PageState>("initializing");
   const [message, setMessage] = useState<string>("");
@@ -92,11 +120,13 @@ export default function EmailVerifiedPage() {
         setState("verified");
         setMessage("Your email has been verified successfully. Please log in.");
 
-        // Short delay so user reads the message, then redirect to home and open login modal
+        // Short delay so user reads the message, then redirect them to the
+        // right login page based on the role they signed up with.
         redirectTimerRef.current = window.setTimeout(() => {
           if (!mountedRef.current) return;
           setState("redirecting");
-          navigate("/", { replace: true, state: { openLogin: true } });
+          const t = resolveLoginTarget();
+          navigate(t.path, { replace: true, state: t.state });
         }, 1600);
 
         return;
@@ -129,19 +159,20 @@ export default function EmailVerifiedPage() {
   // verification" bug clients reported on mobile.
 
   // If the magic link signed the user in successfully, fast-path them straight
-  // to their dashboard once auth has finished initializing — no need to send
-  // them through the login modal again.
+  // to the right dashboard once auth has finished initializing — no need to
+  // send them through the login modal again.
   useEffect(() => {
     if (loading) return;
     if (user && isVerified) {
       const t = window.setTimeout(() => {
         if (mountedRef.current) {
-          navigate("/dashboard", { replace: true });
+          navigate(resolvePostVerifyTarget(), { replace: true });
         }
       }, 600);
       return () => window.clearTimeout(t);
     }
-  }, [loading, user, isVerified, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user, isVerified, profile, navigate]);
 
   // Provide a manual way to sign-out & open the login modal (keeps your original UX)
   const goToLogin = async () => {
@@ -150,7 +181,8 @@ export default function EmailVerifiedPage() {
     } catch (_) {
       // ignore
     } finally {
-      navigate("/", { replace: true, state: { openLogin: true } });
+      const t = resolveLoginTarget();
+      navigate(t.path, { replace: true, state: t.state });
     }
   };
 
@@ -219,7 +251,8 @@ export default function EmailVerifiedPage() {
                   if (redirectTimerRef.current) {
                     window.clearTimeout(redirectTimerRef.current);
                   }
-                  navigate("/", { replace: true, state: { openLogin: true } });
+                  const t = resolveLoginTarget();
+                  navigate(t.path, { replace: true, state: t.state });
                 }}
                 style={{
                   padding: "10px 16px",
