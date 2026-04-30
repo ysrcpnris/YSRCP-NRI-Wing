@@ -2504,7 +2504,13 @@ if (!district || !assembly) {
     normalizedConstituency: normConstituency,
   });
 
-  // Location-scoped leaders (RC / DP / AC) — match the user's district + constituency.
+  // Location-scoped leaders (RC / DP / AC) — match the user's district.
+  // For Assembly Coordinators the assignment row has a constituency value
+  // and must match the user's. For Regional Coordinators / District
+  // Presidents the constituency column is NULL — they cover the whole
+  // district, so a district match alone is enough. The .or() filter
+  // captures both: same constituency OR no constituency.
+  const constituencyFilter = `constituency.ilike.${normConstituency},constituency.is.null`;
   const { data: locData, error: locErr } = await supabase
     .from("leader_assignments")
     .select(`
@@ -2522,7 +2528,7 @@ if (!district || !assembly) {
       )
     `)
     .ilike("district", normDistrict)
-    .ilike("constituency", normConstituency)
+    .or(constituencyFilter)
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
@@ -3140,6 +3146,11 @@ const handleSubmitSuggestion = async () => {
       country: countryOfResidence || "India",
       suggestion: message,
       suggestion_date: new Date().toISOString().split("T")[0], // ✅ CORRECT
+      // Capture the submitter's contact details so admin can follow up
+      // from the All Suggestions table without cross-referencing profiles.
+      user_id: user?.id || null,
+      mobile_number: profile?.mobile_number || null,
+      email: profile?.email || null,
     });
 
     if (error) throw error;

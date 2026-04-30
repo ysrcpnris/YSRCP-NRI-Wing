@@ -6,6 +6,11 @@ type Suggestion = {
   id: number;
   name: string;
   country: string;
+  // mobile + email come from the suggestions row directly when the user
+  // submitted from a logged-in session (after new_25 migration). Older
+  // rows may have null here.
+  mobile: string | null;
+  email: string | null;
   date: string;
   suggestion: string;
 };
@@ -38,6 +43,8 @@ const useFetchSuggestions = () => {
             id: d.id,
             name: d.name,
             country: d.country,
+            mobile: d.mobile_number ?? null,
+            email: d.email ?? null,
             date: d.suggestion_date,
             suggestion: d.suggestion,
           })) as Suggestion[]
@@ -97,15 +104,37 @@ function SuggestionModal({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full mx-4 border-2 border-primary-600">
         {/* Header */}
-        <div className="flex justify-between items-start mb-4 pb-3 border-b border-blue-100">
-          <div className="text-sm text-gray-600">
-            <span className="font-semibold text-primary-600">
-              {suggestion.name}
-            </span>
-            <span className="text-gray-400 mx-2">·</span>
-            <span className="text-gray-600">{suggestion.country}</span>
-            <span className="text-gray-400 mx-2">·</span>
-            <span className="text-gray-600">{suggestion.date}</span>
+        <div className="flex justify-between items-start mb-4 pb-3 border-b border-blue-100 gap-3">
+          <div className="text-sm text-gray-600 min-w-0">
+            <p>
+              <span className="font-semibold text-primary-600">
+                {suggestion.name || "—"}
+              </span>
+              <span className="text-gray-400 mx-2">·</span>
+              <span className="text-gray-600">{suggestion.country || "—"}</span>
+              <span className="text-gray-400 mx-2">·</span>
+              <span className="text-gray-600">{suggestion.date}</span>
+            </p>
+            {(suggestion.mobile || suggestion.email) && (
+              <p className="mt-1 text-[12px] text-gray-500 flex flex-wrap gap-x-3 gap-y-1">
+                {suggestion.mobile && (
+                  <a
+                    href={`tel:${suggestion.mobile}`}
+                    className="hover:underline text-primary-700"
+                  >
+                    📞 {suggestion.mobile}
+                  </a>
+                )}
+                {suggestion.email && (
+                  <a
+                    href={`mailto:${suggestion.email}`}
+                    className="hover:underline text-primary-700"
+                  >
+                    ✉️ {suggestion.email}
+                  </a>
+                )}
+              </p>
+            )}
           </div>
 
           <button
@@ -179,18 +208,12 @@ export default function Suggestions() {
             <table className="min-w-full border border-gray-200 rounded-lg">
               <thead className="bg-primary-600 text-white">
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Name
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Country
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Date
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">
-                    Suggestion
-                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Name</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Mobile</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Email</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Country</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Date</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Suggestion</th>
                 </tr>
               </thead>
               <tbody>
@@ -199,8 +222,32 @@ export default function Suggestions() {
                     key={s.id}
                     className="border-b hover:bg-blue-50 transition"
                   >
-                    <td className="px-4 py-2 text-sm">{s.name}</td>
-                    <td className="px-4 py-2 text-sm">{s.country}</td>
+                    <td className="px-4 py-2 text-sm">{s.name || "—"}</td>
+                    <td className="px-4 py-2 text-sm whitespace-nowrap">
+                      {s.mobile ? (
+                        <a
+                          href={`tel:${s.mobile}`}
+                          className="text-primary-600 hover:underline"
+                        >
+                          {s.mobile}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 text-sm whitespace-nowrap">
+                      {s.email ? (
+                        <a
+                          href={`mailto:${s.email}`}
+                          className="text-primary-600 hover:underline"
+                        >
+                          {s.email}
+                        </a>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 text-sm">{s.country || "—"}</td>
                     <td className="px-4 py-2 text-sm">{s.date}</td>
                     <td
                       onClick={() => setSelectedSuggestion(s)}
