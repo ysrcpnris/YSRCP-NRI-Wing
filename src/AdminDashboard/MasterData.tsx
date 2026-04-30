@@ -51,9 +51,11 @@ const ROLES = [
 ];
 
 const isGlobalRole = (r: string) => r === "Global Coordinator";
-// Only Assembly Coordinator is district + constituency. The rest are
-// district-only (or none, for Global).
-const needsConstituency = (r: string) => r === "Assembly Coordinator";
+// Roles that take a (district, constituency) pair. Regional Coordinator is
+// district-only — they cover the whole district. Global Coordinator has
+// neither (visible everywhere).
+const needsConstituency = (r: string) =>
+  r === "Assembly Coordinator" || r === "District President";
 
 /* ======================================================
    COMPONENT
