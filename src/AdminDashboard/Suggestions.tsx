@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { countriesData } from "../lib/countryCodes";
 
 // Suggestion submission structure with user info and feedback
 type Suggestion = {
@@ -13,6 +14,50 @@ type Suggestion = {
   email: string | null;
   date: string;
   suggestion: string;
+};
+
+// ----------------------------------------------------------------------
+// Display helpers
+// ----------------------------------------------------------------------
+// Show '2026-04-28T00:00:00+00:00' as '28 Apr 2026' — readable date only,
+// no timezone clutter. Falls back to the raw value if it doesn't parse.
+const formatDate = (raw: string | null | undefined): string => {
+  if (!raw) return "—";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+// Build a wa.me link. If the stored mobile already starts with '+', we
+// trust it and use the digits as-is. Otherwise we look up the country's
+// dial code from the suggestion's `country` field and prepend it. India
+// is the safe default for legacy NRI rows where country wasn't set.
+const buildWhatsappLink = (
+  mobile: string | null,
+  country: string | null
+): string | null => {
+  if (!mobile) return null;
+  const digits = mobile.replace(/\D/g, "");
+  if (!digits) return null;
+  if (mobile.trim().startsWith("+")) {
+    return `https://wa.me/${digits}`;
+  }
+  // Already has a country code prefix in the digits (e.g. '91XXXXXXXXXX').
+  // Heuristic: if length >= 11, treat the leading digits as country code
+  // and don't prepend again.
+  if (digits.length >= 11) {
+    return `https://wa.me/${digits}`;
+  }
+  // Otherwise, prepend the dial code derived from the country name.
+  const match = countriesData.find(
+    (c) => c.name.toLowerCase() === (country || "").toLowerCase()
+  );
+  const dial = match?.code || "91"; // default India for legacy rows
+  return `https://wa.me/${dial}${digits}`;
 };
 
 // Placeholder suggestions array (not used, actual data from database)
@@ -113,18 +158,26 @@ function SuggestionModal({
               <span className="text-gray-400 mx-2">·</span>
               <span className="text-gray-600">{suggestion.country || "—"}</span>
               <span className="text-gray-400 mx-2">·</span>
-              <span className="text-gray-600">{suggestion.date}</span>
+              <span className="text-gray-600">{formatDate(suggestion.date)}</span>
             </p>
             {(suggestion.mobile || suggestion.email) && (
               <p className="mt-1 text-[12px] text-gray-500 flex flex-wrap gap-x-3 gap-y-1">
-                {suggestion.mobile && (
-                  <a
-                    href={`tel:${suggestion.mobile}`}
-                    className="hover:underline text-primary-700"
-                  >
-                    📞 {suggestion.mobile}
-                  </a>
-                )}
+                {suggestion.mobile && (() => {
+                  const wa = buildWhatsappLink(suggestion.mobile, suggestion.country);
+                  return wa ? (
+                    <a
+                      href={wa}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:underline text-emerald-700"
+                      title="Open WhatsApp"
+                    >
+                      💬 {suggestion.mobile}
+                    </a>
+                  ) : (
+                    <span>📞 {suggestion.mobile}</span>
+                  );
+                })()}
                 {suggestion.email && (
                   <a
                     href={`mailto:${suggestion.email}`}
@@ -224,14 +277,22 @@ export default function Suggestions() {
                   >
                     <td className="px-4 py-2 text-sm">{s.name || "—"}</td>
                     <td className="px-4 py-2 text-sm whitespace-nowrap">
-                      {s.mobile ? (
-                        <a
-                          href={`tel:${s.mobile}`}
-                          className="text-primary-600 hover:underline"
-                        >
-                          {s.mobile}
-                        </a>
-                      ) : (
+                      {s.mobile ? (() => {
+                        const wa = buildWhatsappLink(s.mobile, s.country);
+                        return wa ? (
+                          <a
+                            href={wa}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-emerald-700 hover:underline"
+                            title="Open WhatsApp"
+                          >
+                            {s.mobile}
+                          </a>
+                        ) : (
+                          <span>{s.mobile}</span>
+                        );
+                      })() : (
                         <span className="text-gray-400">—</span>
                       )}
                     </td>
@@ -248,7 +309,7 @@ export default function Suggestions() {
                       )}
                     </td>
                     <td className="px-4 py-2 text-sm">{s.country || "—"}</td>
-                    <td className="px-4 py-2 text-sm">{s.date}</td>
+                    <td className="px-4 py-2 text-sm whitespace-nowrap">{formatDate(s.date)}</td>
                     <td
                       onClick={() => setSelectedSuggestion(s)}
                       className="px-4 py-2 text-sm text-primary-600 cursor-pointer hover:underline font-medium"
