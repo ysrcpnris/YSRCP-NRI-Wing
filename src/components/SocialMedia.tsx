@@ -171,95 +171,68 @@ export default function PressMeetsAndSocial() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    // Videos shown on the home page are now admin-curated via the
+    // "Featured Videos" admin tab — no runtime YouTube Data API call.
+    // We read straight from public.youtube_videos, ordered by the
+    // sort_order the admin chose, and only show is_active rows.
     const fetchVideos = async () => {
       setLoading(true);
-      const key = import.meta.env.VITE_YOUTUBE_API_KEY;
-      
-      // Try YouTube API first
-      if (key) {
-        try {
-          // Search for the official YS Jagan Mohan Reddy channel
-          const channelRes = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?part=snippet&q=YS%20Jagan%20Mohan%20Reddy%20Official&type=channel&maxResults=1&key=${key}`
-          );
-
-          const channelJson = await channelRes.json();
-          
-          if (channelJson.error) {
-            throw new Error(channelJson.error.message || "Channel API Error");
-          }
-          
-          if (!channelJson.items || channelJson.items.length === 0) {
-            throw new Error("Official channel not found");
-          }
-
-          const foundChannelId = channelJson.items[0].id.channelId;
-          
-          // Now fetch videos from this channel
-          const res = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${foundChannelId}&order=date&maxResults=${MAX_VIDEOS}&type=video&key=${key}`
-          );
-
-          const json = await res.json();
-          
-          if (json.error) {
-            throw new Error(json.error.message || "Video API Error");
-          }
-          
-          if (!json.items || json.items.length === 0) {
-            throw new Error("No items in response");
-          }
-
-          const videoData = json.items.map((v: any) => ({
-            title: v.snippet?.title || 'Untitled',
-            url: `https://www.youtube.com/watch?v=${v.id?.videoId || ''}`,
-            image: v.snippet?.thumbnails?.medium?.url || v.snippet?.thumbnails?.high?.url || v.snippet?.thumbnails?.default?.url || '',
-            time: formatRelativeTime(v.snippet?.publishedAt || new Date().toISOString()),
-            views: "—",
-            isLive: v.snippet?.liveBroadcastContent === "live",
-          }));
-
-          setVideos(videoData);
-          setLoading(false);
-          return;
-        } catch (error) {
-          // YouTube API failed, will use Supabase fallback
-        }
-      }
-
-      // Fallback: Fetch from Supabase
       try {
         const { data, error } = await supabase
-          .from('youtube_videos')
-          .select('*')
-          .order('published_at', { ascending: false })
+          .from("youtube_videos")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+          .order("published_at", { ascending: false })
           .limit(MAX_VIDEOS);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
-        if (data && data.length > 0) {
-          const videoData = data.map((v: any) => ({
-            title: v.title,
-            url: v.video_url,
-            image: v.thumbnail_url || v.thumbnail || "",
-            time: formatRelativeTime(v.published_at),
-            views: "—",
-            isLive: false,
-          }));
-          setVideos(videoData);
-        }
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
+        // Some stored thumbnail URLs use the legacy `img.youtube.com` host,
+        // which our CSP blocks (img-src only allows *.ytimg.com). Rewrite
+        // the host on read so old rows render without re-saving them.
+        const fixThumb = (u: string | null | undefined, id: string | null) => {
+          const fixed = (u || "").replace(
+            /^https?:\/\/img\.youtube\.com\//,
+            "https://i.ytimg.com/"
+          );
+          if (fixed) return fixed;
+          return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : "";
+        };
+
+        const videoData = (data || []).map((v: any) => ({
+          title: v.title || "Untitled",
+          url:
+            v.video_url ||
+            (v.video_id ? `https://www.youtube.com/watch?v=${v.video_id}` : ""),
+          image: fixThumb(v.thumbnail_url, v.video_id),
+          time: v.published_at ? formatRelativeTime(v.published_at) : "",
+          views: "—",
+          isLive: false,
+        }));
+        setVideos(videoData);
+      } catch {
+        setVideos([]);
       }
+      setLoading(false);
     };
 
     fetchVideos();
-    // Increase refresh interval to 1 hour to avoid quota issues
-    const i = setInterval(fetchVideos, 60 * 60 * 1000);
-    return () => clearInterval(i);
+
+    // Realtime: refresh whenever an admin adds, removes, or reorders a
+    // video so the home page stays in sync without a manual refresh.
+    const channel = supabase
+      .channel("featured-videos-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "youtube_videos" },
+        fetchVideos
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {

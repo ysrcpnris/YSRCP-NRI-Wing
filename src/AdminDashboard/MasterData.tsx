@@ -44,18 +44,51 @@ type AssignmentDraft = {
 const LEADER_PHOTO_BUCKET = "leader-photos";
 
 const ROLES = [
+  "President",
   "Global Coordinator",
   "Regional Coordinator",
   "District President",
   "Assembly Coordinator",
 ];
 
-const isGlobalRole = (r: string) => r === "Global Coordinator";
-// Roles that take a (district, constituency) pair. Regional Coordinator is
-// district-only — they cover the whole district. Global Coordinator has
-// neither (visible everywhere).
+// Top-of-tree role: visible to everyone, no district / constituency.
+// Treated the same as Global Coordinator for scoping purposes.
+const isGlobalRole = (r: string) =>
+  r === "Global Coordinator" || r === "President";
+// Roles that take a (district, constituency) pair. Only Assembly
+// Coordinators are scoped to a constituency. District Presidents and
+// Regional Coordinators cover the whole district; Global Coordinator and
+// President have no scope at all (visible everywhere).
 const needsConstituency = (r: string) =>
-  r === "Assembly Coordinator" || r === "District President";
+  r === "Assembly Coordinator";
+
+// Canonicalize leader phone numbers to E.164 (+91…) before save so
+// `wa.me/<digits>` always opens the correct India contact regardless of
+// the visiting user's locale. Returns:
+//   • '' for empty input
+//   • the original placeholder for the YS Jagan '0000000000' marker
+//   • '+91XXXXXXXXXX' for 10-digit Indian mobiles
+//   • '+91XXXXXXXXXX' when admin enters '91XXXXXXXXXX' without the '+'
+//   • the original string when already prefixed with '+' (foreign or
+//     already-canonical numbers are left alone)
+const normalizeIndianPhone = (raw: string): string => {
+  const trimmed = (raw || "").trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("+")) return trimmed;
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits === "0000000000") return trimmed;
+  if (digits.length === 10) return `+91${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
+  return trimmed;
+};
+
+// Pretty-print '+91XXXXXXXXXX' as '+91 XXXXXXXXXX' for readability in
+// admin tables / cards. Non-Indian numbers are returned unchanged.
+const formatLeaderPhone = (p: string | null | undefined): string => {
+  if (!p) return "";
+  if (p.startsWith("+91") && p.length > 3) return `+91 ${p.slice(3)}`;
+  return p;
+};
 
 /* ======================================================
    COMPONENT
@@ -75,6 +108,11 @@ export default function MasterData() {
   const [showModal, setShowModal] = useState(false);
   // editLeaderId is null when creating, set when editing.
   const [editLeaderId, setEditLeaderId] = useState<string | null>(null);
+  // Role being edited at the time the modal opened. Needed because a
+  // leader can hold multiple roles (e.g. YS Jagan = President + AC), so
+  // on save we only want to replace the assignments belonging to THIS
+  // role row — not wipe out the leader's other-role assignments.
+  const [editOriginalRole, setEditOriginalRole] = useState<string | null>(null);
 
   // "Show all districts" popover when admin clicks the "+N more" badge.
   const [districtsModal, setDistrictsModal] = useState<LeaderRow | null>(null);
@@ -158,14 +196,18 @@ export default function MasterData() {
       return;
     }
 
-    // Group by leader_id. Inactive leaders are dropped (their assignments
-    // were already filtered by is_active=true on the assignment row, but
-    // the leader row itself can also be deactivated).
+    // Group by (leader_id, role) so a single person who holds multiple
+    // roles (e.g. YS Jagan as both President and Assembly Coordinator
+    // for Pulivendula) appears as one row per role — each with its own
+    // district / constituency. Grouping by leader alone would merge his
+    // President assignment with his AC assignment, hiding the
+    // constituency under a meaningless "see districts" label.
     const map = new Map<string, LeaderRow>();
     for (const a of (data || []) as any[]) {
       const leader = a.leader as LeaderMaster | null;
       if (!leader || !leader.is_active) continue;
-      const existing = map.get(leader.id);
+      const key = `${leader.id}::${a.role}`;
+      const existing = map.get(key);
       const assignment: LeaderAssignment = {
         id: a.id,
         leader_id: a.leader_id,
@@ -177,7 +219,7 @@ export default function MasterData() {
       if (existing) {
         existing.assignments.push(assignment);
       } else {
-        map.set(leader.id, {
+        map.set(key, {
           leader,
           role: a.role,
           assignments: [assignment],
@@ -279,6 +321,7 @@ export default function MasterData() {
   ====================================================== */
   const openAddModal = () => {
     setEditLeaderId(null);
+    setEditOriginalRole(null);
     setName("");
     setPhone("");
     setPhone2("");
@@ -298,6 +341,7 @@ export default function MasterData() {
 
   const openEditModal = (row: LeaderRow) => {
     setEditLeaderId(row.leader.id);
+    setEditOriginalRole(row.role);
     setName(row.leader.name || "");
     setPhone(row.leader.whatsapp_number || "");
     setPhone2(row.leader.whatsapp_number_2 || "");
@@ -405,8 +449,8 @@ export default function MasterData() {
 
     setSavingLeader(true);
 
-    const phoneNorm  = phone.trim();
-    const phone2Norm = phone2.trim() || null;
+    const phoneNorm  = normalizeIndianPhone(phone);
+    const phone2Norm = normalizeIndianPhone(phone2) || null;
 
     let leaderId = editLeaderId;
 
@@ -470,13 +514,19 @@ export default function MasterData() {
       );
     }
 
-    // 3. Replace all assignments for this leader. Simpler than diffing —
-    //    delete the existing active ones and insert the fresh set.
+    // 3. Replace assignments — but only for the role being edited (and
+    //    the original role if the admin changed it in this session).
+    //    Wiping every assignment for the leader would also clobber any
+    //    OTHER role they hold (e.g. YS Jagan as both President and AC).
     {
+      const rolesToReplace = Array.from(
+        new Set([formRole, editOriginalRole].filter(Boolean) as string[])
+      );
       const { error: delErr } = await supabase
         .from("leader_assignments")
         .delete()
-        .eq("leader_id", leaderId);
+        .eq("leader_id", leaderId)
+        .in("role", rolesToReplace);
       if (delErr) {
         setSavingLeader(false);
         alert("Failed to clear old assignments: " + delErr.message);
@@ -520,20 +570,43 @@ export default function MasterData() {
   };
 
   /* ======================================================
-     DELETE — soft delete the entire leader (all rows)
+     DELETE — remove a single role for the leader. If the leader holds
+     no other roles after this, also deactivate the master record so
+     they disappear from the directory entirely.
   ====================================================== */
   const deleteLeader = async (row: LeaderRow) => {
     if (
       !confirm(
-        `Deactivate "${row.leader.name}"? They'll be removed from every district they're assigned to.`
+        `Remove "${row.leader.name}" from the role "${row.role}"? They'll lose every district / constituency assigned under this role.`
       )
     )
       return;
-    // Soft-delete by flipping is_active on the leader. RLS lets admin update.
-    await supabase
-      .from("leaders_master")
-      .update({ is_active: false })
-      .eq("id", row.leader.id);
+
+    // 1. Hard-delete the assignment rows for this (leader, role).
+    const { error: delErr } = await supabase
+      .from("leader_assignments")
+      .delete()
+      .eq("leader_id", row.leader.id)
+      .eq("role", row.role);
+    if (delErr) {
+      alert("Failed to remove role: " + delErr.message);
+      return;
+    }
+
+    // 2. If the leader has zero remaining active assignments, deactivate
+    //    the master row so they don't appear as an orphan.
+    const { count } = await supabase
+      .from("leader_assignments")
+      .select("id", { count: "exact", head: true })
+      .eq("leader_id", row.leader.id)
+      .eq("is_active", true);
+    if ((count ?? 0) === 0) {
+      await supabase
+        .from("leaders_master")
+        .update({ is_active: false })
+        .eq("id", row.leader.id);
+    }
+
     fetchData();
   };
 
@@ -544,7 +617,7 @@ export default function MasterData() {
   const filtersActive = !!(state || district || constituency || role);
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="py-4 md:py-6 px-2 md:px-2">
       <div className="flex flex-wrap justify-between items-start gap-3 mb-4 md:mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-primary-600">Local Leaders</h1>
@@ -685,7 +758,7 @@ export default function MasterData() {
                   const firstDistrict = districts[0] || "—";
                   const moreCount = districts.length - 1;
                   return (
-                    <tr key={row.leader.id} className="hover:bg-gray-50 transition align-top">
+                    <tr key={`${row.leader.id}::${row.role}`} className="hover:bg-gray-50 transition align-top">
                       <td className="px-4 py-3 font-medium text-gray-900">
                         <div className="flex items-center gap-2.5">
                           <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
@@ -750,10 +823,33 @@ export default function MasterData() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
-                        <div>{row.leader.whatsapp_number || "—"}</div>
+                        <div>
+                          {row.leader.whatsapp_number &&
+                          row.leader.whatsapp_number.replace(/\D/g, "") !== "0000000000" ? (
+                            <a
+                              href={`https://wa.me/${row.leader.whatsapp_number.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary-700 hover:text-primary-900 hover:underline"
+                              title="Open in WhatsApp"
+                            >
+                              {formatLeaderPhone(row.leader.whatsapp_number)}
+                            </a>
+                          ) : (
+                            "—"
+                          )}
+                        </div>
                         {row.leader.whatsapp_number_2 && (
                           <div className="text-[11px] text-gray-500">
-                            {row.leader.whatsapp_number_2}
+                            <a
+                              href={`https://wa.me/${row.leader.whatsapp_number_2.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="hover:text-primary-700 hover:underline"
+                              title="Open in WhatsApp"
+                            >
+                              {formatLeaderPhone(row.leader.whatsapp_number_2)}
+                            </a>
                           </div>
                         )}
                       </td>
@@ -860,11 +956,14 @@ export default function MasterData() {
               {/* Phone primary */}
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">
-                  WhatsApp number (with country code, no spaces)
+                  WhatsApp number{" "}
+                  <span className="text-gray-400 font-normal italic">
+                    (10-digit Indian — +91 added automatically)
+                  </span>
                 </label>
                 <input
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                  placeholder="+919876543210"
+                  placeholder="9876543210 or +919876543210"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -928,11 +1027,13 @@ export default function MasterData() {
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">
                   Secondary WhatsApp number{" "}
-                  <span className="text-gray-400 font-normal italic">(optional)</span>
+                  <span className="text-gray-400 font-normal italic">
+                    (optional — +91 added automatically)
+                  </span>
                 </label>
                 <input
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                  placeholder="+919876543210"
+                  placeholder="9876543210 or +919876543210"
                   value={phone2}
                   onChange={(e) => setPhone2(e.target.value)}
                 />
@@ -956,7 +1057,7 @@ export default function MasterData() {
               {/* Coverage area — Global hint OR multi-district list */}
               {isGlobalRole(formRole) ? (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800">
-                  🌐 <span className="font-semibold">Global Coordinator</span> — visible to{" "}
+                  🌐 <span className="font-semibold">{formRole}</span> — visible to{" "}
                   <b>every user</b> regardless of address. No districts needed.
                 </div>
               ) : formRole ? (

@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Settings } from "lucide-react";
 import { Globe } from "lucide-react";
+import { Network } from "lucide-react";
+import { Youtube } from "lucide-react";
 import * as XLSX from "xlsx";
 import Visited from "./Visited";
 import Assistance from "./Assistance";
@@ -11,6 +13,8 @@ import ServiceCategories from "./ServiceCategories";
 import Suggestions from "./Suggestions";
 // import ServiceInbox from "./ServiceInbox";
 import MasterData from "./MasterData";
+import OrgHierarchy from "./OrgHierarchy";
+import FeaturedVideos from "./FeaturedVideos";
 import SupportTeams from "./SupportTeams";
 import UsersPage from "./Users";
 import EventsNotifications from "./EventsNotifications";
@@ -349,6 +353,8 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Users} label="Suggestions" page="suggestions" />
             {/* <Item icon={FolderKanban} label="Service Inbox" page="serviceInbox" /> */}
             <Item icon={Settings} label="Master Data" page="masterData" />
+            <Item icon={Network} label="Org Hierarchy" page="orgHierarchy" />
+            <Item icon={Youtube} label="Featured Videos" page="featuredVideos" />
             <Item icon={Newspaper} label="Events & Notifications" page="eventsnotifications" />
             <Item icon={Newspaper} label="News" page="news" />
             <Item icon={Globe} label="Content Control" page="contentControl" />
@@ -1089,6 +1095,8 @@ export default function AdminDashboard() {
       {currentPage === "suggestions" && <Suggestions />}
       {/* {currentPage === "serviceInbox" && <ServiceInbox />} */}
       {currentPage === "masterData" && <MasterData />}
+      {currentPage === "orgHierarchy" && <OrgHierarchy />}
+      {currentPage === "featuredVideos" && <FeaturedVideos />}
       {currentPage === "eventsnotifications" && <EventsNotifications />}
       {currentPage === "news" && <News />}
       {currentPage === "contentControl" && <ContentControl />}

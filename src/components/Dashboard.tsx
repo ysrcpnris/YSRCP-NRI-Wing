@@ -1976,6 +1976,7 @@ useEffect(() => {
   >
 >({});
 
+
   /**
    * ═══════════════════════════════════════════════════════════════
    * NRI COORDINATOR STATE
@@ -3948,6 +3949,7 @@ const renderConnectContent = () => {
     }
   });
 
+
   const colorClasses = [
     { text: "text-emerald-600", border: "border-emerald-200" },
     { text: "text-teal-600", border: "border-teal-200" },
@@ -4011,12 +4013,12 @@ const renderConnectContent = () => {
                 <div className="w-full space-y-1.5">
                   <button
                     onClick={() => {
-                      if (!leader.whatsapp_number) {
+                      const digits = leader.whatsapp_number?.replace(/\D/g, "");
+                      if (!digits || digits === "0000000000") {
                         showToast("WhatsApp contact not available", "info");
                         return;
                       }
-                      const phone = leader.whatsapp_number.replace(/\D/g, "");
-                      window.open(`https://wa.me/${phone}`, "_blank");
+                      window.open(`https://wa.me/${digits}`, "_blank");
                       showToast(`Opening WhatsApp with ${leader.name}`, "info");
                     }}
                     className="w-full py-2 rounded-lg bg-whatsapp-500
