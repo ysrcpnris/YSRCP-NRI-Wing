@@ -1081,6 +1081,14 @@ type Referral = {
   public_user_code?: string | null;
   type: 'active' | 'passive';
   created_at: string;
+  // For passive referrals only: details of the active/direct referrer who
+  // actually brought this member into the network. NULL on active rows.
+  upstream?: {
+    name: string;
+    mobile_number: string | null;
+    location: string | null;
+    public_user_code: string | null;
+  } | null;
 };
 type LeaderAssignmentRow = {
   role: string;
@@ -1105,6 +1113,10 @@ type EventItem = {
   date: string | null;       // event date (decides active vs previous)
   venue?: string | null;
   created_at: string;
+  // 'event' rows let users apply to attend; 'notification' rows are
+  // announce-only. Defaults to 'event' if the column isn't present
+  // (e.g. before new_34 has been applied), so existing UX is preserved.
+  kind?: "event" | "notification";
 };
 
 
@@ -1396,6 +1408,22 @@ const [selectedInner, setSelectedInner] = useState<string | null>(null);
   };
   const [myRequests, setMyRequests] = useState<MyServiceRequest[]>([]);
   const [loadingMyRequests, setLoadingMyRequests] = useState(false);
+  // Active tab in the My Service Requests filter strip.
+  const [serviceRequestTab, setServiceRequestTab] = useState<
+    "all" | "pending" | "in_progress" | "resolved" | "other"
+  >("all");
+  // Active tab in the Notifications view (formerly "Active Events" /
+  // "Previous Events").
+  const [notificationTab, setNotificationTab] = useState<"active" | "previous">("active");
+
+  // Set of event ids the current user has already applied to. Used by
+  // the Apply / Applied button on each event card. Updated optimistically
+  // when the user confirms in the modal.
+  const [myAppliedEventIds, setMyAppliedEventIds] = useState<Set<string>>(new Set());
+  // The event the user is about to confirm applying to. Drives the
+  // "Confirm attendance" modal. null when the modal is closed.
+  const [confirmApplyEvent, setConfirmApplyEvent] = useState<EventItem | null>(null);
+  const [applyingEventId, setApplyingEventId] = useState<string | null>(null);
 
 
 const [contributionTypes, setContributionTypes] = useState<
@@ -2195,7 +2223,7 @@ const fetchReferrals = async () => {
   if (!user) return;
   setReferralsLoading(true);
   try {
-    const buildReferral = (r: any, type: "active" | "passive") => {
+    const buildReferral = (r: any, type: "active" | "passive"): Referral => {
       const first = r.first_name ?? "";
       const last = r.last_name ?? "";
       const abroad = [r.city_abroad, r.country_of_residence]
@@ -2204,6 +2232,32 @@ const fetchReferrals = async () => {
       const indian = [r.assembly_constituency, r.district, r.indian_state]
         .filter(Boolean)
         .join(", ");
+
+      // Build the upstream/direct-referrer object for passive rows. The RPC
+      // (new_33) returns upstream_* columns; for active rows they're null.
+      let upstream: Referral["upstream"] = null;
+      if (type === "passive" && (r.upstream_first_name || r.upstream_last_name)) {
+        const uFirst = r.upstream_first_name ?? "";
+        const uLast = r.upstream_last_name ?? "";
+        const uAbroad = [r.upstream_city_abroad, r.upstream_country_of_residence]
+          .filter(Boolean)
+          .join(", ");
+        const uIndian = [
+          r.upstream_assembly_constituency,
+          r.upstream_district,
+          r.upstream_indian_state,
+        ]
+          .filter(Boolean)
+          .join(", ");
+        upstream = {
+          name:
+            uLast && uLast !== uFirst ? `${uFirst} ${uLast}` : uFirst || "Member",
+          mobile_number: r.upstream_mobile_number ?? null,
+          location: uAbroad || uIndian || null,
+          public_user_code: r.upstream_public_user_code ?? null,
+        };
+      }
+
       return {
         id: r.id,
         member_name: last && last !== first ? `${first} ${last}` : first || "Member",
@@ -2212,6 +2266,7 @@ const fetchReferrals = async () => {
         public_user_code: r.public_user_code ?? null,
         type,
         created_at: r.created_at,
+        upstream,
       };
     };
 
@@ -2231,6 +2286,61 @@ const fetchReferrals = async () => {
   } finally {
     setReferralsLoading(false);
   }
+};
+
+// Insert a row into event_applications for the current user. The
+// confirmation modal calls this on "Yes". The set-state is optimistic
+// so the button flips to Applied immediately; a hard error rolls it
+// back. Duplicate applies are blocked by the UNIQUE (event_id, user_id)
+// constraint at the DB level.
+const handleConfirmApply = async (event: EventItem) => {
+  if (!user) return;
+  setApplyingEventId(event.id);
+  // Optimistic flip
+  setMyAppliedEventIds((prev) => new Set(prev).add(event.id));
+  const { error } = await supabase
+    .from("event_applications")
+    .insert({ event_id: event.id, user_id: user.id });
+  setApplyingEventId(null);
+  setConfirmApplyEvent(null);
+  if (error) {
+    // Rollback the optimistic add. Ignore if the duplicate-key error
+    // means we were already applied — that's a no-op for the user.
+    if (!/duplicate key|already exists|unique/i.test(error.message)) {
+      setMyAppliedEventIds((prev) => {
+        const next = new Set(prev);
+        next.delete(event.id);
+        return next;
+      });
+      showToast("Could not apply: " + error.message, "info");
+      return;
+    }
+  }
+  showToast("Applied — your details have been shared with the admin team", "success");
+};
+
+// Cancel the current user's application for an event. Same optimistic
+// flip + rollback pattern.
+const handleCancelApply = async (event: EventItem) => {
+  if (!user) return;
+  setApplyingEventId(event.id);
+  setMyAppliedEventIds((prev) => {
+    const next = new Set(prev);
+    next.delete(event.id);
+    return next;
+  });
+  const { error } = await supabase
+    .from("event_applications")
+    .delete()
+    .eq("event_id", event.id)
+    .eq("user_id", user.id);
+  setApplyingEventId(null);
+  if (error) {
+    setMyAppliedEventIds((prev) => new Set(prev).add(event.id));
+    showToast("Could not cancel: " + error.message, "info");
+    return;
+  }
+  showToast("Application cancelled", "info");
 };
 
 const handleSubmitService = async () => {
@@ -2620,9 +2730,12 @@ if (!district || !assembly) {
       // =======================
       // 3. EVENTS
       // =======================
+  // Pull `kind` so the UI can decide whether to render an "Apply" button
+  // on each card (only kind='event' qualifies; 'notification' rows stay
+  // announce-only).
   const { data: eventsData, error: eventsError } = await supabase
   .from("events")
-  .select("id, title, info, status, date, venue, created_at")
+  .select("id, title, info, status, date, venue, created_at, kind")
   .eq("status", "Sent")
   .order("date", { ascending: false, nullsFirst: false });
 
@@ -2630,6 +2743,18 @@ if (eventsError) {
   console.error("Events fetch error:", eventsError);
 } else {
   setEvents(eventsData as EventItem[]);
+}
+
+// Pull the events the user has already applied to so the Apply button
+// flips to "Applied" without needing to refetch after the click.
+{
+  const { data: appliedData } = await supabase
+    .from("event_applications")
+    .select("event_id")
+    .eq("user_id", user.id);
+  setMyAppliedEventIds(
+    new Set((appliedData || []).map((r: any) => r.event_id))
+  );
 }
 
 
@@ -3866,9 +3991,55 @@ const handleSubmitSuggestion = async () => {
                           </p>
                         )}
                       </div>
-                      <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">
-                        {formatDate(r.created_at)}
-                      </span>
+                      {/* Direct-referrer pill — replaces the date in the
+                          corner. On hover (or focus) it opens a small
+                          popover listing the active/direct referrer's
+                          name + contact, so the viewer sees who actually
+                          brought this passive member into the network.
+                          The date moved underneath the row. */}
+                      {r.upstream ? (
+                        <div className="relative group shrink-0">
+                          <button
+                            type="button"
+                            tabIndex={0}
+                            className="text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition cursor-default"
+                          >
+                            Direct Referral
+                          </button>
+                          <div
+                            className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto absolute right-0 top-full mt-1.5 z-30 w-60 bg-white border border-gray-200 shadow-xl rounded-lg p-3 text-left"
+                            role="tooltip"
+                          >
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
+                              Direct referrer
+                            </p>
+                            <p className="text-sm font-bold text-gray-900 leading-tight break-words">
+                              {r.upstream.name}
+                            </p>
+                            {r.upstream.public_user_code && (
+                              <p className="text-[10px] font-mono text-gray-400 mt-0.5">
+                                {r.upstream.public_user_code}
+                              </p>
+                            )}
+                            {r.upstream.mobile_number && (
+                              <p className="text-[11px] text-gray-600 mt-1.5 inline-flex items-center gap-1">
+                                <span aria-hidden>📞</span>
+                                <span className="break-all">{r.upstream.mobile_number}</span>
+                              </p>
+                            )}
+                            {r.upstream.location && (
+                              <p className="text-[11px] text-gray-500 mt-0.5 inline-flex items-center gap-1">
+                                <span aria-hidden>📍</span>
+                                <span className="break-words">{r.upstream.location}</span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">
+                          {formatDate(r.created_at)}
+                        </span>
+                      )}
                     </div>
                     {r.mobile_number && (
                       <p className="text-[11px] text-gray-600 mt-1 inline-flex items-center gap-1">
@@ -3885,6 +4056,14 @@ const handleSubmitSuggestion = async () => {
                       <p className="text-[11px] text-gray-500 mt-0.5 inline-flex items-center gap-1">
                         <span aria-hidden>📍</span>
                         <span className="truncate">{r.location}</span>
+                      </p>
+                    )}
+                    {/* Date row — moved out of the corner now that the
+                        pill takes that slot. Always shown so the user
+                        still sees when this referral was created. */}
+                    {r.upstream && (
+                      <p className="text-[10px] font-semibold text-gray-400 mt-1.5">
+                        Added {formatDate(r.created_at)}
                       </p>
                     )}
                   </li>
@@ -3971,8 +4150,12 @@ const renderConnectContent = () => {
             return (
               <div
                 key={`${leader.id}-${leader.role}`}
+                // h-full + flex-col make every card the same vertical height
+                // as the tallest one in the row (CSS grid stretches cells by
+                // default), so different name lengths or one-vs-two WhatsApp
+                // buttons never produce a ragged edge.
                 className={`bg-white border ${colors.border}
-                rounded-xl p-4 flex flex-col items-center text-center
+                rounded-xl p-4 flex flex-col items-center text-center h-full
                 shadow-sm hover:shadow-md transition-all`}
               >
                 {/* ROLE */}
@@ -3986,7 +4169,7 @@ const renderConnectContent = () => {
                 <div
                   className="w-16 h-16 rounded-full bg-gray-100
                              border border-gray-300 flex items-center
-                             justify-center mb-3 overflow-hidden"
+                             justify-center mb-3 overflow-hidden flex-shrink-0"
                 >
                   {leader.photo_url ? (
                     <img
@@ -4004,13 +4187,21 @@ const renderConnectContent = () => {
                   )}
                 </div>
 
-                {/* NAME */}
-                <h4 className="text-sm font-bold text-gray-900 mb-4">
+                {/* NAME — clamped to two lines with a fixed minimum height
+                    so long names don't push the rest of the card down.
+                    The full name is still available on hover via title. */}
+                <h4
+                  title={leader.name || "Leader"}
+                  className="text-sm font-bold text-gray-900 mb-4 line-clamp-2 min-h-[2.5rem] leading-tight px-1"
+                >
                   {leader.name || "Leader"}
                 </h4>
 
-                {/* WHATSAPP BUTTONS — primary always, secondary only when set */}
-                <div className="w-full space-y-1.5">
+                {/* WHATSAPP BUTTONS — primary always, secondary only when set.
+                    mt-auto pins the buttons to the bottom of the card so the
+                    primary button lines up across cards even when names
+                    differ in length or the secondary number is missing. */}
+                <div className="w-full space-y-1.5 mt-auto">
                   <button
                     onClick={() => {
                       const digits = leader.whatsapp_number?.replace(/\D/g, "");
@@ -4285,15 +4476,97 @@ const renderServicesContent = () => (
         </button>
       </div>
 
-      {loadingMyRequests ? (
-        <p className="text-xs text-gray-500">Loading...</p>
-      ) : myRequests.length === 0 ? (
-        <p className="text-xs text-gray-500">
-          You haven't submitted any requests yet.
-        </p>
-      ) : (
+      {/* Status tabs — let the user filter their submissions by stage.
+          "Other" rolls up rejected + anything we don't recognise so the
+          active/resolved tabs stay clean. Counts per tab so users can
+          see at a glance how many are in each bucket. */}
+      {(() => {
+        // Defined inside an IIFE so the JSX can reference these locals
+        // without exporting them to the outer scope.
+        return null;
+      })()}
+      {(() => {
+        const counts = {
+          all: myRequests.length,
+          pending: myRequests.filter((r) => r.status === "pending" || !r.status).length,
+          in_progress: myRequests.filter((r) => r.status === "in_progress").length,
+          resolved: myRequests.filter((r) => r.status === "resolved").length,
+          other: myRequests.filter(
+            (r) =>
+              r.status &&
+              !["pending", "in_progress", "resolved"].includes(r.status as string)
+          ).length,
+        };
+        const tabs = [
+          { id: "all" as const,         label: "All",          count: counts.all },
+          { id: "pending" as const,     label: "Pending",      count: counts.pending },
+          { id: "in_progress" as const, label: "In progress",  count: counts.in_progress },
+          { id: "resolved" as const,    label: "Resolved",     count: counts.resolved },
+          { id: "other" as const,       label: "Other",        count: counts.other },
+        ];
+        return (
+          <div className="flex flex-wrap gap-1.5 mb-4 border-b border-gray-200 pb-2">
+            {tabs.map((t) => {
+              const active = serviceRequestTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setServiceRequestTab(t.id)}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
+                    active
+                      ? "bg-primary-600 text-white border-primary-600"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  {t.label}
+                  <span
+                    className={`ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 ${
+                      active
+                        ? "bg-white/20 text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {t.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
+
+      {(() => {
+        const filtered = myRequests.filter((r) => {
+          if (serviceRequestTab === "all") return true;
+          if (serviceRequestTab === "pending") return r.status === "pending" || !r.status;
+          if (serviceRequestTab === "other") {
+            return (
+              r.status &&
+              !["pending", "in_progress", "resolved"].includes(r.status as string)
+            );
+          }
+          return r.status === serviceRequestTab;
+        });
+        if (loadingMyRequests) {
+          return <p className="text-xs text-gray-500">Loading...</p>;
+        }
+        if (myRequests.length === 0) {
+          return (
+            <p className="text-xs text-gray-500">
+              You haven't submitted any requests yet.
+            </p>
+          );
+        }
+        if (filtered.length === 0) {
+          return (
+            <p className="text-xs text-gray-500">
+              No requests in this tab.
+            </p>
+          );
+        }
+        return (
         <div className="space-y-4">
-          {myRequests.map((r) => {
+          {filtered.map((r) => {
             const statusLabel =
               r.status === "resolved"
                 ? "Resolved"
@@ -4400,11 +4673,12 @@ const renderServicesContent = () => (
             );
           })}
         </div>
-      )}
+        );
+      })()}
     </div>
   </div>
 );
-  
+
 const renderEventsContent = () => {
   // An event is "active" if it has a future date OR no date at all
   // (treat undated announcements as still-relevant general notifications).
@@ -4476,44 +4750,99 @@ const renderEventsContent = () => {
             <span className="truncate">{event.venue}</span>
           </p>
         )}
+
+        {/* Apply button — only on event-kind rows that haven't passed.
+            'notification' rows skip this entirely (announce-only). For
+            past events the button is hidden because applications are
+            no longer meaningful. */}
+        {(event.kind === undefined || event.kind === "event") &&
+          !faded &&
+          (() => {
+            const alreadyApplied = myAppliedEventIds.has(event.id);
+            return (
+              <div className="mt-3 pt-2 border-t border-dashed border-gray-200">
+                {alreadyApplied ? (
+                  <button
+                    onClick={() => void handleCancelApply(event)}
+                    disabled={applyingEventId === event.id}
+                    className="w-full text-[12px] font-semibold py-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-60"
+                    title="Click to cancel your application"
+                  >
+                    ✓ Applied — tap to cancel
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setConfirmApplyEvent(event)}
+                    disabled={applyingEventId === event.id}
+                    className="w-full text-[12px] font-bold uppercase tracking-wide py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+                  >
+                    Apply to attend
+                  </button>
+                )}
+              </div>
+            );
+          })()}
       </div>
     );
   };
 
+  // Tabs split notifications into Active (upcoming or undated) vs
+  // Previous (past) so the user can scan one bucket at a time. Counts
+  // per tab make it obvious whether anything new sits in each bucket.
+  const tabs = [
+    { id: "active" as const,   label: "Active",   list: activeEvents },
+    { id: "previous" as const, label: "Previous", list: previousEvents },
+  ];
+  const currentList =
+    notificationTab === "previous" ? previousEvents : activeEvents;
+
   return (
     <div className="pt-4 max-w-3xl">
+      <h3 className="text-base font-bold text-gray-900 mb-3">Notifications</h3>
+
       {events.length === 0 ? (
-        <div className="text-xs text-gray-500">No events or notifications.</div>
+        <div className="text-xs text-gray-500">No notifications yet.</div>
       ) : (
         <>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-gray-900">
-              Active Events
-              <span className="ml-2 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                {activeEvents.length}
-              </span>
-            </h3>
+          {/* Status tabs */}
+          <div className="flex flex-wrap gap-1.5 mb-4 border-b border-gray-200 pb-2">
+            {tabs.map((t) => {
+              const active = notificationTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setNotificationTab(t.id)}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
+                    active
+                      ? "bg-primary-600 text-white border-primary-600"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  {t.label}
+                  <span
+                    className={`ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 ${
+                      active
+                        ? "bg-white/20 text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {t.list.length}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          {activeEvents.length === 0 ? (
-            <p className="text-xs text-gray-500 mb-6">
-              No active events at the moment.
+
+          {currentList.length === 0 ? (
+            <p className="text-xs text-gray-500">
+              {notificationTab === "previous"
+                ? "No previous notifications."
+                : "No active notifications at the moment."}
             </p>
           ) : (
-            <div className="mb-6">{activeEvents.map((e) => card(e))}</div>
-          )}
-
-          {previousEvents.length > 0 && (
-            <>
-              <div className="flex items-center justify-between mb-3 pt-2 border-t border-gray-100">
-                <h3 className="text-sm font-bold text-gray-700 mt-3">
-                  Previous Events
-                  <span className="ml-2 text-[11px] font-bold text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
-                    {previousEvents.length}
-                  </span>
-                </h3>
-              </div>
-              <div>{previousEvents.map((e) => card(e, true))}</div>
-            </>
+            <div>
+              {currentList.map((e) => card(e, notificationTab === "previous"))}
+            </div>
           )}
         </>
       )}
@@ -4735,7 +5064,7 @@ const renderSuggestionsContent = () => (
             <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
               {eventsCount}
             </p>
-            <p className="text-xs text-gray-500 mt-1.5">Events & updates</p>
+            <p className="text-xs text-gray-500 mt-1.5">Notifications</p>
           </button>
         </div>
 
@@ -4820,7 +5149,7 @@ const renderSuggestionsContent = () => (
     { id: "profile" as const,     label: "Profile",     icon: User,          color: "text-primary-600" },
     { id: "referrals" as const,   label: "My Network",  icon: Users,         color: "text-emerald-600" },
     { id: "services" as const,    label: "Services",    icon: Briefcase,     color: "text-amber-600" },
-    { id: "events" as const,      label: "Events",      icon: Bell,          color: "text-pink-600", badge: unseenEventsCount || 0 },
+    { id: "events" as const,      label: "Notifications", icon: Bell,        color: "text-pink-600", badge: unseenEventsCount || 0 },
     { id: "connect" as const,     label: "Leaders",     icon: MessageSquare, color: "text-primary-600" },
     { id: "suggestions" as const, label: "Feedback",    icon: Send,          color: "text-purple-600" },
   ];
@@ -4842,6 +5171,67 @@ const renderSuggestionsContent = () => (
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col md:flex-row font-sans bg-gray-50">
+
+      {/* ========================================================
+          CONFIRM-APPLY MODAL — opens when the user clicks "Apply to
+          attend" on an event card. Forces a deliberate "yes" before
+          their details are shared with the admin team.
+      ======================================================== */}
+      {confirmApplyEvent && (
+        <div
+          className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setConfirmApplyEvent(null)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-5 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900">Confirm attendance</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Click <b>Yes</b> only if you actually want to attend this event. Your name
+                and contact details will be shared with the admin team.
+              </p>
+            </div>
+            <div className="px-6 py-4">
+              <div className="text-sm font-bold text-gray-900">
+                {confirmApplyEvent.title}
+              </div>
+              {confirmApplyEvent.date && (
+                <div className="text-[11px] text-emerald-700 font-semibold mt-0.5">
+                  📅 {formatDate(confirmApplyEvent.date)}
+                </div>
+              )}
+              {confirmApplyEvent.venue && (
+                <div className="text-[11px] text-gray-500 mt-0.5">
+                  📍 {confirmApplyEvent.venue}
+                </div>
+              )}
+              {confirmApplyEvent.info && (
+                <p className="text-[12px] text-gray-700 mt-2 leading-relaxed line-clamp-4">
+                  {confirmApplyEvent.info}
+                </p>
+              )}
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setConfirmApplyEvent(null)}
+                disabled={applyingEventId === confirmApplyEvent.id}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => void handleConfirmApply(confirmApplyEvent)}
+                disabled={applyingEventId === confirmApplyEvent.id}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {applyingEventId === confirmApplyEvent.id ? "Submitting…" : "Yes, apply"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {/* ========================================================

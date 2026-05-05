@@ -2,35 +2,38 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Globe, Leaf, GraduationCap, HeartHandshake, Landmark, Construction, Factory, Users, Scale, Map, Heart, TrendingUp } from 'lucide-react';
 
+// IMPORTANT: each pillar's `id` must match the matching key in
+// UNIVERSAL_PILLAR_DETAILS in src/components/PillarDetailpage.tsx,
+// because clicking a card navigates to /pillars/<id> and the detail
+// page indexes its content map by that id. The mapping is:
+//   1  → Healthcare        7  → Governance
+//   2  → Education         8  → Decentralised
+//   3  → Agriculture       9  → Economic Growth
+//   4  → Welfare           10 → Social Justice
+//   5  → Infrastructure    11 → Blue Economy
+//   6  → Industrial        12 → Women Empowerment
 const PILLARS = [
-  // 1. Health
   {
-    id: 11,
+    id: 1,
     title: "Healthcare Reforms",
     info: "Free treatment via Arogyasri, medical colleges, and village clinics for strong public health.",
     image: "/pillar-images/487072673_9604201229600258_7691177371061798975_n.jpg",
     icon: <Heart className="text-red-500" />
   },
-
-  // 2. Education
   {
-    id: 3,
+    id: 2,
     title: "Education, Skill Development & Youth",
     info: "Education reforms, skill universities, employability and youth empowerment.",
     image: "/pillar-images/495170491_1241218450705754_4998350073252110290_n.jpg",
     icon: <GraduationCap className="text-indigo-500" />
   },
-
-  // 3. Agriculture
   {
-    id: 2,
+    id: 3,
     title: "Agricultural Reforms",
     info: "Farmer income security, MSP, irrigation, crop planning and agri exports.",
     image: "/pillar-images/128702759_3643024099051364_7728079183867142972_n.jpg",
     icon: <Leaf className="text-green-500" />
   },
-
-  // 4. Welfare
   {
     id: 4,
     title: "Welfare Architecture",
@@ -38,73 +41,57 @@ const PILLARS = [
     image: "/pillar-images/600215068_1417738646387066_7593797886179697001_n.jpg",
     icon: <HeartHandshake className="text-red-500" />
   },
-
-  // 5. Infrastructure
   {
-    id: 6,
+    id: 5,
     title: "Infrastructure Development",
     info: "Roads, housing, water supply, sanitation and public infrastructure.",
     image: "/pillar-images/510788596_1276223217205277_8615475189619476412_n.jpg",
     icon: <Construction className="text-amber-600" />
   },
-
-  // 6. Industrial Development
   {
-    id: 7,
+    id: 6,
     title: "Industrial & Employment Growth",
     info: "Industrial parks, MSMEs, manufacturing, investment facilitation and job creation.",
     image: "/pillar-images/470042453_9007435769276810_2323383073333999001_n.jpg",
     icon: <Factory className="text-slate-600" />
   },
-
-  // 7. Governance
   {
-    id: 5,
+    id: 7,
     title: "Governance Reforms",
     info: "Village and Ward Secretariats, volunteer system, transparency and citizen-centric service delivery.",
     image: "/pillar-images/468959763_8971065816247139_3372442148156847674_n.jpg",
     icon: <Landmark className="text-primary-600" />
   },
-
-  // 8. Decentralization & Development
   {
-    id: 10,
+    id: 8,
     title: "Decentralised Development",
     info: "Regional balance, district empowerment and grassroots leadership.",
     image: "/pillar-images/482100581_9488420077845041_2943274274254903894_n.jpg",
     icon: <Map className="text-emerald-600" />
   },
-
-  // 9. Economic Growth
   {
-    id: 12,
+    id: 9,
     title: "Economic Growth",
     info: "Welfare-led growth putting money in people's hands and strengthening local markets.",
     image: "/pillar-images/525018991_1302193227941609_2585825087392610829_n.jpg",
     icon: <TrendingUp className="text-primary-600" />
   },
-
-  // 10. Social Justice
   {
-    id: 9,
+    id: 10,
     title: "Social Justice",
     info: "SC, ST, BC, minority welfare and inclusive development.",
     image: "/pillar-images/480737493_9446382862048763_929632864761132216_n.jpg",
     icon: <Scale className="text-purple-600" />
   },
-
-  // 11. Blue Economy
   {
-    id: 1,
+    id: 11,
     title: "Blue Economy",
     info: "Ports, shipping, fisheries, aquaculture, coastal trade and marine livelihoods.",
     image: "/pillar-images/159622322_3921148761238895_2124063265924097094_n.jpg",
     icon: <Globe className="text-primary-500" />
   },
-
-  // Any remaining pillar(s) (kept after the ordered list)
   {
-    id: 8,
+    id: 12,
     title: "Women Empowerment",
     info: "SHGs, entrepreneurship, credit linkage and financial inclusion.",
     image: "/pillar-images/616827092_1443499287144335_5964224249188115272_n.jpg",

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { journeyData } from "../lib/politicalJourneyData";
 import { supabase } from "../lib/supabase";
 import NotificationsFeed from "./NotificationsFeed";
@@ -9,7 +8,6 @@ export default function PoliticalJourney() {
   const [hoveredYear, setHoveredYear] = useState<number | null>(null);
   const [selectedYear, setSelectedYear] = useState<number>(2018);
   const [showStayConnected, setShowStayConnected] = useState<boolean | null>(null); // null = loading
-  const navigate = useNavigate();
 
   const years = Object.keys(journeyData).map(Number).sort((a, b) => a - b);
   const totalYears = years.length;
@@ -40,10 +38,6 @@ export default function PoliticalJourney() {
   const getTeaser = (year: number) => {
     const first = journeyData[year].points[0] || "";
     return first.length > 140 ? first.slice(0, 140).trim() + "..." : first;
-  };
-
-  const handleReadMore = (year: number) => {
-    navigate(`/political-journey/${year}`);
   };
 
   // Smart alignment for hover popups (enhanced view only)
@@ -108,13 +102,6 @@ export default function PoliticalJourney() {
                 <li key={idx}>{point}</li>
               ))}
             </ul>
-
-            <button
-              onClick={() => handleReadMore(selectedYear)}
-              className="mt-4 text-sm font-semibold text-accent-600 hover:text-accent-700 transition"
-            >
-              Read full story →
-            </button>
           </div>
         </div>
 
@@ -184,7 +171,7 @@ export default function PoliticalJourney() {
         Our Political Journey: The Path to People's Trust
       </h2>
       <p className="text-center text-white/70 text-xs sm:text-sm mb-5 max-w-xl mx-auto px-4 relative z-10">
-        Hover a year to preview, then click to explore the full story.
+        Hover a year to see the highlights from that period.
       </p>
 
       {/* YEAR TIMELINE WITH HOVER POPUPS */}
@@ -201,11 +188,11 @@ export default function PoliticalJourney() {
               onMouseLeave={() => setHoveredYear(null)}
             >
               <button
-                onClick={() => handleReadMore(year)}
+                type="button"
                 className={`
                   px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3
                   rounded-lg font-semibold text-sm sm:text-base
-                  transition-all duration-200
+                  transition-all duration-200 cursor-default
                   ${
                     isActive
                       ? "bg-accent-500 text-white shadow-xl scale-110"
@@ -232,18 +219,9 @@ export default function PoliticalJourney() {
                                     >
                         {data.title}
                       </h3>
-                      <p className="text-xs text-gray-600 leading-relaxed mb-3">
+                      <p className="text-xs text-gray-600 leading-relaxed">
                         {getTeaser(year)}
                       </p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReadMore(year);
-                        }}
-                        className="text-xs sm:text-sm font-semibold text-accent-600 hover:text-accent-700 transition"
-                      >
-                        Click here to read more →
-                      </button>
                     </div>
                   </div>
                 </div>

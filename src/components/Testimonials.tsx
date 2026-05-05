@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 interface Testimonial {
   quote: string;
@@ -6,7 +7,9 @@ interface Testimonial {
   role: string;
 }
 
-/* ✅ ALL TESTIMONIALS */
+// Fallback content used only while the DB query is in flight or if the
+// admin hasn't curated any rows yet. The component swaps these out for
+// the live `testimonials` table contents on mount.
 const TESTIMONIALS_DATA: Testimonial[] = [
   {
     quote:
@@ -137,8 +140,77 @@ const TESTIMONIALS_DATA: Testimonial[] = [
 ];
 
 const Testimonials = () => {
-  // Duplicate the array for seamless infinite loop
-  const looped = [...TESTIMONIALS_DATA, ...TESTIMONIALS_DATA];
+  // Live admin-managed testimonials. While loading or when the admin
+  // hasn't added any rows yet, we keep showing the static defaults
+  // above so the section is never blank.
+  const [items, setItems] = useState<Testimonial[]>(TESTIMONIALS_DATA);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      const { data, error } = await supabase
+        .from("testimonials")
+        .select("name, location, message")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      if (!mounted) return;
+      if (!error && data && data.length > 0) {
+        setItems(
+          data.map((d: any) => ({
+            quote: d.message,
+            author: d.name,
+            role: d.location,
+          }))
+        );
+      }
+    };
+    void load();
+
+    // Realtime: refresh when an admin adds, edits, hides, or deletes.
+    const channel = supabase
+      .channel("testimonials-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "testimonials" },
+        load
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      void supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Decide at runtime whether the rendered cards overflow the viewport.
+  // If they don't (e.g. only one or two testimonials), we render the
+  // single set centered with no animation — duplicating would show the
+  // same testimonial twice next to itself, and scrolling a non-overflowing
+  // strip looks like a glitch. When content does overflow we render two
+  // copies back-to-back so the marquee can loop seamlessly.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const probeRef = useRef<HTMLDivElement>(null);
+  const [shouldScroll, setShouldScroll] = useState(false);
+
+  useLayoutEffect(() => {
+    const recompute = () => {
+      const container = containerRef.current;
+      const probe = probeRef.current;
+      if (!container || !probe) return;
+      // Probe holds exactly one set of cards (no duplication).
+      const overflow = probe.scrollWidth > container.clientWidth;
+      setShouldScroll(overflow);
+    };
+    recompute();
+    window.addEventListener("resize", recompute);
+    return () => window.removeEventListener("resize", recompute);
+  }, [items]);
+
+  // Cards rendered into the visible track. When marquee mode is on we
+  // need a duplicate set behind the first one to fill the gap during
+  // the translateX(-50%) loop. When off, render exactly one set.
+  const rendered = shouldScroll ? [...items, ...items] : items;
 
   return (
     <section className="relative bg-white py-10 sm:py-14 overflow-hidden">
@@ -153,9 +225,30 @@ const Testimonials = () => {
         </p>
       </div>
 
-      <div className="relative w-full overflow-hidden">
-        <div className="marquee-track flex gap-4 sm:gap-6 px-4">
-          {looped.map((item, idx) => {
+      {/* Hidden probe — measures the natural width of one set of cards
+          so we can decide whether scrolling is necessary. Visually
+          identical layout to the real track but absolutely positioned
+          off-screen so it never appears to the user. */}
+      <div
+        ref={probeRef}
+        aria-hidden="true"
+        className="absolute -top-[9999px] left-0 flex gap-4 sm:gap-6 px-4 pointer-events-none invisible"
+      >
+        {items.map((item, idx) => (
+          <div
+            key={`probe-${idx}`}
+            className="w-[280px] sm:w-[340px] md:w-[380px] flex-shrink-0"
+          >
+            {item.quote}
+          </div>
+        ))}
+      </div>
+
+      <div ref={containerRef} className="relative w-full overflow-hidden">
+        <div
+          className={`${shouldScroll ? "marquee-track" : "static-track justify-center"} flex gap-4 sm:gap-6 px-4`}
+        >
+          {rendered.map((item, idx) => {
             const isGreen = idx % 2 === 0;
             const borderColor = isGreen ? "border-l-green-600" : "border-l-blue-600";
             const textColor = isGreen ? "text-green-700" : "text-primary-700";
@@ -193,6 +286,13 @@ const Testimonials = () => {
           width: max-content;
           animation: testimonial-scroll 30s linear infinite;
           will-change: transform;
+        }
+
+        /* When content fits the viewport, no animation — just a static,
+           centered row. width:auto lets justify-center actually take
+           effect (a max-content track ignores it). */
+        .static-track {
+          width: 100%;
         }
 
         @keyframes testimonial-scroll {

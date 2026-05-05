@@ -6,6 +6,7 @@ import { Settings } from "lucide-react";
 import { Globe } from "lucide-react";
 import { Network } from "lucide-react";
 import { Youtube } from "lucide-react";
+import { Quote } from "lucide-react";
 import * as XLSX from "xlsx";
 import Visited from "./Visited";
 import Assistance from "./Assistance";
@@ -15,6 +16,7 @@ import Suggestions from "./Suggestions";
 import MasterData from "./MasterData";
 import OrgHierarchy from "./OrgHierarchy";
 import FeaturedVideos from "./FeaturedVideos";
+import TestimonialsAdmin from "./TestimonialsAdmin";
 import SupportTeams from "./SupportTeams";
 import UsersPage from "./Users";
 import EventsNotifications from "./EventsNotifications";
@@ -130,58 +132,96 @@ const calculateAge = (dob: string | null | undefined): number | string => {
   }
 };
 
-// Exports member data to Excel with formatted columns and auto-fit widths.
-// Async because we also pull referral aggregates from the `referrals` table
-// (direct + passive counts per user, plus the referrer's name lookup) so
-// the Excel sheet captures the full referral picture, not just the profile.
+// =====================================================================
+// FULL DATA EXPORT — multi-sheet workbook covering every part of the
+// portal: profiles, referrals (with the upstream referrer for passive
+// rows), service requests, suggestions, events + applications,
+// testimonials, featured videos, and leadership directory.
+//
+// Each sheet is keyed off the same `data` rows so cross-references
+// (e.g. "User" on a service request) resolve to a real name without
+// the admin having to look up UUIDs by hand.
+// =====================================================================
 const exportToExcel = async (
   data: Row[],
   filename: string = "registrations.xlsx"
 ) => {
-  if (data.length === 0) {
-    XLSX.writeFile(XLSX.utils.book_new(), filename);
-    return;
-  }
+  // Helper — append a sheet only if it has rows. Auto-fits column widths.
+  const appendSheet = (
+    workbook: XLSX.WorkBook,
+    name: string,
+    rows: Record<string, any>[]
+  ) => {
+    const ws = XLSX.utils.json_to_sheet(rows.length === 0 ? [{ "(empty)": "" }] : rows);
+    if (rows.length > 0) {
+      ws["!cols"] = Object.keys(rows[0]).map(() => ({ wch: 20 }));
+    }
+    // Sheet names have a 31-char limit in Excel.
+    XLSX.utils.book_append_sheet(workbook, ws, name.slice(0, 31));
+  };
 
-  // 1. Map referral_code → "First Last" so we can fill in "Referred By Name"
-  //    for users whose referred_by code matches someone in `data`.
+  const isoDate = (d: string | null | undefined) =>
+    d ? new Date(d).toISOString().slice(0, 10) : "-";
+  const fullName = (
+    p: { first_name?: string | null; last_name?: string | null; full_name?: string | null; email?: string | null } | undefined
+  ): string => {
+    if (!p) return "-";
+    const fn = [p.first_name, p.last_name].filter(Boolean).join(" ");
+    return fn || p.full_name || p.email || "-";
+  };
+
+  const workbook = XLSX.utils.book_new();
+
+  // -------------------------------------------------------------------
+  // Lookups
+  // -------------------------------------------------------------------
+  const profileById = new Map<string, Row>();
+  for (const r of data) profileById.set(r.id, r);
   const codeToName: Record<string, string> = {};
   for (const r of data) {
-    if (r.referral_code) {
-      const nm =
-        [r.first_name, r.last_name].filter(Boolean).join(" ") ||
-        r.full_name ||
-        r.email ||
-        "";
-      if (nm) codeToName[r.referral_code] = nm;
-    }
+    if (r.referral_code) codeToName[r.referral_code] = fullName(r);
   }
 
-  // 2. Fetch every referrals row in one go and bucket by referrer_id.
-  //    Direct + 'active' both map to the "Direct Referrals" count
-  //    (the column was renamed in the user-facing UI; data values stay
-  //    'direct' / 'active' for back-compat). 'passive' goes to its own col.
-  const counts: Record<string, { direct: number; passive: number }> = {};
+  // -------------------------------------------------------------------
+  // Sheet 1: USERS — every column we display anywhere on the site,
+  //          plus referral counts.
+  // -------------------------------------------------------------------
+  // Pull all referrals once for both the count column and the dedicated
+  // referral sheets below.
+  type RefRow = {
+    id: string;
+    referrer_id: string | null;
+    referred_id: string | null;
+    source: string | null;
+    created_at: string;
+  };
+  let allReferrals: RefRow[] = [];
   try {
-    const { data: refRows, error: refErr } = await supabase
+    const { data: refRows } = await supabase
       .from("referrals")
-      .select("referrer_id, source");
-    if (refErr) {
-      console.error("referrals fetch (export):", refErr);
-    } else if (refRows) {
-      for (const r of refRows as Array<{ referrer_id: string; source: string }>) {
-        if (!r.referrer_id) continue;
-        if (!counts[r.referrer_id]) counts[r.referrer_id] = { direct: 0, passive: 0 };
-        if (r.source === "passive") counts[r.referrer_id].passive++;
-        else counts[r.referrer_id].direct++;
-      }
-    }
+      .select("id, referrer_id, referred_id, source, created_at");
+    allReferrals = (refRows || []) as RefRow[];
   } catch (e) {
-    console.error("referrals aggregation failed:", e);
+    console.error("referrals fetch failed:", e);
   }
 
-  // 3. Build the export rows.
-  const exportData = data.map((row) => {
+  // Index by (referred_id) → direct row, so we can resolve the
+  // "in-between" person for every passive referral.
+  const directByReferred = new Map<string, RefRow>();
+  for (const r of allReferrals) {
+    if (r.source !== "passive" && r.referred_id) {
+      directByReferred.set(r.referred_id, r);
+    }
+  }
+  const counts: Record<string, { direct: number; passive: number }> = {};
+  for (const r of allReferrals) {
+    if (!r.referrer_id) continue;
+    if (!counts[r.referrer_id]) counts[r.referrer_id] = { direct: 0, passive: 0 };
+    if (r.source === "passive") counts[r.referrer_id].passive++;
+    else counts[r.referrer_id].direct++;
+  }
+
+  const usersSheet = data.map((row) => {
     const c = counts[row.id] || { direct: 0, passive: 0 };
     return {
       "Member ID": row.public_user_code || "-",
@@ -208,7 +248,6 @@ const exportToExcel = async (
       "Family Mobile": row.family_mobile || "-",
       "Family Village": row.family_village || "-",
       "Family Designation": row.family_designation || "-",
-      // Referral data
       "My Referral Code": row.referral_code || "-",
       "Referred By (Code)": row.referred_by || "-",
       "Referred By (Name)": (row.referred_by && codeToName[row.referred_by]) || "-",
@@ -216,19 +255,257 @@ const exportToExcel = async (
       "Passive Referrals": c.passive,
       "Total Referrals": c.direct + c.passive,
       "Role": row.role || "-",
-      "Joined": row.created_at
-        ? new Date(row.created_at).toISOString().slice(0, 10)
-        : "-",
+      "Joined": isoDate(row.created_at),
     };
   });
+  appendSheet(workbook, "Users", usersSheet);
 
-  const worksheet = XLSX.utils.json_to_sheet(exportData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
+  // -------------------------------------------------------------------
+  // Sheet 2: DIRECT REFERRALS — one row per direct referral edge with
+  //          both sides resolved to names + key contact details.
+  // -------------------------------------------------------------------
+  const directRefRows = allReferrals
+    .filter((r) => r.source !== "passive")
+    .map((r) => {
+      const referrer = r.referrer_id ? profileById.get(r.referrer_id) : undefined;
+      const referred = r.referred_id ? profileById.get(r.referred_id) : undefined;
+      return {
+        "Date":             isoDate(r.created_at),
+        "Source":           r.source || "-",
+        "Referrer Name":    fullName(referrer),
+        "Referrer Code":    referrer?.public_user_code || "-",
+        "Referrer Mobile":  referrer?.mobile_number || "-",
+        "Referred Name":    fullName(referred),
+        "Referred Code":    referred?.public_user_code || "-",
+        "Referred Mobile":  referred?.mobile_number || "-",
+        "Referred Email":   referred?.email || "-",
+        "Referred Country": referred?.country_of_residence || "-",
+        "Referred City":    referred?.city_abroad || "-",
+        "Referred State":   referred?.indian_state || "-",
+        "Referred District":referred?.district || "-",
+      };
+    });
+  appendSheet(workbook, "Direct Referrals", directRefRows);
 
-  // Auto-fit column widths
-  const colWidths = Object.keys(exportData[0] || {}).map(() => ({ wch: 20 }));
-  worksheet["!cols"] = colWidths;
+  // -------------------------------------------------------------------
+  // Sheet 3: PASSIVE REFERRALS — for each passive edge, surface the
+  //          in-between user (the direct referrer of the passive
+  //          referred, i.e. who actually brought them in).
+  // -------------------------------------------------------------------
+  const passiveRefRows = allReferrals
+    .filter((r) => r.source === "passive")
+    .map((r) => {
+      const top = r.referrer_id ? profileById.get(r.referrer_id) : undefined;
+      const passive = r.referred_id ? profileById.get(r.referred_id) : undefined;
+      const middleEdge = r.referred_id ? directByReferred.get(r.referred_id) : undefined;
+      const middle = middleEdge?.referrer_id
+        ? profileById.get(middleEdge.referrer_id)
+        : undefined;
+      return {
+        "Date":                       isoDate(r.created_at),
+        "Top Referrer Name":          fullName(top),
+        "Top Referrer Code":          top?.public_user_code || "-",
+        "Direct (Middle) Name":       fullName(middle),
+        "Direct (Middle) Code":       middle?.public_user_code || "-",
+        "Direct (Middle) Mobile":     middle?.mobile_number || "-",
+        "Direct (Middle) Country":    middle?.country_of_residence || "-",
+        "Direct (Middle) City":       middle?.city_abroad || "-",
+        "Passive Member Name":        fullName(passive),
+        "Passive Member Code":        passive?.public_user_code || "-",
+        "Passive Member Mobile":      passive?.mobile_number || "-",
+        "Passive Member Email":       passive?.email || "-",
+        "Passive Member Country":     passive?.country_of_residence || "-",
+        "Passive Member City":        passive?.city_abroad || "-",
+        "Passive Member State":       passive?.indian_state || "-",
+        "Passive Member District":    passive?.district || "-",
+      };
+    });
+  appendSheet(workbook, "Passive Referrals", passiveRefRows);
+
+  // -------------------------------------------------------------------
+  // Sheet 4: SERVICE REQUESTS
+  // -------------------------------------------------------------------
+  try {
+    const { data: srRows } = await supabase
+      .from("service_requests")
+      .select(
+        "id, user_id, service_type, service_category, service_option, description, status, assigned_to, action_taken, admin_comments, team_reply, team_resolved_at, created_at"
+      )
+      .order("created_at", { ascending: false });
+    const sr = (srRows || []).map((s: any) => {
+      const u = s.user_id ? profileById.get(s.user_id) : undefined;
+      return {
+        "Date":         isoDate(s.created_at),
+        "User":         fullName(u),
+        "User Code":    u?.public_user_code || "-",
+        "Mobile":       u?.mobile_number || "-",
+        "Email":        u?.email || "-",
+        "Service":      s.service_type || "-",
+        "Category":     s.service_category || "-",
+        "Option":       s.service_option || "-",
+        "Description":  s.description || "-",
+        "Status":       s.status || "-",
+        "Assigned To":  s.assigned_to || "-",
+        "Action Taken": s.action_taken || "-",
+        "Admin Notes":  s.admin_comments || "-",
+        "Team Reply":   s.team_reply || "-",
+        "Resolved At":  s.team_resolved_at
+          ? new Date(s.team_resolved_at).toISOString()
+          : "-",
+      };
+    });
+    appendSheet(workbook, "Service Requests", sr);
+  } catch (e) {
+    console.error("service_requests export failed:", e);
+  }
+
+  // -------------------------------------------------------------------
+  // Sheet 5: SUGGESTIONS
+  // -------------------------------------------------------------------
+  try {
+    const { data: sgRows } = await supabase
+      .from("suggestions")
+      .select("*")
+      .order("suggestion_date", { ascending: false });
+    const sg = (sgRows || []).map((s: any) => ({
+      "Date":       s.suggestion_date ? isoDate(s.suggestion_date) : "-",
+      "Name":       s.name || "-",
+      "Country":    s.country || "-",
+      "Mobile":     s.mobile_number || "-",
+      "Email":      s.email || "-",
+      "Suggestion": s.suggestion || "-",
+    }));
+    appendSheet(workbook, "Suggestions", sg);
+  } catch (e) {
+    console.error("suggestions export failed:", e);
+  }
+
+  // -------------------------------------------------------------------
+  // Sheet 6: EVENTS & NOTIFICATIONS
+  // -------------------------------------------------------------------
+  let eventsById: Map<string, any> = new Map();
+  try {
+    const { data: evRows } = await supabase
+      .from("events")
+      .select("id, kind, title, info, date, venue, status, created_at")
+      .order("created_at", { ascending: false });
+    eventsById = new Map((evRows || []).map((e: any) => [e.id, e]));
+    const ev = (evRows || []).map((e: any) => ({
+      "Kind":       e.kind || "-",
+      "Title":      e.title || "-",
+      "Info":       e.info || "-",
+      "Date":       e.date ? isoDate(e.date) : "-",
+      "Venue":      e.venue || "-",
+      "Status":     e.status || "-",
+      "Created":    isoDate(e.created_at),
+    }));
+    appendSheet(workbook, "Events & Notifications", ev);
+  } catch (e) {
+    console.error("events export failed:", e);
+  }
+
+  // -------------------------------------------------------------------
+  // Sheet 7: EVENT APPLICATIONS — one row per (event, applicant).
+  //          Joins the user's profile to the event title for
+  //          readability without a separate lookup.
+  // -------------------------------------------------------------------
+  try {
+    const { data: appRows } = await supabase
+      .from("event_applications")
+      .select("id, event_id, user_id, applied_at")
+      .order("applied_at", { ascending: false });
+    const apps = (appRows || []).map((a: any) => {
+      const u = a.user_id ? profileById.get(a.user_id) : undefined;
+      const ev = a.event_id ? eventsById.get(a.event_id) : undefined;
+      return {
+        "Applied At":  a.applied_at ? new Date(a.applied_at).toISOString() : "-",
+        "Event":       ev?.title || "-",
+        "Event Date":  ev?.date ? isoDate(ev.date) : "-",
+        "User":        fullName(u),
+        "User Code":   u?.public_user_code || "-",
+        "Mobile":      u?.mobile_number || "-",
+        "Email":       u?.email || "-",
+        "Country":     u?.country_of_residence || "-",
+        "City":        u?.city_abroad || "-",
+        "State":       u?.indian_state || "-",
+        "District":    u?.district || "-",
+      };
+    });
+    appendSheet(workbook, "Event Applications", apps);
+  } catch (e) {
+    console.error("event_applications export failed:", e);
+  }
+
+  // -------------------------------------------------------------------
+  // Sheet 8: LEADERS — joined leader_assignments + leaders_master.
+  // -------------------------------------------------------------------
+  try {
+    const { data: laRows } = await supabase
+      .from("leader_assignments")
+      .select(
+        `id, role, district, constituency, sort_order, is_active,
+         leaders_master ( id, name, whatsapp_number, whatsapp_number_2 )`
+      )
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    const ls = (laRows || []).map((r: any) => ({
+      "Role":          r.role || "-",
+      "District":      r.district || "-",
+      "Constituency":  r.constituency || "-",
+      "Name":          r.leaders_master?.name || "-",
+      "WhatsApp":      r.leaders_master?.whatsapp_number || "-",
+      "Alt. WhatsApp": r.leaders_master?.whatsapp_number_2 || "-",
+    }));
+    appendSheet(workbook, "Leaders", ls);
+  } catch (e) {
+    console.error("leaders export failed:", e);
+  }
+
+  // -------------------------------------------------------------------
+  // Sheet 9: TESTIMONIALS
+  // -------------------------------------------------------------------
+  try {
+    const { data: tRows } = await supabase
+      .from("testimonials")
+      .select("name, location, message, sort_order, is_active, created_at")
+      .order("sort_order", { ascending: true });
+    const t = (tRows || []).map((row: any) => ({
+      "Name":      row.name || "-",
+      "Location":  row.location || "-",
+      "Message":   row.message || "-",
+      "Active":    row.is_active ? "Yes" : "No",
+      "Order":     row.sort_order ?? 0,
+      "Created":   isoDate(row.created_at),
+    }));
+    appendSheet(workbook, "Testimonials", t);
+  } catch (e) {
+    console.error("testimonials export failed:", e);
+  }
+
+  // -------------------------------------------------------------------
+  // Sheet 10: FEATURED VIDEOS
+  // -------------------------------------------------------------------
+  try {
+    const { data: vRows } = await supabase
+      .from("youtube_videos")
+      .select("video_id, title, video_url, published_at, sort_order, is_active");
+    const v = (vRows || []).map((row: any) => ({
+      "Title":     row.title || "-",
+      "URL":       row.video_url || `https://www.youtube.com/watch?v=${row.video_id}`,
+      "Video ID":  row.video_id,
+      "Order":     row.sort_order ?? 0,
+      "Active":    row.is_active === false ? "No" : "Yes",
+      "Added":     isoDate(row.published_at),
+    }));
+    appendSheet(workbook, "Featured Videos", v);
+  } catch (e) {
+    console.error("featured_videos export failed:", e);
+  }
+
+  // Empty workbook fallback — Excel rejects a workbook with no sheets.
+  if (workbook.SheetNames.length === 0) {
+    appendSheet(workbook, "Empty", []);
+  }
 
   XLSX.writeFile(workbook, filename);
 };
@@ -355,6 +632,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Settings} label="Master Data" page="masterData" />
             <Item icon={Network} label="Org Hierarchy" page="orgHierarchy" />
             <Item icon={Youtube} label="Featured Videos" page="featuredVideos" />
+            <Item icon={Quote} label="Testimonials" page="testimonials" />
             <Item icon={Newspaper} label="Events & Notifications" page="eventsnotifications" />
             <Item icon={Newspaper} label="News" page="news" />
             <Item icon={Globe} label="Content Control" page="contentControl" />
@@ -1097,6 +1375,7 @@ export default function AdminDashboard() {
       {currentPage === "masterData" && <MasterData />}
       {currentPage === "orgHierarchy" && <OrgHierarchy />}
       {currentPage === "featuredVideos" && <FeaturedVideos />}
+      {currentPage === "testimonials" && <TestimonialsAdmin />}
       {currentPage === "eventsnotifications" && <EventsNotifications />}
       {currentPage === "news" && <News />}
       {currentPage === "contentControl" && <ContentControl />}
