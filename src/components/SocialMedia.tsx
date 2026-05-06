@@ -6,15 +6,17 @@ import {
   Share2,
   Radio,
   Youtube,
-  MessageCircle,
-  Facebook,
-  Instagram,
-  Twitter,
-  Send,
   Shield,
   Code,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import {
+  FacebookBrand,
+  XBrand,
+  InstagramBrand,
+  WhatsAppBrand,
+  TelegramBrand,
+} from "./BrandIcons";
 
 const CHANNEL_ID = "UCM3lYQQxJZTzQzYO35-_JCw";
 const MAX_VIDEOS = 12;
@@ -28,13 +30,22 @@ const formatRelativeTime = (publishedAt: string) => {
   return `${Math.floor(mins / 1440)}d ago`;
 };
 
-const SocialIcon = ({ icon: Icon, bg, text, url }: any) => {
+// Renders one brand icon inside a soft circular tile. The brand SVGs
+// already carry their own canonical colour, so the tile uses a neutral
+// background to let the brand mark stand on its own.
+const SocialIcon = ({ icon: Icon, bg, url }: any) => {
   const node = (
-    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${bg} ${text} hover:scale-110 transition`}>
-      <Icon size={18} />
+    <div className={`w-10 h-10 rounded-lg flex items-center justify-center hover:scale-110 transition ${bg || "bg-gray-50 border border-gray-200"}`}>
+      <Icon size={20} />
     </div>
   );
-  return url ? <a href={url} target="_blank" rel="noopener noreferrer">{node}</a> : node;
+  return url ? (
+    <a href={url} target="_blank" rel="noopener noreferrer" aria-label="Open social link">
+      {node}
+    </a>
+  ) : (
+    node
+  );
 };
 
 // Drive video carousel: replace the placeholder IDs with your Google Drive file IDs
@@ -308,8 +319,8 @@ export default function PressMeetsAndSocial() {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row w-full bg-white">
-      <div className="lg:w-[65%] bg-gradient-to-br from-[#0055a5] to-[#003366] p-4 sm:p-6">
+    <div id="digital-channels" className="flex flex-col lg:flex-row w-full bg-white">
+      <div id="onair" className="lg:w-[65%] bg-gradient-to-br from-[#0055a5] to-[#003366] p-4 sm:p-6">
         <h2 className="text-white font-black text-lg sm:text-xl text-center mb-4 sm:mb-6 flex justify-center items-center gap-2">
           <Video size={20} /> Jagan Anna On Air
         </h2>
@@ -371,22 +382,24 @@ export default function PressMeetsAndSocial() {
               title: "Jagan Anna",
               desc: "Official Leader Handles",
               colors: [
-                { icon: Facebook, bg: "bg-blue-100", text: "text-primary-700", url: "https://www.facebook.com/ysjagan/" },
-                { icon: Twitter, bg: "bg-sky-100", text: "text-sky-600", url: "https://x.com/ysjagan/" },
-                { icon: Instagram, bg: "bg-pink-100", text: "text-pink-600", url: "https://www.instagram.com/ysjagan/" },
-                { icon: MessageCircle, bg: "bg-green-100", text: "text-green-600", url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
-                { icon: Send, bg: "bg-cyan-100", text: "text-cyan-600", url: "https://t.me/s/JaganSpeaks?q=%23YSJagan&before=4121" },
+                { icon: FacebookBrand,  url: "https://www.facebook.com/ysjagan/" },
+                { icon: XBrand,         url: "https://x.com/ysjagan/" },
+                { icon: InstagramBrand, url: "https://www.instagram.com/ysjagan/" },
+                { icon: WhatsAppBrand,  url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
+                { icon: TelegramBrand,  url: "https://t.me/s/JaganSpeaks?q=%23YSJagan&before=4121" },
               ],
             },
             {
               title: "YSRCP Party",
               desc: "Official Party Updates",
+              // Mirror the same handles as the Jagan Anna card above —
+              // those are the URLs the client confirmed are correct.
               colors: [
-                { icon: Facebook, bg: "bg-blue-100", text: "text-primary-700", url: "https://www.instagram.com/ysrcongress/?hl=en" },
-                { icon: Twitter, bg: "bg-sky-100", text: "text-sky-600", url: "https://x.com/YSRCParty" },
-                { icon: Instagram, bg: "bg-pink-100", text: "text-pink-600", url: "https://www.instagram.com/ysrcongress/?hl=en" },
-                { icon: MessageCircle, bg: "bg-green-100", text: "text-green-600", url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
-                { icon: Send, bg: "bg-cyan-100", text: "text-cyan-600", url: "https://www.ysrcongress.com/" },
+                { icon: FacebookBrand,  url: "https://www.facebook.com/ysjagan/" },
+                { icon: XBrand,         url: "https://x.com/ysjagan/" },
+                { icon: InstagramBrand, url: "https://www.instagram.com/ysjagan/" },
+                { icon: WhatsAppBrand,  url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
+                { icon: TelegramBrand,  url: "https://t.me/s/JaganSpeaks?q=%23YSJagan&before=4121" },
               ],
             },
           ].map((c, idx) => (
@@ -400,7 +413,7 @@ export default function PressMeetsAndSocial() {
               </div>
               <div className="flex justify-center gap-3 sm:gap-4 mt-3 sm:mt-4">
                 {c.colors.map((ic, i) => (
-                  <SocialIcon key={i} icon={ic.icon} bg={ic.bg} text={ic.text} url={(ic as any).url} />
+                  <SocialIcon key={i} icon={ic.icon} url={ic.url} />
                 ))}
               </div>
             </div>

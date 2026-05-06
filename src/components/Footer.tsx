@@ -1,59 +1,133 @@
 import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Globe,
   Mail,
   Phone,
-  Facebook,
-  Twitter,
-  Instagram,
-  Youtube,
   ChevronDown,
 } from "lucide-react";
+import {
+  FacebookBrand,
+  XBrand,
+  InstagramBrand,
+  YouTubeBrand,
+} from "./BrandIcons";
 import nriLogo from "./nrilogo.png";
+
+// Each Quick Link routes to one of:
+//   • '#anchor'  — smooth-scrolls to a home-page section (or navigates
+//                   to home first when the user is on another route).
+//   • '/path'    — react-router push to that path.
+//   • absolute URL with `external: true` — opens in a new tab.
+type LinkItem = { label: string; to: string; external?: boolean };
+
+const NRI_SERVICES: LinkItem[] = [
+  { label: "Document Services",   to: "#services" },
+  { label: "Property Assistance", to: "#services" },
+  { label: "Business Support",    to: "#services" },
+  { label: "Education Services",  to: "#services" },
+  { label: "Legal Help",          to: "#services" },
+  { label: "Investment Guidance", to: "#services" },
+];
+
+const QUICK_LINKS: LinkItem[] = [
+  { label: "About YSRCP",         to: "/about" },
+  { label: "Home",                to: "#hero" },
+  { label: "Services",            to: "#services" },
+  // Jagan-mark click takes the user to the Pillars of Progress
+  // section (id="section-pillars" on TenPillar).
+  { label: "Jagan-mark",          to: "#section-pillars" },
+  { label: "Jagan anna on air",   to: "#onair" },
+  { label: "Digital channels",    to: "#digital-channels" },
+  { label: "Gallery",             to: "#glimpse" },
+];
+
+const REGIONS: LinkItem[] = [
+  { label: "USA & Canada",         to: "#" },
+  { label: "Middle East",          to: "#" },
+  { label: "Europe & UK",          to: "#" },
+  { label: "Australia & NZ",       to: "#" },
+  { label: "Singapore & Malaysia", to: "#" },
+];
 
 const Footer: React.FC = () => {
   const [open, setOpen] = useState<string | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const sections = [
-    {
-      title: "NRI Services",
-      items: [
-        "Document Services",
-        "Property Assistance",
-        "Business Support",
-        "Education Services",
-        "Legal Help",
-        "Investment Guidance",
-      ],
-    },
-    {
-      title: "Quick Links",
-      items: [
-        "About YSRCP",
-        "Leadership",
-        "Policies",
-        "Press Releases",
-        "Careers",
-        "Privacy Policy",
-      ],
-    },
-    {
-      title: "Regions",
-      items: [
-        "USA & Canada",
-        "Middle East",
-        "Europe & UK",
-        "Australia & NZ",
-        "Singapore & Malaysia",
-      ],
-    },
+  const sections: { title: string; items: LinkItem[] }[] = [
+    { title: "NRI Services", items: NRI_SERVICES },
+    { title: "Quick Links",  items: QUICK_LINKS },
+    { title: "Regions",      items: REGIONS },
   ];
 
+  // Smooth-scroll to a hash anchor. If the user is on a different
+  // route, navigate to '/' first and scroll once the home page has
+  // painted (two RAF ticks gives React time to mount the section).
+  const scrollToAnchor = (hash: string) => {
+    if (!hash || hash === "#") return;
+    if (location.pathname !== "/") {
+      navigate("/");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = document.querySelector(hash);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+      return;
+    }
+    const el = document.querySelector(hash);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Render a Quick Link with the right element based on its `to`:
+  //   '#anchor' → button that smooth-scrolls
+  //   '/path'   → react-router <Link> (handles history + relative paths)
+  //   external  → <a target="_blank">
+  const renderLinkItem = (item: LinkItem, className: string) => {
+    if (item.external) {
+      return (
+        <a
+          href={item.to}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={className}
+        >
+          {item.label}
+        </a>
+      );
+    }
+    if (item.to.startsWith("/")) {
+      return (
+        <Link
+          to={item.to}
+          className={className}
+          onClick={() => window.scrollTo({ top: 0, behavior: "auto" })}
+        >
+          {item.label}
+        </Link>
+      );
+    }
+    return (
+      <button
+        type="button"
+        onClick={() => scrollToAnchor(item.to)}
+        className={className}
+      >
+        {item.label}
+      </button>
+    );
+  };
+
+  // Mirror the same handles used in the Jagan Anna / YSRCP Party
+  // cards on the home page — those URLs are the client-confirmed
+  // working ones. YouTube kept as the YSRCP official channel since
+  // the Jagan Anna card doesn't have a YouTube entry.
   const footerSocialLinks = [
-    { icon: Facebook, url: "https://www.instagram.com/ysrcongress/?hl=en", label: "Facebook" },
-    { icon: Twitter, url: "https://x.com/YSRCParty", label: "Twitter" },
-    { icon: Instagram, url: "https://www.instagram.com/ysrcongress/?hl=en", label: "Instagram" },
-    { icon: Youtube, url: "https://www.youtube.com/@ysrcpofficial", label: "YouTube" },
+    { icon: FacebookBrand,  url: "https://www.facebook.com/ysjagan/",     label: "Facebook" },
+    { icon: XBrand,         url: "https://x.com/ysjagan/",                label: "Twitter" },
+    { icon: InstagramBrand, url: "https://www.instagram.com/ysjagan/",    label: "Instagram" },
+    { icon: YouTubeBrand,   url: "https://www.youtube.com/@ysrcpofficial", label: "YouTube" },
   ];
 
   return (
@@ -127,8 +201,11 @@ const Footer: React.FC = () => {
               >
                 <ul className="space-y-2 text-xs text-gray-400">
                   {sec.items.map((item, i) => (
-                    <li key={i} className="hover:text-white cursor-pointer transition">
-                      {item}
+                    <li key={i}>
+                      {renderLinkItem(
+                        item,
+                        "text-left hover:text-white cursor-pointer transition"
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -146,11 +223,11 @@ const Footer: React.FC = () => {
               </h4>
               <ul className="space-y-2 text-gray-400 text-sm">
                 {sec.items.map((item, i) => (
-                  <li
-                    key={i}
-                    className="hover:text-white hover:translate-x-1 transition-all duration-200 cursor-pointer"
-                  >
-                    {item}
+                  <li key={i}>
+                    {renderLinkItem(
+                      item,
+                      "inline-block text-left hover:text-white hover:translate-x-1 transition-all duration-200 cursor-pointer"
+                    )}
                   </li>
                 ))}
               </ul>
