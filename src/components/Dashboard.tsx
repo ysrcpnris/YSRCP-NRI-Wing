@@ -1057,6 +1057,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { sanitizeText } from '../lib/sanitize';
 import { useAuth } from '../contexts/useAuth';
 import Cropper from 'react-easy-crop';
 import { getCroppedBlob, PixelCrop } from '../lib/cropImage';
@@ -2352,7 +2353,10 @@ const handleCancelApply = async (event: EventItem) => {
 };
 
 const handleSubmitService = async () => {
-  const message = serviceMessageRef.current?.value.trim();
+  // Sanitise + trim before length-checking so a textarea full of
+  // zero-width chars doesn't pass the "is filled" guard while
+  // actually being empty after the strip.
+  const message = sanitizeText(serviceMessageRef.current?.value || "").trim();
 
   if (!selectedService || !selectedSub || !selectedInner) {
     showToast("Please complete service selection", "info");
@@ -3231,23 +3235,27 @@ if (dob) {
     const instagram =
       (document.getElementById("instagram") as HTMLInputElement)?.value || "";
 
+// Run every free-text field through the shared hygiene sanitiser
+// before persisting. Strips control chars, zero-width / bidi
+// chars, and angle brackets. Empty strings are normalised to NULL
+// for optional fields so the DB stays clean.
 const updates = {
   dob,
-  profession,
-  role_designation: roleDesignation,
-  organization: organization,
+  profession:         sanitizeText(profession).trim(),
+  role_designation:   sanitizeText(roleDesignation).trim(),
+  organization:       sanitizeText(organization).trim(),
 
-  facebook_id: facebook,
-  twitter_id: twitter,
-  linkedin_id: linkedin,
-  instagram_id: instagram,
+  facebook_id:        sanitizeText(facebook).trim(),
+  twitter_id:         sanitizeText(twitter).trim(),
+  linkedin_id:        sanitizeText(linkedin).trim(),
+  instagram_id:       sanitizeText(instagram).trim(),
 
-  // Active family member (optional — empty strings persisted as NULL)
-  family_relation:    familyRelation || null,
-  family_name:        familyName.trim() || null,
-  family_mobile:      familyMobile.trim() || null,
-  family_village:     familyVillage.trim() || null,
-  family_designation: familyDesignation.trim() || null,
+  // Active family member (optional — empty strings persisted as NULL).
+  family_relation:    sanitizeText(familyRelation).trim() || null,
+  family_name:        sanitizeText(familyName).trim() || null,
+  family_mobile:      sanitizeText(familyMobile).trim() || null,
+  family_village:     sanitizeText(familyVillage).trim() || null,
+  family_designation: sanitizeText(familyDesignation).trim() || null,
 
   updated_at: new Date().toISOString(),
 };
@@ -3289,7 +3297,9 @@ const fetchMySuggestions = async () => {
 };
 
 const handleSubmitSuggestion = async () => {
-  const message = suggestionRef.current?.value.trim() || "";
+  // Strip control / zero-width chars before trimming so a paste-attack
+  // that's "100% invisible characters" doesn't bypass the empty check.
+  const message = sanitizeText(suggestionRef.current?.value || "").trim();
 
   if (!message) {
     showToast("Please enter your suggestion", "info");

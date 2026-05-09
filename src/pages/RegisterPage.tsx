@@ -12,23 +12,11 @@ import { countriesData } from '../lib/countryCodes';
 import { getStates, getCities, hasStateData } from '../lib/locationData';
 import { indianAddressData } from '../lib/indianAddressData';
 
-// ----------------------------------------------------------------------
-// Input sanitizers — we use the Supabase JS client which already
-// parameterises every query (so SQL injection isn't possible at the
-// transport layer), but we still strip control characters and angle
-// brackets from user-typed strings up front so:
-//   1. they can't smuggle HTML into anything we render later, and
-//   2. accidental keystrokes (zero-width chars, BOM, NULL) don't end
-//      up persisted in profile fields where they look like glitches.
-// ----------------------------------------------------------------------
-const sanitizeText = (raw: string): string =>
-  (raw || "")
-    // Strip ASCII control chars (0x00-0x1F + DEL 0x7F) and common
-    // zero-width / bidirectional script-smuggling chars in a single pass.
-    // eslint-disable-next-line no-control-regex, no-misleading-character-class
-    .replace(/[\u0000-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, "")
-    // Disallow angle brackets so anything saved cannot be rehydrated as HTML.
-    .replace(/[<>]/g, "");
+// Free-text sanitiser shared with every other form that accepts
+// user input - see src/lib/sanitize.ts for the rationale and the
+// ranges stripped. RegisterPage applies it on submit alongside
+// the other forms (Profile edit, Suggestions, Service requests).
+import { sanitizeText } from "../lib/sanitize";
 
 const SUBMIT_COOLDOWN_SECONDS = 30;
 const SUBMIT_COOLDOWN_KEY = "register_submit_until";
