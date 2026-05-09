@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Admins should never be inserted into anyone's referral tree — they
       // don't count as "referred members" and we don't want them showing up
-      // in the user's Active Referrals list or earning the referrer credits.
+      // in the user's Direct Referrals list.
       if (p?.role === "admin") {
         try {
           localStorage.removeItem("referral_code");
@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Delegate the entire flow to the SECURITY DEFINER RPC. The RPC:
       //   - looks up the referrer by code (profiles RLS would otherwise
       //     block a brand-new user from seeing anyone else's profile),
-      //   - inserts the active row (which fires the +50 credit trigger),
+      //   - inserts the active referral row,
       //   - inserts the passive row for the grandparent if applicable,
       //   - is idempotent (no-op if a referrals row already exists for me).
       // We pass `currentUserId` explicitly via auth context — auth.uid()

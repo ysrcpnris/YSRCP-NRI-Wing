@@ -908,7 +908,7 @@ export default function AdminDashboard() {
   const [err, setErr] = useState<string>("");
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  // Active sidebar page is mirrored to the URL hash (e.g. /admin#credits) so
+  // Active sidebar page is mirrored to the URL hash (e.g. /admin#users) so
   // a page refresh keeps the admin where they were instead of bouncing back
   // to the Dashboard tab.
   const VALID_ADMIN_PAGES = [

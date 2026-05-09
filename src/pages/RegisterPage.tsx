@@ -459,8 +459,8 @@ return (
                   <p className="text-xs text-emerald-700 mt-0.5">
                     Code:{" "}
                     <span className="font-mono font-semibold">{refCode}</span>{" "}
-                    · You'll get <b>+25 signup credits</b>, and your referrer
-                    will earn <b>+50</b> once you verify your email.
+                    · You'll be added to your referrer's network once you
+                    verify your email.
                   </p>
                 </div>
               </div>
