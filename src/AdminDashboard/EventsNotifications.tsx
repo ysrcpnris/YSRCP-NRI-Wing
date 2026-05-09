@@ -58,14 +58,11 @@ const currentLivingLocation = (a: Applicant): string => {
   return indian || country || "—";
 };
 
-// True when the event's date was more than 7 days ago — at that point
-// the auto-purge has run (or the read-time TTL hides the rows anyway),
-// so applicant data is gone for good.
-const APPLICATIONS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const isApplicationsExpired = (eventDate: string | null): boolean => {
-  if (!eventDate) return false;
-  return new Date(eventDate).getTime() + APPLICATIONS_TTL_MS < Date.now();
-};
+// Applications no longer auto-delete after 7 days — the client wants
+// the historical list preserved indefinitely. The helper below is kept
+// at file scope as a no-op stub so any earlier callers that imported
+// it continue to compile. It always returns false now.
+const isApplicationsExpired = (_eventDate: string | null): boolean => false;
 
 export default function EventsNotifications() {
   const [events, setEvents] = useState<EventRow[]>([]);
@@ -95,14 +92,9 @@ export default function EventsNotifications() {
     void initialize();
   }, []);
 
-  // Run the auto-purge first so any expired applications are removed
-  // before we fetch counts. Then load events + counts in parallel.
+  // Auto-purge has been disabled by the client — applications are now
+  // kept indefinitely. Just fetch events + counts on mount.
   const initialize = async () => {
-    try {
-      await supabase.rpc("purge_expired_event_applications");
-    } catch {
-      /* purge is best-effort; failures here shouldn't block the page */
-    }
     await fetchEvents();
   };
 
@@ -351,32 +343,21 @@ export default function EventsNotifications() {
                 <p className="text-sm text-gray-600 line-clamp-3">{e.info}</p>
 
                 {/* Applicants strip — only meaningful for kind=event.
-                    Once the event ended more than 7 days ago, the
-                    auto-purge has run (or the read-time TTL hides the
-                    rows anyway), so we replace the View button with a
-                    static "User data auto-deleted" message instead of
-                    a button that would open an empty list. */}
+                    Applications are preserved indefinitely (no TTL),
+                    so the View button is always available regardless
+                    of when the event happened. */}
                 {isEvent && (
                   <div className="mt-3 pt-3 border-t border-dashed border-gray-200 flex items-center justify-between gap-2 flex-wrap">
-                    {isApplicationsExpired(e.date) ? (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 italic">
-                        <Trash2 size={12} />
-                        User data auto-deleted (event ended over 7 days ago)
-                      </span>
-                    ) : (
-                      <>
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
-                          <Users size={13} />
-                          {applyCount} {applyCount === 1 ? "applicant" : "applicants"}
-                        </span>
-                        <button
-                          onClick={() => void openApplicants(e)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100"
-                        >
-                          View applicants →
-                        </button>
-                      </>
-                    )}
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+                      <Users size={13} />
+                      {applyCount} {applyCount === 1 ? "applicant" : "applicants"}
+                    </span>
+                    <button
+                      onClick={() => void openApplicants(e)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100"
+                    >
+                      View applicants →
+                    </button>
                   </div>
                 )}
               </div>
@@ -543,10 +524,7 @@ export default function EventsNotifications() {
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {applicantsModalEvent.date
-                    ? `Event on ${new Date(applicantsModalEvent.date).toLocaleDateString()} · Auto-clears ${new Date(
-                        new Date(applicantsModalEvent.date).getTime() +
-                          7 * 24 * 60 * 60 * 1000
-                      ).toLocaleDateString()}`
+                    ? `Event on ${new Date(applicantsModalEvent.date).toLocaleDateString()}`
                     : "No event date"}
                 </p>
               </div>

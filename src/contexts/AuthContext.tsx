@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useRef,
   useState,
@@ -9,23 +7,10 @@ import {
 import { User, Session } from "@supabase/supabase-js";
 import { supabase, Profile } from "../lib/supabase";
 import { MESSAGES } from "../constants/messages";
-
-type AuthContextType = {
-  user: User | null;
-  profile: Profile | null;
-  loading: boolean;
-  isVerified: boolean;
-  signUp: (
-    email: string,
-    password: string,
-    profileData: Partial<Profile>
-  ) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ user: User; session: Session } | null>;
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// AuthContext + useAuth + AuthContextType all live in ./useAuth so this
+// file can stay component-only — that lets Vite's Fast Refresh keep
+// component state across edits to AuthProvider's body.
+import { AuthContext } from "./useAuth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -549,7 +534,7 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
     if (v !== undefined && v !== null && v !== "") meta[k as string] = v;
   }
 
-  // 🔵 STEP 3 — call Supabase signup only if safe
+  // 🔵 STEP 3 — call Supabase signup only if safe.
   const { data, error } = await supabase.auth.signUp({
     email: normalizedEmail,
     password,
@@ -678,10 +663,6 @@ const signIn = async (email: string, password: string) => {
   );
 }
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-  return ctx;
-}
+// `useAuth` and `AuthContext` are exported from ./useAuth.ts so this
+// file can be a component-only module (better Fast Refresh behaviour).
+// Consumers should `import { useAuth } from "../contexts/useAuth"`.

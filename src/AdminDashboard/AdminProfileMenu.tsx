@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { User, Lock, LogOut, Save, X, Phone, Mail, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { toast } from "react-toastify";
 
 /* ===============================

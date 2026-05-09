@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 
 // Guards `/support-team/dashboard` — only profiles with role='support_team'
 // can enter. Non-signed-in users get bounced to the support-team auth page;

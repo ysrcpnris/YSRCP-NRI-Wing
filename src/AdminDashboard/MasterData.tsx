@@ -445,6 +445,48 @@ export default function MasterData() {
         }
         keys.add(key);
       }
+
+      // Block cross-leader collisions: an Assembly Coordinator can only
+      // exist once per (district, constituency); a District President
+      // can only exist once per district. The DB has unique indexes
+      // backing this rule, but we check up-front so the admin sees a
+      // friendly name instead of a constraint violation.
+      if (formRole === "Assembly Coordinator" || formRole === "District President") {
+        const checks = formAssignments.map((a) =>
+          formRole === "Assembly Coordinator"
+            ? { district: a.district, constituency: a.constituency }
+            : { district: a.district, constituency: null as string | null }
+        );
+        for (const c of checks) {
+          let q = supabase
+            .from("leader_assignments")
+            .select("leader_id, leaders_master(name)")
+            .eq("role", formRole)
+            .eq("is_active", true)
+            .eq("district", c.district);
+          if (formRole === "Assembly Coordinator") {
+            q = q.eq("constituency", c.constituency || "");
+          }
+          const { data: clash } = await q;
+          // Exclude the leader currently being edited from the
+          // collision check — re-saving their own row is fine.
+          const conflict = (clash || []).find(
+            (r: any) => r.leader_id !== editLeaderId
+          );
+          if (conflict) {
+            const existing = (conflict as any).leaders_master?.name || "another leader";
+            const where =
+              formRole === "Assembly Coordinator"
+                ? `${c.district} / ${c.constituency}`
+                : c.district;
+            alert(
+              `${existing} is already the ${formRole} for ${where}. ` +
+                `Only one ${formRole} can hold that area at a time — remove the existing one first or pick a different area.`
+            );
+            return;
+          }
+        }
+      }
     }
 
     setSavingLeader(true);

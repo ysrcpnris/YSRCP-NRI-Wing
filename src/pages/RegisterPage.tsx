@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { Eye, EyeOff, MapPin } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,6 +11,27 @@ import 'react-toastify/dist/ReactToastify.css';
 import { countriesData } from '../lib/countryCodes';
 import { getStates, getCities, hasStateData } from '../lib/locationData';
 import { indianAddressData } from '../lib/indianAddressData';
+
+// ----------------------------------------------------------------------
+// Input sanitizers — we use the Supabase JS client which already
+// parameterises every query (so SQL injection isn't possible at the
+// transport layer), but we still strip control characters and angle
+// brackets from user-typed strings up front so:
+//   1. they can't smuggle HTML into anything we render later, and
+//   2. accidental keystrokes (zero-width chars, BOM, NULL) don't end
+//      up persisted in profile fields where they look like glitches.
+// ----------------------------------------------------------------------
+const sanitizeText = (raw: string): string =>
+  (raw || "")
+    // Strip ASCII control chars (0x00-0x1F + DEL 0x7F) and common
+    // zero-width / bidirectional script-smuggling chars in a single pass.
+    // eslint-disable-next-line no-control-regex, no-misleading-character-class
+    .replace(/[\u0000-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, "")
+    // Disallow angle brackets so anything saved cannot be rehydrated as HTML.
+    .replace(/[<>]/g, "");
+
+const SUBMIT_COOLDOWN_SECONDS = 30;
+const SUBMIT_COOLDOWN_KEY = "register_submit_until";
 
 /**
  * Searchable input: users can type to filter the dropdown options
@@ -113,6 +134,10 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Cooldown after a successful (or failed) submit so accidental
+  // double-clicks can't fire two signups. Stored in localStorage so
+  // a quick refresh doesn't bypass it.
+  const [submitCooldown, setSubmitCooldown] = useState<number>(0);
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneError, setPhoneError] = useState('');
@@ -300,9 +325,17 @@ export default function RegisterPage() {
     // Indian States → Districts → Assembly Constituencies → Mandals
 
 const handleSubmit = async (e: React.FormEvent) => {
- 
   e.preventDefault();
   setError('');
+
+  // Hard guard against rapid double-submit (race during the loading
+  // state isn't enough — a user can hit Enter twice in <1ms).
+  if (loading) return;
+  if (submitCooldown > 0) {
+    setError(`Please wait ${submitCooldown}s before trying again.`);
+    return;
+  }
+
   setLoading(true);
 
   try {
@@ -349,10 +382,6 @@ if (pwdError) {
     }
 
     // Pull the referral code from localStorage (set by /ref/:code redirect).
-    // Pass it through to signUp so it lives in auth.users.user_metadata and
-    // survives the email-verification round-trip — even when the user opens
-    // the verification email on a different device where localStorage isn't
-    // available. processReferralIfNeeded() falls back to this on first login.
     const referredByCode = (() => {
       try {
         return localStorage.getItem("referral_code") || undefined;
@@ -361,36 +390,51 @@ if (pwdError) {
       }
     })();
 
+    // Sanitize every free-text field one more time at submit so anything
+    // that bypassed the per-field handler (autofill, paste, programmatic
+    // setting) is also stripped before it reaches the database.
     const profilePayload = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
+      first_name: sanitizeText(formData.first_name).trim(),
+      last_name: sanitizeText(formData.last_name).trim(),
       mobile_number: formData.mobile_number,
-      country_of_residence: formData.country_of_residence,
-      state_abroad: formData.state_abroad,
-      city_abroad: formData.city_abroad,
-      indian_state: formData.indian_state,
-      district: formData.district,
-      assembly_constituency: formData.assembly_constituency,
-      mandal: formData.mandal,
+      country_of_residence: sanitizeText(formData.country_of_residence).trim(),
+      state_abroad: sanitizeText(formData.state_abroad).trim(),
+      city_abroad: sanitizeText(formData.city_abroad).trim(),
+      indian_state: sanitizeText(formData.indian_state).trim(),
+      district: sanitizeText(formData.district).trim(),
+      assembly_constituency: sanitizeText(formData.assembly_constituency).trim(),
+      mandal: sanitizeText(formData.mandal).trim(),
       referred_by: referredByCode,
     };
 
     // SIGN UP
-await signUp(
-  formData.email,
-  formData.password,
-  profilePayload
-);
+    await signUp(
+      formData.email.trim().toLowerCase(),
+      formData.password,
+      profilePayload
+    );
 
-navigate("/verify-email", {
-  state: { email: formData.email },
-});
+    // Start the cooldown so a "wait — should I click again?" reflex
+    // can't fire a second signup before the verify-email page mounts.
+    const until = Date.now() + SUBMIT_COOLDOWN_SECONDS * 1000;
+    try {
+      localStorage.setItem(SUBMIT_COOLDOWN_KEY, String(until));
+    } catch { /* ignore */ }
 
-return;
+    navigate("/verify-email", {
+      state: { email: formData.email.trim().toLowerCase() },
+    });
 
+    return;
   } catch (err: any) {
     console.error(err);
     setError(err.message || 'Signup failed');
+    // Apply a shorter cooldown on failure too so brute-force submit
+    // attempts can't burn through Supabase's signup quota.
+    const until = Date.now() + 10 * 1000;
+    try {
+      localStorage.setItem(SUBMIT_COOLDOWN_KEY, String(until));
+    } catch { /* ignore */ }
   } finally {
     setLoading(false);
   }
@@ -402,6 +446,26 @@ return;
     return () => {
       isMounted.current = false;
     };
+  }, []);
+
+  // Cooldown ticker — reads any persisted timestamp from localStorage
+  // (so a quick refresh doesn't bypass the wait), then decrements once
+  // per second until it hits zero.
+  useEffect(() => {
+    const tick = () => {
+      let until = 0;
+      try {
+        until = parseInt(localStorage.getItem(SUBMIT_COOLDOWN_KEY) || "0", 10);
+      } catch { /* ignore */ }
+      const remaining = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      setSubmitCooldown(remaining);
+      if (remaining === 0) {
+        try { localStorage.removeItem(SUBMIT_COOLDOWN_KEY); } catch { /* ignore */ }
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
   }, []);
   const isPasswordInvalid = !!passwordError || (confirmPassword !== formData.password);
 return (
@@ -1024,13 +1088,18 @@ return (
               </div>
             </fieldset>
 
-            {/* ── Submit ── */}
+            {/* ── Submit ── disabled while loading or while in cooldown
+                so accidental double-clicks can't fire two signups. */}
             <button
               type="submit"
-              disabled={loading}
-              className="btn-gradient w-full py-3 text-base rounded-xl"
+              disabled={loading || submitCooldown > 0}
+              className="btn-gradient w-full py-3 text-base rounded-xl disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading
+                ? 'Creating account...'
+                : submitCooldown > 0
+                ? `Please wait ${submitCooldown}s…`
+                : 'Create Account'}
             </button>
           </form>
 

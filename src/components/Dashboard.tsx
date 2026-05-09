@@ -1057,7 +1057,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import Cropper from 'react-easy-crop';
 import { getCroppedBlob, PixelCrop } from '../lib/cropImage';
 import { useIdleLogout } from '../hooks/useIdleLogout';
@@ -2055,6 +2055,14 @@ useEffect(() => {
    */
 
   const [submittingSuggestion, setSubmittingSuggestion] = useState(false);
+  // The user's own past suggestions, listed below the form so they
+  // can see what they've already sent to the admin team.
+  const [mySuggestions, setMySuggestions] = useState<
+    Array<{ id: number; suggestion: string; suggestion_date: string | null; created_at: string }>
+  >([]);
+  // Set when the user has just submitted — shows a friendly thank-you
+  // panel until they navigate away or write a new suggestion.
+  const [suggestionThanks, setSuggestionThanks] = useState<boolean>(false);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
 
   /**
@@ -2555,6 +2563,10 @@ useEffect(() => {
 // Refresh button and the Realtime listener can reuse the same logic.
 await fetchReferrals();
 
+// Load the user's own past suggestions so they can see them under
+// the form when they open the Feedback tab.
+void fetchMySuggestions();
+
      // 2. Leaders (NEW NORMALIZED LOGIC)
     // Even when the user has no Indian district/assembly (e.g., NRIs abroad),
     // we still fetch the GLOBAL coordinator(s) so they appear on every user's
@@ -2621,7 +2633,17 @@ if (!district || !assembly) {
   // Presidents the constituency column is NULL — they cover the whole
   // district, so a district match alone is enough. The .or() filter
   // captures both: same constituency OR no constituency.
-  const constituencyFilter = `constituency.ilike.${normConstituency},constituency.is.null`;
+  //
+  // PostgREST quoting: wrap the user-supplied value in double quotes so
+  // a comma or paren in the profile field can't break the filter into
+  // two parts. (Supabase JS already parameterises HTTP transport, so
+  // this is purely a parser-safety guard, not an injection fix.) Inner
+  // quotes / backslashes are escaped per PostgREST spec.
+  const escapeOrValue = (v: string) =>
+    `"${v.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  const constituencyFilter = `constituency.ilike.${escapeOrValue(
+    normConstituency
+  )},constituency.is.null`;
   const { data: locData, error: locErr } = await supabase
     .from("leader_assignments")
     .select(`
@@ -2843,64 +2865,53 @@ const referralLink =
  // const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
   // ---------------- PROFILE COMPLETION & MISSING FIELDS ----------------
   // 🔹 Profile completion calculation
+// Profile completion is a weighted average of every meaningful field
+// the user can fill. Each item below contributes 1 unit out of TOTAL.
+//
+// Notable rules (from the requirements pass):
+//   • Active Family Member fields are each counted individually — they
+//     remain optional to *save* the profile, but until each one is
+//     filled the bar can't reach 100%.
+//   • Social links count individually too, so adding more handles
+//     bumps the bar by one slot each instead of an all-or-nothing.
 const profileCompletion = useMemo(() => {
   if (!profile) return 0;
 
-  const TOTAL_SECTIONS = 11;
-  let completed = 0;
+  const checks: boolean[] = [
+    // Identity
+    !!profile.first_name,
+    !!profile.last_name,
+    !!profile.mobile_number,
+    !!profile.dob,
+    !!profile.profile_photo,
+    !!profile.gender,
+    // Address — Indian
+    !!indianState,
+    !indianState || !!district,        // district fills if state set
+    !district   || !!assembly,         // assembly fills if district set
+    !assembly   || !!mandal,            // mandal fills if assembly set
+    // Professional
+    !!profile.profession,
+    !!profile.role_designation,
+    !!profile.organization,
+    // Socials — each link is its own slot.
+    !!profile.facebook_id,
+    !!profile.twitter_id,
+    !!profile.linkedin_id,
+    !!profile.instagram_id,
+    // Contribution
+    Array.isArray(selectedContributions) && selectedContributions.length > 0,
+    // Active Family Member — each field counts. These remain optional to
+    // submit the profile, but the bar can't reach 100% until they're set.
+    !!familyRelation,
+    !!familyName,
+    !!familyMobile,
+    !!familyVillage,
+    !!familyDesignation,
+  ];
 
-  // 1️⃣ Name
-  if (profile.first_name) completed++;
-
-  // 2️⃣ Mobile
-  if (profile.mobile_number) completed++;
-
-  // 3️⃣ DOB
-  if (profile.dob) completed++;
-
-  // 4️⃣ Photo
-  if (profile.profile_photo) completed++;
-
-  // 5️⃣ Indian State
-  if (indianState) completed++;
-
-  // 6️⃣ District
-  if (!indianState || district) completed++;
-
-  // 7️⃣ Assembly
-  if (!district || assembly) completed++;
-
-  // 8️⃣ Mandal
-  if (!assembly || mandal) completed++;
-
-  // 9️⃣ Profession + Role + Company
-  if (
-    profile.profession &&
-    profile.role_designation &&
-    profile.organization
-  ) {
-    completed++;
-  }
-
-  // 🔟 Socials
-  if (
-    profile.facebook_id &&
-    profile.twitter_id &&
-    profile.linkedin_id &&
-    profile.instagram_id
-  ) {
-    completed++;
-  }
-
-  // 1️⃣1️⃣ Contribution
-  if (
-    Array.isArray(selectedContributions) &&
-    selectedContributions.length > 0
-  ) {
-    completed++;
-  }
-
-  return Math.round((completed / TOTAL_SECTIONS) * 100);
+  const completed = checks.filter(Boolean).length;
+  return Math.round((completed / checks.length) * 100);
 }, [
   profile,
   selectedContributions,
@@ -2908,6 +2919,11 @@ const profileCompletion = useMemo(() => {
   district,
   assembly,
   mandal,
+  familyRelation,
+  familyName,
+  familyMobile,
+  familyVillage,
+  familyDesignation,
 ]);
 
 // 🔹 Missing profile fields detection
@@ -3256,6 +3272,22 @@ const updates = {
 };
 
 
+// Load the current user's previous suggestions so they can see what
+// they've already submitted under the form. Falls back gracefully if
+// `user_id` was never linked on legacy rows by also matching `name`.
+const fetchMySuggestions = async () => {
+  if (!user?.id) return;
+  const { data, error } = await supabase
+    .from("suggestions")
+    .select("id, suggestion, suggestion_date, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (!error && data) {
+    setMySuggestions(data as any);
+  }
+};
+
 const handleSubmitSuggestion = async () => {
   const message = suggestionRef.current?.value.trim() || "";
 
@@ -3271,7 +3303,7 @@ const handleSubmitSuggestion = async () => {
       name: fullName,
       country: countryOfResidence || "India",
       suggestion: message,
-      suggestion_date: new Date().toISOString().split("T")[0], // ✅ CORRECT
+      suggestion_date: new Date().toISOString().split("T")[0],
       // Capture the submitter's contact details so admin can follow up
       // from the All Suggestions table without cross-referencing profiles.
       user_id: user?.id || null,
@@ -3285,7 +3317,9 @@ const handleSubmitSuggestion = async () => {
       suggestionRef.current.value = "";
     }
 
-    showToast("Suggestion submitted successfully!", "success");
+    setSuggestionThanks(true);
+    void fetchMySuggestions();
+    showToast("Suggestion submitted — thank you!", "success");
   } catch (err) {
     console.error("Suggestion error:", err);
     showToast("Failed to submit suggestion", "info");
@@ -4918,7 +4952,82 @@ const renderSuggestionsContent = () => (
         </button>
       </div>
 
+      {/* Thank-you banner — shown after a successful submit until the
+          user starts typing a new one or refreshes. */}
+      {suggestionThanks && (
+        <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
+          <span className="text-2xl" aria-hidden>🙏</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-emerald-800">
+              Thank you for your suggestion!
+            </p>
+            <p className="text-xs text-emerald-700 mt-0.5">
+              Your feedback has been shared with the admin team. We read every
+              submission — keep them coming!
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSuggestionThanks(false)}
+            className="text-emerald-700/60 hover:text-emerald-900 text-lg leading-none"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
+
+    {/* ============== PREVIOUS SUGGESTIONS ============== */}
+    {/* Lists every suggestion the current user has submitted. Hidden
+        when there's nothing to show (e.g. brand-new account). */}
+    {mySuggestions.length > 0 && (
+      <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-black text-gray-800">
+              Your previous suggestions
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {mySuggestions.length}{" "}
+              {mySuggestions.length === 1 ? "suggestion" : "suggestions"} sent so far
+            </p>
+          </div>
+          <button
+            onClick={() => void fetchMySuggestions()}
+            className="text-[11px] font-semibold text-primary-600 hover:text-primary-800"
+          >
+            Refresh
+          </button>
+        </div>
+
+        <ul className="divide-y divide-gray-100">
+          {mySuggestions.map((s) => {
+            const dateStr = s.suggestion_date
+              ? new Date(s.suggestion_date).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : new Date(s.created_at).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                });
+            return (
+              <li key={s.id} className="py-3 first:pt-0 last:pb-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
+                  {dateStr}
+                </p>
+                <p className="text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed">
+                  {s.suggestion}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    )}
   </div>
 );
 

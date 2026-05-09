@@ -25,7 +25,7 @@ import ContentControl from "./ContentControl";
 import News from "./News";
 import AdminProfileMenu from "./AdminProfileMenu";
 import ysrLogo from "../components/nrilogo.png";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 import { toast } from "react-toastify";
 
 
@@ -906,6 +906,10 @@ export default function AdminDashboard() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string>("");
+  // Excel export is async (multiple Supabase queries) — track its
+  // in-flight state separately so the button can disable itself and
+  // ignore re-clicks while the workbook is being generated.
+  const [exporting, setExporting] = useState(false);
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   // Active sidebar page is mirrored to the URL hash (e.g. /admin#users) so
@@ -1221,11 +1225,29 @@ export default function AdminDashboard() {
             </p>
           </div>
           <button
-            onClick={() => exportToExcel(rows, `registrations_${new Date().toISOString().split('T')[0]}.xlsx`)}
-            disabled={loading || rows.length === 0}
+            onClick={async () => {
+              if (exporting) return; // re-click guard
+              setExporting(true);
+              try {
+                await exportToExcel(
+                  rows,
+                  `registrations_${new Date().toISOString().split("T")[0]}.xlsx`
+                );
+              } finally {
+                setExporting(false);
+              }
+            }}
+            disabled={loading || exporting || rows.length === 0}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 font-medium"
           >
-            📥 Export Excel
+            {exporting ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Generating Excel…
+              </>
+            ) : (
+              <>📥 Export Excel</>
+            )}
           </button>
         </div>
 

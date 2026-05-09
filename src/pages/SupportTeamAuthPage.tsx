@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User as UserIcon, Phone, ShieldCheck, Loader2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
 
 type AvailableTeam = {
   id: string;
