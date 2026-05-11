@@ -16,7 +16,7 @@ import { indianAddressData } from '../lib/indianAddressData';
 // user input - see src/lib/sanitize.ts for the rationale and the
 // ranges stripped. RegisterPage applies it on submit alongside
 // the other forms (Profile edit, Suggestions, Service requests).
-import { sanitizeText } from "../lib/sanitize";
+import { sanitizeText, isValidName } from "../lib/sanitize";
 
 const SUBMIT_COOLDOWN_SECONDS = 30;
 const SUBMIT_COOLDOWN_KEY = "register_submit_until";
@@ -339,6 +339,20 @@ if (pwdError) {
     // validations
     if (formData.password.length < 6) {
       throw new Error('Password must be at least 6 characters');
+    }
+
+    // === Name validation === ensure first/last names are real text.
+    // Rejects garbage entries like "," or "..." or "   " (people have
+    // tried that). Must contain at least one letter in any script.
+    if (!isValidName(formData.first_name)) {
+      throw new Error(
+        'Please enter a valid first name (at least 2 characters, including at least one letter).'
+      );
+    }
+    if (!isValidName(formData.last_name)) {
+      throw new Error(
+        'Please enter a valid last name (at least 2 characters, including at least one letter).'
+      );
     }
 
     const currentCode = getCurrentCountryCode();

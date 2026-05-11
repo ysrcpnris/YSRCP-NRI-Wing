@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User, Lock, LogOut, ChevronLeft } from 'lucide-react';
+import { User, Lock, LogOut, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,11 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  // Independent show/hide flag per password field so toggling one
+  // doesn't reveal the others.
+  const [showCurrentPwd, setShowCurrentPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState('');
@@ -259,30 +264,67 @@ const initials =
         </div>
 
         <form onSubmit={handleChangePassword} className="p-6 space-y-4">
-          <input
-            type="password"
-            autoComplete="current-password"
-            placeholder="Current password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
-          />
-          <input
-            type="password"
-            autoComplete="new-password"
-            placeholder="New password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none"
-          />
-          <input
-            type="password"
-            autoComplete="new-password"
-            placeholder="Confirm password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none"
-          />
+          {/* Current password — eye toggles visibility independently
+              of the other two fields. */}
+          <div className="relative">
+            <input
+              type={showCurrentPwd ? "text" : "password"}
+              autoComplete="current-password"
+              placeholder="Current password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full px-4 py-3 pr-12 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowCurrentPwd((v) => !v)}
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              aria-label={showCurrentPwd ? "Hide password" : "Show password"}
+            >
+              {showCurrentPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          <div className="relative">
+            <input
+              type={showNewPwd ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="New password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full px-4 py-3 pr-12 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPwd((v) => !v)}
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              aria-label={showNewPwd ? "Hide password" : "Show password"}
+            >
+              {showNewPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          <div className="relative">
+            <input
+              type={showConfirmPwd ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="Confirm password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-3 pr-12 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPwd((v) => !v)}
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              aria-label={showConfirmPwd ? "Hide password" : "Show password"}
+            >
+              {showConfirmPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
 
           {passwordError && (
             <p className="text-sm font-bold text-red-700 bg-red-50 p-3 rounded-lg border border-red-300">

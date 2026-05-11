@@ -263,20 +263,24 @@ export default function TestimonialsAdmin() {
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-500 mb-1 block">
-              Location (country)
+              Location
             </label>
-            <select
+            <input
+              type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white"
-            >
-              <option value="">Select country…</option>
+              placeholder="e.g. California, USA"
+              list="testimonial-location-suggestions"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+            />
+            {/* The country list is still offered as autocomplete suggestions
+                via <datalist>, but admin can type any free-form location
+                like "California, USA" or "London, UK". */}
+            <datalist id="testimonial-location-suggestions">
               {COUNTRY_NAMES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c} />
               ))}
-            </select>
+            </datalist>
           </div>
         </div>
         <div className="mb-3">
@@ -357,18 +361,14 @@ export default function TestimonialsAdmin() {
                             className="border border-primary-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
                             placeholder="Name"
                           />
-                          <select
+                          <input
+                            type="text"
                             value={editLocation}
                             onChange={(e) => setEditLocation(e.target.value)}
-                            className="border border-primary-300 rounded px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
-                          >
-                            <option value="">Select country…</option>
-                            {COUNTRY_NAMES.map((c) => (
-                              <option key={c} value={c}>
-                                {c}
-                              </option>
-                            ))}
-                          </select>
+                            placeholder="Location (e.g. California, USA)"
+                            list="testimonial-location-suggestions"
+                            className="border border-primary-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
+                          />
                         </div>
                         <textarea
                           rows={3}

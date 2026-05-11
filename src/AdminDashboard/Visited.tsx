@@ -295,7 +295,7 @@ export default function Visited() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-primary-600">
-            NRI Visits with Hon’ble CM
+            NRI Visits with Jagan Anna
           </h1>
           <p className="text-gray-600">Overview of all NRI visits</p>
         </div>

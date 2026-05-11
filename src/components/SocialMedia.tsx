@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Video,
-  Calendar,
-  Eye,
   Share2,
   Radio,
   Youtube,
@@ -310,10 +308,6 @@ export default function PressMeetsAndSocial() {
       </div>
       <div className="p-3">
         <h3 className="text-white font-bold text-sm line-clamp-2">{v.title}</h3>
-        <div className="flex gap-3 text-xs text-blue-200 mt-2">
-          <span className="flex gap-1"><Calendar size={12} /> {v.time}</span>
-          <span className="flex gap-1"><Eye size={12} /> {v.views}</span>
-        </div>
       </div>
     </a>
   );

@@ -169,8 +169,12 @@ export default function FeaturedVideos() {
       setPreviewLoading(false);
       if (meta?.thumbnail_url) setPreviewThumb(normalizeThumb(meta.thumbnail_url));
       // Don't clobber the title if admin already overrode it manually.
+      // If oEmbed failed entirely (CSP block, regional restriction,
+      // private video), leave the title input empty so the admin
+      // types the real title — better than silently saving "Video xyz"
+      // as the displayed title on the home page.
       if (!titleManualOverride) {
-        setTitleInput(meta?.title || `Video ${id}`);
+        setTitleInput(meta?.title || "");
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,6 +194,13 @@ export default function FeaturedVideos() {
       alert("Paste a valid YouTube link first.");
       return;
     }
+    if (!titleInput.trim()) {
+      alert(
+        "Could not fetch the video title automatically. Please type the " +
+          "title in the box below the URL, then click Add."
+      );
+      return;
+    }
     if (rows.some((r) => r.video_id === previewVideoId)) {
       alert("This video is already in the list.");
       return;
@@ -199,7 +210,7 @@ export default function FeaturedVideos() {
       rows.length > 0 ? Math.max(...rows.map((r) => r.sort_order ?? 0)) + 1 : 0;
     const insertRow: Row = {
       video_id: previewVideoId,
-      title: titleInput.trim() || "Untitled",
+      title: titleInput.trim(),
       description: null,
       thumbnail_url: previewThumb || thumbForId(previewVideoId),
       published_at: new Date().toISOString(),
@@ -348,7 +359,12 @@ export default function FeaturedVideos() {
           </div>
           <button
             onClick={addVideo}
-            disabled={!previewVideoId || adding || previewLoading}
+            disabled={
+              !previewVideoId ||
+              adding ||
+              previewLoading ||
+              !titleInput.trim()
+            }
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
           >
             {adding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}

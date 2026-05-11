@@ -54,3 +54,14 @@ export const sanitizeText = (raw: string | null | undefined): string =>
 // also meaningless (names, locations).
 export const sanitizeTrim = (raw: string | null | undefined): string =>
   sanitizeText(raw).trim();
+
+// Returns true when the value contains at least one letter character
+// (Latin, Devanagari, Telugu, Tamil, Arabic, CJK — any script). Used
+// to validate human names so users can't register with garbage like
+// "," or "..." or "   ". Whitespace-only and pure-punctuation values
+// are rejected. Numbers alone are also rejected.
+export const isValidName = (raw: string | null | undefined): boolean => {
+  const cleaned = sanitizeText(raw).trim();
+  if (cleaned.length < 2) return false;          // 1-char names are usually bogus
+  return /\p{L}/u.test(cleaned);                  // must contain at least one letter
+};

@@ -448,10 +448,16 @@ export default function MasterData() {
 
       // Block cross-leader collisions: an Assembly Coordinator can only
       // exist once per (district, constituency); a District President
-      // can only exist once per district. The DB has unique indexes
-      // backing this rule, but we check up-front so the admin sees a
-      // friendly name instead of a constraint violation.
-      if (formRole === "Assembly Coordinator" || formRole === "District President") {
+      // and a Regional Coordinator can each only exist once per district
+      // (a single RC may cover multiple districts but each district has
+      // exactly one). The DB has unique indexes backing this rule, but
+      // we check up-front so the admin sees a friendly name instead of
+      // a constraint violation.
+      if (
+        formRole === "Assembly Coordinator" ||
+        formRole === "District President" ||
+        formRole === "Regional Coordinator"
+      ) {
         const checks = formAssignments.map((a) =>
           formRole === "Assembly Coordinator"
             ? { district: a.district, constituency: a.constituency }

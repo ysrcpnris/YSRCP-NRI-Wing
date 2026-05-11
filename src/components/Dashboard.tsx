@@ -1057,7 +1057,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { sanitizeText } from '../lib/sanitize';
+import { sanitizeText, isValidName } from '../lib/sanitize';
 import { useAuth } from '../contexts/useAuth';
 import Cropper from 'react-easy-crop';
 import { getCroppedBlob, PixelCrop } from '../lib/cropImage';
@@ -1763,6 +1763,13 @@ const contributionRef = useRef<HTMLDivElement | null>(null);
 const [stateAbroad, setStateAbroad] = useState("");
 const [cityAbroad, setCityAbroad] = useState("");
 const [countryOfResidence, setCountryOfResidence] = useState<string>("India");
+// Personal-info fields are now editable from the dashboard profile tab
+// (previously locked because they were set during registration). Held
+// in their own state so the input value stays in sync with the user's
+// keystrokes until they hit Save Profile.
+const [editFirstName, setEditFirstName] = useState("");
+const [editLastName, setEditLastName] = useState("");
+const [editMobileNumber, setEditMobileNumber] = useState("");
 
 const [countries, setCountries] = useState<
   {
@@ -1927,6 +1934,11 @@ useEffect(() => {
     setStateAbroad("");
     setCityAbroad("");
   }
+
+  // Hydrate the editable personal fields on profile load.
+  setEditFirstName(profile.first_name || "");
+  setEditLastName(profile.last_name || "");
+  setEditMobileNumber(profile.mobile_number || "");
 }, [profile]);
 
 
@@ -2878,46 +2890,69 @@ const referralLink =
 //     filled the bar can't reach 100%.
 //   • Social links count individually too, so adding more handles
 //     bumps the bar by one slot each instead of an all-or-nothing.
-const profileCompletion = useMemo(() => {
-  if (!profile) return 0;
+// Single source-of-truth for "is the profile complete?". Used by BOTH
+// the percentage bar (`profileCompletion`) and the missing-fields list
+// (`missingProfileFields`) so they can never disagree (e.g. bar at 96%
+// while the list says "fully completed").
+const profileChecklist = useMemo(() => {
+  if (!profile) return [] as Array<{ key: string; label: string; ok: boolean }>;
 
-  const checks: boolean[] = [
+  const isIndia =
+    (countryOfResidence || profile.country_of_residence || "").trim() ===
+    "India";
+
+  const items: Array<{ key: string; label: string; ok: boolean }> = [
     // Identity
-    !!profile.first_name,
-    !!profile.last_name,
-    !!profile.mobile_number,
-    !!profile.dob,
-    !!profile.profile_photo,
-    !!profile.gender,
+    { key: "photo",       label: "Add Profile Photo",      ok: !!profile.profile_photo },
+    { key: "mobile",      label: "Add Mobile Number",      ok: !!profile.mobile_number },
+    { key: "dob",         label: "Add Date of Birth",      ok: !!profile.dob },
+    { key: "gender",      label: "Select Gender",          ok: !!profile.gender },
+
     // Address — Indian
-    !!indianState,
-    !indianState || !!district,        // district fills if state set
-    !district   || !!assembly,         // assembly fills if district set
-    !assembly   || !!mandal,            // mandal fills if assembly set
+    { key: "state",       label: "Select State",           ok: !!indianState },
+    { key: "district",    label: "Select District",        ok: !indianState || !!district },
+    { key: "assembly",    label: "Select Assembly",        ok: !district   || !!assembly },
+    { key: "mandal",      label: "Select Mandal",          ok: !assembly   || !!mandal },
+
     // Professional
-    !!profile.profession,
-    !!profile.role_designation,
-    !!profile.organization,
-    // Socials — each link is its own slot.
-    !!profile.facebook_id,
-    !!profile.twitter_id,
-    !!profile.linkedin_id,
-    !!profile.instagram_id,
+    { key: "profession",  label: "Select Profession",      ok: !!profile.profession },
+    { key: "role",        label: "Add Role / Course",      ok: !!profile.role_designation },
+    { key: "company",     label: "Add Company / University", ok: !!profile.organization },
+
+    // Social links — each one is its own slot.
+    { key: "facebook",    label: "Add Facebook",           ok: !!profile.facebook_id },
+    { key: "twitter",     label: "Add Twitter",            ok: !!profile.twitter_id },
+    { key: "linkedin",    label: "Add LinkedIn",           ok: !!profile.linkedin_id },
+    { key: "instagram",   label: "Add Instagram",          ok: !!profile.instagram_id },
+
     // Contribution
-    Array.isArray(selectedContributions) && selectedContributions.length > 0,
-    // Active Family Member — each field counts. These remain optional to
-    // submit the profile, but the bar can't reach 100% until they're set.
-    !!familyRelation,
-    !!familyName,
-    !!familyMobile,
-    !!familyVillage,
-    !!familyDesignation,
+    {
+      key: "contribution",
+      label: "Select Contribution Area",
+      ok: Array.isArray(selectedContributions) && selectedContributions.length > 0,
+    },
+
+    // Active Family Member — optional to save, but each missing field
+    // keeps the bar under 100% so the user knows what's still pending.
+    { key: "familyRelation",    label: "Family Member — Relation",    ok: !!familyRelation },
+    { key: "familyName",        label: "Family Member — Name",        ok: !!familyName },
+    { key: "familyMobile",      label: "Family Member — Mobile",      ok: !!familyMobile },
+    { key: "familyVillage",     label: "Family Member — Village",     ok: !!familyVillage },
+    { key: "familyDesignation", label: "Family Member — Designation", ok: !!familyDesignation },
   ];
 
-  const completed = checks.filter(Boolean).length;
-  return Math.round((completed / checks.length) * 100);
+  // Abroad fields only apply when the user lives outside India.
+  if (!isIndia) {
+    items.push(
+      { key: "state_abroad", label: "Select Abroad State", ok: !!profile.state_abroad },
+      { key: "city_abroad",  label: "Select Abroad City",  ok: !!profile.city_abroad },
+    );
+  }
+
+  return items;
 }, [
   profile,
+  countryOfResidence,
   selectedContributions,
   indianState,
   district,
@@ -2930,100 +2965,32 @@ const profileCompletion = useMemo(() => {
   familyDesignation,
 ]);
 
-// 🔹 Missing profile fields detection
+const profileCompletion = useMemo(() => {
+  if (profileChecklist.length === 0) return 0;
+  const done = profileChecklist.filter((i) => i.ok).length;
+  return Math.round((done / profileChecklist.length) * 100);
+}, [profileChecklist]);
 
-const missingProfileFields = useMemo(() => {
-  if (!profile) return [];
-
-  const missing: { key: string; label: string }[] = [];
-
-  if (!profile.profile_photo)
-    missing.push({ key: "photo", label: "Add Profile Photo" });
-
-  if (!profile.mobile_number)
-    missing.push({ key: "mobile", label: "Add Mobile Number" });
-if (!profile.dob) {
-  missing.push({
-    key: "dob",
-    label: "Add Date of Birth",
-  });
-}
-
-  const country = profile.country_of_residence?.trim().toLowerCase();
-const isIndia =
-  (countryOfResidence || profile.country_of_residence) === "India";
-// ✅ 1. Check Indian State FIRST
-if (!indianState) {
-  missing.push({
-    key: "state",
-    label: "Select State",
-  });
-}
-
-if (indianState) {
-  if (!district)
-    missing.push({ key: "district", label: "Select District" });
-
-  if (!assembly)
-    missing.push({ key: "assembly", label: "Select Assembly" });
-
-  if (!mandal)
-    missing.push({ key: "mandal", label: "Select Mandal" });
-}
-
-
-  if (!profile.facebook_id)
-    missing.push({ key: "facebook", label: "Add Facebook" });
-  if (!profile.twitter_id)
-    missing.push({ key: "twitter", label: "Add Twitter" });
-  if (!profile.linkedin_id)
-    missing.push({ key: "linkedin", label: "Add LinkedIn" });
-  if (!profile.instagram_id)
-    missing.push({ key: "instagram", label: "Add Instagram" });
-
-  if (!profile.profession)
-    missing.push({ key: "profession", label: "Select Profession" });
-
- if (!profile.role_designation)
-  missing.push({ key: "role", label: "Add Role / Course" });
-
-if (!profile.organization)
-  missing.push({ key: "company", label: "Add Company / University" });
-
-// 🌍 Abroad State & City (for NRIs)
-if (!isIndia) {
-  if (!profile.state_abroad)
-    missing.push({ key: "state_abroad", label: "Select Abroad State" });
-
-  if (!profile.city_abroad)
-    missing.push({ key: "city_abroad", label: "Select Abroad City" });
-}
-
-  // ✅ CONTRIBUTION CHECK
-  if (!selectedContributions || selectedContributions.length === 0) {
-    missing.push({
-      key: "contribution",
-      label: "Select Contribution Area",
-    });
-  }
-
-  return missing;
-}, [
-  profile,
-  selectedContributions,
-  indianState,
-  district,
-  assembly,
-  mandal,
-]);
+// Derived directly from the shared `profileChecklist` above so the
+// missing-list and the percentage bar can never disagree (e.g. bar at
+// 96% while the list claims "all complete").
+const missingProfileFields = useMemo(
+  () =>
+    profileChecklist
+      .filter((i) => !i.ok)
+      .map(({ key, label }) => ({ key, label })),
+  [profileChecklist]
+);
 const missingFieldToRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
   photo: profilePhotoRef,
   mobile: personalInfoRef,
   dob: personalInfoRef,
+  gender: personalInfoRef,
 
   state_abroad: residencyRef,
   city_abroad: residencyRef,
 
+  state: indianAddressRef,
   district: indianAddressRef,
   assembly: indianAddressRef,
   mandal: indianAddressRef,
@@ -3038,6 +3005,14 @@ const missingFieldToRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
   instagram: professionalRef,
 
   contribution: contributionRef,
+
+  // Active Family Member fields all scroll to the professional section
+  // where the family card lives (no dedicated ref today).
+  familyRelation:    professionalRef,
+  familyName:        professionalRef,
+  familyMobile:      professionalRef,
+  familyVillage:     professionalRef,
+  familyDesignation: professionalRef,
 };
 
 
@@ -3205,9 +3180,27 @@ const handleSaveProfile = async () => {
       await handleUploadPhoto();
     }
 
-    // 🔒 Locked fields (first_name, last_name, mobile_number, country/state/city,
-    //    indian_state, district, assembly, mandal) are set during registration and
-    //    must NOT be overwritten from the dashboard.
+    // Personal details + Indian address + Current country address are
+    // now editable from the dashboard (previously locked at registration
+    // only). Email remains read-only because it's the auth identity.
+
+    // Reject garbage names like "," or "..." before saving — these
+    // slipped through earlier because the sanitizer only strips
+    // invisible chars, not visible punctuation.
+    if (!isValidName(editFirstName)) {
+      showToast(
+        "Please enter a valid first name (at least 2 characters, including at least one letter).",
+        "info"
+      );
+      return;
+    }
+    if (!isValidName(editLastName)) {
+      showToast(
+        "Please enter a valid last name (at least 2 characters, including at least one letter).",
+        "info"
+      );
+      return;
+    }
 
 const dob =
   (document.getElementById("dob") as HTMLInputElement)?.value || null;
@@ -3236,10 +3229,26 @@ if (dob) {
       (document.getElementById("instagram") as HTMLInputElement)?.value || "";
 
 // Run every free-text field through the shared hygiene sanitiser
-// before persisting. Strips control chars, zero-width / bidi
-// chars, and angle brackets. Empty strings are normalised to NULL
-// for optional fields so the DB stays clean.
+// before persisting. Strips control chars, zero-width / bidi chars.
+// Empty strings are normalised to NULL for optional fields so the DB
+// stays clean.
 const updates = {
+  // Personal details (now editable from the dashboard).
+  first_name:           sanitizeText(editFirstName).trim() || null,
+  last_name:            sanitizeText(editLastName).trim() || null,
+  mobile_number:        sanitizeText(editMobileNumber).trim() || null,
+
+  // Current country address (editable).
+  country_of_residence: sanitizeText(countryOfResidence).trim() || null,
+  state_abroad:         sanitizeText(stateAbroad).trim() || null,
+  city_abroad:          sanitizeText(cityAbroad).trim() || null,
+
+  // Indian address (editable).
+  indian_state:          sanitizeText(indianState).trim() || null,
+  district:              sanitizeText(district).trim() || null,
+  assembly_constituency: sanitizeText(assembly).trim() || null,
+  mandal:                sanitizeText(mandal).trim() || null,
+
   dob,
   profession:         sanitizeText(profession).trim(),
   role_designation:   sanitizeText(roleDesignation).trim(),
@@ -3505,8 +3514,8 @@ const handleSubmitSuggestion = async () => {
 
           {/* ========== ACCOUNT INFORMATION (locked) ========== */}
           <div ref={personalInfoRef} className="p-5 bg-white rounded-xl border border-gray-200">
-            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
-              Account Information <span className="text-gray-300">🔒</span>
+            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
+              Account Information
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -3516,9 +3525,9 @@ const handleSubmitSuggestion = async () => {
                 <input
                   id="firstName"
                   type="text"
-                  readOnly
-                  value={profile?.first_name || ''}
-                  className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
+                  value={editFirstName}
+                  onChange={(e) => setEditFirstName(e.target.value)}
+                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
               <div>
@@ -3528,14 +3537,14 @@ const handleSubmitSuggestion = async () => {
                 <input
                   id="lastName"
                   type="text"
-                  readOnly
-                  value={profile?.last_name || ''}
-                  className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
+                  value={editLastName}
+                  onChange={(e) => setEditLastName(e.target.value)}
+                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Email
+                  Email <span className="text-gray-300">🔒</span>
                 </label>
                 <input
                   id="email"
@@ -3552,9 +3561,9 @@ const handleSubmitSuggestion = async () => {
                 <input
                   id="mobile_number"
                   type="tel"
-                  readOnly
-                  value={profile?.mobile_number || ""}
-                  className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 cursor-not-allowed"
+                  value={editMobileNumber}
+                  onChange={(e) => setEditMobileNumber(e.target.value)}
+                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
               <div className="md:col-span-2">
@@ -3576,66 +3585,87 @@ const handleSubmitSuggestion = async () => {
             </div>
           </div>
 
-          {/* ========== CURRENT RESIDENCY (locked) ========== */}
+          {/* ========== CURRENT RESIDENCY ========== */}
           <div ref={residencyRef} className="p-5 bg-white rounded-xl border border-gray-200">
-            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
-              Current Residency <span className="text-gray-300">🔒</span>
+            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
+              Current Residency
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">Country</label>
-                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-                  {countryOfResidence || "—"}
-                </div>
+                <input
+                  type="text"
+                  value={countryOfResidence}
+                  onChange={(e) => setCountryOfResidence(e.target.value)}
+                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                />
               </div>
               {countryOfResidence !== "India" && (
                 <>
                   <div>
                     <label className="text-[10px] font-medium text-gray-500 mb-1 block">State / Province</label>
-                    <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-                      {stateAbroad || "—"}
-                    </div>
+                    <input
+                      type="text"
+                      value={stateAbroad}
+                      onChange={(e) => setStateAbroad(e.target.value)}
+                      className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                    />
                   </div>
                   <div>
                     <label className="text-[10px] font-medium text-gray-500 mb-1 block">City</label>
-                    <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-                      {cityAbroad || "—"}
-                    </div>
+                    <input
+                      type="text"
+                      value={cityAbroad}
+                      onChange={(e) => setCityAbroad(e.target.value)}
+                      className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                    />
                   </div>
                 </>
               )}
             </div>
           </div>
 
-          {/* ========== INDIA ADDRESS (locked) ========== */}
+          {/* ========== INDIA ADDRESS ========== */}
           <div ref={indianAddressRef} className="p-5 bg-white rounded-xl border border-gray-200">
-            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
-              India Address <span className="text-gray-300">🔒</span>
+            <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
+              India Address
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">State</label>
-                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-                  {indianState || "—"}
-                </div>
+                <input
+                  type="text"
+                  value={indianState}
+                  onChange={(e) => setIndianState(e.target.value)}
+                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                />
               </div>
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">District</label>
-                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-                  {district || "—"}
-                </div>
+                <input
+                  type="text"
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                />
               </div>
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">Assembly Constituency</label>
-                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-                  {assembly || "—"}
-                </div>
+                <input
+                  type="text"
+                  value={assembly}
+                  onChange={(e) => setAssembly(e.target.value)}
+                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                />
               </div>
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">Mandal</label>
-                <div className="w-full h-11 px-3 flex items-center bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-500">
-                  {mandal || "—"}
-                </div>
+                <input
+                  type="text"
+                  value={mandal}
+                  onChange={(e) => setMandal(e.target.value)}
+                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                />
               </div>
             </div>
           </div>
@@ -4841,7 +4871,7 @@ const renderEventsContent = () => {
     notificationTab === "previous" ? previousEvents : activeEvents;
 
   return (
-    <div className="pt-4 max-w-3xl">
+    <div className="pt-4 max-w-5xl">
       <h3 className="text-base font-bold text-gray-900 mb-3">Notifications</h3>
 
       {events.length === 0 ? (

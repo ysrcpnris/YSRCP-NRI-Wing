@@ -71,7 +71,10 @@ const CONTINENTS = [
   "North America",
   "South America",
   "Australia",
-  "Unknown",
+  // Catch-all for profiles whose country isn't recognised in the
+  // continent map below. Renamed from "Unknown" so the bucket reads
+  // less alarming to admins reviewing the dashboard.
+  "Others",
 ] as const;
 
 type Row = {
@@ -623,7 +626,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
           <nav className="space-y-2">
             <Item icon={Home} label="Dashboard" page="dashboard" />
             <Item icon={Users} label="All Users" page="users" />
-            <Item icon={CalendarDays} label="Visited" page="visited" />
+            <Item icon={CalendarDays} label="NRI Visits with Jagan Anna" page="visited" />
             <Item icon={Newspaper} label="Assistance" page="assistance" />
             <Item icon={FolderKanban} label="Service Categories" page="serviceCategories" />
             <Item icon={Users} label="Support Teams" page="supportTeams" />
@@ -952,7 +955,7 @@ export default function AdminDashboard() {
   // String normalization helpers
   const norm = (v: string | null | undefined) => (v || "").trim();
   const toContinent = (country: string) =>
-    countryContinentMap[normalizeCountry(country)] || "Unknown";
+    countryContinentMap[normalizeCountry(country)] || "Others";
 
   // Normalize country names for consistent lookup
   const normalizeCountry = (value: string) =>
