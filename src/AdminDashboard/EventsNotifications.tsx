@@ -34,6 +34,7 @@ type Applicant = {
   full_name: string | null;
   email: string | null;
   mobile_number: string | null;
+  gender: string | null;
   country_of_residence: string | null;
   city_abroad: string | null;
   indian_state: string | null;
@@ -240,6 +241,7 @@ export default function EventsNotifications() {
     const rows = applicants.map((a, i) => ({
       "#":          i + 1,
       Name:         a.full_name || "—",
+      Gender:       a.gender || "—",
       Mobile:       a.mobile_number || "—",
       Email:        a.email || "—",
       Location:     currentLivingLocation(a),
@@ -641,7 +643,15 @@ export default function EventsNotifications() {
                             <tr className="bg-gray-50 border-b border-gray-100">
                               <td></td>
                               <td colSpan={5} className="px-4 py-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                  <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">
+                                      Gender
+                                    </p>
+                                    <p className="text-gray-700">
+                                      {a.gender || "—"}
+                                    </p>
+                                  </div>
                                   <div>
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">
                                       Current location

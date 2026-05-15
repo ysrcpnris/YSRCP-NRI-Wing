@@ -65,3 +65,31 @@ export const isValidName = (raw: string | null | undefined): boolean => {
   if (cleaned.length < 2) return false;          // 1-char names are usually bogus
   return /\p{L}/u.test(cleaned);                  // must contain at least one letter
 };
+
+// Returns true when the value looks like a valid Indian mobile number:
+// either 10 digits (e.g. "9876543210") or 12 digits starting with "91"
+// (e.g. "919876543210" / "+91 9876 543 210"). Non-digit characters
+// (spaces, dashes, plus-signs) are stripped before checking — the
+// helper only cares about the digit content.
+export const isValidIndianMobile = (raw: string | null | undefined): boolean => {
+  if (!raw) return false;
+  const digits = String(raw).replace(/\D/g, "");
+  if (digits.length === 10) return true;
+  if (digits.length === 12 && digits.startsWith("91")) return true;
+  return false;
+};
+
+// Returns true if the input parses as a well-formed http/https URL.
+// Empty input also returns true because most URL fields on the profile
+// are optional — call sites that need a non-empty URL should also
+// check the trim'd length.
+export const isValidUrl = (raw: string | null | undefined): boolean => {
+  const v = sanitizeText(raw).trim();
+  if (!v) return true;
+  try {
+    const u = new URL(v);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+};

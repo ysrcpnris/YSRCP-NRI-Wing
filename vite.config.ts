@@ -50,6 +50,14 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["lucide-react"],
   },
+  // Strip every console.* call and `debugger` statement from the
+  // production bundle. Anything wrapped in `if (import.meta.env.DEV)`
+  // is already tree-shaken; this catches the rest so production users
+  // can't see profile photo URLs, leader query filters, or any other
+  // diagnostic noise in DevTools.
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
   server: {
     headers: {
       "Content-Security-Policy": cspDev,

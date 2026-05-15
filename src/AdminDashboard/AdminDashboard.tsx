@@ -341,6 +341,7 @@ const exportToExcel = async (
         "Date":         isoDate(s.created_at),
         "User":         fullName(u),
         "User Code":    u?.public_user_code || "-",
+        "Gender":       u?.gender || "-",
         "Mobile":       u?.mobile_number || "-",
         "Email":        u?.email || "-",
         "Service":      s.service_type || "-",
@@ -426,6 +427,7 @@ const exportToExcel = async (
         "Event Date":  ev?.date ? isoDate(ev.date) : "-",
         "User":        fullName(u),
         "User Code":   u?.public_user_code || "-",
+        "Gender":      u?.gender || "-",
         "Mobile":      u?.mobile_number || "-",
         "Email":       u?.email || "-",
         "Country":     u?.country_of_residence || "-",
@@ -734,6 +736,7 @@ function MembersList({
                 <tr>
                   <th className="py-3 px-4 text-left text-sm font-semibold">User ID</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Name</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold">Gender</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Email</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">Mobile</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold">WhatsApp</th>
@@ -756,6 +759,7 @@ function MembersList({
                         {fam.public_user_code || "-"}
                       </td>
                       <td className="py-2 px-4">{[fam.first_name, fam.last_name].filter(Boolean).join(" ") || "-"}</td>
+                      <td className="py-2 px-4">{fam.gender || "-"}</td>
                       <td className="py-2 px-4">{fam.email || "-"}</td>
                       <td className="py-2 px-4">{fam.mobile_number || "-"}</td>
                       <td className="py-2 px-4">{fam.whatsapp_number || "-"}</td>

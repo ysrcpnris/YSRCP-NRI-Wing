@@ -135,7 +135,7 @@ export default function Header({ onSignUp }: HeaderProps) {
                   onClick={() => scrollToSection("section-pillars")}
                   className={navLink}
                 >
-                  Jagan-Mark
+                  JaganAnna Mark
                 </button>
               </div>
               <button onClick={() => scrollToSection("glimpse")} className={navLink}>

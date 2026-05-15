@@ -163,6 +163,39 @@ export default function Assistance() {
     }
   };
 
+  // Admin shortcut: close a request directly without routing it to a
+  // support team. Use when the admin themselves replied to the user
+  // off-platform (call / WhatsApp) or when the request was spam / not
+  // actionable. Stamps the resolved-at timestamp and clears any team
+  // assignment so the closure is unambiguously admin-driven.
+  const handleAdminClose = async (req: AssistanceItem) => {
+    const reason = window.prompt(
+      "Closing this request directly from the admin side.\n\n" +
+        "Optional: enter a short note about what was done (visible to the user).",
+      ""
+    );
+    if (reason === null) return; // user clicked Cancel
+
+    const { error } = await supabase
+      .from("service_requests")
+      .update({
+        status: "resolved",
+        assigned_to: "Admin",
+        assigned_team_id: null,
+        action_taken: reason.trim() || "Closed by admin",
+        admin_comments: reason.trim() || null,
+        team_reply: reason.trim() || "Closed by admin (no team reply).",
+        team_resolved_at: new Date().toISOString(),
+      })
+      .eq("id", req.id);
+
+    if (error) {
+      alert("Failed to close request: " + error.message);
+      return;
+    }
+    fetchRequests();
+  };
+
   /* ---------------- UI ---------------- */
   return (
     <div className="p-6">
@@ -257,15 +290,29 @@ export default function Assistance() {
                       </button>
                     </td>
 
-                    {/* Action: route to team (pending) or reassign / show team status */}
+                    {/* Action column.
+                        - Pending: admin can either assign a team OR
+                          close the request directly (off-platform reply,
+                          spam, etc.).
+                        - In progress: shows the team it's with, with
+                          links to Reassign or Close.
+                        - Resolved/rejected: read-only stamp. */}
                     <td className="px-3 py-2">
                       {item.status === "pending" ? (
-                        <button
-                          onClick={() => openAllocationForm(item)}
-                          className="bg-primary-600 text-white px-3 py-1 rounded"
-                        >
-                          Assign team
-                        </button>
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => openAllocationForm(item)}
+                            className="bg-primary-600 text-white px-3 py-1 rounded text-xs"
+                          >
+                            Assign team
+                          </button>
+                          <button
+                            onClick={() => void handleAdminClose(item)}
+                            className="text-[11px] text-emerald-700 hover:underline self-start"
+                          >
+                            Close request
+                          </button>
+                        </div>
                       ) : item.status === "in_progress" ? (
                         <div className="flex flex-col gap-1">
                           <span className="text-blue-700 text-xs font-semibold">
@@ -276,6 +323,12 @@ export default function Assistance() {
                             className="text-[11px] text-primary-700 hover:underline self-start"
                           >
                             Reassign
+                          </button>
+                          <button
+                            onClick={() => void handleAdminClose(item)}
+                            className="text-[11px] text-emerald-700 hover:underline self-start"
+                          >
+                            Close request
                           </button>
                         </div>
                       ) : (

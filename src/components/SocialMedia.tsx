@@ -14,19 +14,14 @@ import {
   InstagramBrand,
   WhatsAppBrand,
   TelegramBrand,
+  WebsiteBrand,
 } from "./BrandIcons";
 
-const CHANNEL_ID = "UCM3lYQQxJZTzQzYO35-_JCw";
+// Maximum number of admin-curated videos to render in the carousel.
+// (CHANNEL_ID + REFRESH_INTERVAL + formatRelativeTime were carry-overs
+// from the old YouTube Data API path — removed now that videos come
+// from the admin-curated `youtube_videos` table.)
 const MAX_VIDEOS = 12;
-const REFRESH_INTERVAL = 30 * 60 * 1000;
-
-const formatRelativeTime = (publishedAt: string) => {
-  const diff = Date.now() - new Date(publishedAt).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  if (mins < 1440) return `${Math.floor(mins / 60)}h ago`;
-  return `${Math.floor(mins / 1440)}d ago`;
-};
 
 // Renders one brand icon inside a soft circular tile. The brand SVGs
 // already carry their own canonical colour, so the tile uses a neutral
@@ -215,8 +210,8 @@ export default function PressMeetsAndSocial() {
             v.video_url ||
             (v.video_id ? `https://www.youtube.com/watch?v=${v.video_id}` : ""),
           image: fixThumb(v.thumbnail_url, v.video_id),
-          time: v.published_at ? formatRelativeTime(v.published_at) : "",
-          views: "—",
+          // `time` / `views` were dropped from the card UI in an earlier
+          // pass, so they're no longer shaped into the data object.
           isLive: false,
         }));
         setVideos(videoData);
@@ -316,7 +311,7 @@ export default function PressMeetsAndSocial() {
     <div id="digital-channels" className="flex flex-col lg:flex-row w-full bg-white">
       <div id="onair" className="lg:w-[65%] bg-gradient-to-br from-[#0055a5] to-[#003366] p-4 sm:p-6">
         <h2 className="text-white font-black text-lg sm:text-xl text-center mb-4 sm:mb-6 flex justify-center items-center gap-2">
-          <Video size={20} /> Jagan Anna On Air
+          <Video size={20} /> JaganAnna on Air
         </h2>
 
         {/* If DRIVE_VIDEOS are configured (replace placeholder IDs), show Drive carousel */}
@@ -384,16 +379,17 @@ export default function PressMeetsAndSocial() {
               ],
             },
             {
-              title: "YSRCP Party",
+              title: "YSR Congress Party",
               desc: "Official Party Updates",
-              // Mirror the same handles as the Jagan Anna card above —
-              // those are the URLs the client confirmed are correct.
+              // Mirror the Jagan Anna handles confirmed by the client.
+              // Telegram swapped out for the official party website —
+              // tapping the globe icon takes visitors to ysrcongress.com.
               colors: [
                 { icon: FacebookBrand,  url: "https://www.facebook.com/ysjagan/" },
                 { icon: XBrand,         url: "https://x.com/ysjagan/" },
                 { icon: InstagramBrand, url: "https://www.instagram.com/ysjagan/" },
                 { icon: WhatsAppBrand,  url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
-                { icon: TelegramBrand,  url: "https://t.me/s/JaganSpeaks?q=%23YSJagan&before=4121" },
+                { icon: WebsiteBrand,   url: "https://www.ysrcongress.com" },
               ],
             },
           ].map((c, idx) => (

@@ -417,6 +417,46 @@ export default function MasterData() {
       alert("Please fill name, WhatsApp number, and role.");
       return;
     }
+    // Phone shape is enforced by the locked-+91 UI, but double-check
+    // on save in case anything bypasses the input (paste before our
+    // onChange runs, manual state-poke via devtools, etc.).
+    const primaryDigits = phone.replace(/\D/g, "").replace(/^91/, "");
+    if (primaryDigits.length !== 10) {
+      alert("WhatsApp number must be exactly 10 digits (with +91 prefix shown).");
+      return;
+    }
+    if (phone2.trim()) {
+      const secondaryDigits = phone2.replace(/\D/g, "").replace(/^91/, "");
+      if (secondaryDigits.length !== 10) {
+        alert("Secondary WhatsApp number must be 10 digits (or leave blank).");
+        return;
+      }
+    }
+    // Globally-singular roles: there can only be ONE active President
+    // and ONE active Global Coordinator at any time. Check before save
+    // so admin sees a friendly name instead of (eventually) a DB
+    // constraint violation.
+    if (isGlobal) {
+      const { data: clash } = await supabase
+        .from("leader_assignments")
+        .select("leader_id, leaders_master(name)")
+        .eq("role", formRole)
+        .eq("is_active", true);
+      const conflict = (clash || []).find(
+        (r: any) => r.leader_id !== editLeaderId
+      );
+      if (conflict) {
+        const existing =
+          (conflict as any).leaders_master?.name || "another leader";
+        alert(
+          `${existing} is already the ${formRole}. ` +
+            `Only one ${formRole} can exist at a time — remove the existing ` +
+            `one first or edit that record instead of creating a new one.`
+        );
+        return;
+      }
+    }
+
     if (!isGlobal) {
       if (formAssignments.length === 0) {
         alert("Add at least one district.");
@@ -1001,20 +1041,34 @@ export default function MasterData() {
                 />
               </div>
 
-              {/* Phone primary */}
+              {/* Phone primary — +91 is locked in the UI so admins
+                  always enter exactly 10 national digits. The leading
+                  prefix is stored canonically so wa.me links work. */}
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">
                   WhatsApp number{" "}
+                  <span className="text-red-500">*</span>
                   <span className="text-gray-400 font-normal italic">
-                    (10-digit Indian — +91 added automatically)
+                    {" "}(10 digits, India)
                   </span>
                 </label>
-                <input
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                  placeholder="9876543210 or +919876543210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-lg bg-gray-100 border border-r-0 border-gray-300 text-sm font-bold text-gray-600">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    className="flex-1 border border-gray-300 rounded-r-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    placeholder="9876543210"
+                    value={phone.replace(/^\+?91/, "").replace(/\D/g, "")}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      setPhone(digits ? `+91${digits}` : "");
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Photo */}
@@ -1071,20 +1125,33 @@ export default function MasterData() {
                 </div>
               </div>
 
-              {/* Phone secondary */}
+              {/* Phone secondary — same locked-+91 pattern as the
+                  primary, but optional. Leaving the field blank keeps
+                  the secondary number NULL on save. */}
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">
                   Secondary WhatsApp number{" "}
                   <span className="text-gray-400 font-normal italic">
-                    (optional — +91 added automatically)
+                    (optional — 10 digits)
                   </span>
                 </label>
-                <input
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-                  placeholder="9876543210 or +919876543210"
-                  value={phone2}
-                  onChange={(e) => setPhone2(e.target.value)}
-                />
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-lg bg-gray-100 border border-r-0 border-gray-300 text-sm font-bold text-gray-600">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    className="flex-1 border border-gray-300 rounded-r-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    placeholder="9876543210"
+                    value={phone2.replace(/^\+?91/, "").replace(/\D/g, "")}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      setPhone2(digits ? `+91${digits}` : "");
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Role */}

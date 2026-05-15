@@ -1057,7 +1057,12 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { sanitizeText, isValidName } from '../lib/sanitize';
+import {
+  sanitizeText,
+  isValidName,
+  isValidIndianMobile,
+  isValidUrl,
+} from '../lib/sanitize';
 import { useAuth } from '../contexts/useAuth';
 import Cropper from 'react-easy-crop';
 import { getCroppedBlob, PixelCrop } from '../lib/cropImage';
@@ -1770,6 +1775,7 @@ const [countryOfResidence, setCountryOfResidence] = useState<string>("India");
 const [editFirstName, setEditFirstName] = useState("");
 const [editLastName, setEditLastName] = useState("");
 const [editMobileNumber, setEditMobileNumber] = useState("");
+const [editGender, setEditGender] = useState("");
 
 const [countries, setCountries] = useState<
   {
@@ -1939,6 +1945,7 @@ useEffect(() => {
   setEditFirstName(profile.first_name || "");
   setEditLastName(profile.last_name || "");
   setEditMobileNumber(profile.mobile_number || "");
+  setEditGender(profile.gender || "");
 }, [profile]);
 
 
@@ -3202,6 +3209,54 @@ const handleSaveProfile = async () => {
       return;
     }
 
+    // Mobile number — must be 10 digits (Indian) or 12 digits starting
+    // with 91 ("+91" prefix + 10 digits). Anything else is a typo or
+    // malformed paste.
+    if (!isValidIndianMobile(editMobileNumber)) {
+      showToast(
+        "Mobile number must be 10 digits (e.g. 9876543210). +91 country code is optional.",
+        "info"
+      );
+      return;
+    }
+
+    // Family member mobile — locked-+91 UI enforces shape on input,
+    // but re-check on save: must be either empty or exactly +91 + 10
+    // digits (rejects any value that managed to bypass the input filter).
+    if (familyMobile.trim()) {
+      const famDigits = familyMobile.replace(/\D/g, "").replace(/^91/, "");
+      if (famDigits.length !== 10) {
+        showToast(
+          "Family member's mobile must be exactly 10 digits.",
+          "info"
+        );
+        return;
+      }
+    }
+
+    // Social fields accept either a full URL or a plain handle
+    // (e.g. "@ysjagan", "ysjagan"). Only validate when the value
+    // looks URL-ish — i.e. contains "://" or starts with "www.".
+    // Plain handles pass through untouched.
+    const looksUrlish = (s: string) =>
+      /:\/\//.test(s) || /^www\./i.test(s.trim());
+    const socialUrlChecks: Array<[string, string]> = [
+      ["Facebook",  (document.getElementById("facebook")  as HTMLInputElement)?.value || ""],
+      ["Twitter",   (document.getElementById("twitter")   as HTMLInputElement)?.value || ""],
+      ["LinkedIn",  (document.getElementById("linkedin")  as HTMLInputElement)?.value || ""],
+      ["Instagram", (document.getElementById("instagram") as HTMLInputElement)?.value || ""],
+    ];
+    for (const [label, val] of socialUrlChecks) {
+      const v = val.trim();
+      if (v && looksUrlish(v) && !isValidUrl(v)) {
+        showToast(
+          `${label} link looks like a URL but is malformed. Use the full address (https://…) or just your handle.`,
+          "info"
+        );
+        return;
+      }
+    }
+
 const dob =
   (document.getElementById("dob") as HTMLInputElement)?.value || null;
 
@@ -3237,6 +3292,7 @@ const updates = {
   first_name:           sanitizeText(editFirstName).trim() || null,
   last_name:            sanitizeText(editLastName).trim() || null,
   mobile_number:        sanitizeText(editMobileNumber).trim() || null,
+  gender:               editGender || null,
 
   // Current country address (editable).
   country_of_residence: sanitizeText(countryOfResidence).trim() || null,
@@ -3525,6 +3581,7 @@ const handleSubmitSuggestion = async () => {
                 <input
                   id="firstName"
                   type="text"
+                  maxLength={60}
                   value={editFirstName}
                   onChange={(e) => setEditFirstName(e.target.value)}
                   className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
@@ -3537,6 +3594,7 @@ const handleSubmitSuggestion = async () => {
                 <input
                   id="lastName"
                   type="text"
+                  maxLength={60}
                   value={editLastName}
                   onChange={(e) => setEditLastName(e.target.value)}
                   className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
@@ -3561,12 +3619,28 @@ const handleSubmitSuggestion = async () => {
                 <input
                   id="mobile_number"
                   type="tel"
+                  inputMode="tel"
+                  // 13 chars accommodates the longest sensible Indian
+                  // mobile representation: "+91XXXXXXXXXX". Anything
+                  // longer is rejected at validation time too.
+                  maxLength={13}
                   value={editMobileNumber}
-                  onChange={(e) => setEditMobileNumber(e.target.value)}
+                  onChange={(e) => {
+                    // Allow digits, leading '+', spaces, dashes — strip
+                    // everything else as the user types so paste-attacks
+                    // (alphabets / control chars) can't even land in
+                    // the field.
+                    const cleaned = e.target.value.replace(/[^0-9+\-\s]/g, "");
+                    setEditMobileNumber(cleaned);
+                  }}
+                  placeholder="9876543210 or +919876543210"
                   className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
+                <p className="text-[10px] text-gray-400 mt-1">
+                  10 digits (Indian). +91 country code is optional.
+                </p>
               </div>
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                   Date of Birth
                 </label>
@@ -3581,6 +3655,24 @@ const handleSubmitSuggestion = async () => {
                              focus:bg-white focus:ring-2 focus:ring-primary-500
                              outline-none transition-all"
                 />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Gender
+                </label>
+                <select
+                  value={editGender}
+                  onChange={(e) => setEditGender(e.target.value)}
+                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg
+                             text-sm font-bold text-gray-800 focus:bg-white
+                             focus:ring-2 focus:ring-primary-500 outline-none"
+                >
+                  <option value="">— Select gender —</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
               </div>
             </div>
           </div>
@@ -3712,6 +3804,7 @@ const handleSubmitSuggestion = async () => {
       </label>
       <input
         type="text"
+        maxLength={80}
         value={familyName}
         onChange={(e) => setFamilyName(e.target.value)}
         placeholder="Family member's full name"
@@ -3724,14 +3817,31 @@ const handleSubmitSuggestion = async () => {
       <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
         Mobile Number
       </label>
-      <input
-        type="tel"
-        value={familyMobile}
-        onChange={(e) => setFamilyMobile(e.target.value)}
-        placeholder="+91XXXXXXXXXX"
-        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
-                   text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
-      />
+      {/* +91 prefix is rendered as a locked label so the family
+          member's number is always stored / displayed in canonical
+          Indian E.164. The user only types the 10 national digits. */}
+      <div className="flex">
+        <span className="inline-flex items-center px-3 h-12 rounded-l-lg bg-gray-100 border border-r-0 border-gray-300 text-sm font-bold text-gray-600">
+          +91
+        </span>
+        <input
+          type="tel"
+          inputMode="numeric"
+          maxLength={10}
+          // Display the 10-digit portion only; +91 stays in storage.
+          value={familyMobile.replace(/^\+?91/, "").replace(/\D/g, "")}
+          onChange={(e) => {
+            const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+            // Persist with the +91 prefix when non-empty; empty when
+            // the user clears the field so the family block stays
+            // truly optional.
+            setFamilyMobile(digits ? `+91${digits}` : "");
+          }}
+          placeholder="10-digit mobile number"
+          className="flex-1 h-12 px-3 bg-gray-50 border border-gray-300 rounded-r-lg
+                     text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+        />
+      </div>
     </div>
 
     <div>
@@ -3740,6 +3850,7 @@ const handleSubmitSuggestion = async () => {
       </label>
       <input
         type="text"
+        maxLength={80}
         value={familyVillage}
         onChange={(e) => setFamilyVillage(e.target.value)}
         placeholder="Native village"
@@ -3754,6 +3865,7 @@ const handleSubmitSuggestion = async () => {
       </label>
       <input
         type="text"
+        maxLength={80}
         value={familyDesignation}
         onChange={(e) => setFamilyDesignation(e.target.value)}
         placeholder="e.g. Mandal President, Sarpanch, Party Worker"
@@ -3779,6 +3891,7 @@ const handleSubmitSuggestion = async () => {
   </label>
   <input
     type="text"
+    maxLength={80}
     value={profession}
     onChange={(e) => setProfession(e.target.value)}
     placeholder="e.g. Software Engineer, Doctor, Business Owner, Student"
@@ -3795,6 +3908,7 @@ const handleSubmitSuggestion = async () => {
   <input
     id="role_designation"
     type="text"
+    maxLength={80}
     value={roleDesignation}
     onChange={(e) => setRoleDesignation(e.target.value)}
     placeholder="e.g. Senior Developer, Founder, B.Tech CS"
@@ -3811,6 +3925,7 @@ const handleSubmitSuggestion = async () => {
   <input
     id="organization"
     type="text"
+    maxLength={120}
     value={organization}
     onChange={(e) => setOrganization(e.target.value)}
     placeholder="e.g. Infosys, IIT Delhi"
@@ -3829,6 +3944,7 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   defaultValue={profile?.facebook_id ?? ''}
                   placeholder="Facebook Profile URL / ID"
+                  maxLength={200}
                   className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
@@ -3839,6 +3955,7 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   defaultValue={profile?.twitter_id ?? ''}
                   placeholder="X (Twitter) Handle"
+                  maxLength={200}
                   className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
@@ -3849,6 +3966,7 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   defaultValue={profile?.linkedin_id ?? ''}
                   placeholder="LinkedIn Profile URL"
+                  maxLength={200}
                   className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
@@ -3859,6 +3977,7 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   defaultValue={profile?.instagram_id ?? ''}
                   placeholder="Instagram Handle"
+                  maxLength={200}
                   className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>

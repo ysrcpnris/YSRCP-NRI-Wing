@@ -173,12 +173,26 @@ export default function RegisterPage() {
     // referred_by: '',
   });
 
+  // Full list (country → code) for resolving a code when the user picks
+  // a country elsewhere on the form. The phone-input dropdown uses the
+  // deduped list below so the user doesn't see "+1" listed 20+ times
+  // (US, Canada, Antigua, Bahamas, etc. all share +1).
   const countryCodes = countriesData
     .map(country => ({
       name: country.name,
       code: '+' + country.code
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  // Distinct phone codes, sorted by numeric value of the code.
+  // Two countries with the same code (e.g. +1 for US, Canada and many
+  // Caribbean nations) collapse into a single option here.
+  const distinctPhoneCodes = Array.from(
+    new Set(countryCodes.map((c) => c.code))
+  ).sort(
+    (a, b) =>
+      parseInt(a.replace(/\D/g, ""), 10) - parseInt(b.replace(/\D/g, ""), 10)
+  );
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -219,6 +233,20 @@ export default function RegisterPage() {
     '+94': 9,
     '+358': 9,
     '+420': 9,
+  };
+
+  // For country codes that aren't in the explicit map above, fall back
+  // to the ITU-T E.164 max (15 digits total — minus the country code).
+  // This stops the field from accepting unbounded input for any of the
+  // ~200 countries we haven't hardcoded a length for. The submit-time
+  // validator below also accepts 7-15 digits as a sane minimum for
+  // unknown countries.
+  const E164_MAX_NATIONAL_DIGITS = 15;
+  const getMaxDigits = (code: string): number => {
+    const exact = phoneLengths[code];
+    if (exact) return exact;
+    const codeDigits = code.replace(/\D/g, "").length;
+    return Math.max(7, E164_MAX_NATIONAL_DIGITS - codeDigits);
   };
 
   const professions = ['Job', 'Business', 'Student'];
@@ -358,8 +386,20 @@ if (pwdError) {
     const currentCode = getCurrentCountryCode();
     const numberOnly = formData.mobile_number.slice(currentCode.length);
     const expected = phoneLengths[currentCode];
-    if (expected && numberOnly.length !== expected) {
-      throw new Error(`Mobile number must be ${expected} digits`);
+    if (expected) {
+      // Exact length is known — enforce strictly.
+      if (numberOnly.length !== expected) {
+        throw new Error(`Mobile number must be ${expected} digits for ${currentCode}`);
+      }
+    } else {
+      // Unknown country — accept any plausible E.164 national number
+      // (7 to (15 - country-code-digits) digits).
+      const maxLen = getMaxDigits(currentCode);
+      if (numberOnly.length < 7 || numberOnly.length > maxLen) {
+        throw new Error(
+          `Mobile number must be between 7 and ${maxLen} digits for ${currentCode}`
+        );
+      }
     }
 
     // === Mandatory location validations ===
@@ -532,12 +572,6 @@ return (
               </div>
             );
           })()}
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* ── Personal Information ── */}
@@ -857,35 +891,61 @@ return (
                         const newCode = e.target.value;
                         const prevCode = getCurrentCountryCode();
                         const numberOnly = formData.mobile_number.slice(prevCode.length);
-                        setFormData({ ...formData, mobile_number: newCode + numberOnly });
+                        // Reset back-to-cap when switching to a country
+                        // with a shorter expected length so the field
+                        // can't be over-filled from the previous code.
+                        const newMax = getMaxDigits(newCode);
+                        const trimmed = numberOnly.slice(0, newMax);
+                        setFormData({ ...formData, mobile_number: newCode + trimmed });
                         const expected = phoneLengths[newCode];
-                        if (expected && numberOnly.length > 0 && numberOnly.length !== expected) {
+                        if (expected && trimmed.length > 0 && trimmed.length !== expected) {
                           setPhoneError(`Mobile number must be ${expected} digits for ${newCode}`);
+                        } else if (
+                          !expected &&
+                          trimmed.length > 0 &&
+                          (trimmed.length < 7 || trimmed.length > newMax)
+                        ) {
+                          setPhoneError(
+                            `Mobile number must be between 7 and ${newMax} digits for ${newCode}`
+                          );
                         } else {
                           setPhoneError('');
                         }
                       }}
                       className="bg-transparent text-sm outline-none px-1 py-2.5"
                     >
-                      {countryCodes.map((country) => (
-                        <option key={country.name} value={country.code}>
-                          {country.code}
+                      {distinctPhoneCodes.map((code) => (
+                        <option key={code} value={code}>
+                          {code}
                         </option>
                       ))}
                     </select>
                   </div>
                   <input
                     type="tel"
+                    inputMode="tel"
                     required
+                    // maxLength is the per-country cap (or the E.164 fallback
+                    // for unmapped countries). The onChange also slices at the
+                    // same length so paste-attacks can't exceed it either.
+                    maxLength={getMaxDigits(getCurrentCountryCode())}
                     value={formData.mobile_number.slice(getCurrentCountryCode().length)}
                     onChange={(e) => {
                       const currentCode = getCurrentCountryCode();
-                      let digits = e.target.value.replace(/\D/g, '');
+                      const maxLen = getMaxDigits(currentCode);
+                      let digits = e.target.value.replace(/\D/g, '').slice(0, maxLen);
                       const expected = phoneLengths[currentCode];
-                      if (expected) digits = digits.slice(0, expected);
                       setFormData({ ...formData, mobile_number: currentCode + digits });
                       if (expected && digits.length > 0 && digits.length !== expected) {
                         setPhoneError(`Mobile number must be ${expected} digits for ${currentCode}`);
+                      } else if (
+                        !expected &&
+                        digits.length > 0 &&
+                        (digits.length < 7 || digits.length > maxLen)
+                      ) {
+                        setPhoneError(
+                          `Mobile number must be between 7 and ${maxLen} digits for ${currentCode}`
+                        );
                       } else {
                         setPhoneError('');
                       }
@@ -1089,6 +1149,15 @@ return (
                 </div>
               </div>
             </fieldset>
+
+            {/* Validation errors are shown right above the Submit
+                button so the user sees them at the bottom of the form
+                without having to scroll back to the top to find them. */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
 
             {/* ── Submit ── disabled while loading or while in cooldown
                 so accidental double-clicks can't fire two signups. */}

@@ -22,12 +22,12 @@ import nriLogo from "./nrilogo.png";
 type LinkItem = { label: string; to: string; external?: boolean };
 
 const NRI_SERVICES: LinkItem[] = [
-  { label: "Document Services",   to: "#services" },
-  { label: "Property Assistance", to: "#services" },
-  { label: "Business Support",    to: "#services" },
-  { label: "Education Services",  to: "#services" },
-  { label: "Legal Help",          to: "#services" },
-  { label: "Investment Guidance", to: "#services" },
+  { label: "Education Guidance",     to: "#services" },
+  { label: "Visa Support",           to: "#services" },
+  { label: "Job Assistance",         to: "#services" },
+  { label: "Immigration Assistance", to: "#services" },
+  { label: "Career Coach",           to: "#services" },
+  { label: "Local Connector",        to: "#services" },
 ];
 
 const QUICK_LINKS: LinkItem[] = [
@@ -36,18 +36,18 @@ const QUICK_LINKS: LinkItem[] = [
   { label: "Services",            to: "#services" },
   // Jagan-mark click takes the user to the Pillars of Progress
   // section (id="section-pillars" on TenPillar).
-  { label: "Jagan-mark",          to: "#section-pillars" },
+  { label: "JaganAnna Mark",      to: "#section-pillars" },
   { label: "Jagan anna on air",   to: "#onair" },
   { label: "Digital channels",    to: "#digital-channels" },
   { label: "Gallery",             to: "#glimpse" },
 ];
 
 const REGIONS: LinkItem[] = [
-  { label: "USA & Canada",         to: "#" },
-  { label: "Middle East",          to: "#" },
-  { label: "Europe & UK",          to: "#" },
-  { label: "Australia & NZ",       to: "#" },
-  { label: "Singapore & Malaysia", to: "#" },
+  { label: "North America",            to: "#" },
+  { label: "Europe",                   to: "#" },
+  { label: "South East Asia",          to: "#" },
+  { label: "Australia and New Zealand", to: "#" },
+  { label: "East Asia",                to: "#" },
 ];
 
 const Footer: React.FC = () => {
