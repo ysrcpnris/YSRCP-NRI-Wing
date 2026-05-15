@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/useAuth";
 import { toast } from "react-toastify";
+import { filterLettersOnly, isValidLettersOnly } from "../lib/sanitize";
 
 /* ===============================
    ADMIN PROFILE MENU (TOP RIGHT)
@@ -143,6 +144,12 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
   // Saves profile changes to database
   const updateProfile = async () => {
     if (!profile?.id) return;
+    if (!isValidLettersOnly(form.first_name)) {
+      toast.error(
+        "Name must contain only letters and spaces (no numbers or punctuation)."
+      );
+      return;
+    }
     setSaving(true);
 
     try {
@@ -194,7 +201,13 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
               </div>
               <input
                 value={form.first_name}
-                onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                maxLength={60}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    first_name: filterLettersOnly(e.target.value, 60),
+                  })
+                }
                 placeholder="Name"
                 className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
@@ -224,8 +237,16 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
                 <Phone size={16} />
               </div>
               <input
+                type="tel"
+                inputMode="numeric"
                 value={form.mobile_number}
-                onChange={(e) => setForm({ ...form, mobile_number: e.target.value })}
+                maxLength={15}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    mobile_number: e.target.value.replace(/[^0-9+]/g, "").slice(0, 15),
+                  })
+                }
                 placeholder="Mobile Number"
                 className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
@@ -240,8 +261,16 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
                 <Phone size={16} className="text-green-500" />
               </div>
               <input
+                type="tel"
+                inputMode="numeric"
                 value={form.whatsapp_number}
-                onChange={(e) => setForm({ ...form, whatsapp_number: e.target.value })}
+                maxLength={15}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    whatsapp_number: e.target.value.replace(/[^0-9+]/g, "").slice(0, 15),
+                  })
+                }
                 placeholder="WhatsApp Number"
                 className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
               />

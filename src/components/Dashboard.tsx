@@ -1059,10 +1059,20 @@ import {
 import { supabase } from '../lib/supabase';
 import {
   sanitizeText,
-  isValidName,
   isValidIndianMobile,
   isValidUrl,
+  filterLettersOnly,
+  filterFamilyName,
+  isValidLettersOnly,
+  isValidFamilyName,
 } from '../lib/sanitize';
+import { countriesData } from '../lib/countryCodes';
+import { getStates, getCities, hasStateData } from '../lib/locationData';
+// Imported under a different name because Dashboard.tsx has a local
+// `indianAddressData` constant defined at the top of the file for
+// legacy reasons. The shared lib version is the one we feed into the
+// cascading-dropdown UI below.
+import { indianAddressData as INDIAN_ADDRESS_DATA } from '../lib/indianAddressData';
 import { useAuth } from '../contexts/useAuth';
 import Cropper from 'react-easy-crop';
 import { getCroppedBlob, PixelCrop } from '../lib/cropImage';
@@ -1240,6 +1250,136 @@ const AccordionItem = ({
       </div>
     </div>
   );
+};
+
+// =====================================================================
+// SearchableInput — same UX as the registration page. Lets users type
+// to filter the dropdown, or type a custom value not in the list. We
+// inline it here (rather than share with RegisterPage) to keep this
+// component self-contained; if more screens need it, lift it into a
+// shared component file.
+// =====================================================================
+function SearchableInput({
+  value,
+  options,
+  onChange,
+  placeholder,
+  disabled,
+  letterFilter = true,
+}: {
+  value: string;
+  options: string[];
+  onChange: (val: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  // When true (default for address fields) we run input through the
+  // strict letters-only filter so users can't type digits / brackets
+  // into State/District/City inputs.
+  letterFilter?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const q = value.trim().toLowerCase();
+  const sorted = [...options].sort((a, b) => a.localeCompare(b));
+  const filtered = q
+    ? sorted.filter((o) => o.toLowerCase().includes(q))
+    : sorted;
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <input
+        type="text"
+        disabled={disabled}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => {
+          const next = letterFilter
+            ? filterLettersOnly(e.target.value, 120)
+            : e.target.value.slice(0, 120);
+          onChange(next);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+      />
+      {open && !disabled && filtered.length > 0 && (
+        <ul className="absolute z-40 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+          {filtered.map((opt) => (
+            <li
+              key={opt}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onChange(opt);
+                setOpen(false);
+              }}
+              className={`px-3 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
+                value === opt
+                  ? "bg-primary-50 font-medium text-primary-700"
+                  : ""
+              }`}
+            >
+              {opt}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// Distinct phone codes (deduped & sorted by numeric value) — shared
+// between the registration page and the profile-edit page. Two
+// countries with the same dial code (e.g. +1 for US, Canada and many
+// Caribbean nations) collapse into a single dropdown entry here.
+const PROFILE_PHONE_CODES = Array.from(
+  new Set(countriesData.map((c) => "+" + c.code))
+).sort(
+  (a, b) =>
+    parseInt(a.replace(/\D/g, ""), 10) - parseInt(b.replace(/\D/g, ""), 10)
+);
+
+// Expected national-number length per country. Same map used on the
+// registration page so profile-edit validation feels identical.
+const PROFILE_PHONE_LENGTHS: Record<string, number> = {
+  "+91": 10,
+  "+1": 10,
+  "+44": 10,
+  "+61": 9,
+  "+971": 9,
+  "+966": 9,
+  "+65": 8,
+  "+81": 10,
+  "+82": 9,
+  "+353": 9,
+  "+60": 9,
+  "+852": 8,
+  "+886": 9,
+  "+86": 11,
+  "+92": 10,
+  "+880": 10,
+  "+94": 9,
+  "+358": 9,
+  "+420": 9,
+};
+
+// Fallback length for any country code we haven't explicitly mapped:
+// the ITU-T E.164 max (15 digits) minus the country-code length.
+const profilePhoneMaxDigits = (code: string): number => {
+  const exact = PROFILE_PHONE_LENGTHS[code];
+  if (exact) return exact;
+  const codeDigits = code.replace(/\D/g, "").length;
+  return Math.max(7, 15 - codeDigits);
 };
 
 const Dashboard: React.FC = () => {
@@ -1691,6 +1831,35 @@ const toggleContribution = async (
  * - Helps in professional networking and skill-based matching
  */
 
+// Fixed list of party / civic designations an "active YSRCP family
+// member" can hold. The Family Member panel uses a <select> over this
+// list so admins receive consistent, non-garbage values across users
+// (previously it was free-text and accepted anything).
+const FAMILY_DESIGNATIONS = [
+  "MLA",
+  "MP",
+  "Minister",
+  "District President",
+  "District Convener",
+  "Constituency Coordinator",
+  "Mandal President",
+  "Mandal Convener",
+  "Sarpanch",
+  "Vice Sarpanch",
+  "Ward Member",
+  "ZPTC Member",
+  "MPTC Member",
+  "Party President",
+  "Vice President",
+  "General Secretary",
+  "Secretary",
+  "Joint Secretary",
+  "Treasurer",
+  "Party Worker",
+  "Volunteer",
+  "Other",
+];
+
 const roleOptions: Record<string, string[]> = {
   Job: [
     "Software Engineer",
@@ -1776,6 +1945,34 @@ const [editFirstName, setEditFirstName] = useState("");
 const [editLastName, setEditLastName] = useState("");
 const [editMobileNumber, setEditMobileNumber] = useState("");
 const [editGender, setEditGender] = useState("");
+
+// Profile section is read-only by default. Clicking Edit unlocks the
+// fields; Cancel reverts to the last saved values; Save validates and
+// persists then drops back to read-only.
+const [profileEditMode, setProfileEditMode] = useState(false);
+// Ref on the bottom Edit / Cancel / Save row so the inline link in
+// the read-only banner can smooth-scroll there + flash a highlight.
+// The ref is on the wrapper DIV (which stays mounted regardless of
+// edit mode) rather than on the Edit button itself — that button
+// unmounts the instant we flip into edit mode and would null out
+// the ref before scrollIntoView ran.
+const profileEditBtnRef = useRef<HTMLDivElement | null>(null);
+
+const enterProfileEditMode = () => {
+  // Scroll FIRST so the ref is guaranteed to point at the live DOM
+  // node — the wrapper div is mounted in both edit / read-only
+  // modes, so its position is already correct. Doing this before
+  // setState avoids any race against React's commit phase.
+  const row = profileEditBtnRef.current;
+  if (row) {
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+    row.classList.add("ring-4", "ring-amber-400", "rounded-lg");
+    window.setTimeout(() => {
+      row.classList.remove("ring-4", "ring-amber-400", "rounded-lg");
+    }, 1500);
+  }
+  setProfileEditMode(true);
+};
 
 const [countries, setCountries] = useState<
   {
@@ -3178,6 +3375,55 @@ const renderEventsSummary = () => {
 // );
 
 
+// Re-hydrate every editable state hook from the currently loaded
+// profile. Called from the Cancel button so the user discards their
+// in-progress edits without a network round-trip.
+const resetEditsFromProfile = () => {
+  if (!profile) return;
+  setEditFirstName(profile.first_name || "");
+  setEditLastName(profile.last_name || "");
+  setEditMobileNumber(profile.mobile_number || "");
+  setEditGender(profile.gender || "");
+  setCountryOfResidence(profile.country_of_residence || "India");
+  if (profile.country_of_residence !== "India") {
+    setStateAbroad(profile.state_abroad || "");
+    setCityAbroad(profile.city_abroad || "");
+  } else {
+    setStateAbroad("");
+    setCityAbroad("");
+  }
+  setIndianState(profile.indian_state?.trim() || "");
+  setDistrict(profile.district ? normalizeDistrict(profile.district) : "");
+  setAssembly(
+    profile.assembly_constituency
+      ? normalizeAssembly(profile.assembly_constituency)
+      : ""
+  );
+  setMandal(profile.mandal ? normalizeMandal(profile.mandal) : "");
+  setProfession(profile.profession || "");
+  setRoleDesignation(profile.role_designation || "");
+  setOrganization(profile.organization || "");
+  setFamilyRelation((profile as any).family_relation || "");
+  setFamilyName((profile as any).family_name || "");
+  setFamilyMobile((profile as any).family_mobile || "");
+  setFamilyVillage((profile as any).family_village || "");
+  setFamilyDesignation((profile as any).family_designation || "");
+  // Uncontrolled social inputs — restore via direct DOM write.
+  const setSocial = (id: string, val: string) => {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    if (el) el.value = val;
+  };
+  setSocial("facebook", profile.facebook_id || "");
+  setSocial("twitter", profile.twitter_id || "");
+  setSocial("linkedin", profile.linkedin_id || "");
+  setSocial("instagram", profile.instagram_id || "");
+};
+
+const handleCancelProfileEdit = () => {
+  resetEditsFromProfile();
+  setProfileEditMode(false);
+};
+
 const handleSaveProfile = async () => {
   if (!user) return;
 
@@ -3191,34 +3437,64 @@ const handleSaveProfile = async () => {
     // now editable from the dashboard (previously locked at registration
     // only). Email remains read-only because it's the auth identity.
 
-    // Reject garbage names like "," or "..." before saving — these
-    // slipped through earlier because the sanitizer only strips
-    // invisible chars, not visible punctuation.
-    if (!isValidName(editFirstName)) {
+    // Names must be letters and spaces only — reject digits, full
+    // stops, commas, brackets, etc. (the input filter prevents typing
+    // those, but a paste / programmatic update could still slip them
+    // in).
+    if (!isValidLettersOnly(editFirstName)) {
       showToast(
-        "Please enter a valid first name (at least 2 characters, including at least one letter).",
+        "First name must contain only letters and spaces (no numbers, full stops, or commas).",
         "info"
       );
       return;
     }
-    if (!isValidName(editLastName)) {
+    if (!isValidLettersOnly(editLastName)) {
       showToast(
-        "Please enter a valid last name (at least 2 characters, including at least one letter).",
+        "Last name must contain only letters and spaces (no numbers, full stops, or commas).",
         "info"
       );
       return;
     }
 
-    // Mobile number — must be 10 digits (Indian) or 12 digits starting
-    // with 91 ("+91" prefix + 10 digits). Anything else is a typo or
-    // malformed paste.
-    if (!isValidIndianMobile(editMobileNumber)) {
-      showToast(
-        "Mobile number must be 10 digits (e.g. 9876543210). +91 country code is optional.",
-        "info"
+    // Mobile number — country-aware validation matching the
+    // registration page. Resolve the current code by longest-prefix
+    // match, then check the national-digit length against the per-
+    // country expectation (with an E.164 fallback for unmapped codes).
+    {
+      const sortedCodes = [...PROFILE_PHONE_CODES].sort(
+        (a, b) => b.length - a.length
       );
-      return;
+      let currentCode = "+91";
+      for (const code of sortedCodes) {
+        if (editMobileNumber.startsWith(code)) {
+          currentCode = code;
+          break;
+        }
+      }
+      const nationalDigits = editMobileNumber
+        .slice(currentCode.length)
+        .replace(/\D/g, "");
+      const expected = PROFILE_PHONE_LENGTHS[currentCode];
+      const maxLen = profilePhoneMaxDigits(currentCode);
+      if (expected) {
+        if (nationalDigits.length !== expected) {
+          showToast(
+            `Mobile number must be exactly ${expected} digits for ${currentCode}.`,
+            "info"
+          );
+          return;
+        }
+      } else if (nationalDigits.length < 7 || nationalDigits.length > maxLen) {
+        showToast(
+          `Mobile number must be between 7 and ${maxLen} digits for ${currentCode}.`,
+          "info"
+        );
+        return;
+      }
     }
+    // Suppress unused-import warning while keeping the helper around
+    // for legacy callers (Indian-only paths still rely on it).
+    void isValidIndianMobile;
 
     // Family member mobile — locked-+91 UI enforces shape on input,
     // but re-check on save: must be either empty or exactly +91 + 10
@@ -3234,23 +3510,61 @@ const handleSaveProfile = async () => {
       }
     }
 
-    // Social fields accept either a full URL or a plain handle
-    // (e.g. "@ysjagan", "ysjagan"). Only validate when the value
-    // looks URL-ish — i.e. contains "://" or starts with "www.".
-    // Plain handles pass through untouched.
-    const looksUrlish = (s: string) =>
-      /:\/\//.test(s) || /^www\./i.test(s.trim());
-    const socialUrlChecks: Array<[string, string]> = [
+    // Family-member optional fields. Name allows ONE period for
+    // initials ("S. Krishna"); village is strict letters-only.
+    if (familyName.trim() && !isValidFamilyName(familyName)) {
+      showToast(
+        "Family member name must contain only letters and spaces (one period allowed for an initial, e.g. \"S. Krishna\").",
+        "info"
+      );
+      return;
+    }
+    if (familyVillage.trim() && !isValidLettersOnly(familyVillage)) {
+      showToast(
+        "Village must contain only letters and spaces (no numbers or punctuation).",
+        "info"
+      );
+      return;
+    }
+
+    // Professional & Social — strict letters-only on every text field
+    // (digits, brackets, commas, full stops are all rejected).
+    if (profession.trim() && !isValidLettersOnly(profession)) {
+      showToast(
+        "Professional Category must contain only letters and spaces.",
+        "info"
+      );
+      return;
+    }
+    if (roleDesignation.trim() && !isValidLettersOnly(roleDesignation)) {
+      showToast(
+        "Role / Designation must contain only letters and spaces.",
+        "info"
+      );
+      return;
+    }
+    if (organization.trim() && !isValidLettersOnly(organization)) {
+      showToast(
+        "Company / Organization Name must contain only letters and spaces.",
+        "info"
+      );
+      return;
+    }
+
+    // Social fields — must be valid http/https URLs when filled.
+    // Plain @handles are no longer accepted; the client asked for
+    // strict URL validation across the board.
+    const socialFields: Array<[string, string]> = [
       ["Facebook",  (document.getElementById("facebook")  as HTMLInputElement)?.value || ""],
-      ["Twitter",   (document.getElementById("twitter")   as HTMLInputElement)?.value || ""],
+      ["X (Twitter)", (document.getElementById("twitter") as HTMLInputElement)?.value || ""],
       ["LinkedIn",  (document.getElementById("linkedin")  as HTMLInputElement)?.value || ""],
       ["Instagram", (document.getElementById("instagram") as HTMLInputElement)?.value || ""],
     ];
-    for (const [label, val] of socialUrlChecks) {
+    for (const [label, val] of socialFields) {
       const v = val.trim();
-      if (v && looksUrlish(v) && !isValidUrl(v)) {
+      if (v && !isValidUrl(v)) {
         showToast(
-          `${label} link looks like a URL but is malformed. Use the full address (https://…) or just your handle.`,
+          `${label} must be a valid URL starting with https:// (e.g. https://facebook.com/your-profile).`,
           "info"
         );
         return;
@@ -3338,6 +3652,8 @@ const updates = {
 
     await refreshProfile();
     showToast("Profile Updated Successfully!", "success");
+    // Drop back to read-only after a successful save.
+    setProfileEditMode(false);
   } catch (err) {
     console.error(err);
     showToast("Failed to update profile", "info");
@@ -3565,8 +3881,30 @@ const handleSubmitSuggestion = async () => {
           </div>
         </div>
 
-        {/* Right Column: Form */}
+        {/* Right Column: one wrapper that owns cols 2–3 of the
+            grid. Inside it we stack the read-only banner, the
+            disabled-able fieldset, and the Edit/Cancel/Save row.
+            The banner and the action buttons MUST live outside the
+            <fieldset> because `<fieldset disabled>` cascades the
+            disabled state to every nested button, which would
+            silently disable the inline link + the bottom action
+            buttons in read-only mode. */}
         <div className="lg:col-span-2 space-y-4">
+          {!profileEditMode && (
+            <div className="px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-semibold">
+              Profile is read-only. Click{" "}
+              <button
+                type="button"
+                onClick={enterProfileEditMode}
+                className="underline font-bold text-amber-900 hover:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-400 rounded"
+              >
+                Edit Profile
+              </button>{" "}
+              below to make changes.
+            </div>
+          )}
+
+          <fieldset disabled={!profileEditMode} className="space-y-4 disabled:opacity-95">
 
           {/* ========== ACCOUNT INFORMATION (locked) ========== */}
           <div ref={personalInfoRef} className="p-5 bg-white rounded-xl border border-gray-200">
@@ -3583,7 +3921,7 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   maxLength={60}
                   value={editFirstName}
-                  onChange={(e) => setEditFirstName(e.target.value)}
+                  onChange={(e) => setEditFirstName(filterLettersOnly(e.target.value, 60))}
                   className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
@@ -3596,7 +3934,7 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   maxLength={60}
                   value={editLastName}
-                  onChange={(e) => setEditLastName(e.target.value)}
+                  onChange={(e) => setEditLastName(filterLettersOnly(e.target.value, 60))}
                   className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
               </div>
@@ -3616,28 +3954,64 @@ const handleSubmitSuggestion = async () => {
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                   Mobile Number
                 </label>
-                <input
-                  id="mobile_number"
-                  type="tel"
-                  inputMode="tel"
-                  // 13 chars accommodates the longest sensible Indian
-                  // mobile representation: "+91XXXXXXXXXX". Anything
-                  // longer is rejected at validation time too.
-                  maxLength={13}
-                  value={editMobileNumber}
-                  onChange={(e) => {
-                    // Allow digits, leading '+', spaces, dashes — strip
-                    // everything else as the user types so paste-attacks
-                    // (alphabets / control chars) can't even land in
-                    // the field.
-                    const cleaned = e.target.value.replace(/[^0-9+\-\s]/g, "");
-                    setEditMobileNumber(cleaned);
-                  }}
-                  placeholder="9876543210 or +919876543210"
-                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
-                />
+                {(() => {
+                  // Country-code dropdown + national-digits input, same
+                  // pattern as the registration page. Storage stays as
+                  // E.164 ("+91XXXXXXXXXX") in editMobileNumber.
+                  // Resolve the current code by longest-prefix match so
+                  // "+880" (Bangladesh) wins over "+88" if we ever map it.
+                  const sortedCodes = [...PROFILE_PHONE_CODES].sort(
+                    (a, b) => b.length - a.length
+                  );
+                  let currentCode = "+91";
+                  for (const code of sortedCodes) {
+                    if (editMobileNumber.startsWith(code)) {
+                      currentCode = code;
+                      break;
+                    }
+                  }
+                  const maxLen = profilePhoneMaxDigits(currentCode);
+                  const nationalDigits = editMobileNumber
+                    .slice(currentCode.length)
+                    .replace(/\D/g, "");
+                  return (
+                    <div className="flex">
+                      <select
+                        value={currentCode}
+                        onChange={(e) => {
+                          const newCode = e.target.value;
+                          const trimmed = nationalDigits.slice(
+                            0,
+                            profilePhoneMaxDigits(newCode)
+                          );
+                          setEditMobileNumber(newCode + trimmed);
+                        }}
+                        className="px-2 py-3 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                      >
+                        {PROFILE_PHONE_CODES.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                      <input
+                        id="mobile_number"
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={maxLen}
+                        value={nationalDigits}
+                        onChange={(e) => {
+                          const digits = e.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, maxLen);
+                          setEditMobileNumber(currentCode + digits);
+                        }}
+                        placeholder={`${maxLen}-digit mobile number`}
+                        className="flex-1 p-3 bg-gray-50 border border-gray-300 rounded-r-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                      />
+                    </div>
+                  );
+                })()}
                 <p className="text-[10px] text-gray-400 mt-1">
-                  10 digits (Indian). +91 country code is optional.
+                  Pick your country code, then enter the national-number digits only.
                 </p>
               </div>
               <div>
@@ -3678,6 +4052,11 @@ const handleSubmitSuggestion = async () => {
           </div>
 
           {/* ========== CURRENT RESIDENCY ========== */}
+          {/* Country / State / City are searchable dropdowns sourced
+              from the same data the registration page uses. Free-text
+              entry is still allowed (so countries / regions we don't
+              have a built-in list for are accepted) but digits and
+              symbols are stripped at typing time by SearchableInput. */}
           <div ref={residencyRef} className="p-5 bg-white rounded-xl border border-gray-200">
             <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
               Current Residency
@@ -3685,32 +4064,84 @@ const handleSubmitSuggestion = async () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">Country</label>
-                <input
-                  type="text"
+                <SearchableInput
                   value={countryOfResidence}
-                  onChange={(e) => setCountryOfResidence(e.target.value)}
-                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  options={countriesData.map((c) => c.name)}
+                  onChange={(val) => {
+                    setCountryOfResidence(val);
+                    setStateAbroad("");
+                    setCityAbroad("");
+                  }}
+                  placeholder="Search or type country"
                 />
               </div>
               {countryOfResidence !== "India" && (
                 <>
                   <div>
                     <label className="text-[10px] font-medium text-gray-500 mb-1 block">State / Province</label>
-                    <input
-                      type="text"
-                      value={stateAbroad}
-                      onChange={(e) => setStateAbroad(e.target.value)}
-                      className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
-                    />
+                    {hasStateData(countryOfResidence) ? (
+                      <SearchableInput
+                        value={stateAbroad}
+                        options={getStates(countryOfResidence)}
+                        onChange={(val) => {
+                          setStateAbroad(val);
+                          setCityAbroad("");
+                        }}
+                        placeholder="Search or type state / province"
+                        disabled={!countryOfResidence}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={stateAbroad}
+                        maxLength={120}
+                        disabled={!countryOfResidence}
+                        onChange={(e) => {
+                          setStateAbroad(filterLettersOnly(e.target.value, 120));
+                          setCityAbroad("");
+                        }}
+                        placeholder={
+                          !countryOfResidence
+                            ? "Select a country first"
+                            : "Enter your state / province"
+                        }
+                        className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                    )}
                   </div>
                   <div>
                     <label className="text-[10px] font-medium text-gray-500 mb-1 block">City</label>
-                    <input
-                      type="text"
-                      value={cityAbroad}
-                      onChange={(e) => setCityAbroad(e.target.value)}
-                      className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
-                    />
+                    {(() => {
+                      const cityList = getCities(countryOfResidence, stateAbroad);
+                      if (cityList.length > 0) {
+                        return (
+                          <SearchableInput
+                            value={cityAbroad}
+                            options={cityList}
+                            onChange={(val) => setCityAbroad(val)}
+                            placeholder="Search or type city"
+                            disabled={!stateAbroad}
+                          />
+                        );
+                      }
+                      return (
+                        <input
+                          type="text"
+                          value={cityAbroad}
+                          maxLength={120}
+                          disabled={!stateAbroad}
+                          onChange={(e) =>
+                            setCityAbroad(filterLettersOnly(e.target.value, 120))
+                          }
+                          placeholder={
+                            !stateAbroad
+                              ? "Select a state first"
+                              : "Enter your city"
+                          }
+                          className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                      );
+                    })()}
                   </div>
                 </>
               )}
@@ -3718,6 +4149,11 @@ const handleSubmitSuggestion = async () => {
           </div>
 
           {/* ========== INDIA ADDRESS ========== */}
+          {/* Cascading searchable dropdowns: State → District →
+              Assembly Constituency → Mandal. Same data and UX as the
+              registration page. Each level clears the levels below
+              it when changed so the user can't end up with a stale
+              (district, AC) combination. */}
           <div ref={indianAddressRef} className="p-5 bg-white rounded-xl border border-gray-200">
             <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
               India Address
@@ -3725,38 +4161,72 @@ const handleSubmitSuggestion = async () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">State</label>
-                <input
-                  type="text"
+                <SearchableInput
                   value={indianState}
-                  onChange={(e) => setIndianState(e.target.value)}
-                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  options={Object.keys(INDIAN_ADDRESS_DATA)}
+                  onChange={(val) => {
+                    setIndianState(val);
+                    setDistrict("");
+                    setAssembly("");
+                    setMandal("");
+                  }}
+                  placeholder="Search or type state"
                 />
               </div>
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">District</label>
-                <input
-                  type="text"
+                <SearchableInput
                   value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  options={
+                    indianState
+                      ? (INDIAN_ADDRESS_DATA[indianState] || []).map((d) => d.name)
+                      : []
+                  }
+                  onChange={(val) => {
+                    setDistrict(val);
+                    setAssembly("");
+                    setMandal("");
+                  }}
+                  placeholder={indianState ? "Search or type district" : "Select a state first"}
+                  disabled={!indianState}
                 />
               </div>
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">Assembly Constituency</label>
-                <input
-                  type="text"
+                <SearchableInput
                   value={assembly}
-                  onChange={(e) => setAssembly(e.target.value)}
-                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  options={
+                    indianState && district
+                      ? (
+                          INDIAN_ADDRESS_DATA[indianState]?.find(
+                            (d) => d.name === district
+                          )?.constituencies || []
+                        ).map((c) => c.name)
+                      : []
+                  }
+                  onChange={(val) => {
+                    setAssembly(val);
+                    setMandal("");
+                  }}
+                  placeholder={district ? "Search or type constituency" : "Select a district first"}
+                  disabled={!district}
                 />
               </div>
               <div>
                 <label className="text-[10px] font-medium text-gray-500 mb-1 block">Mandal</label>
-                <input
-                  type="text"
+                <SearchableInput
                   value={mandal}
-                  onChange={(e) => setMandal(e.target.value)}
-                  className="w-full h-11 px-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  options={
+                    indianState && district && assembly
+                      ? INDIAN_ADDRESS_DATA[indianState]
+                          ?.find((d) => d.name === district)
+                          ?.constituencies.find((c) => c.name === assembly)
+                          ?.mandals || []
+                      : []
+                  }
+                  onChange={(val) => setMandal(val)}
+                  placeholder={assembly ? "Search or type mandal" : "Select a constituency first"}
+                  disabled={!assembly}
                 />
               </div>
             </div>
@@ -3806,7 +4276,7 @@ const handleSubmitSuggestion = async () => {
         type="text"
         maxLength={80}
         value={familyName}
-        onChange={(e) => setFamilyName(e.target.value)}
+        onChange={(e) => setFamilyName(filterFamilyName(e.target.value, 80))}
         placeholder="Family member's full name"
         className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
                    text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
@@ -3852,7 +4322,7 @@ const handleSubmitSuggestion = async () => {
         type="text"
         maxLength={80}
         value={familyVillage}
-        onChange={(e) => setFamilyVillage(e.target.value)}
+        onChange={(e) => setFamilyVillage(filterLettersOnly(e.target.value, 80))}
         placeholder="Native village"
         className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
                    text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
@@ -3863,15 +4333,17 @@ const handleSubmitSuggestion = async () => {
       <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
         Designation <span className="font-normal text-gray-400 italic normal-case">(optional)</span>
       </label>
-      <input
-        type="text"
-        maxLength={80}
+      <select
         value={familyDesignation}
         onChange={(e) => setFamilyDesignation(e.target.value)}
-        placeholder="e.g. Mandal President, Sarpanch, Party Worker"
         className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
                    text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
-      />
+      >
+        <option value="">— Select designation —</option>
+        {FAMILY_DESIGNATIONS.map((d) => (
+          <option key={d} value={d}>{d}</option>
+        ))}
+      </select>
     </div>
   </div>
 </div>
@@ -3893,7 +4365,7 @@ const handleSubmitSuggestion = async () => {
     type="text"
     maxLength={80}
     value={profession}
-    onChange={(e) => setProfession(e.target.value)}
+    onChange={(e) => setProfession(filterLettersOnly(e.target.value, 80))}
     placeholder="e.g. Software Engineer, Doctor, Business Owner, Student"
     className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
                text-sm font-semibold
@@ -3910,7 +4382,7 @@ const handleSubmitSuggestion = async () => {
     type="text"
     maxLength={80}
     value={roleDesignation}
-    onChange={(e) => setRoleDesignation(e.target.value)}
+    onChange={(e) => setRoleDesignation(filterLettersOnly(e.target.value, 80))}
     placeholder="e.g. Senior Developer, Founder, B.Tech CS"
     className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
                text-sm font-semibold
@@ -3927,7 +4399,7 @@ const handleSubmitSuggestion = async () => {
     type="text"
     maxLength={120}
     value={organization}
-    onChange={(e) => setOrganization(e.target.value)}
+    onChange={(e) => setOrganization(filterLettersOnly(e.target.value, 120))}
     placeholder="e.g. Infosys, IIT Delhi"
     className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
                text-sm font-semibold"
@@ -3936,14 +4408,21 @@ const handleSubmitSuggestion = async () => {
 </div>
 
             {/* Social Media Inputs */}
+            <p className="text-[11px] text-gray-500 mb-2 italic">
+              Paste the full URL of each profile (must start with
+              <span className="font-mono">https://</span>). Plain
+              handles like <span className="font-mono">@yourname</span>
+              are not accepted — the save will fail until each filled
+              field is a valid URL.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
                 <Facebook className="absolute left-3 top-3 text-primary-600" size={16} />
                 <input
                 id="facebook"
-                  type="text"
+                  type="url"
                   defaultValue={profile?.facebook_id ?? ''}
-                  placeholder="Facebook Profile URL / ID"
+                  placeholder="https://facebook.com/your-profile"
                   maxLength={200}
                   className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
@@ -3952,9 +4431,9 @@ const handleSubmitSuggestion = async () => {
                 <Twitter className="absolute left-3 top-3 text-black" size={16} />
                 <input
                 id="twitter"
-                  type="text"
+                  type="url"
                   defaultValue={profile?.twitter_id ?? ''}
-                  placeholder="X (Twitter) Handle"
+                  placeholder="https://x.com/your-handle"
                   maxLength={200}
                   className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
@@ -3963,9 +4442,9 @@ const handleSubmitSuggestion = async () => {
                 <Linkedin className="absolute left-3 top-3 text-primary-700" size={16} />
                 <input
                 id="linkedin"
-                  type="text"
+                  type="url"
                   defaultValue={profile?.linkedin_id ?? ''}
-                  placeholder="LinkedIn Profile URL"
+                  placeholder="https://linkedin.com/in/your-handle"
                   maxLength={200}
                   className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
@@ -3974,9 +4453,9 @@ const handleSubmitSuggestion = async () => {
                 <Instagram className="absolute left-3 top-3 text-pink-600" size={16} />
                 <input
                 id="instagram"
-                  type="text"
+                  type="url"
                   defaultValue={profile?.instagram_id ?? ''}
-                  placeholder="Instagram Handle"
+                  placeholder="https://instagram.com/your-handle"
                   maxLength={200}
                   className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
                 />
@@ -4009,13 +4488,41 @@ const handleSubmitSuggestion = async () => {
             </div>
           </div>
 
-          <div className="flex justify-end pt-1">
-            <button
-              onClick={handleSaveProfile}
-              className="px-6 py-2.5 bg-gray-900 text-white font-bold rounded-lg shadow-lg hover:bg-black transition-all flex items-center gap-2 text-xs uppercase tracking-wider"
-            >
-              <Check size={14} /> Save Details
-            </button>
+          </fieldset>
+
+          {/* Edit / Cancel / Save buttons sit inside the right
+              column wrapper but OUTSIDE the <fieldset> so they
+              don't inherit its disabled state. */}
+          <div
+            ref={profileEditBtnRef}
+            className="flex justify-end pt-1 gap-2 transition-shadow"
+          >
+            {profileEditMode ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleCancelProfileEdit}
+                  className="px-5 py-2.5 bg-white text-gray-700 font-bold rounded-lg border border-gray-300 hover:bg-gray-50 transition-all flex items-center gap-2 text-xs uppercase tracking-wider"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveProfile}
+                  className="px-6 py-2.5 bg-gray-900 text-white font-bold rounded-lg shadow-lg hover:bg-black transition-all flex items-center gap-2 text-xs uppercase tracking-wider"
+                >
+                  <Check size={14} /> Save
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setProfileEditMode(true)}
+                className="px-6 py-2.5 bg-primary-600 text-white font-bold rounded-lg shadow-lg hover:bg-primary-700 transition-all flex items-center gap-2 text-xs uppercase tracking-wider"
+              >
+                Edit Profile
+              </button>
+            )}
           </div>
         </div>
       </div>

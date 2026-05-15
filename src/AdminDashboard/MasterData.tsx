@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, Edit3, Trash2, Upload, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { indianAddressData } from "../lib/indianAddressData";
+import { filterNameLike, isValidNameLike } from "../lib/sanitize";
 
 /* ======================================================
    TYPES
@@ -415,6 +416,10 @@ export default function MasterData() {
 
     if (!name.trim() || !phone.trim() || !formRole) {
       alert("Please fill name, WhatsApp number, and role.");
+      return;
+    }
+    if (!isValidNameLike(name)) {
+      alert("Please enter a valid leader name (letters only, at least 2 characters).");
       return;
     }
     // Phone shape is enforced by the locked-+91 UI, but double-check
@@ -1036,8 +1041,9 @@ export default function MasterData() {
                 <input
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
                   placeholder="e.g. Sri P.V. Midhun Reddy"
+                  maxLength={120}
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => setName(filterNameLike(e.target.value, 120))}
                 />
               </div>
 

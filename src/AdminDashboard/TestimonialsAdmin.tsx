@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { countriesData } from "../lib/countryCodes";
+import { filterNameLike, isValidNameLike } from "../lib/sanitize";
 import {
   Loader2,
   Plus,
@@ -82,6 +83,14 @@ export default function TestimonialsAdmin() {
   const addTestimonial = async () => {
     if (!name.trim() || !location.trim() || !message.trim()) {
       alert("Please fill in name, location, and message.");
+      return;
+    }
+    if (!isValidNameLike(name)) {
+      alert("Please enter a valid name (letters only, at least 2 characters).");
+      return;
+    }
+    if (!isValidNameLike(location)) {
+      alert("Please enter a valid location (letters only).");
       return;
     }
     setAdding(true);
@@ -256,8 +265,9 @@ export default function TestimonialsAdmin() {
             <input
               type="text"
               placeholder="e.g. MR. Bharath Kandula"
+              maxLength={120}
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(filterNameLike(e.target.value, 120))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
             />
           </div>
@@ -268,8 +278,9 @@ export default function TestimonialsAdmin() {
             <input
               type="text"
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(e) => setLocation(filterNameLike(e.target.value, 120))}
               placeholder="e.g. California, USA"
+              maxLength={120}
               list="testimonial-location-suggestions"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
             />
@@ -357,14 +368,16 @@ export default function TestimonialsAdmin() {
                           <input
                             type="text"
                             value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
+                            maxLength={120}
+                            onChange={(e) => setEditName(filterNameLike(e.target.value, 120))}
                             className="border border-primary-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
                             placeholder="Name"
                           />
                           <input
                             type="text"
                             value={editLocation}
-                            onChange={(e) => setEditLocation(e.target.value)}
+                            maxLength={120}
+                            onChange={(e) => setEditLocation(filterNameLike(e.target.value, 120))}
                             placeholder="Location (e.g. California, USA)"
                             list="testimonial-location-suggestions"
                             className="border border-primary-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"

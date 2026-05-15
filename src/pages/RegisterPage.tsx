@@ -16,7 +16,11 @@ import { indianAddressData } from '../lib/indianAddressData';
 // user input - see src/lib/sanitize.ts for the rationale and the
 // ranges stripped. RegisterPage applies it on submit alongside
 // the other forms (Profile edit, Suggestions, Service requests).
-import { sanitizeText, isValidName } from "../lib/sanitize";
+import {
+  sanitizeText,
+  filterLettersOnly,
+  isValidLettersOnly,
+} from "../lib/sanitize";
 
 const SUBMIT_COOLDOWN_SECONDS = 30;
 const SUBMIT_COOLDOWN_KEY = "register_submit_until";
@@ -372,14 +376,14 @@ if (pwdError) {
     // === Name validation === ensure first/last names are real text.
     // Rejects garbage entries like "," or "..." or "   " (people have
     // tried that). Must contain at least one letter in any script.
-    if (!isValidName(formData.first_name)) {
+    if (!isValidLettersOnly(formData.first_name)) {
       throw new Error(
-        'Please enter a valid first name (at least 2 characters, including at least one letter).'
+        'First name must contain only letters and spaces (no numbers, full stops, or commas).'
       );
     }
-    if (!isValidName(formData.last_name)) {
+    if (!isValidLettersOnly(formData.last_name)) {
       throw new Error(
-        'Please enter a valid last name (at least 2 characters, including at least one letter).'
+        'Last name must contain only letters and spaces (no numbers, full stops, or commas).'
       );
     }
 
@@ -586,8 +590,14 @@ return (
                   <input
                     type="text"
                     required
+                    maxLength={60}
                     value={formData.first_name}
-                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        first_name: filterLettersOnly(e.target.value, 60),
+                      })
+                    }
                     className="input-field"
                     placeholder="First name"
                   />
@@ -599,8 +609,14 @@ return (
                   <input
                     type="text"
                     required
+                    maxLength={60}
                     value={formData.last_name}
-                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        last_name: filterLettersOnly(e.target.value, 60),
+                      })
+                    }
                     className="input-field"
                     placeholder="Last name"
                   />

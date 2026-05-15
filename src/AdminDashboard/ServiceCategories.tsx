@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { filterOrgLike } from "../lib/sanitize";
 import {
   Plus,
   Pencil,
@@ -318,7 +319,8 @@ export default function ServiceCategories() {
         <input
           type="text"
           value={newCategoryName}
-          onChange={(e) => setNewCategoryName(e.target.value)}
+          maxLength={80}
+          onChange={(e) => setNewCategoryName(filterOrgLike(e.target.value, 80))}
           onKeyDown={(e) => e.key === "Enter" && createCategory()}
           placeholder={`New category under ${SERVICE_TYPES.find((s) => s.key === activeType)?.label}…`}
           className="flex-1 px-2 py-1.5 text-sm focus:outline-none"
@@ -366,7 +368,8 @@ export default function ServiceCategories() {
                     <input
                       autoFocus
                       value={editingCatDraft}
-                      onChange={(e) => setEditingCatDraft(e.target.value)}
+                      maxLength={80}
+                      onChange={(e) => setEditingCatDraft(filterOrgLike(e.target.value, 80))}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") saveEditCat();
                         if (e.key === "Escape") cancelEditCat();
@@ -446,7 +449,8 @@ export default function ServiceCategories() {
                             <input
                               autoFocus
                               value={editingOptDraft}
-                              onChange={(e) => setEditingOptDraft(e.target.value)}
+                              maxLength={80}
+                              onChange={(e) => setEditingOptDraft(filterOrgLike(e.target.value, 80))}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") saveEditOpt();
                                 if (e.key === "Escape") cancelEditOpt();
@@ -505,8 +509,12 @@ export default function ServiceCategories() {
                       <input
                         type="text"
                         value={newOptionDrafts[cat.id] || ""}
+                        maxLength={80}
                         onChange={(e) =>
-                          setNewOptionDrafts((d) => ({ ...d, [cat.id]: e.target.value }))
+                          setNewOptionDrafts((d) => ({
+                            ...d,
+                            [cat.id]: filterOrgLike(e.target.value, 80),
+                          }))
                         }
                         onKeyDown={(e) => e.key === "Enter" && createOption(cat.id)}
                         placeholder={`New option under "${cat.name}"…`}

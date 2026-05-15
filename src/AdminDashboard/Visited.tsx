@@ -1,6 +1,7 @@
 // src/pages/Visited.tsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { filterNameLike, isValidNameLike } from "../lib/sanitize";
 
 /* =======================
    TYPES
@@ -182,6 +183,21 @@ export default function Visited() {
   ======================= */
   // Create or update visit record in database
   const handleSaveVisit = async (form: Visit) => {
+    // Required-field + format checks. Visitor name and place must be
+    // real text (letters / spaces / periods), not random brackets or
+    // pure-digit garbage.
+    if (!isValidNameLike(form.visitor_name)) {
+      alert("Please enter a valid visitor name (letters only, at least 2 characters).");
+      return;
+    }
+    if (!isValidNameLike(form.place)) {
+      alert("Please enter a valid place name (letters only, at least 2 characters).");
+      return;
+    }
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
     if (editingVisit) {
       await supabase.from("nri_visits").update(form).eq("id", editingVisit.id);
     } else {
@@ -227,21 +243,25 @@ export default function Visited() {
               className="border w-full p-2 rounded"
               placeholder="Visitor Name"
               value={form.visitor_name}
-              onChange={(e) => update("visitor_name", e.target.value)}
+              maxLength={120}
+              onChange={(e) => update("visitor_name", filterNameLike(e.target.value, 120))}
             />
 
             <input
+              type="email"
               className="border w-full p-2 rounded"
               placeholder="Email"
               value={form.email}
+              maxLength={120}
               onChange={(e) => update("email", e.target.value)}
             />
 
             <input
               className="border w-full p-2 rounded"
-              placeholder="Place"
+              placeholder="Place (e.g. Hyderabad)"
               value={form.place}
-              onChange={(e) => update("place", e.target.value)}
+              maxLength={120}
+              onChange={(e) => update("place", filterNameLike(e.target.value, 120))}
             />
 
             <input
