@@ -1,9 +1,5 @@
 # YSRCP NRI Wing Portal — Architecture & Developer Guide
 
-The complete reference for any developer picking up this project. Read
-top-to-bottom on first onboarding; after that use it as a map and a glossary.
-
----
 
 ## Table of Contents
 
