@@ -20,8 +20,8 @@ export default function Yuvanestham({ setAuthMode, setShowAuthModal }: Yuvanesth
         }}
       />
 
-      <section className="pt-24 p-10 text-center">
-        <h1 className="text-3xl font-bold text-primary-700 mb-4">Jagananna Yuvanestham</h1>
+      <section className="pt-20 sm:pt-24 px-4 sm:px-6 lg:px-10 py-8 sm:py-10 text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary-700 mb-4">Jagananna Yuvanestham</h1>
         <p className="text-gray-700 max-w-2xl mx-auto mb-8">
           Comprehensive support program for youth development and empowerment.
         </p>

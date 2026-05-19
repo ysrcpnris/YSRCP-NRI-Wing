@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { filterOrgLike } from "../lib/sanitize";
+import { filterLettersOnly } from "../lib/sanitize";
 import {
   Plus,
   Pencil,
@@ -320,7 +320,7 @@ export default function ServiceCategories() {
           type="text"
           value={newCategoryName}
           maxLength={80}
-          onChange={(e) => setNewCategoryName(filterOrgLike(e.target.value, 80))}
+          onChange={(e) => setNewCategoryName(filterLettersOnly(e.target.value, 80))}
           onKeyDown={(e) => e.key === "Enter" && createCategory()}
           placeholder={`New category under ${SERVICE_TYPES.find((s) => s.key === activeType)?.label}…`}
           className="flex-1 px-2 py-1.5 text-sm focus:outline-none"
@@ -369,7 +369,7 @@ export default function ServiceCategories() {
                       autoFocus
                       value={editingCatDraft}
                       maxLength={80}
-                      onChange={(e) => setEditingCatDraft(filterOrgLike(e.target.value, 80))}
+                      onChange={(e) => setEditingCatDraft(filterLettersOnly(e.target.value, 80))}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") saveEditCat();
                         if (e.key === "Escape") cancelEditCat();
@@ -450,7 +450,7 @@ export default function ServiceCategories() {
                               autoFocus
                               value={editingOptDraft}
                               maxLength={80}
-                              onChange={(e) => setEditingOptDraft(filterOrgLike(e.target.value, 80))}
+                              onChange={(e) => setEditingOptDraft(filterLettersOnly(e.target.value, 80))}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") saveEditOpt();
                                 if (e.key === "Escape") cancelEditOpt();
@@ -513,7 +513,7 @@ export default function ServiceCategories() {
                         onChange={(e) =>
                           setNewOptionDrafts((d) => ({
                             ...d,
-                            [cat.id]: filterOrgLike(e.target.value, 80),
+                            [cat.id]: filterLettersOnly(e.target.value, 80),
                           }))
                         }
                         onKeyDown={(e) => e.key === "Enter" && createOption(cat.id)}

@@ -107,6 +107,7 @@ function SearchableInput({
 }
 const getPasswordError = (password: string): string | null => {
   if (password.length < 8) return "Password must be at least 8 characters";
+  if (password.length > 16) return "Password must be 16 characters or fewer";
   if (!/[A-Z]/.test(password)) return "Must include at least one uppercase letter";
   if (!/[a-z]/.test(password)) return "Must include at least one lowercase letter";
   if (!/[0-9]/.test(password)) return "Must include at least one number";
@@ -988,14 +989,20 @@ return (
                       type={showPassword ? 'text' : 'password'}
                       required
                       minLength={8}
+                      maxLength={16}
                       value={formData.password}
                       onChange={(e) => {
-                        const value = e.target.value;
+                        // Cap at 16 chars on the way in so paste-bombs
+                        // can't sneak through. Login form (AuthModal)
+                        // intentionally has no cap so users with
+                        // pre-existing >16-char passwords can still
+                        // sign in.
+                        const value = e.target.value.slice(0, 16);
                         setFormData({ ...formData, password: value });
                         setPasswordError(getPasswordError(value));
                       }}
                       className="input-field pr-10"
-                      placeholder="Min 8 characters"
+                      placeholder="8–16 characters"
                     />
                     <button
                       type="button"
@@ -1017,6 +1024,7 @@ return (
                       type={showConfirmPassword ? 'text' : 'password'}
                       required
                       minLength={8}
+                      maxLength={16}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="input-field pr-10"

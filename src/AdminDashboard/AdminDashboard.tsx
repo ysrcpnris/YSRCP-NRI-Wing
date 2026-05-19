@@ -1212,7 +1212,7 @@ export default function AdminDashboard() {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
 
-      <main className="flex-1 ml-0 md:ml-64 p-8 overflow-y-auto h-screen">
+      <main className="flex-1 ml-0 md:ml-64 p-4 sm:p-6 lg:p-8 pt-16 md:pt-8 overflow-y-auto h-screen overflow-x-hidden">
         {/* Mobile Menu Button */}
         <button
           onClick={() => setSidebarOpen(true)}
@@ -1222,12 +1222,12 @@ export default function AdminDashboard() {
         </button>
         {currentPage === "dashboard" && (
     <>
-        <div className="flex justify-between items-start mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-primary-600 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary-600 mb-1 sm:mb-2">
               Coordinator Dashboard
             </h1>
-            <p className="text-gray-500">
+            <p className="text-sm sm:text-base text-gray-500">
               Registrations overview by continent, country, and state
             </p>
           </div>

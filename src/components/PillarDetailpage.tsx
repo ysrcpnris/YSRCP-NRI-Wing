@@ -779,14 +779,14 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
 
       {/* 2. Content Section */}
       <section className="w-full py-10 bg-white">
-         <div className="px-4 md:px-12">
+         <div className="px-3 sm:px-4 md:px-8 lg:px-12">
             <div className="space-y-6">
                 
                 {/* Section 1: The 3-Part Layout */}
                 <div className="flex flex-col lg:flex-row gap-0 bg-white rounded-[3rem] overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.1)] border border-gray-100 min-h-[600px]">
                   
                   {/* Part A: Navigation Panel (18% width) */}
-                  <div className="w-full lg:w-[20%] bg-gray-50/50 p-8 border-r border-gray-100 flex flex-col gap-2 shrink-0 z-20 relative">
+                  <div className="w-full lg:w-[20%] bg-gray-50/50 p-4 sm:p-6 lg:p-8 border-r border-gray-100 flex flex-col gap-2 shrink-0 z-20 relative">
                       <div className="absolute top-0 left-0 w-1 h-full bg-ysrcp-blue/5"></div>
                         {/* Navigation header removed per design: hide 'Navigation' and 'Operational Focus' labels */}
                       <div className="space-y-4">
@@ -824,7 +824,7 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                   {/* Part B: Content Area (57% width) */}
                   <div className="w-full lg:w-[100%] flex flex-col md:flex-row items-stretch animate-fade-in relative z-10 overflow-hidden">
                       {currentItem && (
-                        <div className="w-full lg:w-[80%] p-8 lg:p-12 flex flex-col items-start bg-white border-r border-gray-100 relative overflow-hidden">
+                        <div className="w-full lg:w-[80%] p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col items-start bg-white border-r border-gray-100 relative overflow-hidden">
                           <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-ysrcp-blue/5 rounded-full blur-3xl pointer-events-none"></div>
 
                           <div className="relative z-10 w-full flex flex-col items-start h-full">

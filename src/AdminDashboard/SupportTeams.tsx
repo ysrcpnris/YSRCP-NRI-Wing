@@ -11,7 +11,7 @@ import {
   Phone,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { filterNameLike, isValidNameLike } from "../lib/sanitize";
+import { filterLettersOnly, isValidLettersOnly } from "../lib/sanitize";
 
 // Returned by admin_support_teams_overview() RPC.
 type TeamRow = {
@@ -83,8 +83,8 @@ export default function SupportTeams() {
       setErr("Team name is required.");
       return;
     }
-    if (!isValidNameLike(trimmed)) {
-      setErr("Team name must contain only letters and spaces (at least 2 characters).");
+    if (!isValidLettersOnly(trimmed)) {
+      setErr("Team name must contain only letters and spaces (no numbers, full stops, or commas).");
       return;
     }
 
@@ -210,7 +210,7 @@ export default function SupportTeams() {
             placeholder="Team name (e.g. Legal Cell AP)"
             value={name}
             maxLength={120}
-            onChange={(e) => setName(filterNameLike(e.target.value, 120))}
+            onChange={(e) => setName(filterLettersOnly(e.target.value, 120))}
           />
           <input
             className="border p-2 rounded"

@@ -56,6 +56,7 @@ type ValidationResult = {
 
 // Minimum password length requirement
 const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 16;
 
 // Color mapping for password strength levels
 const STRENGTH_COLORS: Record<StrengthLevel, string> = {
@@ -149,6 +150,10 @@ function validateNewPassword(
 
   if (next.length < MIN_PASSWORD_LENGTH) {
     reasons.push(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+  }
+
+  if (next.length > MAX_PASSWORD_LENGTH) {
+    reasons.push(`Password must be ${MAX_PASSWORD_LENGTH} characters or fewer.`);
   }
 
   if (!hasUppercase(next)) {
@@ -489,13 +494,17 @@ export default function ChangePassword() {
         />
 
         <div className="space-y-3">
+          {/* New + Confirm capped at 16 chars on input. "Current
+              Password" (above) intentionally has no cap so users with
+              pre-existing >16-char passwords can still authenticate
+              the change. */}
           <PasswordInput
             label="New Password"
             value={newPassword}
-            onChange={setNewPassword}
+            onChange={(v) => setNewPassword(v.slice(0, 16))}
             visible={visibility.next}
             onToggle={() => toggleVisibility("next")}
-            placeholder="Enter new password"
+            placeholder="8–16 characters"
             disabled={submitting}
           />
           <StrengthMeter password={newPassword} />
@@ -504,7 +513,7 @@ export default function ChangePassword() {
         <PasswordInput
           label="Confirm New Password"
           value={confirmPassword}
-          onChange={setConfirmPassword}
+          onChange={(v) => setConfirmPassword(v.slice(0, 16))}
           visible={visibility.confirm}
           onToggle={() => toggleVisibility("confirm")}
           placeholder="Re-enter new password"

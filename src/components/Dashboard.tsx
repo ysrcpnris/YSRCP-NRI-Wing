@@ -3666,11 +3666,14 @@ const updates = {
 // `user_id` was never linked on legacy rows by also matching `name`.
 const fetchMySuggestions = async () => {
   if (!user?.id) return;
+  // The suggestions table only has `suggestion_date` (timestamptz with
+  // default now()) — there is no `created_at` column. Selecting it
+  // would 400 with "column suggestions.created_at does not exist".
   const { data, error } = await supabase
     .from("suggestions")
-    .select("id, suggestion, suggestion_date, created_at")
+    .select("id, suggestion, suggestion_date")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
+    .order("suggestion_date", { ascending: false })
     .limit(50);
   if (!error && data) {
     setMySuggestions(data as any);
@@ -5675,11 +5678,7 @@ const renderSuggestionsContent = () => (
                   month: "short",
                   year: "numeric",
                 })
-              : new Date(s.created_at).toLocaleDateString("en-IN", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                });
+              : "";
             return (
               <li key={s.id} className="py-3 first:pt-0 last:pb-0">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">

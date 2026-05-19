@@ -594,12 +594,20 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   try {
     if (mode === "signin") {
+      // Email-shape pre-check. Browser's type=email is lenient
+      // (accepts e.g. "foo@bar"). Stricter regex here rejects values
+      // that obviously aren't an address before we hit Supabase.
+      const emailCandidate = (formData.email || "").trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailCandidate)) {
+        throw new Error("Please enter a valid email address (e.g. you@example.com).");
+      }
+
       // 1) attempt sign in (AuthContext.signIn handles auth & email verification checks)
       // capture return value in case signIn returns session data
       let signInResult: any = null;
       try {
         signInResult = await withTimeout(
-          signIn(formData.email, formData.password),
+          signIn(emailCandidate, formData.password),
           15000
         );
       } catch (err) {
@@ -1454,9 +1462,10 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                       <input
                         type="email"
                         required
+                        maxLength={120}
                         value={formData.email}
                         onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
+                          setFormData({ ...formData, email: e.target.value.trim() })
                         }
                         className="input-field"
                         placeholder="you@example.com"
@@ -1466,6 +1475,10 @@ className="w-full px-4 py-2 border border-blue-400 rounded-lg bg-blue-50 focus:r
                     <div>
                       <label className="input-label">Password</label>
                       <div className="relative">
+                        {/* No maxLength on sign-in: existing users may
+                            have passwords longer than the new 16-char
+                            cap and we don't want to lock them out. The
+                            cap only applies to register / reset / change. */}
                         <input
                           type={showPassword ? "text" : "password"}
                           required

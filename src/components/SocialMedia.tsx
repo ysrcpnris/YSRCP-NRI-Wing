@@ -348,13 +348,33 @@ export default function PressMeetsAndSocial() {
           </div>
         )}
 
-        <div ref={row1Ref} onMouseEnter={() => paused.current = true} onMouseLeave={() => paused.current = false}
-             className="flex gap-3 sm:gap-4 overflow-x-auto mb-4 sm:mb-6 scrollbar-none scroll-smooth">
+        {/* Touch handlers added so the auto-scroll animation pauses
+            while the user is dragging on mobile (without them, the
+            RAF loop fights the native touch-scroll and the carousel
+            feels jerky / unscrollable). touch-pan-x lets horizontal
+            gestures pass through to the scroller while vertical
+            gestures keep scrolling the page. */}
+        <div
+          ref={row1Ref}
+          onMouseEnter={() => (paused.current = true)}
+          onMouseLeave={() => (paused.current = false)}
+          onTouchStart={() => (paused.current = true)}
+          onTouchEnd={() => (paused.current = false)}
+          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+          className="flex gap-3 sm:gap-4 overflow-x-auto mb-4 sm:mb-6 scrollbar-none scroll-smooth"
+        >
           {videos.slice(0, 6).map(Card)}
         </div>
 
-        <div ref={row2Ref} onMouseEnter={() => paused.current = true} onMouseLeave={() => paused.current = false}
-             className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none scroll-smooth">
+        <div
+          ref={row2Ref}
+          onMouseEnter={() => (paused.current = true)}
+          onMouseLeave={() => (paused.current = false)}
+          onTouchStart={() => (paused.current = true)}
+          onTouchEnd={() => (paused.current = false)}
+          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+          className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none scroll-smooth"
+        >
           {videos.slice(6, 12).map(Card)}
         </div>
       </div>

@@ -222,10 +222,12 @@ const handleResetPassword = async (e: React.FormEvent) => {
                   <input
                     type={showPassword ? "text" : "password"}
                     required
+                    minLength={8}
+                    maxLength={16}
                     disabled={loading}
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 8 characters"
+                    onChange={(e) => setNewPassword(e.target.value.slice(0, 16))}
+                    placeholder="8–16 characters"
                     className="input-field pr-10"
                   />
                   <button
@@ -250,9 +252,11 @@ const handleResetPassword = async (e: React.FormEvent) => {
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     required
+                    minLength={8}
+                    maxLength={16}
                     disabled={loading}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => setConfirmPassword(e.target.value.slice(0, 16))}
                     placeholder="Re-enter password"
                     className="input-field pr-10"
                   />

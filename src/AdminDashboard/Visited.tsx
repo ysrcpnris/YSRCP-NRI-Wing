@@ -1,7 +1,7 @@
 // src/pages/Visited.tsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { filterNameLike, isValidNameLike } from "../lib/sanitize";
+import { filterLettersOnly, isValidLettersOnly } from "../lib/sanitize";
 
 /* =======================
    TYPES
@@ -186,12 +186,12 @@ export default function Visited() {
     // Required-field + format checks. Visitor name and place must be
     // real text (letters / spaces / periods), not random brackets or
     // pure-digit garbage.
-    if (!isValidNameLike(form.visitor_name)) {
-      alert("Please enter a valid visitor name (letters only, at least 2 characters).");
+    if (!isValidLettersOnly(form.visitor_name)) {
+      alert("Visitor name must contain only letters and spaces (no numbers or punctuation).");
       return;
     }
-    if (!isValidNameLike(form.place)) {
-      alert("Please enter a valid place name (letters only, at least 2 characters).");
+    if (!isValidLettersOnly(form.place)) {
+      alert("Place must contain only letters and spaces (no numbers or punctuation).");
       return;
     }
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
@@ -244,7 +244,7 @@ export default function Visited() {
               placeholder="Visitor Name"
               value={form.visitor_name}
               maxLength={120}
-              onChange={(e) => update("visitor_name", filterNameLike(e.target.value, 120))}
+              onChange={(e) => update("visitor_name", filterLettersOnly(e.target.value, 120))}
             />
 
             <input
@@ -261,7 +261,7 @@ export default function Visited() {
               placeholder="Place (e.g. Hyderabad)"
               value={form.place}
               maxLength={120}
-              onChange={(e) => update("place", filterNameLike(e.target.value, 120))}
+              onChange={(e) => update("place", filterLettersOnly(e.target.value, 120))}
             />
 
             <input

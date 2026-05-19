@@ -354,8 +354,17 @@ export default function FeaturedVideos() {
               placeholder="https://www.youtube.com/watch?v=..."
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 ${
+                urlInput.trim() && !previewVideoId
+                  ? "border-red-400 bg-red-50"
+                  : "border-gray-300"
+              }`}
             />
+            {urlInput.trim() && !previewVideoId && (
+              <p className="text-xs text-red-600 mt-1">
+                Only YouTube links are accepted — paste a youtube.com or youtu.be URL.
+              </p>
+            )}
           </div>
           <button
             onClick={addVideo}
