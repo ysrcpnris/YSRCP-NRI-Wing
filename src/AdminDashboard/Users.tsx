@@ -88,14 +88,34 @@ export default function Users() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(
-        "id, public_user_code, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, created_at"
-      )
-      .order("created_at", { ascending: false });
-    if (!error && data) setRows(data as Row[]);
-    setLoading(false);
+    // Supabase caps a single SELECT at ~1000 rows; paginate via
+    // .range() to pull the whole table. Stops once a batch comes back
+    // smaller than batchSize (i.e. we've reached the end).
+    const batchSize = 1000;
+    let offset = 0;
+    const allRows: Row[] = [];
+    try {
+      while (true) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select(
+            "id, public_user_code, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, created_at"
+          )
+          .order("created_at", { ascending: false })
+          .range(offset, offset + batchSize - 1);
+        if (error) {
+          console.error("fetchUsers error:", error);
+          break;
+        }
+        const chunk = (data || []) as Row[];
+        allRows.push(...chunk);
+        if (chunk.length < batchSize) break;
+        offset += batchSize;
+      }
+      setRows(allRows);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

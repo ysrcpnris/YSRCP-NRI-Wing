@@ -24,3 +24,8 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# local one-off scripts (DB passwords / PII / experiments)
+*.cjs
+users.sql
+migration_sql/
