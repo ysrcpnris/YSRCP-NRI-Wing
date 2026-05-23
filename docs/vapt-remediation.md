@@ -76,16 +76,6 @@ The primary remediation listed in the original report was "Enforce RLS on all ta
 - Postgres applies the principle of least privilege: with no `anon` SELECT policy, the row is invisible to the anon role regardless of any URL parameter or filter the caller passes.
 - Service-role keys (which would bypass RLS) have never been included in the frontend bundle — verified by searching the published bundle for `service_role`.
 
-### Optional additional hardening
-Rotating the anon key further reduces the attack surface in case the key was harvested before the V-01 fix landed. Steps:
-1. Supabase Dashboard → **Project Settings → API → JWT Settings → Reset JWT secret**.
-2. Copy the new `anon public` key.
-3. Update `VITE_SUPABASE_ANON_KEY` in the local `.env` and in Vercel → Settings → Environment Variables (Production + Preview).
-4. Redeploy.
-
-Note: rotating the JWT secret invalidates every currently signed-in session. Schedule this during a low-traffic window.
-
----
 
 ## V-03 — PostgREST Schema Hints (MEDIUM)
 
