@@ -91,7 +91,10 @@ function MainLandingPage({
       <News />
       <Contact setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />
       <ImpactMap />
-      <Testimonials />
+      {/* Voices of Our Global Community — hidden from UI per client
+          request. Uncomment to bring the testimonials carousel back.
+          Backing data + admin CRUD are untouched. */}
+      {/* <Testimonials /> */}
       <SocialMedia />
       <Glimpse />
       <Footer />
