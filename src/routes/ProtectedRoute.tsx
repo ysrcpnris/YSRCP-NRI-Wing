@@ -40,7 +40,7 @@ export default function ProtectedRoute() {
     return <Navigate to="/verify-email" replace />;
   }
 
-  
+
   if (!profile) {
     const verificationInProgress = isVerified || onVerifyPages;
     if (verificationInProgress) {
@@ -48,6 +48,23 @@ export default function ProtectedRoute() {
     }
     // fallback: user confirmed but no profile and not in a verification flow.
     return <Navigate to="/verify-email" replace />;
+  }
+
+  // Two-factor gate: every signed-in user must have completed the
+  // email-OTP step within the last 8 hours. The flag is written by
+  // VerifyOtpPage after a successful verifyOtp call. We allow an 8h
+  // sliding window so users don't have to re-OTP every page reload
+  // but DO have to re-OTP after closing the browser for the night,
+  // and ALWAYS have to re-OTP on a fresh login (signIn clears the
+  // flag before sending the new code).
+  const OTP_VALID_FOR_MS = 8 * 60 * 60 * 1000;
+  let otpVerifiedAt = 0;
+  try {
+    otpVerifiedAt = parseInt(localStorage.getItem("otp_verified_at") || "0", 10);
+  } catch { /* ignore */ }
+  const otpFresh = otpVerifiedAt > 0 && Date.now() - otpVerifiedAt < OTP_VALID_FOR_MS;
+  if (!otpFresh) {
+    return <Navigate to="/verify-otp" replace state={{ email: user.email }} />;
   }
 
   // All good — render protected child routes

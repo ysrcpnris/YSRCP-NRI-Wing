@@ -15,9 +15,22 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* iOS Safari over-scroll: don't let the browser bounce the whole
+       page when a content list reaches its end — important on the
+       admin tables and the dashboard cards. */
+    overscroll-behavior-y: none;
   }
 
-  /* Scrollbar */
+  /* Firefox scrollbar — webkit pseudo-elements don't work in Firefox.
+     `scrollbar-color` + `scrollbar-width` are the standardised
+     properties Firefox implements. Both rules together keep the
+     scrollbar consistent across Chrome, Edge, Safari, Firefox. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(19, 104, 214, 0.3) transparent;
+  }
+
+  /* WebKit scrollbar (Chrome / Edge / Safari) */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -31,6 +44,27 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(19, 104, 214, 0.4);
+  }
+
+  /* iOS Safari: type=date / type=time inputs render with a default
+     gray border + odd internal padding. Normalise so they look like
+     other inputs. */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 2.5rem;
+  }
+
+  /* Safari renders auto-filled inputs with a yellow background.
+     Override to keep the form looking consistent. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    -webkit-text-fill-color: #1f2937 !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 }
 

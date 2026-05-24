@@ -50,6 +50,17 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["lucide-react"],
   },
+  // Explicit cross-browser build target. Vite's default targets
+  // ES2020, which works on modern Chrome / Firefox / Safari / Edge
+  // but excludes anything older. The list below mirrors the
+  // browserslist entry in package.json so autoprefixer + esbuild
+  // produce matching output. iOS 15 / Safari 15 are the practical
+  // floor — older NRI users on aging devices still get a working
+  // site, just without a few CSS-grid niceties.
+  build: {
+    target: ["chrome90", "firefox88", "safari15", "edge90"],
+    cssTarget: ["chrome90", "firefox88", "safari15", "edge90"],
+  },
   // Strip every console.* call and `debugger` statement from the
   // production bundle. Anything wrapped in `if (import.meta.env.DEV)`
   // is already tree-shaken; this catches the rest so production users

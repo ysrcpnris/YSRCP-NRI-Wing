@@ -56,7 +56,29 @@
 
 
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover lets the site use the full screen on
+         notched iPhones; maximum-scale=5 keeps pinch-zoom working
+         (some Android browsers cap user-scalable=no). -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover"
+    />
+    <!-- Tells the browser the site is colour-aware: prevents Chrome
+         on Android from inverting colours in dark mode. -->
+    <meta name="color-scheme" content="light" />
+    <!-- Theme colour shown in the iOS Safari status bar + Android
+         address bar. Matches the YSRCP brand blue. -->
+    <meta name="theme-color" content="#003366" />
+    <!-- Apple PWA support so adding to home screen works on iOS. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="YSRCP NRI Wing" />
+    <!-- Microsoft tile colour for Windows pinned tiles. -->
+    <meta name="msapplication-TileColor" content="#003366" />
+    <!-- format-detection=no stops iOS from auto-styling phone numbers
+         as blue tappable links inside non-phone contexts (was making
+         random digit strings look like mobile numbers). -->
+    <meta name="format-detection" content="telephone=no" />
 
     <!-- Inter font: preconnect kicks off the TLS handshake in parallel with HTML
          parsing; the stylesheet link triggers the font fetch immediately instead

@@ -46,6 +46,7 @@ import Yuvanestham from "./pages/Yuvanestham";
 import LiveStreamPage from "./pages/LiveStream";
 import RegisterPage from "./pages/RegisterPage";
 import ResetPasswordConfirmPage from "./pages/ResetPasswordConfirmPage";
+import VerifyOtpPage from "./pages/VerifyOtpPage";
 
 import AdminDashboard from "./AdminDashboard/AdminDashboard";
 import AdminRoute from "./routes/AdminRoute";
@@ -244,6 +245,7 @@ function AppContent() {
         <Route path="/news/:id" element={<NewsDetail setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />} />
 
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-otp" element={<VerifyOtpPage />} />
 
         <Route
           path="/admin/dashboard"

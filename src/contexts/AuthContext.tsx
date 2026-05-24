@@ -57,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setIsVerified(false);
     clearAdminFlag();
+    // Clear the 2FA timestamp so the next sign-in is gated again.
+    try { localStorage.removeItem("otp_verified_at"); } catch { /* ignore */ }
   };
 
   const killUnverifiedSession = async () => {
@@ -578,6 +580,20 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
 };
 
 
+// Two-factor login:
+//   Step 1 — verify the password (Supabase issues a session).
+//   Step 2 — Supabase emails a 6-digit OTP via signInWithOtp.
+//   Step 3 — VerifyOtpPage calls verifyOtp; only after that does
+//            ProtectedRoute let the user reach /dashboard.
+//
+// The OTP step is what mitigates credential-stuffing attacks
+// (attacker has the password but no access to the user's inbox).
+//
+// signIn returns { otp_required: true, email } so the caller
+// (AuthModal) knows to navigate to /verify-otp. After verifyOtp
+// completes successfully the frontend writes
+// localStorage.otp_verified_at = now() and Protectedroute uses
+// that timestamp (valid for 8 hours) to allow access.
 const signIn = async (email: string, password: string) => {
   const normalizedEmail = (email || "").trim().toLowerCase();
 
@@ -621,7 +637,44 @@ const signIn = async (email: string, password: string) => {
       throw new Error("Registration incomplete. Contact support.");
     }
 
-    return data;
+    // 🔵 STEP 2 — sign out the password-only session BEFORE asking
+    // for the OTP email. If signInWithOtp is called while there's an
+    // active session Supabase treats it as a "step-up reauth" and
+    // mints a short-lived (~60 sec) token that often appears already
+    // expired by the time the user opens the email. Signing out first
+    // forces a clean magic-link / OTP flow with the full 1-hour
+    // lifetime configured in the project's Auth settings.
+    try {
+      localStorage.removeItem("otp_verified_at");
+    } catch { /* ignore */ }
+    await supabase.auth.signOut();
+    // Drop the local React state too so ProtectedRoute doesn't
+    // briefly think the user is signed in.
+    hardResetState();
+
+    // 🔵 STEP 3 — trigger Supabase to email the OTP. With no active
+    // session this generates a regular sign-in OTP that lives the
+    // full configured lifetime (Auth → Email Settings → OTP Expiry,
+    // default 3600 sec).
+    const { error: otpErr } = await supabase.auth.signInWithOtp({
+      email: normalizedEmail,
+      options: { shouldCreateUser: false },
+    });
+    if (otpErr) {
+      console.error("[signIn] signInWithOtp send error:", otpErr);
+      throw new Error(
+        "Couldn't send the verification code. Please try again in a moment."
+      );
+    }
+
+    // Record when the OTP was sent so VerifyOtpPage can show a live
+    // countdown and distinguish "code expired" from "wrong code"
+    // without depending on Supabase's error wording.
+    try {
+      localStorage.setItem("otp_sent_at", String(Date.now()));
+    } catch { /* ignore */ }
+
+    return { ...data, otp_required: true, email: normalizedEmail };
 
   } catch (err: any) {
     if (err instanceof Error) {

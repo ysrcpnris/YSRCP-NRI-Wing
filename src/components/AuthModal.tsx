@@ -602,72 +602,22 @@ const handleSubmit = async (e: React.FormEvent) => {
         throw new Error("Please enter a valid email address (e.g. you@example.com).");
       }
 
-      // 1) attempt sign in (AuthContext.signIn handles auth & email verification checks)
-      // capture return value in case signIn returns session data
-      let signInResult: any = null;
-      try {
-        signInResult = await withTimeout(
-          signIn(emailCandidate, formData.password),
-          15000
-        );
-      } catch (err) {
-        // rethrow to outer catch so we unify error handling
-        throw err;
-      }
+      // 1) attempt sign in. AuthContext.signIn now performs the full
+      //    password + profile + email-confirmed checks AND signs out
+      //    the password-only session before triggering the OTP email.
+      //    By the time signIn returns successfully, the user has no
+      //    active Supabase session — we're in the OTP-waiting phase.
+      await withTimeout(
+        signIn(emailCandidate, formData.password),
+        20000
+      );
 
-      // 2) Get current user (fallback if signIn didn't return user)
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        throw new Error("Login failed. Please try again.");
-      }
-
-      // 3) Extra safety: block if email not verified (signIn normally already checks this)
-      if (!user.email_confirmed_at) {
-        await supabase.auth.signOut();
-        throw new Error(
-          "Email not verified. Please check your inbox and click the verification link."
-        );
-      }
-
-      // 4) Check profile existence (profile must exist for full registration)
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle(); // use maybeSingle to avoid throw when missing
-
-      if (profileError) {
-        console.error("profiles lookup error:", profileError);
-        // Something went wrong on backend — don't reveal details to user
-        throw new Error("Something went wrong. Please try again later.");
-      }
-
-      if (!profile) {
-        // ensure we clear session and block access
-        await supabase.auth.signOut();
-        throw new Error(
-          "Registration incomplete. Please complete signup or contact support."
-        );
-      }
-
-      // 5) Success → close modal & redirect based on role
+      // 2) Route to the OTP entry page. We don't query the profile
+      //    here (there's no session anymore); the role-based redirect
+      //    happens after verifyOtp inside VerifyOtpPage / Protected /
+      //    AdminRoute.
       onClose();
-
-      const intendedPath = sessionStorage.getItem("post_login_redirect");
-      sessionStorage.removeItem("post_login_redirect");
-
-      if (profile.role === "admin") {
-        // If admin tried to access a specific admin page, honor it
-        navigate(intendedPath && intendedPath.startsWith("/admin") ? intendedPath : "/admin/dashboard");
-      } else {
-        // Non-admins always land on normal dashboard
-        navigate("/dashboard");
-      }
-
+      navigate("/verify-otp", { state: { email: emailCandidate } });
       return;
     }
 
