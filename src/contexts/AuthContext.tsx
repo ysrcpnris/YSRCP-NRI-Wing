@@ -458,21 +458,26 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
     profileData = { ...profileData, mobile_number: normalizedMobile };
   }
 
-  // 🔴 STEP 1a — check if email already exists in profiles
-  const { data: existingUser, error: checkError } = await supabase
+  // 🔴 STEP 1a — check if email already exists in profiles.
+  //     Uses ilike with the lowercased value so a profile that was
+  //     created with "Foo@Bar.com" still matches when a new user
+  //     types "foo@bar.com". The DB also enforces this via a UNIQUE
+  //     index on lower(email) (migration new_43), but the early
+  //     check gives a friendly error before the auth.signUp call.
+  const { data: existingUsers, error: checkError } = await supabase
     .from("profiles")
     .select("id")
-    .eq("email", normalizedEmail)
-    .maybeSingle();
+    .ilike("email", normalizedEmail)
+    .limit(1);
 
   if (checkError) {
     console.error("Profile lookup error:", checkError);
     throw new Error("Unable to register. Please try again.");
   }
 
-  if (existingUser) {
+  if (existingUsers && existingUsers.length > 0) {
     // 🛑 BLOCK signup immediately
-    throw new Error("User already registered. Please login instead.");
+    throw new Error("This email is already registered. Please log in instead.");
   }
 
   // 🔴 STEP 1b — check if mobile number already exists
