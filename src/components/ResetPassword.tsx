@@ -65,6 +65,8 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
       }
     }
   };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -166,7 +168,7 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeLinejoin="round"
+                  strokeWidth={2}
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
