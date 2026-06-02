@@ -1174,8 +1174,8 @@ export default function AdminDashboard() {
     "#10b981", "#7c3aed", "#dc2626", "#0891b2", "#65a30d",
   ];
 
-  const renderPieLabel = ({ cx, cy, midAngle, outerRadius, value, percent }: {
-    cx: number; cy: number; midAngle: number; outerRadius: number; value: number; percent: number;
+  const renderPieLabel = ({ cx, cy, midAngle, outerRadius, value, percent, name }: {
+    cx: number; cy: number; midAngle: number; outerRadius: number; value: number; percent: number; name?: string;
   }) => {
     if (percent < 0.04) return null;
     const RADIAN = Math.PI / 180;
@@ -1365,13 +1365,14 @@ export default function AdminDashboard() {
                   {/* Bar Chart */}
                   <div className="h-96">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 50 }}>
-                        <XAxis 
-                          dataKey="name" 
+                      <BarChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 80 }}>
+                        <XAxis
+                          dataKey="name"
                           tick={{ fontSize: 11 }}
-                          angle={chartData.length > 8 ? -45 : 0}
-                          textAnchor={chartData.length > 8 ? "end" : "middle"}
-                          height={chartData.length > 8 ? 80 : 50}
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                          interval={0}
                         />
                         <YAxis />
                         <Tooltip />
@@ -1381,28 +1382,29 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Pie Chart - Full width and height */}
-                  <div className="h-96 flex items-center justify-center">
+                  <div className="h-96 flex items-center justify-center overflow-hidden">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                      <PieChart margin={{ top: 20, right: 100, bottom: 20, left: 100 }}>
                         <Pie
                           data={chartData}
                           dataKey="count"
                           nameKey="name"
-                          cx="50%"
+                          cx="35%"
                           cy="45%"
-                          outerRadius={chartData.length > 15 ? 85 : 100}
+                          outerRadius={chartData.length > 15 ? 70 : 85}
                           label={renderPieLabel}
-                          labelLine
+                          labelLine={false}
                         >
                           {chartData.map((_, i) => (
                             <Cell key={i} fill={COLORS[i % COLORS.length]} />
                           ))}
                         </Pie>
                         <Tooltip formatter={(value) => value.toLocaleString()} />
-                        <Legend 
-                          verticalAlign="bottom" 
-                          height={36}
-                          wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }}
+                        <Legend
+                          verticalAlign="middle"
+                          align="right"
+                          layout="vertical"
+                          wrapperStyle={{ fontSize: "11px", paddingLeft: "10px", overflow: "auto", maxHeight: "300px" }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
