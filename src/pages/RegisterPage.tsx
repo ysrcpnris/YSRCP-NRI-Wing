@@ -275,6 +275,24 @@ export default function RegisterPage() {
 
   const professions = ['Job', 'Business', 'Student'];
 
+  // Helper to match country aliases (USA → United States of America)
+  const matchesCountrySearch = (countryName: string, searchTerm: string): boolean => {
+    const search = searchTerm.toLowerCase().trim();
+    if (!search) return true;
+
+    // Direct match
+    if (countryName.toLowerCase().includes(search)) return true;
+
+    // USA aliases
+    if (countryName === "United States of America") {
+      return ["usa", "us", "united states", "america", "american"].some(alias =>
+        alias.includes(search) || search.includes(alias)
+      );
+    }
+
+    return false;
+  };
+
   // Helper function to get country code from country name
   // Helper function to get country code from country name
   const getCountryCode = (countryName: string): string => {
@@ -686,7 +704,7 @@ return (
                     <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
                       {countryCodes
                         .filter((c) =>
-                          c.name.toLowerCase().includes(countrySearch.toLowerCase())
+                          matchesCountrySearch(c.name, countrySearch)
                         )
                         .map((country) => (
                           <li
@@ -713,7 +731,7 @@ return (
                           </li>
                         ))}
                       {countryCodes.filter((c) =>
-                        c.name.toLowerCase().includes(countrySearch.toLowerCase())
+                        matchesCountrySearch(c.name, countrySearch)
                       ).length === 0 && (
                         <li className="px-4 py-2 text-sm text-gray-400">
                           No matching country — please pick the closest one.

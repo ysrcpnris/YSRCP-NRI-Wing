@@ -116,6 +116,11 @@ const handleResetPassword = async (e: React.FormEvent) => {
 
     if (!isMounted.current) return;
 
+    // Mark 2FA as satisfied — the user authenticated via a reset link or
+    // OTP magic link, so ProtectedRoute must not send them to /verify-otp
+    // immediately after they land on /dashboard.
+    try { localStorage.setItem("otp_verified_at", String(Date.now())); } catch { /* ignore */ }
+
     toast.success("Password reset successfully! Redirecting to dashboard...");
 
     setTimeout(() => {

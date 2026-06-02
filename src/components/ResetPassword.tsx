@@ -39,7 +39,7 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
       const { error: verifyErr } = await supabase.auth.verifyOtp({
         email,
         token: otpCode,
-        type: "recovery",
+        type: "email",
       });
 
       if (verifyErr) {
@@ -48,12 +48,13 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
 
       if (isMounted.current) {
         setError("");
-        // Show success and redirect to password update
-        toast.success("OTP verified! You can now reset your password.");
-        // Redirect to new password page after 1 second
+        // Mark 2FA as satisfied so ProtectedRoute doesn't demand a second OTP
+        // after the password is changed and the user lands on /dashboard.
+        try { localStorage.setItem("otp_verified_at", String(Date.now())); } catch { /* ignore */ }
+        toast.success("OTP verified! Redirecting to set your new password…");
         setTimeout(() => {
-          window.location.href = "/reset-password-confirm";
-        }, 1000);
+          window.location.replace("/reset-password-confirm");
+        }, 800);
       }
     } catch (err: any) {
       if (isMounted.current) {
@@ -69,85 +70,71 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // ── inline validation (stops before touching Supabase) ──
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
     setButtonDisabled(true);
 
-    // Disable button for 30 seconds to prevent spam
-    const disableTimer = setTimeout(() => {
-      if (isMounted.current) {
-        setButtonDisabled(false);
-      }
-    }, 30000);
-
     try {
-      if (!email) {
-        setError("Please enter your email address.");
-        setLoading(false);
-        setButtonDisabled(false);
-        clearTimeout(disableTimer);
-        return;
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        setError("Please enter a valid email address.");
-        setLoading(false);
-        setButtonDisabled(false);
-        clearTimeout(disableTimer);
-        return;
-      }
-
-      // Use the current origin so it works in both dev (localhost) and production
       const redirectUrl = `${window.location.origin}/reset-password-confirm`;
 
       if (resetMethod === "email") {
-        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(
-          email,
-          { redirectTo: redirectUrl }
-        );
-
-        if (resetErr) {
-          console.warn("Reset password error:", resetErr.message);
-        }
-
+        // Always show success — never reveal whether the email is registered.
+        await supabase.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
         if (isMounted.current) {
           setIsSubmitted(true);
-          setLoading(false);
-          toast.success("Password reset link sent! Check your email.");
+          toast.success("Check your email — a reset link has been sent if this address is registered.");
         }
       } else {
-        // Send magic link (used as OTP-style passwordless login)
+        // ── OTP / magic-link flow ──
         const { error: otpError } = await supabase.auth.signInWithOtp({
           email,
-          options: {
-            emailRedirectTo: redirectUrl,
-            shouldCreateUser: false,
-          },
+          options: { shouldCreateUser: false },
         });
 
-        if (otpError) {
-          console.warn("OTP send error:", otpError.message);
-        }
+        if (!isMounted.current) return;
 
-        if (isMounted.current) {
-          setIsSubmitted(true);
-          setLoading(false);
-          toast.success("Magic link sent! Check your email to sign in.");
+        // Always move to OTP entry screen regardless of errors.
+        // On 429 the email may still arrive after a short delay.
+        setIsSubmitted(true);
+
+        if (otpError) {
+          const status = (otpError as any).status ?? 0;
+          const msg    = otpError.message?.toLowerCase() ?? "";
+          const isRateLimit =
+            status === 429 ||
+            msg.includes("rate") ||
+            msg.includes("too many") ||
+            msg.includes("limit");
+
+          if (isRateLimit) {
+            toast.info(
+              "High request volume — the code may take a few minutes to arrive. Check your inbox (and spam)."
+            );
+          }
+          // 422 = email not found — don't reveal, just show entry screen silently
+        } else {
+          toast.success("OTP sent! Check your inbox (and spam folder).");
         }
       }
-    } catch (err: unknown) {
-      console.warn("Reset flow exception:", err);
-      // Security best practice: don't reveal if email exists — always show success
+    } catch {
       if (isMounted.current) {
-        setIsSubmitted(true);
-        toast.success("If the email exists, a reset link has been sent.");
+        setError("Something went wrong. Please try again.");
+        setButtonDisabled(false);
       }
     } finally {
       if (isMounted.current) {
         setLoading(false);
       }
-      clearTimeout(disableTimer);
     }
   };
 
