@@ -1045,10 +1045,6 @@ import {
   CheckCircle,
   Info,
   AlertCircle,
-  Facebook,
-  Linkedin,
-  Instagram,
-  Twitter,
   Home,
   Menu,
   X,
@@ -1056,6 +1052,7 @@ import {
   TrendingUp,
   ArrowUpRight,
 } from 'lucide-react';
+import { FacebookBrand, XBrand, InstagramBrand, LinkedInBrand } from './BrandIcons';
 import { supabase } from '../lib/supabase';
 import {
   sanitizeText,
@@ -2032,6 +2029,7 @@ const [familyName, setFamilyName] = useState("");
 const [familyMobile, setFamilyMobile] = useState("");
 const [familyVillage, setFamilyVillage] = useState("");
 const [familyDesignation, setFamilyDesignation] = useState("");
+const [familyDesignationOther, setFamilyDesignationOther] = useState("");
 
   /**
    * ═══════════════════════════════════════════════════════════════
@@ -2175,7 +2173,12 @@ useEffect(() => {
   setFamilyName((profile as any).family_name || "");
   setFamilyMobile((profile as any).family_mobile || "");
   setFamilyVillage((profile as any).family_village || "");
-  setFamilyDesignation((profile as any).family_designation || "");
+  {
+    const loadedDesig = (profile as any).family_designation || "";
+    const isKnown = FAMILY_DESIGNATIONS.includes(loadedDesig);
+    setFamilyDesignation(isKnown ? loadedDesig : (loadedDesig ? "Other" : ""));
+    setFamilyDesignationOther(isKnown ? "" : loadedDesig);
+  }
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
@@ -2277,6 +2280,7 @@ useEffect(() => {
   const [mySuggestions, setMySuggestions] = useState<
     Array<{ id: number; suggestion: string; suggestion_date: string | null; created_at: string }>
   >([]);
+  const [suggRefreshing, setSuggRefreshing] = useState(false);
   // Set when the user has just submitted — shows a friendly thank-you
   // panel until they navigate away or write a new suggestion.
   const [suggestionThanks, setSuggestionThanks] = useState<boolean>(false);
@@ -3407,7 +3411,12 @@ const resetEditsFromProfile = () => {
   setFamilyName((profile as any).family_name || "");
   setFamilyMobile((profile as any).family_mobile || "");
   setFamilyVillage((profile as any).family_village || "");
-  setFamilyDesignation((profile as any).family_designation || "");
+  {
+    const loadedDesig = (profile as any).family_designation || "";
+    const isKnown = FAMILY_DESIGNATIONS.includes(loadedDesig);
+    setFamilyDesignation(isKnown ? loadedDesig : (loadedDesig ? "Other" : ""));
+    setFamilyDesignationOther(isKnown ? "" : loadedDesig);
+  }
   // Uncontrolled social inputs — restore via direct DOM write.
   const setSocial = (id: string, val: string) => {
     const el = document.getElementById(id) as HTMLInputElement | null;
@@ -3551,23 +3560,33 @@ const handleSaveProfile = async () => {
       return;
     }
 
-    // Social fields — must be valid http/https URLs when filled.
-    // Plain @handles are no longer accepted; the client asked for
-    // strict URL validation across the board.
-    const socialFields: Array<[string, string]> = [
-      ["Facebook",  (document.getElementById("facebook")  as HTMLInputElement)?.value || ""],
-      ["X (Twitter)", (document.getElementById("twitter") as HTMLInputElement)?.value || ""],
-      ["LinkedIn",  (document.getElementById("linkedin")  as HTMLInputElement)?.value || ""],
-      ["Instagram", (document.getElementById("instagram") as HTMLInputElement)?.value || ""],
+    // Social fields — must be valid URLs from the correct platform.
+    const socialValidations: Array<[string, string, string[]]> = [
+      ["Facebook",    (document.getElementById("facebook")  as HTMLInputElement)?.value || "", ["facebook.com", "fb.com"]],
+      ["X (Twitter)", (document.getElementById("twitter")  as HTMLInputElement)?.value || "", ["x.com", "twitter.com"]],
+      ["LinkedIn",    (document.getElementById("linkedin")  as HTMLInputElement)?.value || "", ["linkedin.com"]],
+      ["Instagram",   (document.getElementById("instagram") as HTMLInputElement)?.value || "", ["instagram.com"]],
     ];
-    for (const [label, val] of socialFields) {
+    for (const [label, val, allowedDomains] of socialValidations) {
       const v = val.trim();
-      if (v && !isValidUrl(v)) {
-        showToast(
-          `${label} must be a valid URL starting with https:// (e.g. https://facebook.com/your-profile).`,
-          "info"
-        );
-        return;
+      if (v) {
+        if (!isValidUrl(v)) {
+          showToast(`${label} must be a valid URL starting with https://`, "info");
+          return;
+        }
+        try {
+          const hostname = new URL(v).hostname.replace(/^www\./, '');
+          if (!allowedDomains.some(d => hostname === d || hostname.endsWith('.' + d))) {
+            showToast(
+              `${label} link must be from ${allowedDomains[0]} (e.g. https://${allowedDomains[0]}/your-profile)`,
+              "info"
+            );
+            return;
+          }
+        } catch {
+          showToast(`${label} must be a valid URL starting with https://`, "info");
+          return;
+        }
       }
     }
 
@@ -3634,7 +3653,9 @@ const updates = {
   family_name:        sanitizeText(familyName).trim() || null,
   family_mobile:      sanitizeText(familyMobile).trim() || null,
   family_village:     sanitizeText(familyVillage).trim() || null,
-  family_designation: sanitizeText(familyDesignation).trim() || null,
+  family_designation: familyDesignation === 'Other'
+    ? sanitizeText(familyDesignationOther).trim() || null
+    : sanitizeText(familyDesignation).trim() || null,
 
   updated_at: new Date().toISOString(),
 };
@@ -3666,9 +3687,7 @@ const updates = {
 // `user_id` was never linked on legacy rows by also matching `name`.
 const fetchMySuggestions = async () => {
   if (!user?.id) return;
-  // The suggestions table only has `suggestion_date` (timestamptz with
-  // default now()) — there is no `created_at` column. Selecting it
-  // would 400 with "column suggestions.created_at does not exist".
+  setSuggRefreshing(true);
   const { data, error } = await supabase
     .from("suggestions")
     .select("id, suggestion, suggestion_date")
@@ -3678,6 +3697,7 @@ const fetchMySuggestions = async () => {
   if (!error && data) {
     setMySuggestions(data as any);
   }
+  setSuggRefreshing(false);
 };
 
 const handleSubmitSuggestion = async () => {
@@ -3841,9 +3861,11 @@ const handleSubmitSuggestion = async () => {
           })()}
 
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 text-red-600">
-              Missing Info
-            </h4>
+            {missingProfileFields.length > 0 && (
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 text-red-600">
+                Missing Info
+              </h4>
+            )}
            <div className="space-y-2">
  {missingProfileFields.length === 0 ? (
   <div className="text-xs text-green-600 font-bold">
@@ -4338,7 +4360,7 @@ const handleSubmitSuggestion = async () => {
       </label>
       <select
         value={familyDesignation}
-        onChange={(e) => setFamilyDesignation(e.target.value)}
+        onChange={(e) => { setFamilyDesignation(e.target.value); setFamilyDesignationOther(''); }}
         className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
                    text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
       >
@@ -4347,6 +4369,17 @@ const handleSubmitSuggestion = async () => {
           <option key={d} value={d}>{d}</option>
         ))}
       </select>
+      {familyDesignation === 'Other' && (
+        <input
+          type="text"
+          maxLength={60}
+          value={familyDesignationOther}
+          onChange={(e) => setFamilyDesignationOther(filterLettersOnly(e.target.value, 60))}
+          placeholder="Enter designation (letters only)"
+          className="mt-2 w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
+                     text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+        />
+      )}
     </div>
   </div>
 </div>
@@ -4420,7 +4453,7 @@ const handleSubmitSuggestion = async () => {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
-                <Facebook className="absolute left-3 top-3 text-primary-600" size={16} />
+                <FacebookBrand className="absolute left-3 top-3" size={16} />
                 <input
                 id="facebook"
                   type="url"
@@ -4431,7 +4464,7 @@ const handleSubmitSuggestion = async () => {
                 />
               </div>
               <div className="relative">
-                <Twitter className="absolute left-3 top-3 text-black" size={16} />
+                <XBrand className="absolute left-3 top-3" size={16} />
                 <input
                 id="twitter"
                   type="url"
@@ -4442,7 +4475,7 @@ const handleSubmitSuggestion = async () => {
                 />
               </div>
               <div className="relative">
-                <Linkedin className="absolute left-3 top-3 text-primary-700" size={16} />
+                <LinkedInBrand className="absolute left-3 top-3" size={16} />
                 <input
                 id="linkedin"
                   type="url"
@@ -4453,7 +4486,7 @@ const handleSubmitSuggestion = async () => {
                 />
               </div>
               <div className="relative">
-                <Instagram className="absolute left-3 top-3 text-pink-600" size={16} />
+                <InstagramBrand className="absolute left-3 top-3" size={16} />
                 <input
                 id="instagram"
                   type="url"
@@ -5664,9 +5697,16 @@ const renderSuggestionsContent = () => (
           </div>
           <button
             onClick={() => void fetchMySuggestions()}
-            className="text-[11px] font-semibold text-primary-600 hover:text-primary-800"
+            disabled={suggRefreshing}
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-primary-600 hover:text-primary-800 disabled:opacity-60"
           >
-            Refresh
+            <svg
+              className={`w-3 h-3 ${suggRefreshing ? 'animate-spin' : ''}`}
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+            >
+              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {suggRefreshing ? 'Refreshing…' : 'Refresh'}
           </button>
         </div>
 

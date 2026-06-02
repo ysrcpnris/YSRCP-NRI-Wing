@@ -6,11 +6,24 @@ import NewsCarousel from "./NewsCarousel";
 
 export default function PoliticalJourney() {
   const [hoveredYear, setHoveredYear] = useState<number | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(2018);
+  const [selectedYear, setSelectedYear] = useState<number>(2011);
   const [showStayConnected, setShowStayConnected] = useState<boolean | null>(null); // null = loading
 
   const years = Object.keys(journeyData).map(Number).sort((a, b) => a - b);
   const totalYears = years.length;
+
+  // Auto-advance carousel for OFF VIEW (when stay connected is disabled)
+  useEffect(() => {
+    if (showStayConnected !== false) return;
+    const yearList = Object.keys(journeyData).map(Number).sort((a, b) => a - b);
+    const timer = setInterval(() => {
+      setSelectedYear(prev => {
+        const idx = yearList.indexOf(prev);
+        return yearList[(idx + 1) % yearList.length];
+      });
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [showStayConnected]);
 
   // Fetch the toggle setting
   useEffect(() => {

@@ -775,7 +775,7 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                 onClick={onBack}
                 className="flex items-center gap-2 text-white/90 hover:text-white font-black mb-6 transition-all uppercase text-[10px] tracking-widest bg-white/10 backdrop-blur-md px-4 py-2 rounded-full w-fit border border-white/20"
               >
-                <ArrowLeft size={14} /> ← Back to Home
+                <ArrowLeft size={14} /> Back to Home
               </button>
               
               <h1 className="text-3xl md:text-5xl lg:text-[3.5rem] font-black text-white uppercase tracking-tighter leading-[0.9] mb-2 drop-shadow-2xl">
@@ -933,8 +933,8 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                             </div>
                             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-x-8 gap-y-2.5 w-full">
                                 {["Income Security", "Modern Ports", "No Migration", "Marine Exports", "Local Jobs", "Community Dignity", "Coastal Safety", "Market Stability"].map((point, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 text-[11px] font-bold text-gray-600 leading-none group transition-all hover:text-ysrcp-blue">
-                                        <div className="w-1.5 h-1.5 bg-ysrcp-green rounded-full shrink-0 group-hover:scale-125 transition-transform shadow-sm"></div>
+                                    <div key={idx} className={`flex items-center gap-2 leading-none group transition-all ${idx < 4 ? 'text-[13px] font-black text-ysrcp-blue' : 'text-[11px] font-bold text-gray-500 hover:text-ysrcp-blue'}`}>
+                                        <div className={`rounded-full shrink-0 group-hover:scale-125 transition-transform shadow-sm ${idx < 4 ? 'w-2.5 h-2.5 bg-ysrcp-blue' : 'w-1.5 h-1.5 bg-ysrcp-green'}`}></div>
                                         <span className="truncate">{point}</span>
                                     </div>
                                 ))}
@@ -959,8 +959,8 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                             </div>
                             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-x-8 gap-y-2.5 w-full">
                                 {details.impactPoints.slice(0, 8).map((point, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 text-[11px] font-bold text-gray-600 leading-none group transition-all hover:text-ysrcp-blue">
-                                        <div className="w-1.5 h-1.5 bg-ysrcp-green rounded-full shrink-0 group-hover:scale-125 transition-transform shadow-sm"></div>
+                                    <div key={idx} className={`flex items-center gap-2 leading-none group transition-all ${idx < 4 ? 'text-[13px] font-black' : 'text-[11px] font-bold text-gray-500 hover:text-ysrcp-blue'}`} style={idx < 4 ? { color: details.accentHex } : {}}>
+                                        <div className={`rounded-full shrink-0 group-hover:scale-125 transition-transform shadow-sm ${idx < 4 ? 'w-2.5 h-2.5' : 'w-1.5 h-1.5 bg-ysrcp-green'}`} style={idx < 4 ? { backgroundColor: details.accentHex } : {}}></div>
                                         <span className="truncate">{point}</span>
                                     </div>
                                 ))}

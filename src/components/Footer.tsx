@@ -37,7 +37,7 @@ const QUICK_LINKS: LinkItem[] = [
   // Jagan-mark click takes the user to the Pillars of Progress
   // section (id="section-pillars" on TenPillar).
   { label: "JaganAnna Mark",      to: "#section-pillars" },
-  { label: "Jagan anna on air",   to: "#onair" },
+  { label: "JaganAnna on Air",     to: "#onair" },
   { label: "Digital channels",    to: "#digital-channels" },
   { label: "Gallery",             to: "#glimpse" },
 ];

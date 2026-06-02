@@ -36,6 +36,7 @@ function SearchableInput({
   placeholder,
   required,
   disabled,
+  requireSelection,
 }: {
   value: string;
   options: string[];
@@ -43,21 +44,25 @@ function SearchableInput({
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
+  requireSelection?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState('');
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
         setOpen(false);
+        setDraft('');
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const q = value.trim().toLowerCase();
+  const isEditing = open && requireSelection;
+  const q = (isEditing ? draft : value).trim().toLowerCase();
   const sorted = [...options].sort((a, b) => a.localeCompare(b));
   const filtered = q
     ? sorted.filter((o) => o.toLowerCase().includes(q))
@@ -70,12 +75,20 @@ function SearchableInput({
         required={required}
         disabled={disabled}
         placeholder={placeholder}
-        value={value}
+        value={isEditing ? draft : value}
         onChange={(e) => {
-          onChange(e.target.value);
+          if (requireSelection) {
+            setDraft(e.target.value);
+            onChange('');
+          } else {
+            onChange(e.target.value);
+          }
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          setDraft('');
+          setOpen(true);
+        }}
         className="input-field disabled:bg-gray-100 disabled:cursor-not-allowed"
       />
       {open && !disabled && filtered.length > 0 && (
@@ -86,6 +99,7 @@ function SearchableInput({
               onMouseDown={(e) => {
                 e.preventDefault();
                 onChange(opt);
+                setDraft('');
                 setOpen(false);
               }}
               className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
@@ -97,7 +111,12 @@ function SearchableInput({
           ))}
         </ul>
       )}
-      {open && !disabled && filtered.length === 0 && value.length > 0 && (
+      {requireSelection && open && !disabled && filtered.length === 0 && draft.length > 0 && (
+        <p className="text-[11px] text-red-500 mt-1">
+          No match found. Please select from the dropdown.
+        </p>
+      )}
+      {!requireSelection && open && !disabled && filtered.length === 0 && value.length > 0 && (
         <p className="text-[11px] text-gray-500 mt-1">
           No match — your typed value will be saved as-is.
         </p>
@@ -428,6 +447,20 @@ if (pwdError) {
       );
     }
 
+    // === Indian Address validations ===
+    if (!formData.indian_state.trim()) {
+      throw new Error('Please select your State from the India Address dropdown.');
+    }
+    if (!formData.district.trim()) {
+      throw new Error('Please select your District from the dropdown.');
+    }
+    if (!formData.assembly_constituency.trim()) {
+      throw new Error('Please select your Assembly Constituency from the dropdown.');
+    }
+    if (!formData.mandal.trim()) {
+      throw new Error('Please select your Mandal / Municipality from the dropdown.');
+    }
+
     // Pull the referral code from localStorage (set by /ref/:code redirect).
     const referredByCode = (() => {
       try {
@@ -739,7 +772,7 @@ return (
                           }
                           onChange={(e) => {
                             setStateSearch(e.target.value);
-                            setFormData({ ...formData, state_abroad: e.target.value, city_abroad: '' });
+                            setFormData({ ...formData, state_abroad: '', city_abroad: '' });
                             setShowStateDropdown(true);
                           }}
                           onFocus={() => {
@@ -773,8 +806,8 @@ return (
                             {stateList.filter((s) =>
                               s.toLowerCase().includes(stateSearch.toLowerCase())
                             ).length === 0 && stateSearch.length > 0 && (
-                              <li className="px-4 py-2 text-sm text-gray-400">
-                                No match — your typed value will be saved.
+                              <li className="px-4 py-2 text-sm text-red-500">
+                                No match found. Please select from the dropdown.
                               </li>
                             )}
                           </ul>
@@ -835,7 +868,7 @@ return (
                           }
                           onChange={(e) => {
                             setCitySearch(e.target.value);
-                            setFormData({ ...formData, city_abroad: e.target.value });
+                            setFormData({ ...formData, city_abroad: '' });
                             setShowCityDropdown(true);
                           }}
                           onFocus={() => {
@@ -869,8 +902,8 @@ return (
                             {cityList.filter((c) =>
                               c.toLowerCase().includes(citySearch.toLowerCase())
                             ).length === 0 && citySearch.length > 0 && (
-                              <li className="px-4 py-2 text-sm text-gray-400">
-                                No match — your typed value will be saved.
+                              <li className="px-4 py-2 text-sm text-red-500">
+                                No match found. Please select from the dropdown.
                               </li>
                             )}
                           </ul>
@@ -1062,7 +1095,8 @@ return (
                   </label>
                   <SearchableInput
                     required
-                    placeholder="Search or type state"
+                    requireSelection
+                    placeholder="Search and select state"
                     value={formData.indian_state}
                     options={Object.keys(indianAddressData)}
                     onChange={(val) =>
@@ -1083,10 +1117,11 @@ return (
                   </label>
                   <SearchableInput
                     required
+                    requireSelection
                     disabled={!formData.indian_state}
                     placeholder={
                       formData.indian_state
-                        ? 'Search or type district'
+                        ? 'Search and select district'
                         : 'Select a state first'
                     }
                     value={formData.district}
@@ -1116,10 +1151,11 @@ return (
                   </label>
                   <SearchableInput
                     required
+                    requireSelection
                     disabled={!formData.district}
                     placeholder={
                       formData.district
-                        ? 'Search or type constituency'
+                        ? 'Search and select constituency'
                         : 'Select a district first'
                     }
                     value={formData.assembly_constituency}
@@ -1148,10 +1184,11 @@ return (
                   </label>
                   <SearchableInput
                     required
+                    requireSelection
                     disabled={!formData.assembly_constituency}
                     placeholder={
                       formData.assembly_constituency
-                        ? 'Search or type mandal'
+                        ? 'Search and select mandal'
                         : 'Select a constituency first'
                     }
                     value={formData.mandal}
