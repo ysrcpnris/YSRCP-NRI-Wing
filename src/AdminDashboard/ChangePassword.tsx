@@ -330,6 +330,8 @@ export default function ChangePassword() {
 
   const [submitting, setSubmitting] = useState(false);
   const [oldPasswordError, setOldPasswordError] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const mountedRef = useRef(true);
 
   /* ---------------------------------------------------------------------------
@@ -379,6 +381,8 @@ export default function ChangePassword() {
     setConfirmPassword("");
     setVisibility({ old: false, next: false, confirm: false });
     setOldPasswordError("");
+    setNewPasswordError("");
+    setConfirmPasswordError("");
   };
 
 
@@ -392,13 +396,51 @@ export default function ChangePassword() {
   // Validate old password, update with new password, then reset form or show error
   const handleSubmit = async () => {
     setOldPasswordError("");
+    setNewPasswordError("");
+    setConfirmPasswordError("");
+
+    let hasErrors = false;
 
     if (!oldPassword) {
       setOldPasswordError("Current Password is required.");
-      return;
+      hasErrors = true;
     }
 
-    if (!canSubmit) return;
+    if (!newPassword) {
+      setNewPasswordError("New Password is required.");
+      hasErrors = true;
+    } else if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      setNewPasswordError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      hasErrors = true;
+    } else if (newPassword.length > MAX_PASSWORD_LENGTH) {
+      setNewPasswordError(`Password must be ${MAX_PASSWORD_LENGTH} characters or fewer.`);
+      hasErrors = true;
+    } else if (!hasUppercase(newPassword)) {
+      setNewPasswordError("Include at least one uppercase letter.");
+      hasErrors = true;
+    } else if (!hasLowercase(newPassword)) {
+      setNewPasswordError("Include at least one lowercase letter.");
+      hasErrors = true;
+    } else if (!hasNumber(newPassword)) {
+      setNewPasswordError("Include at least one number.");
+      hasErrors = true;
+    } else if (!hasSpecial(newPassword)) {
+      setNewPasswordError("Include at least one special character.");
+      hasErrors = true;
+    } else if (COMMON_PASSWORDS.has(newPassword.toLowerCase())) {
+      setNewPasswordError("This password is too common.");
+      hasErrors = true;
+    }
+
+    if (!confirmPassword) {
+      setConfirmPasswordError("Confirm Password is required.");
+      hasErrors = true;
+    } else if (newPassword !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match.");
+      hasErrors = true;
+    }
+
+    if (hasErrors) return;
 
     setSubmitting(true);
     setBanner({ type: null, message: "" });
@@ -505,7 +547,7 @@ export default function ChangePassword() {
           disabled={submitting}
         />
         {oldPasswordError && (
-          <p className="text-sm text-red-600 -mt-2">{oldPasswordError}</p>
+          <p className="text-sm text-red-600 -mt-4">{oldPasswordError}</p>
         )}
 
         <div className="space-y-3">
@@ -513,41 +555,40 @@ export default function ChangePassword() {
               Password" (above) intentionally has no cap so users with
               pre-existing >16-char passwords can still authenticate
               the change. */}
-          <PasswordInput
-            label="New Password"
-            value={newPassword}
-            onChange={(v) => setNewPassword(v.slice(0, 16))}
-            visible={visibility.next}
-            onToggle={() => toggleVisibility("next")}
-            placeholder="8–16 characters"
-            disabled={submitting}
-          />
-          <StrengthMeter password={newPassword} />
+          <div>
+            <PasswordInput
+              label="New Password"
+              value={newPassword}
+              onChange={(v) => {
+                setNewPassword(v.slice(0, 16));
+                if (newPasswordError) setNewPasswordError("");
+              }}
+              visible={visibility.next}
+              onToggle={() => toggleVisibility("next")}
+              placeholder="8–16 characters"
+              disabled={submitting}
+            />
+            {newPasswordError && (
+              <p className="text-sm text-red-600 -mt-2">{newPasswordError}</p>
+            )}
+            {!newPasswordError && <StrengthMeter password={newPassword} />}
+          </div>
         </div>
 
         <PasswordInput
           label="Confirm New Password"
           value={confirmPassword}
-          onChange={(v) => setConfirmPassword(v.slice(0, 16))}
+          onChange={(v) => {
+            setConfirmPassword(v.slice(0, 16));
+            if (confirmPasswordError) setConfirmPasswordError("");
+          }}
           visible={visibility.confirm}
           onToggle={() => toggleVisibility("confirm")}
           placeholder="Re-enter new password"
           disabled={submitting}
         />
-
-        {/* VALIDATION MESSAGES */}
-        {!validation.ok && (
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
-            <div className="font-medium mb-2 flex items-center gap-2">
-              <ShieldAlert size={16} />
-              Password requirements:
-            </div>
-            <ul className="list-disc pl-5 space-y-1">
-              {validation.reasons.map((r, i) => (
-                <li key={i}>{r}</li>
-              ))}
-            </ul>
-          </div>
+        {confirmPasswordError && (
+          <p className="text-sm text-red-600 -mt-2">{confirmPasswordError}</p>
         )}
 
         {/* ACTIONS */}
