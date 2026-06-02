@@ -1166,16 +1166,35 @@ export default function AdminDashboard() {
       : countryBuckets
     : continentBuckets;
 
-  // Color palette for charts
+  // 20-color palette — enough for every country in any continent bucket
   const COLORS = [
-    "#1368d6",
-    "#16a34a",
-    "#9333ea",
-    "#eab308",
-    "#ef4444",
-    "#0ea5e9",
-    "#475569",
+    "#1368d6", "#16a34a", "#9333ea", "#eab308", "#ef4444",
+    "#0ea5e9", "#f97316", "#14b8a6", "#ec4899", "#6366f1",
+    "#84cc16", "#f43f5e", "#8b5cf6", "#06b6d4", "#d97706",
+    "#10b981", "#7c3aed", "#dc2626", "#0891b2", "#65a30d",
   ];
+
+  const renderPieLabel = ({ cx, cy, midAngle, outerRadius, value, percent }: {
+    cx: number; cy: number; midAngle: number; outerRadius: number; value: number; percent: number;
+  }) => {
+    if (percent < 0.04) return null;
+    const RADIAN = Math.PI / 180;
+    const r = outerRadius + 26;
+    const x = cx + r * Math.cos(-midAngle * RADIAN);
+    const y = cy + r * Math.sin(-midAngle * RADIAN);
+    return (
+      <text
+        x={x} y={y}
+        fill="#374151"
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+        fontSize={11}
+        fontWeight={600}
+      >
+        {value.toLocaleString()}
+      </text>
+    );
+  };
 
   const showCharts = !(selectedContinent && (selectedCountry || countryBuckets.length === 0));
 
@@ -1371,9 +1390,9 @@ export default function AdminDashboard() {
                           nameKey="name"
                           cx="50%"
                           cy="45%"
-                          outerRadius={chartData.length > 15 ? 90 : 110}
-                          label={chartData.length <= 10}
-                          labelLine={false}
+                          outerRadius={chartData.length > 15 ? 85 : 100}
+                          label={renderPieLabel}
+                          labelLine
                         >
                           {chartData.map((_, i) => (
                             <Cell key={i} fill={COLORS[i % COLORS.length]} />

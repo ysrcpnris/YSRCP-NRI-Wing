@@ -123,6 +123,8 @@ export default function MasterData() {
   const [phone, setPhone]   = useState("");
   const [phone2, setPhone2] = useState("");
   const [formRole, setFormRole] = useState("");
+  const [leaderErrors, setLeaderErrors] = useState<Record<string, string>>({});
+  const clearLE = (k: string) => setLeaderErrors(p => { const n = {...p}; delete n[k]; return n; });
   // Multi-district list. Each entry is one (state, district, constituency).
   const [formAssignments, setFormAssignments] = useState<AssignmentDraft[]>([]);
 
@@ -327,8 +329,7 @@ export default function MasterData() {
     setPhone("");
     setPhone2("");
     setFormRole("");
-    // Pre-seed with the active filters as a convenience — admin usually
-    // adds a leader for the area they were filtering by.
+    setLeaderErrors({});
     setFormAssignments([
       {
         state: state || "",
@@ -414,29 +415,24 @@ export default function MasterData() {
     const isGlobal      = isGlobalRole(formRole);
     const wantsCstcy    = needsConstituency(formRole);
 
-    if (!name.trim() || !phone.trim() || !formRole) {
-      alert("Please fill name, WhatsApp number, and role.");
-      return;
+    const formErrs: Record<string, string> = {};
+    if (!name.trim()) formErrs.name = "Leader name is required.";
+    else if (!isValidNameLike(name)) formErrs.name = "Valid name required (letters only, at least 2 characters).";
+    if (!phone.trim()) formErrs.phone = "WhatsApp number is required.";
+    else {
+      const primaryDigits = phone.replace(/\D/g, "").replace(/^91/, "");
+      if (primaryDigits.length !== 10) formErrs.phone = "Must be exactly 10 digits.";
     }
-    if (!isValidNameLike(name)) {
-      alert("Please enter a valid leader name (letters only, at least 2 characters).");
-      return;
-    }
-    // Phone shape is enforced by the locked-+91 UI, but double-check
-    // on save in case anything bypasses the input (paste before our
-    // onChange runs, manual state-poke via devtools, etc.).
-    const primaryDigits = phone.replace(/\D/g, "").replace(/^91/, "");
-    if (primaryDigits.length !== 10) {
-      alert("WhatsApp number must be exactly 10 digits (with +91 prefix shown).");
-      return;
-    }
+    if (!formRole) formErrs.role = "Please select a role.";
     if (phone2.trim()) {
       const secondaryDigits = phone2.replace(/\D/g, "").replace(/^91/, "");
-      if (secondaryDigits.length !== 10) {
-        alert("Secondary WhatsApp number must be 10 digits (or leave blank).");
-        return;
-      }
+      if (secondaryDigits.length !== 10) formErrs.phone2 = "Must be 10 digits (or leave blank).";
     }
+    if (Object.keys(formErrs).length > 0) {
+      setLeaderErrors(formErrs);
+      return;
+    }
+    setLeaderErrors({});
     // Globally-singular roles: there can only be ONE active President
     // and ONE active Global Coordinator at any time. Check before save
     // so admin sees a friendly name instead of (eventually) a DB
@@ -464,7 +460,7 @@ export default function MasterData() {
 
     if (!isGlobal) {
       if (formAssignments.length === 0) {
-        alert("Add at least one district.");
+        setLeaderErrors(p => ({ ...p, assignments: "Add at least one district." }));
         return;
       }
       const bad = formAssignments.find((a) => {
@@ -473,19 +469,19 @@ export default function MasterData() {
         return false;
       });
       if (bad) {
-        alert(
-          wantsCstcy
+        setLeaderErrors(p => ({
+          ...p,
+          assignments: wantsCstcy
             ? "Each row needs state, district and constituency."
-            : "Each row needs state and district."
-        );
+            : "Each row needs state and district.",
+        }));
         return;
       }
-      // Block exact duplicates within the form.
       const keys = new Set<string>();
       for (const a of formAssignments) {
         const key = `${a.district}::${a.constituency || ""}`;
         if (keys.has(key)) {
-          alert(`Duplicate entry: ${a.district}${a.constituency ? " / " + a.constituency : ""}.`);
+          setLeaderErrors(p => ({ ...p, assignments: `Duplicate entry: ${a.district}${a.constituency ? " / " + a.constituency : ""}.` }));
           return;
         }
         keys.add(key);
@@ -1036,15 +1032,16 @@ export default function MasterData() {
               {/* Name */}
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">
-                  Leader name
+                  Leader name <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 ${leaderErrors.name ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                   placeholder="e.g. Sri P.V. Midhun Reddy"
                   maxLength={120}
                   value={name}
-                  onChange={(e) => setName(filterNameLike(e.target.value, 120))}
+                  onChange={(e) => { setName(filterNameLike(e.target.value, 120)); clearLE('name'); }}
                 />
+                {leaderErrors.name && <p className="text-xs text-red-600 mt-1">{leaderErrors.name}</p>}
               </div>
 
               {/* Phone primary — +91 is locked in the UI so admins
@@ -1066,15 +1063,17 @@ export default function MasterData() {
                     type="tel"
                     inputMode="numeric"
                     maxLength={10}
-                    className="flex-1 border border-gray-300 rounded-r-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    className={`flex-1 border rounded-r-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 ${leaderErrors.phone ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                     placeholder="9876543210"
                     value={phone.replace(/^\+?91/, "").replace(/\D/g, "")}
                     onChange={(e) => {
                       const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                       setPhone(digits ? `+91${digits}` : "");
+                      clearLE('phone');
                     }}
                   />
                 </div>
+                {leaderErrors.phone && <p className="text-xs text-red-600 mt-1">{leaderErrors.phone}</p>}
               </div>
 
               {/* Photo */}
@@ -1149,30 +1148,33 @@ export default function MasterData() {
                     type="tel"
                     inputMode="numeric"
                     maxLength={10}
-                    className="flex-1 border border-gray-300 rounded-r-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                    className={`flex-1 border rounded-r-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 ${leaderErrors.phone2 ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                     placeholder="9876543210"
                     value={phone2.replace(/^\+?91/, "").replace(/\D/g, "")}
                     onChange={(e) => {
                       const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                       setPhone2(digits ? `+91${digits}` : "");
+                      clearLE('phone2');
                     }}
                   />
                 </div>
+                {leaderErrors.phone2 && <p className="text-xs text-red-600 mt-1">{leaderErrors.phone2}</p>}
               </div>
 
               {/* Role */}
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Role</label>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Role <span className="text-red-500">*</span></label>
                 <select
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white"
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white ${leaderErrors.role ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                   value={formRole}
-                  onChange={(e) => onRoleChange(e.target.value)}
+                  onChange={(e) => { onRoleChange(e.target.value); clearLE('role'); }}
                 >
                   <option value="">Select Role</option>
                   {ROLES.map((r) => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
+                {leaderErrors.role && <p className="text-xs text-red-600 mt-1">{leaderErrors.role}</p>}
               </div>
 
               {/* Coverage area — Global hint OR multi-district list */}
@@ -1192,12 +1194,13 @@ export default function MasterData() {
                     </label>
                     <button
                       type="button"
-                      onClick={addAssignmentRow}
+                      onClick={() => { addAssignmentRow(); clearLE('assignments'); }}
                       className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-700 border border-primary-200 text-xs font-semibold rounded-lg hover:bg-primary-100"
                     >
                       <Plus size={12} /> Add district
                     </button>
                   </div>
+                  {leaderErrors.assignments && <p className="text-xs text-red-600 mb-2">{leaderErrors.assignments}</p>}
                   <div className="space-y-2">
                     {formAssignments.map((a, idx) => (
                       <div

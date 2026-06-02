@@ -183,29 +183,12 @@ export default function Visited() {
   ======================= */
   // Create or update visit record in database
   const handleSaveVisit = async (form: Visit) => {
-    // Required-field + format checks. Visitor name and place must be
-    // real text (letters / spaces / periods), not random brackets or
-    // pure-digit garbage.
-    if (!isValidLettersOnly(form.visitor_name)) {
-      alert("Visitor name must contain only letters and spaces (no numbers or punctuation).");
-      return;
-    }
-    if (!isValidLettersOnly(form.place)) {
-      alert("Place must contain only letters and spaces (no numbers or punctuation).");
-      return;
-    }
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      alert("Please enter a valid email address.");
-      return;
-    }
     if (editingVisit) {
       await supabase.from("nri_visits").update(form).eq("id", editingVisit.id);
     } else {
-      // Exclude empty id when inserting (let Supabase generate it)
       const { id, ...insertData } = form;
       await supabase.from("nri_visits").insert(insertData);
     }
-
     setModalOpen(false);
     setEditingVisit(null);
     fetchVisits();
@@ -227,9 +210,23 @@ export default function Visited() {
         purpose: "",
       }
     );
+    const [ferrs, setFerrs] = useState<Record<string, string>>({});
 
-    const update = (k: keyof Visit, v: string) =>
-      setForm({ ...form, [k]: v });
+    const update = (k: keyof Visit, v: string) => {
+      setForm(f => ({ ...f, [k]: v }));
+      setFerrs(p => { const n = {...p}; delete n[k as string]; return n; });
+    };
+
+    const handleSave = () => {
+      const errs: Record<string, string> = {};
+      if (!form.visitor_name.trim()) errs.visitor_name = "Visitor name is required.";
+      else if (!isValidLettersOnly(form.visitor_name)) errs.visitor_name = "Letters and spaces only.";
+      if (!form.place.trim()) errs.place = "Place is required.";
+      else if (!isValidLettersOnly(form.place)) errs.place = "Letters and spaces only.";
+      if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
+      if (Object.keys(errs).length > 0) { setFerrs(errs); return; }
+      void handleSaveVisit(form);
+    };
 
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -239,47 +236,56 @@ export default function Visited() {
           </h2>
 
           <div className="space-y-3">
-            <input
-              className="border w-full p-2 rounded"
-              placeholder="Visitor Name"
-              value={form.visitor_name}
-              maxLength={120}
-              onChange={(e) => update("visitor_name", filterLettersOnly(e.target.value, 120))}
-            />
+            <div>
+              <input
+                className={`border w-full p-2 rounded ${ferrs.visitor_name ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                placeholder="Visitor Name *"
+                value={form.visitor_name}
+                maxLength={120}
+                onChange={(e) => update("visitor_name", filterLettersOnly(e.target.value, 120))}
+              />
+              {ferrs.visitor_name && <p className="text-xs text-red-600 mt-1">{ferrs.visitor_name}</p>}
+            </div>
 
-            <input
-              type="email"
-              className="border w-full p-2 rounded"
-              placeholder="Email"
-              value={form.email}
-              maxLength={120}
-              onChange={(e) => update("email", e.target.value)}
-            />
+            <div>
+              <input
+                type="email"
+                className={`border w-full p-2 rounded ${ferrs.email ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                placeholder="Email (optional)"
+                value={form.email}
+                maxLength={120}
+                onChange={(e) => update("email", e.target.value)}
+              />
+              {ferrs.email && <p className="text-xs text-red-600 mt-1">{ferrs.email}</p>}
+            </div>
 
-            <input
-              className="border w-full p-2 rounded"
-              placeholder="Place (e.g. Hyderabad)"
-              value={form.place}
-              maxLength={120}
-              onChange={(e) => update("place", filterLettersOnly(e.target.value, 120))}
-            />
+            <div>
+              <input
+                className={`border w-full p-2 rounded ${ferrs.place ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+                placeholder="Place (e.g. Hyderabad) *"
+                value={form.place}
+                maxLength={120}
+                onChange={(e) => update("place", filterLettersOnly(e.target.value, 120))}
+              />
+              {ferrs.place && <p className="text-xs text-red-600 mt-1">{ferrs.place}</p>}
+            </div>
 
             <input
               type="date"
-              className="border w-full p-2 rounded"
+              className="border border-gray-300 w-full p-2 rounded"
               value={form.visit_date}
               onChange={(e) => update("visit_date", e.target.value)}
             />
 
             <input
               type="time"
-              className="border w-full p-2 rounded"
+              className="border border-gray-300 w-full p-2 rounded"
               value={form.visit_time}
               onChange={(e) => update("visit_time", e.target.value)}
             />
 
             <textarea
-              className="border w-full p-2 rounded"
+              className="border border-gray-300 w-full p-2 rounded"
               rows={3}
               placeholder="Purpose"
               value={form.purpose}
@@ -296,7 +302,7 @@ export default function Visited() {
             </button>
             <button
               className="px-4 py-2 bg-primary-600 text-white rounded"
-              onClick={() => handleSaveVisit(form)}
+              onClick={handleSave}
             >
               Save
             </button>

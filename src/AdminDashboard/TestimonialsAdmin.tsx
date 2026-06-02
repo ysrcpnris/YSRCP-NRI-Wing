@@ -45,6 +45,7 @@ export default function TestimonialsAdmin() {
   const [location, setLocation] = useState("");
   const [message, setMessage] = useState("");
   const [adding, setAdding] = useState(false);
+  const [addErrors, setAddErrors] = useState<Record<string, string>>({});
 
   // Edit-row state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,6 +53,8 @@ export default function TestimonialsAdmin() {
   const [editLocation, setEditLocation] = useState("");
   const [editMessage, setEditMessage] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const [opError, setOpError] = useState<string | null>(null);
 
   useEffect(() => {
     void load();
@@ -78,21 +81,17 @@ export default function TestimonialsAdmin() {
     setName("");
     setLocation("");
     setMessage("");
+    setAddErrors({});
   };
 
   const addTestimonial = async () => {
-    if (!name.trim() || !location.trim() || !message.trim()) {
-      alert("Please fill in name, location, and message.");
-      return;
-    }
-    if (!isValidNameLike(name)) {
-      alert("Please enter a valid name (letters only, at least 2 characters).");
-      return;
-    }
-    if (!isValidNameLike(location)) {
-      alert("Please enter a valid location (letters only).");
-      return;
-    }
+    const errs: Record<string, string> = {};
+    if (!name.trim()) errs.name = "Name is required.";
+    else if (!isValidNameLike(name)) errs.name = "Letters only, at least 2 characters.";
+    if (!location) errs.location = "Please select a country.";
+    if (!message.trim()) errs.message = "Message is required.";
+    if (Object.keys(errs).length > 0) { setAddErrors(errs); return; }
+    setAddErrors({});
     setAdding(true);
     const nextSort =
       rows.length > 0 ? Math.max(...rows.map((r) => r.sort_order ?? 0)) + 1 : 0;
@@ -104,10 +103,7 @@ export default function TestimonialsAdmin() {
       is_active: true,
     });
     setAdding(false);
-    if (error) {
-      alert("Failed to add: " + error.message);
-      return;
-    }
+    if (error) { setOpError("Failed to add: " + error.message); return; }
     resetAddForm();
     void load();
   };
@@ -121,14 +117,17 @@ export default function TestimonialsAdmin() {
 
   const cancelEdit = () => {
     setEditingId(null);
+    setEditErrors({});
   };
 
   const saveEdit = async () => {
     if (!editingId) return;
-    if (!editName.trim() || !editLocation.trim() || !editMessage.trim()) {
-      alert("Please fill in all fields.");
-      return;
-    }
+    const errs: Record<string, string> = {};
+    if (!editName.trim()) errs.editName = "Name is required.";
+    if (!editLocation) errs.editLocation = "Please select a country.";
+    if (!editMessage.trim()) errs.editMessage = "Message is required.";
+    if (Object.keys(errs).length > 0) { setEditErrors(errs); return; }
+    setEditErrors({});
     setSavingEdit(true);
     const { error } = await supabase
       .from("testimonials")
@@ -139,10 +138,7 @@ export default function TestimonialsAdmin() {
       })
       .eq("id", editingId);
     setSavingEdit(false);
-    if (error) {
-      alert("Failed to save: " + error.message);
-      return;
-    }
+    if (error) { setOpError("Failed to save: " + error.message); return; }
     setEditingId(null);
     void load();
   };
@@ -150,10 +146,7 @@ export default function TestimonialsAdmin() {
   const removeRow = async (id: string) => {
     if (!confirm("Delete this testimonial permanently?")) return;
     const { error } = await supabase.from("testimonials").delete().eq("id", id);
-    if (error) {
-      alert("Failed to delete: " + error.message);
-      return;
-    }
+    if (error) { setOpError("Failed to delete: " + error.message); return; }
     void load();
   };
 
@@ -162,10 +155,7 @@ export default function TestimonialsAdmin() {
       .from("testimonials")
       .update({ is_active: !row.is_active })
       .eq("id", row.id);
-    if (error) {
-      alert("Failed to update: " + error.message);
-      return;
-    }
+    if (error) { setOpError("Failed to update: " + error.message); return; }
     void load();
   };
 
@@ -184,9 +174,7 @@ export default function TestimonialsAdmin() {
       .from("testimonials")
       .update({ sort_order: aOrder })
       .eq("id", b.id);
-    if (e1 || e2) {
-      alert("Failed to reorder: " + (e1?.message || e2?.message));
-    }
+    if (e1 || e2) setOpError("Failed to reorder: " + (e1?.message || e2?.message));
     void load();
   };
 
@@ -257,59 +245,58 @@ export default function TestimonialsAdmin() {
         <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
           <Plus size={16} className="text-primary-600" /> Add a testimonial
         </h3>
+        {opError && (
+          <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">{opError}</p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
           <div>
             <label className="text-xs font-semibold text-gray-500 mb-1 block">
-              Name
+              Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               placeholder="e.g. MR. Bharath Kandula"
               maxLength={120}
               value={name}
-              onChange={(e) => setName(filterNameLike(e.target.value, 120))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+              onChange={(e) => { setName(filterNameLike(e.target.value, 120)); setAddErrors(p => { const n={...p}; delete n.name; return n; }); }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 ${addErrors.name ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
             />
+            {addErrors.name && <p className="text-xs text-red-600 mt-1">{addErrors.name}</p>}
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-500 mb-1 block">
-              Location
+              Country <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <select
               value={location}
-              onChange={(e) => setLocation(filterNameLike(e.target.value, 120))}
-              placeholder="e.g. California, USA"
-              maxLength={120}
-              list="testimonial-location-suggestions"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
-            />
-            {/* The country list is still offered as autocomplete suggestions
-                via <datalist>, but admin can type any free-form location
-                like "California, USA" or "London, UK". */}
-            <datalist id="testimonial-location-suggestions">
+              onChange={(e) => { setLocation(e.target.value); setAddErrors(p => { const n={...p}; delete n.location; return n; }); }}
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 bg-white ${addErrors.location ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
+            >
+              <option value="">— Select country —</option>
               {COUNTRY_NAMES.map((c) => (
-                <option key={c} value={c} />
+                <option key={c} value={c}>{c}</option>
               ))}
-            </datalist>
+            </select>
+            {addErrors.location && <p className="text-xs text-red-600 mt-1">{addErrors.location}</p>}
           </div>
         </div>
         <div className="mb-3">
           <label className="text-xs font-semibold text-gray-500 mb-1 block">
-            Message
+            Message <span className="text-red-500">*</span>
           </label>
           <textarea
             rows={3}
             placeholder="Their message…"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+            onChange={(e) => { setMessage(e.target.value); setAddErrors(p => { const n={...p}; delete n.message; return n; }); }}
+            className={`w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 ${addErrors.message ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
           />
+          {addErrors.message && <p className="text-xs text-red-600 mt-1">{addErrors.message}</p>}
         </div>
         <div className="flex justify-end">
           <button
             onClick={addTestimonial}
-            disabled={adding || !name.trim() || !location.trim() || !message.trim()}
+            disabled={adding}
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
           >
             {adding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
@@ -365,30 +352,40 @@ export default function TestimonialsAdmin() {
                     {isEditing ? (
                       <div className="space-y-2">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <input
-                            type="text"
-                            value={editName}
-                            maxLength={120}
-                            onChange={(e) => setEditName(filterNameLike(e.target.value, 120))}
-                            className="border border-primary-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
-                            placeholder="Name"
-                          />
-                          <input
-                            type="text"
-                            value={editLocation}
-                            maxLength={120}
-                            onChange={(e) => setEditLocation(filterNameLike(e.target.value, 120))}
-                            placeholder="Location (e.g. California, USA)"
-                            list="testimonial-location-suggestions"
-                            className="border border-primary-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
-                          />
+                          <div>
+                            <input
+                              type="text"
+                              value={editName}
+                              maxLength={120}
+                              onChange={(e) => { setEditName(filterNameLike(e.target.value, 120)); setEditErrors(p => { const n={...p}; delete n.editName; return n; }); }}
+                              className={`w-full border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 ${editErrors.editName ? 'border-red-400 bg-red-50' : 'border-primary-300'}`}
+                              placeholder="Name"
+                            />
+                            {editErrors.editName && <p className="text-xs text-red-600 mt-0.5">{editErrors.editName}</p>}
+                          </div>
+                          <div>
+                            <select
+                              value={editLocation}
+                              onChange={(e) => { setEditLocation(e.target.value); setEditErrors(p => { const n={...p}; delete n.editLocation; return n; }); }}
+                              className={`w-full border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 bg-white ${editErrors.editLocation ? 'border-red-400 bg-red-50' : 'border-primary-300'}`}
+                            >
+                              <option value="">— Select country —</option>
+                              {COUNTRY_NAMES.map((c) => (
+                                <option key={c} value={c}>{c}</option>
+                              ))}
+                            </select>
+                            {editErrors.editLocation && <p className="text-xs text-red-600 mt-0.5">{editErrors.editLocation}</p>}
+                          </div>
                         </div>
-                        <textarea
-                          rows={3}
-                          value={editMessage}
-                          onChange={(e) => setEditMessage(e.target.value)}
-                          className="w-full border border-primary-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
-                        />
+                        <div>
+                          <textarea
+                            rows={3}
+                            value={editMessage}
+                            onChange={(e) => { setEditMessage(e.target.value); setEditErrors(p => { const n={...p}; delete n.editMessage; return n; }); }}
+                            className={`w-full border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 ${editErrors.editMessage ? 'border-red-400 bg-red-50' : 'border-primary-300'}`}
+                          />
+                          {editErrors.editMessage && <p className="text-xs text-red-600 mt-0.5">{editErrors.editMessage}</p>}
+                        </div>
                       </div>
                     ) : (
                       <>

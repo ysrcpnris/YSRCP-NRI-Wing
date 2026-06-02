@@ -124,6 +124,8 @@ export default function FeaturedVideos() {
   const [previewVideoId, setPreviewVideoId] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [addVideoError, setAddVideoError] = useState<string | null>(null);
+  const [opError, setOpError] = useState<string | null>(null);
 
   useEffect(() => {
     void loadVideos();
@@ -190,19 +192,17 @@ export default function FeaturedVideos() {
   };
 
   const addVideo = async () => {
+    setAddVideoError(null);
     if (!previewVideoId) {
-      alert("Paste a valid YouTube link first.");
+      setAddVideoError("Paste a valid YouTube link first.");
       return;
     }
     if (!titleInput.trim()) {
-      alert(
-        "Could not fetch the video title automatically. Please type the " +
-          "title in the box below the URL, then click Add."
-      );
+      setAddVideoError("Title is required — type it in the box below the URL.");
       return;
     }
     if (rows.some((r) => r.video_id === previewVideoId)) {
-      alert("This video is already in the list.");
+      setAddVideoError("This video is already in the list.");
       return;
     }
     setAdding(true);
@@ -221,10 +221,7 @@ export default function FeaturedVideos() {
     };
     const { error } = await supabase.from("youtube_videos").insert(insertRow);
     setAdding(false);
-    if (error) {
-      alert("Failed to add: " + error.message);
-      return;
-    }
+    if (error) { setOpError("Failed to add: " + error.message); return; }
     resetForm();
     void loadVideos();
   };
@@ -235,10 +232,7 @@ export default function FeaturedVideos() {
       .from("youtube_videos")
       .delete()
       .eq("video_id", videoId);
-    if (error) {
-      alert("Failed to remove: " + error.message);
-      return;
-    }
+    if (error) { setOpError("Failed to remove: " + error.message); return; }
     void loadVideos();
   };
 
@@ -247,10 +241,7 @@ export default function FeaturedVideos() {
       .from("youtube_videos")
       .update({ is_active: !row.is_active })
       .eq("video_id", row.video_id);
-    if (error) {
-      alert("Failed to update: " + error.message);
-      return;
-    }
+    if (error) { setOpError("Failed to update: " + error.message); return; }
     void loadVideos();
   };
 
@@ -259,7 +250,6 @@ export default function FeaturedVideos() {
     if (target < 0 || target >= rows.length) return;
     const a = rows[index];
     const b = rows[target];
-    // Swap their sort_order values.
     const aOrder = a.sort_order ?? 0;
     const bOrder = b.sort_order ?? 0;
     const { error: e1 } = await supabase
@@ -270,9 +260,7 @@ export default function FeaturedVideos() {
       .from("youtube_videos")
       .update({ sort_order: aOrder })
       .eq("video_id", b.video_id);
-    if (e1 || e2) {
-      alert("Failed to reorder: " + (e1?.message || e2?.message));
-    }
+    if (e1 || e2) setOpError("Failed to reorder: " + (e1?.message || e2?.message));
     void loadVideos();
   };
 
@@ -333,6 +321,10 @@ export default function FeaturedVideos() {
         </div>
       </div>
 
+      {opError && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">{opError}</p>
+      )}
+
       {/* ADD FORM */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-5 mb-6">
         <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -364,6 +356,9 @@ export default function FeaturedVideos() {
               <p className="text-xs text-red-600 mt-1">
                 Only YouTube links are accepted — paste a youtube.com or youtu.be URL.
               </p>
+            )}
+            {addVideoError && (
+              <p className="text-xs text-red-600 mt-1">{addVideoError}</p>
             )}
           </div>
           <button

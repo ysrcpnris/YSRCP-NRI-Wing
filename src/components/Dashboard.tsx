@@ -1668,7 +1668,7 @@ useEffect(() => {
 }, [location.state]);
   const [toast, setToast] = useState<{
     msg: string;
-    type: "success" | "info";
+    type: "success" | "info" | "error";
   } | null>(null);
 
   /**
@@ -1682,9 +1682,9 @@ useEffect(() => {
    * - Improves user experience with clear feedback
    */
 
-  const showToast = (msg: string, type: "success" | "info" = "info") => {
+  const showToast = (msg: string, type: "success" | "info" | "error" = "info") => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
 
   // Log profile updates for debugging
@@ -1941,6 +1941,9 @@ const [countryOfResidence, setCountryOfResidence] = useState<string>("India");
 const [editFirstName, setEditFirstName] = useState("");
 const [editLastName, setEditLastName] = useState("");
 const [editMobileNumber, setEditMobileNumber] = useState("");
+const [profileFieldErrors, setProfileFieldErrors] = useState<Record<string, string>>({});
+const clearFieldError = (key: string) =>
+  setProfileFieldErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
 const [editGender, setEditGender] = useState("");
 
 // Profile section is read-only by default. Clicking Edit unlocks the
@@ -2541,7 +2544,7 @@ const handleConfirmApply = async (event: EventItem) => {
         next.delete(event.id);
         return next;
       });
-      showToast("Could not apply: " + error.message, "info");
+      showToast("Could not apply: " + error.message, "error");
       return;
     }
   }
@@ -2566,10 +2569,10 @@ const handleCancelApply = async (event: EventItem) => {
   setApplyingEventId(null);
   if (error) {
     setMyAppliedEventIds((prev) => new Set(prev).add(event.id));
-    showToast("Could not cancel: " + error.message, "info");
+    showToast("Could not cancel: " + error.message, "error");
     return;
   }
-  showToast("Application cancelled", "info");
+  showToast("Application cancelled", "success");
 };
 
 const handleSubmitService = async () => {
@@ -2579,12 +2582,12 @@ const handleSubmitService = async () => {
   const message = sanitizeText(serviceMessageRef.current?.value || "").trim();
 
   if (!selectedService || !selectedSub || !selectedInner) {
-    showToast("Please complete service selection", "info");
+    showToast("Please complete service selection", "error");
     return;
   }
 
   if (!message) {
-    showToast("Please describe your requirement", "info");
+    showToast("Please describe your requirement", "error");
     return;
   }
 
@@ -2618,7 +2621,7 @@ const handleSubmitService = async () => {
     fetchMyServiceRequests();
   } catch (err) {
     console.error(err);
-    showToast("Failed to submit request", "info");
+    showToast("Failed to submit request", "error");
   } finally {
     setSubmittingService(false);
   }
@@ -2630,7 +2633,7 @@ const handleSubmitService = async () => {
 
 const handleRemovePhoto = async () => {
   if (!user || !profile?.profile_photo) {
-    showToast("No profile photo to remove", "info");
+    showToast("No profile photo to remove", "error");
     return;
   }
 
@@ -2641,7 +2644,7 @@ const handleRemovePhoto = async () => {
     )[1];
 
     if (!filePath) {
-      showToast("Invalid photo path", "info");
+      showToast("Invalid photo path", "error");
       return;
     }
 
@@ -2669,7 +2672,7 @@ const handleRemovePhoto = async () => {
     showToast("Profile photo removed", "success");
   } catch (err) {
     console.error("Remove photo error:", err);
-    showToast("Failed to remove photo", "info");
+    showToast("Failed to remove photo", "error");
   }
 };
 
@@ -2711,7 +2714,7 @@ const handleRemovePhoto = async () => {
       setCropperOpen(false);
     } catch (err) {
       console.error("Crop failed:", err);
-      showToast("Couldn't crop the image. Please try again.", "info");
+      showToast("Couldn't crop the image. Please try again.", "error");
     }
   };
 
@@ -3450,159 +3453,86 @@ const handleSaveProfile = async () => {
     // stops, commas, brackets, etc. (the input filter prevents typing
     // those, but a paste / programmatic update could still slip them
     // in).
+    // Collect all field errors at once so every invalid field is highlighted.
+    const fieldErrors: Record<string, string> = {};
+
     if (!isValidLettersOnly(editFirstName)) {
-      showToast(
-        "First name must contain only letters and spaces (no numbers, full stops, or commas).",
-        "info"
-      );
-      return;
+      fieldErrors.firstName = "Letters and spaces only.";
     }
     if (!isValidLettersOnly(editLastName)) {
-      showToast(
-        "Last name must contain only letters and spaces (no numbers, full stops, or commas).",
-        "info"
-      );
-      return;
+      fieldErrors.lastName = "Letters and spaces only.";
     }
 
-    // Mobile number — country-aware validation matching the
-    // registration page. Resolve the current code by longest-prefix
-    // match, then check the national-digit length against the per-
-    // country expectation (with an E.164 fallback for unmapped codes).
     {
-      const sortedCodes = [...PROFILE_PHONE_CODES].sort(
-        (a, b) => b.length - a.length
-      );
+      const sortedCodes = [...PROFILE_PHONE_CODES].sort((a, b) => b.length - a.length);
       let currentCode = "+91";
       for (const code of sortedCodes) {
-        if (editMobileNumber.startsWith(code)) {
-          currentCode = code;
-          break;
-        }
+        if (editMobileNumber.startsWith(code)) { currentCode = code; break; }
       }
-      const nationalDigits = editMobileNumber
-        .slice(currentCode.length)
-        .replace(/\D/g, "");
+      const nationalDigits = editMobileNumber.slice(currentCode.length).replace(/\D/g, "");
       const expected = PROFILE_PHONE_LENGTHS[currentCode];
       const maxLen = profilePhoneMaxDigits(currentCode);
       if (expected) {
-        if (nationalDigits.length !== expected) {
-          showToast(
-            `Mobile number must be exactly ${expected} digits for ${currentCode}.`,
-            "info"
-          );
-          return;
-        }
+        if (nationalDigits.length !== expected)
+          fieldErrors.mobile = `Must be exactly ${expected} digits for ${currentCode}.`;
       } else if (nationalDigits.length < 7 || nationalDigits.length > maxLen) {
-        showToast(
-          `Mobile number must be between 7 and ${maxLen} digits for ${currentCode}.`,
-          "info"
-        );
-        return;
+        fieldErrors.mobile = `Must be 7–${maxLen} digits for ${currentCode}.`;
       }
     }
-    // Suppress unused-import warning while keeping the helper around
-    // for legacy callers (Indian-only paths still rely on it).
     void isValidIndianMobile;
 
-    // Family member mobile — locked-+91 UI enforces shape on input,
-    // but re-check on save: must be either empty or exactly +91 + 10
-    // digits (rejects any value that managed to bypass the input filter).
     if (familyMobile.trim()) {
       const famDigits = familyMobile.replace(/\D/g, "").replace(/^91/, "");
-      if (famDigits.length !== 10) {
-        showToast(
-          "Family member's mobile must be exactly 10 digits.",
-          "info"
-        );
-        return;
-      }
+      if (famDigits.length !== 10)
+        fieldErrors.familyMobile = "Must be exactly 10 digits.";
     }
+    if (familyName.trim() && !isValidFamilyName(familyName))
+      fieldErrors.familyName = "Letters and spaces only (one period allowed for initials).";
+    if (familyVillage.trim() && !isValidLettersOnly(familyVillage))
+      fieldErrors.familyVillage = "Letters and spaces only.";
+    if (profession.trim() && !isValidLettersOnly(profession))
+      fieldErrors.profession = "Letters and spaces only.";
+    if (roleDesignation.trim() && !isValidLettersOnly(roleDesignation))
+      fieldErrors.roleDesignation = "Letters and spaces only.";
+    if (organization.trim() && !isValidLettersOnly(organization))
+      fieldErrors.organization = "Letters and spaces only.";
 
-    // Family-member optional fields. Name allows ONE period for
-    // initials ("S. Krishna"); village is strict letters-only.
-    if (familyName.trim() && !isValidFamilyName(familyName)) {
-      showToast(
-        "Family member name must contain only letters and spaces (one period allowed for an initial, e.g. \"S. Krishna\").",
-        "info"
-      );
-      return;
-    }
-    if (familyVillage.trim() && !isValidLettersOnly(familyVillage)) {
-      showToast(
-        "Village must contain only letters and spaces (no numbers or punctuation).",
-        "info"
-      );
-      return;
-    }
-
-    // Professional & Social — strict letters-only on every text field
-    // (digits, brackets, commas, full stops are all rejected).
-    if (profession.trim() && !isValidLettersOnly(profession)) {
-      showToast(
-        "Professional Category must contain only letters and spaces.",
-        "info"
-      );
-      return;
-    }
-    if (roleDesignation.trim() && !isValidLettersOnly(roleDesignation)) {
-      showToast(
-        "Role / Designation must contain only letters and spaces.",
-        "info"
-      );
-      return;
-    }
-    if (organization.trim() && !isValidLettersOnly(organization)) {
-      showToast(
-        "Company / Organization Name must contain only letters and spaces.",
-        "info"
-      );
-      return;
-    }
-
-    // Social fields — must be valid URLs from the correct platform.
     const socialValidations: Array<[string, string, string[]]> = [
-      ["Facebook",    (document.getElementById("facebook")  as HTMLInputElement)?.value || "", ["facebook.com", "fb.com"]],
-      ["X (Twitter)", (document.getElementById("twitter")  as HTMLInputElement)?.value || "", ["x.com", "twitter.com"]],
-      ["LinkedIn",    (document.getElementById("linkedin")  as HTMLInputElement)?.value || "", ["linkedin.com"]],
-      ["Instagram",   (document.getElementById("instagram") as HTMLInputElement)?.value || "", ["instagram.com"]],
+      ["facebook",  (document.getElementById("facebook")  as HTMLInputElement)?.value || "", ["facebook.com", "fb.com"]],
+      ["twitter",   (document.getElementById("twitter")   as HTMLInputElement)?.value || "", ["x.com", "twitter.com"]],
+      ["linkedin",  (document.getElementById("linkedin")  as HTMLInputElement)?.value || "", ["linkedin.com"]],
+      ["instagram", (document.getElementById("instagram") as HTMLInputElement)?.value || "", ["instagram.com"]],
     ];
-    for (const [label, val, allowedDomains] of socialValidations) {
+    for (const [key, val, allowedDomains] of socialValidations) {
       const v = val.trim();
       if (v) {
         if (!isValidUrl(v)) {
-          showToast(`${label} must be a valid URL starting with https://`, "info");
-          return;
-        }
-        try {
-          const hostname = new URL(v).hostname.replace(/^www\./, '');
-          if (!allowedDomains.some(d => hostname === d || hostname.endsWith('.' + d))) {
-            showToast(
-              `${label} link must be from ${allowedDomains[0]} (e.g. https://${allowedDomains[0]}/your-profile)`,
-              "info"
-            );
-            return;
+          fieldErrors[key] = `Must be a valid URL starting with https://`;
+        } else {
+          try {
+            const hostname = new URL(v).hostname.replace(/^www\./, '');
+            if (!allowedDomains.some(d => hostname === d || hostname.endsWith('.' + d)))
+              fieldErrors[key] = `Must be a ${allowedDomains[0]} link.`;
+          } catch {
+            fieldErrors[key] = `Must be a valid URL starting with https://`;
           }
-        } catch {
-          showToast(`${label} must be a valid URL starting with https://`, "info");
-          return;
         }
       }
     }
 
-const dob =
-  (document.getElementById("dob") as HTMLInputElement)?.value || null;
+    const dob = (document.getElementById("dob") as HTMLInputElement)?.value || null;
+    if (dob) {
+      const dobDate = new Date(dob);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (dobDate > today) fieldErrors.dob = "Cannot be a future date.";
+    }
 
-// Validate DOB — reject future dates
-if (dob) {
-  const dobDate = new Date(dob);
-  const today = new Date();
-  today.setHours(23, 59, 59, 999); // end of today
-  if (dobDate > today) {
-    showToast("Date of Birth cannot be a future date", "info");
-    return;
-  }
-}
+    if (Object.keys(fieldErrors).length > 0) {
+      setProfileFieldErrors(fieldErrors);
+      return;
+    }
+    setProfileFieldErrors({});
 
     const facebook =
       (document.getElementById("facebook") as HTMLInputElement)?.value || "";
@@ -3677,7 +3607,7 @@ const updates = {
     setProfileEditMode(false);
   } catch (err) {
     console.error(err);
-    showToast("Failed to update profile", "info");
+    showToast("Failed to update profile", "error");
   }
 };
 
@@ -3706,7 +3636,7 @@ const handleSubmitSuggestion = async () => {
   const message = sanitizeText(suggestionRef.current?.value || "").trim();
 
   if (!message) {
-    showToast("Please enter your suggestion", "info");
+    showToast("Please enter your suggestion", "error");
     return;
   }
 
@@ -3736,7 +3666,7 @@ const handleSubmitSuggestion = async () => {
     showToast("Suggestion submitted — thank you!", "success");
   } catch (err) {
     console.error("Suggestion error:", err);
-    showToast("Failed to submit suggestion", "info");
+    showToast("Failed to submit suggestion", "error");
   } finally {
     setSubmittingSuggestion(false);
   }
@@ -3946,9 +3876,10 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   maxLength={60}
                   value={editFirstName}
-                  onChange={(e) => setEditFirstName(filterLettersOnly(e.target.value, 60))}
-                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  onChange={(e) => { setEditFirstName(filterLettersOnly(e.target.value, 60)); clearFieldError('firstName'); }}
+                  className={`w-full p-3 bg-gray-50 border rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.firstName ? 'border-red-400' : 'border-gray-300'}`}
                 />
+                {profileFieldErrors.firstName && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.firstName}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
@@ -3959,9 +3890,10 @@ const handleSubmitSuggestion = async () => {
                   type="text"
                   maxLength={60}
                   value={editLastName}
-                  onChange={(e) => setEditLastName(filterLettersOnly(e.target.value, 60))}
-                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  onChange={(e) => { setEditLastName(filterLettersOnly(e.target.value, 60)); clearFieldError('lastName'); }}
+                  className={`w-full p-3 bg-gray-50 border rounded-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.lastName ? 'border-red-400' : 'border-gray-300'}`}
                 />
+                {profileFieldErrors.lastName && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.lastName}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
@@ -4028,13 +3960,15 @@ const handleSubmitSuggestion = async () => {
                             .replace(/\D/g, "")
                             .slice(0, maxLen);
                           setEditMobileNumber(currentCode + digits);
+                          clearFieldError('mobile');
                         }}
                         placeholder={`${maxLen}-digit mobile number`}
-                        className="flex-1 p-3 bg-gray-50 border border-gray-300 rounded-r-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                        className={`flex-1 p-3 bg-gray-50 border rounded-r-lg text-sm font-bold text-gray-800 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.mobile ? 'border-red-400' : 'border-gray-300'}`}
                       />
                     </div>
                   );
                 })()}
+                {profileFieldErrors.mobile && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.mobile}</p>}
                 <p className="text-[10px] text-gray-400 mt-1">
                   Pick your country code, then enter the national-number digits only.
                 </p>
@@ -4049,11 +3983,10 @@ const handleSubmitSuggestion = async () => {
                   defaultValue={profile?.dob || ""}
                   max={new Date().toISOString().split("T")[0]}
                   min="1900-01-01"
-                  className="w-full p-3 bg-gray-50 border border-gray-200
-                             rounded-lg text-sm font-bold text-gray-700
-                             focus:bg-white focus:ring-2 focus:ring-primary-500
-                             outline-none transition-all"
+                  onChange={() => clearFieldError('dob')}
+                  className={`w-full p-3 bg-gray-50 border rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all ${profileFieldErrors.dob ? 'border-red-400' : 'border-gray-200'}`}
                 />
+                {profileFieldErrors.dob && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.dob}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
@@ -4301,11 +4234,11 @@ const handleSubmitSuggestion = async () => {
         type="text"
         maxLength={80}
         value={familyName}
-        onChange={(e) => setFamilyName(filterFamilyName(e.target.value, 80))}
+        onChange={(e) => { setFamilyName(filterFamilyName(e.target.value, 80)); clearFieldError('familyName'); }}
         placeholder="Family member's full name"
-        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
-                   text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+        className={`w-full h-12 px-3 bg-gray-50 border rounded-lg text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.familyName ? 'border-red-400' : 'border-gray-300'}`}
       />
+      {profileFieldErrors.familyName && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.familyName}</p>}
     </div>
 
     <div>
@@ -4331,12 +4264,13 @@ const handleSubmitSuggestion = async () => {
             // the user clears the field so the family block stays
             // truly optional.
             setFamilyMobile(digits ? `+91${digits}` : "");
+            clearFieldError('familyMobile');
           }}
           placeholder="10-digit mobile number"
-          className="flex-1 h-12 px-3 bg-gray-50 border border-gray-300 rounded-r-lg
-                     text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+          className={`flex-1 h-12 px-3 bg-gray-50 border rounded-r-lg text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.familyMobile ? 'border-red-400' : 'border-gray-300'}`}
         />
       </div>
+      {profileFieldErrors.familyMobile && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.familyMobile}</p>}
     </div>
 
     <div>
@@ -4347,11 +4281,11 @@ const handleSubmitSuggestion = async () => {
         type="text"
         maxLength={80}
         value={familyVillage}
-        onChange={(e) => setFamilyVillage(filterLettersOnly(e.target.value, 80))}
+        onChange={(e) => { setFamilyVillage(filterLettersOnly(e.target.value, 80)); clearFieldError('familyVillage'); }}
         placeholder="Native village"
-        className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
-                   text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+        className={`w-full h-12 px-3 bg-gray-50 border rounded-lg text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.familyVillage ? 'border-red-400' : 'border-gray-300'}`}
       />
+      {profileFieldErrors.familyVillage && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.familyVillage}</p>}
     </div>
 
     <div className="md:col-span-2">
@@ -4401,12 +4335,11 @@ const handleSubmitSuggestion = async () => {
     type="text"
     maxLength={80}
     value={profession}
-    onChange={(e) => setProfession(filterLettersOnly(e.target.value, 80))}
+    onChange={(e) => { setProfession(filterLettersOnly(e.target.value, 80)); clearFieldError('profession'); }}
     placeholder="e.g. Software Engineer, Doctor, Business Owner, Student"
-    className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
-               text-sm font-semibold
-               focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+    className={`w-full h-12 px-3 bg-gray-50 border rounded-lg text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.profession ? 'border-red-400' : 'border-gray-300'}`}
   />
+  {profileFieldErrors.profession && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.profession}</p>}
 </div>
 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
   <div className="mb-4">
@@ -4418,12 +4351,11 @@ const handleSubmitSuggestion = async () => {
     type="text"
     maxLength={80}
     value={roleDesignation}
-    onChange={(e) => setRoleDesignation(filterLettersOnly(e.target.value, 80))}
+    onChange={(e) => { setRoleDesignation(filterLettersOnly(e.target.value, 80)); clearFieldError('roleDesignation'); }}
     placeholder="e.g. Senior Developer, Founder, B.Tech CS"
-    className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
-               text-sm font-semibold
-               focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+    className={`w-full h-12 px-3 bg-gray-50 border rounded-lg text-sm font-semibold focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.roleDesignation ? 'border-red-400' : 'border-gray-300'}`}
   />
+  {profileFieldErrors.roleDesignation && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.roleDesignation}</p>}
   </div>
 
   <div className="mb-4">
@@ -4435,11 +4367,11 @@ const handleSubmitSuggestion = async () => {
     type="text"
     maxLength={120}
     value={organization}
-    onChange={(e) => setOrganization(filterLettersOnly(e.target.value, 120))}
+    onChange={(e) => { setOrganization(filterLettersOnly(e.target.value, 120)); clearFieldError('organization'); }}
     placeholder="e.g. Infosys, IIT Delhi"
-    className="w-full h-12 px-3 bg-gray-50 border border-gray-300 rounded-lg
-               text-sm font-semibold"
+    className={`w-full h-12 px-3 bg-gray-50 border rounded-lg text-sm font-semibold ${profileFieldErrors.organization ? 'border-red-400' : 'border-gray-300'}`}
   />
+  {profileFieldErrors.organization && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.organization}</p>}
   </div>
 </div>
 
@@ -4452,49 +4384,65 @@ const handleSubmitSuggestion = async () => {
               field is a valid URL.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <FacebookBrand className="absolute left-3 top-3" size={16} />
-                <input
-                id="facebook"
-                  type="url"
-                  defaultValue={profile?.facebook_id ?? ''}
-                  placeholder="https://facebook.com/your-profile"
-                  maxLength={200}
-                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
-                />
+              <div>
+                <div className="relative">
+                  <FacebookBrand className="absolute left-3 top-3" size={16} />
+                  <input
+                  id="facebook"
+                    type="url"
+                    defaultValue={profile?.facebook_id ?? ''}
+                    placeholder="https://facebook.com/your-profile"
+                    maxLength={200}
+                    onChange={() => clearFieldError('facebook')}
+                    className={`w-full pl-10 p-2.5 bg-gray-50 border rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.facebook ? 'border-red-400' : 'border-gray-200'}`}
+                  />
+                </div>
+                {profileFieldErrors.facebook && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.facebook}</p>}
               </div>
-              <div className="relative">
-                <XBrand className="absolute left-3 top-3" size={16} />
-                <input
-                id="twitter"
-                  type="url"
-                  defaultValue={profile?.twitter_id ?? ''}
-                  placeholder="https://x.com/your-handle"
-                  maxLength={200}
-                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
-                />
+              <div>
+                <div className="relative">
+                  <XBrand className="absolute left-3 top-3" size={16} />
+                  <input
+                  id="twitter"
+                    type="url"
+                    defaultValue={profile?.twitter_id ?? ''}
+                    placeholder="https://x.com/your-handle"
+                    maxLength={200}
+                    onChange={() => clearFieldError('twitter')}
+                    className={`w-full pl-10 p-2.5 bg-gray-50 border rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.twitter ? 'border-red-400' : 'border-gray-200'}`}
+                  />
+                </div>
+                {profileFieldErrors.twitter && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.twitter}</p>}
               </div>
-              <div className="relative">
-                <LinkedInBrand className="absolute left-3 top-3" size={16} />
-                <input
-                id="linkedin"
-                  type="url"
-                  defaultValue={profile?.linkedin_id ?? ''}
-                  placeholder="https://linkedin.com/in/your-handle"
-                  maxLength={200}
-                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
-                />
+              <div>
+                <div className="relative">
+                  <LinkedInBrand className="absolute left-3 top-3" size={16} />
+                  <input
+                  id="linkedin"
+                    type="url"
+                    defaultValue={profile?.linkedin_id ?? ''}
+                    placeholder="https://linkedin.com/in/your-handle"
+                    maxLength={200}
+                    onChange={() => clearFieldError('linkedin')}
+                    className={`w-full pl-10 p-2.5 bg-gray-50 border rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.linkedin ? 'border-red-400' : 'border-gray-200'}`}
+                  />
+                </div>
+                {profileFieldErrors.linkedin && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.linkedin}</p>}
               </div>
-              <div className="relative">
-                <InstagramBrand className="absolute left-3 top-3" size={16} />
-                <input
-                id="instagram"
+              <div>
+                <div className="relative">
+                  <InstagramBrand className="absolute left-3 top-3" size={16} />
+                  <input
+                  id="instagram"
                   type="url"
                   defaultValue={profile?.instagram_id ?? ''}
                   placeholder="https://instagram.com/your-handle"
                   maxLength={200}
-                  className="w-full pl-10 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
+                  onChange={() => clearFieldError('instagram')}
+                  className={`w-full pl-10 p-2.5 bg-gray-50 border rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none ${profileFieldErrors.instagram ? 'border-red-400' : 'border-gray-200'}`}
                 />
+                </div>
+                {profileFieldErrors.instagram && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.instagram}</p>}
               </div>
             </div>
           </div>
@@ -4942,7 +4890,7 @@ const renderConnectContent = () => {
                     onClick={() => {
                       const digits = leader.whatsapp_number?.replace(/\D/g, "");
                       if (!digits || digits === "0000000000") {
-                        showToast("WhatsApp contact not available", "info");
+                        showToast("WhatsApp contact not available", "error");
                         return;
                       }
                       window.open(`https://wa.me/${digits}`, "_blank");
@@ -5787,7 +5735,7 @@ const renderSuggestionsContent = () => (
                       await navigator.clipboard.writeText(profile.public_user_code!);
                       showToast("User ID copied");
                     } catch {
-                      showToast("Copy failed", "info");
+                      showToast("Copy failed", "error");
                     }
                   }}
                   title="Click to copy your User ID"
@@ -6124,11 +6072,19 @@ const renderSuggestionsContent = () => (
 
       {toast && (
         <div
-       className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 ${
-  toast.type === 'success' ? 'bg-gray-900 text-white' : 'bg-primary-600 text-white'
-}`}
+          className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 ${
+            toast.type === 'success'
+              ? 'bg-emerald-600 text-white'
+              : toast.type === 'error'
+              ? 'bg-red-600 text-white'
+              : 'bg-blue-600 text-white'
+          }`}
         >
-          {toast.type === 'success' ? <CheckCircle size={16} /> : <Info size={16} />}
+          {toast.type === 'success'
+            ? <CheckCircle size={16} />
+            : toast.type === 'error'
+            ? <AlertCircle size={16} />
+            : <Info size={16} />}
           <span className="text-xs font-bold uppercase tracking-wide">{toast.msg}</span>
         </div>
       )}
