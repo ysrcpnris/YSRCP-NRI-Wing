@@ -223,6 +223,8 @@ export default function Visited() {
       else if (!isValidLettersOnly(form.visitor_name)) errs.visitor_name = "Letters and spaces only.";
       if (!form.place.trim()) errs.place = "Place is required.";
       else if (!isValidLettersOnly(form.place)) errs.place = "Letters and spaces only.";
+      if (!form.visit_date) errs.visit_date = "Visit date is required.";
+      if (!form.visit_time) errs.visit_time = "Visit time is required.";
       if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
       if (Object.keys(errs).length > 0) { setFerrs(errs); return; }
       void handleSaveVisit(form);
@@ -272,17 +274,19 @@ export default function Visited() {
 
             <input
               type="date"
-              className="border border-gray-300 w-full p-2 rounded"
+              className={`border w-full p-2 rounded ${ferrs.visit_date ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
               value={form.visit_date}
               onChange={(e) => update("visit_date", e.target.value)}
             />
+            {ferrs.visit_date && <p className="text-xs text-red-600 mt-1">{ferrs.visit_date}</p>}
 
             <input
               type="time"
-              className="border border-gray-300 w-full p-2 rounded"
+              className={`border w-full p-2 rounded ${ferrs.visit_time ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
               value={form.visit_time}
               onChange={(e) => update("visit_time", e.target.value)}
             />
+            {ferrs.visit_time && <p className="text-xs text-red-600 mt-1">{ferrs.visit_time}</p>}
 
             <textarea
               className="border border-gray-300 w-full p-2 rounded"

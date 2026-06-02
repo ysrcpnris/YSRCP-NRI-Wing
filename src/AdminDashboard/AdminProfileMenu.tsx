@@ -126,7 +126,6 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
     first_name: "",
     email: "",
     mobile_number: "",
-    whatsapp_number: "",
   });
 
   // Populate form with current profile data on modal open
@@ -136,7 +135,6 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
         first_name: profile.first_name || "",
         email: profile.email || "",
         mobile_number: profile.mobile_number || "",
-        whatsapp_number: profile.whatsapp_number || "",
       });
     }
   }, [profile]);
@@ -158,7 +156,6 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
         .update({
           first_name: form.first_name,
           mobile_number: form.mobile_number,
-          whatsapp_number: form.whatsapp_number,
           updated_at: new Date().toISOString(),
         })
         .eq("id", profile.id);
@@ -249,30 +246,6 @@ function AdminProfileModal({ onClose }: { onClose: () => void }) {
                 }
                 placeholder="Mobile Number"
                 className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              />
-            </div>
-          </div>
-
-          {/* WhatsApp Number field */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">WhatsApp Number</label>
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                <Phone size={16} className="text-green-500" />
-              </div>
-              <input
-                type="tel"
-                inputMode="numeric"
-                value={form.whatsapp_number}
-                maxLength={15}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    whatsapp_number: e.target.value.replace(/[^0-9+]/g, "").slice(0, 15),
-                  })
-                }
-                placeholder="WhatsApp Number"
-                className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
               />
             </div>
           </div>

@@ -329,6 +329,7 @@ export default function ChangePassword() {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [oldPasswordError, setOldPasswordError] = useState("");
   const mountedRef = useRef(true);
 
   /* ---------------------------------------------------------------------------
@@ -377,6 +378,7 @@ export default function ChangePassword() {
     setNewPassword("");
     setConfirmPassword("");
     setVisibility({ old: false, next: false, confirm: false });
+    setOldPasswordError("");
   };
 
 
@@ -389,6 +391,13 @@ export default function ChangePassword() {
 
   // Validate old password, update with new password, then reset form or show error
   const handleSubmit = async () => {
+    setOldPasswordError("");
+
+    if (!oldPassword) {
+      setOldPasswordError("Current Password is required.");
+      return;
+    }
+
     if (!canSubmit) return;
 
     setSubmitting(true);
@@ -486,12 +495,18 @@ export default function ChangePassword() {
         <PasswordInput
           label="Current Password"
           value={oldPassword}
-          onChange={setOldPassword}
+          onChange={(v) => {
+            setOldPassword(v);
+            if (oldPasswordError) setOldPasswordError("");
+          }}
           visible={visibility.old}
           onToggle={() => toggleVisibility("old")}
           placeholder="Enter current password"
           disabled={submitting}
         />
+        {oldPasswordError && (
+          <p className="text-sm text-red-600 -mt-2">{oldPasswordError}</p>
+        )}
 
         <div className="space-y-3">
           {/* New + Confirm capped at 16 chars on input. "Current
