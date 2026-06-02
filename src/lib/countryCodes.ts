@@ -256,7 +256,7 @@ export const countriesData: Country[] = [
   { name: "Vatican City State (Holy See)", code: "39" },
   { name: "Venezuela", code: "58" },
   { name: "Vietnam", code: "84" },
-  { name: "Wake Island, USA", code: "1" },
+  { name: "United States of America", code: "1" },
   { name: "Wallis and Futuna", code: "681" },
   { name: "Yemen", code: "967" },
   { name: "Zambia", code: "260" },
