@@ -32,6 +32,9 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
   const [showNewPwd, setShowNewPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [currentPwdError, setCurrentPwdError] = useState('');
+  const [newPwdError, setNewPwdError] = useState('');
+  const [confirmPwdError, setConfirmPwdError] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
@@ -80,27 +83,38 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ profile }) => 
     e.preventDefault();
     e.stopPropagation();
     setPasswordError('');
+    setCurrentPwdError('');
+    setNewPwdError('');
+    setConfirmPwdError('');
     setPasswordSuccess('');
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError('All fields are required');
-      return;
+    let hasErrors = false;
+
+    if (!currentPassword) {
+      setCurrentPwdError('Current password is required');
+      hasErrors = true;
     }
 
-    if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
-      return;
+    if (!newPassword) {
+      setNewPwdError('New password is required');
+      hasErrors = true;
+    } else if (newPassword.length < 8) {
+      setNewPwdError('Password must be at least 8 characters long');
+      hasErrors = true;
+    } else if (newPassword === currentPassword) {
+      setNewPwdError('New password must be different from current password');
+      hasErrors = true;
     }
 
-    if (newPassword.length < 8) {
-      setPasswordError('Password must be at least 8 characters long');
-      return;
+    if (!confirmPassword) {
+      setConfirmPwdError('Confirm password is required');
+      hasErrors = true;
+    } else if (newPassword !== confirmPassword) {
+      setConfirmPwdError('Passwords do not match');
+      hasErrors = true;
     }
 
-    if (newPassword === currentPassword) {
-      setPasswordError('New password must be different from current password');
-      return;
-    }
+    if (hasErrors) return;
 
     const email = profile?.email || user?.email;
     if (!email) {
@@ -254,6 +268,9 @@ const initials =
               setNewPassword('');
               setConfirmPassword('');
               setPasswordError('');
+              setCurrentPwdError('');
+              setNewPwdError('');
+              setConfirmPwdError('');
               setPasswordSuccess('');
             }}
             className="p-1 hover:bg-white/20 rounded-lg transition-colors"
@@ -264,16 +281,17 @@ const initials =
         </div>
 
         <form onSubmit={handleChangePassword} className="p-6 space-y-4">
-          {/* Current password — eye toggles visibility independently
-              of the other two fields. */}
           <div className="relative">
             <input
               type={showCurrentPwd ? "text" : "password"}
               autoComplete="current-password"
               placeholder="Current password"
               value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-4 py-3 pr-12 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              onChange={(e) => {
+                setCurrentPassword(e.target.value);
+                if (currentPwdError) setCurrentPwdError('');
+              }}
+              className={`w-full px-4 py-3 pr-12 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none border-2 ${currentPwdError ? 'border-red-400 bg-red-50' : 'border-blue-300'}`}
             />
             <button
               type="button"
@@ -284,6 +302,7 @@ const initials =
             >
               {showCurrentPwd ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
+            {currentPwdError && <p className="text-xs text-red-600 mt-1">{currentPwdError}</p>}
           </div>
 
           <div className="relative">
@@ -292,8 +311,11 @@ const initials =
               autoComplete="new-password"
               placeholder="New password"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-3 pr-12 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none"
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                if (newPwdError) setNewPwdError('');
+              }}
+              className={`w-full px-4 py-3 pr-12 rounded-lg focus:ring-2 focus:ring-green-600 outline-none border-2 ${newPwdError ? 'border-red-400 bg-red-50' : 'border-green-300'}`}
             />
             <button
               type="button"
@@ -304,6 +326,7 @@ const initials =
             >
               {showNewPwd ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
+            {newPwdError && <p className="text-xs text-red-600 mt-1">{newPwdError}</p>}
           </div>
 
           <div className="relative">
@@ -312,8 +335,11 @@ const initials =
               autoComplete="new-password"
               placeholder="Confirm password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 pr-12 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none"
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                if (confirmPwdError) setConfirmPwdError('');
+              }}
+              className={`w-full px-4 py-3 pr-12 rounded-lg focus:ring-2 focus:ring-green-600 outline-none border-2 ${confirmPwdError ? 'border-red-400 bg-red-50' : 'border-green-300'}`}
             />
             <button
               type="button"
@@ -324,6 +350,7 @@ const initials =
             >
               {showConfirmPwd ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
+            {confirmPwdError && <p className="text-xs text-red-600 mt-1">{confirmPwdError}</p>}
           </div>
 
           {passwordError && (
