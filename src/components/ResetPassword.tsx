@@ -16,6 +16,7 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpSendStatus, setOtpSendStatus] = useState<"sending" | "sent" | "rate_limited" | "error">("sending");
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -71,7 +72,6 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
     e.preventDefault();
     setError("");
 
-    // ── inline validation (stops before touching Supabase) ──
     if (!email.trim()) {
       setError("Please enter your email address.");
       return;
@@ -81,59 +81,43 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
       return;
     }
 
-    setLoading(true);
-    setButtonDisabled(true);
+    const redirectUrl = `${window.location.origin}/reset-password-confirm`;
 
-    try {
-      const redirectUrl = `${window.location.origin}/reset-password-confirm`;
-
-      if (resetMethod === "email") {
-        // Always show success — never reveal whether the email is registered.
+    if (resetMethod === "email") {
+      // Show spinner only for the email-link method (needs loading feedback)
+      setLoading(true);
+      try {
         await supabase.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
-        if (isMounted.current) {
-          setIsSubmitted(true);
-          toast.success("Check your email — a reset link has been sent if this address is registered.");
+      } catch { /* ignore */ }
+      setLoading(false);
+      setIsSubmitted(true);
+      toast.success("Check your email — a reset link has been sent if this address is registered.");
+
+    } else {
+      // OTP method: transition to the entry screen IMMEDIATELY so the user
+      // can type the code as soon as it arrives — no loading state needed.
+      setOtpSendStatus("sending");
+      setIsSubmitted(true);
+
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false },
+      });
+
+      if (otpError) {
+        const status = (otpError as any).status ?? 0;
+        const msg    = (otpError.message ?? "").toLowerCase();
+        const isRateLimit = status === 429 || status === 422 ||
+          msg.includes("rate") || msg.includes("too many") ||
+          msg.includes("limit") || msg.includes("security");
+
+        if (isRateLimit) {
+          setOtpSendStatus("rate_limited");
+        } else {
+          setOtpSendStatus("error");
         }
       } else {
-        // ── OTP / magic-link flow ──
-        const { error: otpError } = await supabase.auth.signInWithOtp({
-          email,
-          options: { shouldCreateUser: false },
-        });
-
-        if (!isMounted.current) return;
-
-        // Always move to OTP entry screen regardless of errors.
-        // On 429 the email may still arrive after a short delay.
-        setIsSubmitted(true);
-
-        if (otpError) {
-          const status = (otpError as any).status ?? 0;
-          const msg    = otpError.message?.toLowerCase() ?? "";
-          const isRateLimit =
-            status === 429 ||
-            msg.includes("rate") ||
-            msg.includes("too many") ||
-            msg.includes("limit");
-
-          if (isRateLimit) {
-            toast.info(
-              "High request volume — the code may take a few minutes to arrive. Check your inbox (and spam)."
-            );
-          }
-          // 422 = email not found — don't reveal, just show entry screen silently
-        } else {
-          toast.success("OTP sent! Check your inbox (and spam folder).");
-        }
-      }
-    } catch {
-      if (isMounted.current) {
-        setError("Something went wrong. Please try again.");
-        setButtonDisabled(false);
-      }
-    } finally {
-      if (isMounted.current) {
-        setLoading(false);
+        setOtpSendStatus("sent");
       }
     }
   };
@@ -161,11 +145,27 @@ export default function ResetPassword({ onBack }: ResetPasswordProps) {
               </svg>
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h3>
-          <p className="text-gray-700 mb-1">
-            We've sent a 6-digit verification code to:
-          </p>
-          <p className="text-sm text-gray-900 font-semibold">{email}</p>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            {otpSendStatus === "sent" ? "Check Your Email" :
+             otpSendStatus === "sending" ? "Sending OTP…" :
+             otpSendStatus === "rate_limited" ? "Too Many Requests" : "Enter Your Code"}
+          </h3>
+          {otpSendStatus === "sent" && (
+            <p className="text-gray-700 mb-1">We sent a 6-digit code to <span className="font-semibold">{email}</span></p>
+          )}
+          {otpSendStatus === "sending" && (
+            <p className="text-gray-500 text-sm">Sending your code — this takes a moment…</p>
+          )}
+          {otpSendStatus === "rate_limited" && (
+            <div className="mt-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 text-left">
+              <p className="font-semibold mb-1">Email sending is rate-limited.</p>
+              <p>If you received a code earlier, enter it below — it's still valid for 5 minutes.</p>
+              <p className="mt-1">Otherwise wait a few minutes and try again, or use <strong>Reset Link</strong> instead (that method always works).</p>
+            </div>
+          )}
+          {otpSendStatus === "error" && (
+            <p className="text-sm text-red-600 mt-1">Could not send the code. Enter it if you already received it, or go back and try again.</p>
+          )}
         </div>
 
         {/* OTP Input Field */}
