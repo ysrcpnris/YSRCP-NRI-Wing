@@ -1166,12 +1166,16 @@ export default function AdminDashboard() {
       : countryBuckets
     : continentBuckets;
 
-  // 20-color palette — enough for every country in any continent bucket
+  // 40-color palette — enough for every country in any continent bucket
   const COLORS = [
     "#1368d6", "#16a34a", "#9333ea", "#eab308", "#ef4444",
     "#0ea5e9", "#f97316", "#14b8a6", "#ec4899", "#6366f1",
     "#84cc16", "#f43f5e", "#8b5cf6", "#06b6d4", "#d97706",
     "#10b981", "#7c3aed", "#dc2626", "#0891b2", "#65a30d",
+    "#059669", "#7e22ce", "#be185d", "#b91c1c", "#0369a1",
+    "#ea580c", "#15803d", "#4c0519", "#4f46e5", "#db2777",
+    "#0c4a6e", "#7c2d12", "#1e3a8a", "#166534", "#5b21b6",
+    "#831843", "#7f1d1d", "#164e63", "#92400e", "#0f766e",
   ];
 
   const renderPieLabel = ({ cx, cy, midAngle, outerRadius, value, percent, name }: {
