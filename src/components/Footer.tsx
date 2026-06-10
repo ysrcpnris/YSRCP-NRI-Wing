@@ -31,7 +31,7 @@ const NRI_SERVICES: LinkItem[] = [
 ];
 
 const QUICK_LINKS: LinkItem[] = [
-  { label: "About YSRCP",         to: "/about" },
+  { label: "About YSRCP",         to: "#journey" },
   { label: "Home",                to: "#hero" },
   { label: "Services",            to: "#services" },
   // Jagan-mark click takes the user to the Pillars of Progress

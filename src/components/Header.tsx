@@ -120,7 +120,7 @@ export default function Header({ onSignUp }: HeaderProps) {
               <button onClick={() => scrollToSection("hero")} className={navLink}>
                 Home
               </button>
-              <button onClick={() => navigate("/about")} className={navLink}>
+              <button onClick={() => scrollToSection("journey")} className={navLink}>
                 About
               </button>
               <button onClick={() => scrollToSection("services")} className={navLink}>
@@ -202,7 +202,7 @@ export default function Header({ onSignUp }: HeaderProps) {
                 Home
               </button>
               <button
-                onClick={() => navigate("/about")}
+                onClick={() => scrollToSection("journey")}
                 className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition"
               >
                 About
