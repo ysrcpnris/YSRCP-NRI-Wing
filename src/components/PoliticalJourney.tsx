@@ -41,8 +41,8 @@ export default function PoliticalJourney() {
         const v = data.value;
         setShowStayConnected(v === true || v === "true");
       } else {
-        // Default: ON if setting doesn't exist yet
-        setShowStayConnected(true);
+        // Default: OFF if setting doesn't exist yet (matches production)
+        setShowStayConnected(false);
       }
     })();
     return () => { mounted = false; };
@@ -98,7 +98,7 @@ export default function PoliticalJourney() {
               <img
                 src={selected.image}
                 alt={selected.title}
-                className="w-full h-[260px] sm:h-[340px] md:h-[420px] rounded-lg shadow-lg object-cover object-[50%_35%]"
+                className="w-full h-[260px] sm:h-[340px] md:h-[420px] rounded-lg shadow-lg object-cover object-top"
               />
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function PoliticalJourney() {
                     <img
                       src={data.image}
                       alt={data.title}
-                      className="w-full h-36 object-cover object-[50%_35%]"
+                      className="w-full h-48 object-cover object-top"
                     />
                     <div className="p-4">
                       <h3

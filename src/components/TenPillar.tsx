@@ -31,14 +31,14 @@ const PILLARS = [
     id: 3,
     title: "Agricultural Reforms",
     info: "Farmer income security, MSP, irrigation, crop planning and agri exports.",
-    image: "/pillar-images/128702759_3643024099051364_7728079183867142972_n.jpg",
+    image: "/pillar-images/STS_1159.jpeg",
     icon: <Leaf className="text-green-500" />
   },
   {
     id: 4,
     title: "Welfare Architecture",
     info: "Direct Benefit Transfer, pensions, farmer welfare and social security delivery.",
-    image: "/pillar-images/600215068_1417738646387066_7593797886179697001_n.jpg",
+    image: "/pillar-images/128702759_3643024099051364_7728079183867142972_n.jpg",
     icon: <HeartHandshake className="text-red-500" />
   },
   {
@@ -66,14 +66,14 @@ const PILLARS = [
     id: 8,
     title: "Decentralised Development",
     info: "Regional balance, district empowerment and grassroots leadership.",
-    image: "/pillar-images/482100581_9488420077845041_2943274274254903894_n.jpg",
+    image: "/pillar-images/STS_1771.jpeg",
     icon: <Map className="text-emerald-600" />
   },
   {
     id: 9,
     title: "Economic Growth",
     info: "Welfare-led growth putting money in people's hands and strengthening local markets.",
-    image: "/pillar-images/525018991_1302193227941609_2585825087392610829_n.jpg",
+    image: "/pillar-images/economic_growth.jpeg",
     icon: <TrendingUp className="text-primary-600" />
   },
   {
