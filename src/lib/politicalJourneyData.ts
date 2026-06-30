@@ -23,7 +23,7 @@ export const journeyData: Record<number, JourneyYear> = {
       "Even as their leader was unjustly imprisoned, the people's unbreakable faith turned adversity into triumph.",
       "YSRCP stood tall as the fearless champion of the poor, proving no force could silence the roar of the awakened people.",
     ],
-    image: "/Political_Journey/2012.jpg",
+    image: "/Political_Journey/2012.jpeg",
   },
   2014: {
     title: "2014: The Dawn of a Mighty Opposition",
