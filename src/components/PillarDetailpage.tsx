@@ -36,6 +36,7 @@ interface PillarSection {
 interface PillarDetailContent {
   fullTitle: string;
   subTitle?: string;
+  subTitleClass?: string;
   vision: string;
   tabs?: PillarTab[];
   sections?: PillarSection[];
@@ -354,6 +355,7 @@ const UNIVERSAL_PILLAR_DETAILS: Record<number, PillarDetailContent> = {
   7: {
     fullTitle: "Governance Reforms",
     subTitle: "Transparent, Accountable, Citizen-Centric Administration",
+    vision: "Shifting from office-centric bureaucracy to people-centric delivery, bringing transparent, accountable and technology-driven governance to every citizen's doorstep.",
     themeColor: "from-blue-800 to-blue-600",
     accentColor: "blue-600",
     accentHex: "#2563eb",
@@ -782,12 +784,12 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                 {details.fullTitle}
               </h1>
               {details.subTitle && (
-                <p className="text-ysrcp-yellow font-black uppercase tracking-[0.2em] text-xs mb-4 drop-shadow-lg">
+                <p className={`${details.subTitleClass || 'text-black'} font-black uppercase tracking-[0.2em] text-xs mb-4 drop-shadow-lg`}>
                   {details.subTitle}
                 </p>
               )}
-              
-              <div className="max-w-3xl border-l-4 border-ysrcp-yellow pl-4 py-1 bg-black/5">
+
+              <div className="max-w-3xl border-l-4 border-white pl-4 py-1 bg-black/5">
                  <p className="text-base md:text-lg text-white font-bold leading-tight drop-shadow-md italic">
                    {details.vision}
                  </p>
@@ -918,37 +920,10 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                   </div>
                 </div>
 
-                {/* BLUE ECONOMY STATIC IMPACT SECTIONS */}
-                {pillar.id === 1 && (
+                {/* IMPACT ANALYSIS SECTION (Dynamic, themed per pillar) */}
+                {details.impactPoints && (
                   <>
-                    {/* 1. Static Impact Analysis Strip */}
-                    <div id="BlueImpactStrip" className="max-w-7xl mx-auto w-full px-4 py-0 mb-4">
-                      <div className="bg-gray-50/80 border border-gray-100 rounded-3xl p-5 shadow-sm border-l-4 border-ysrcp-blue">
-                          <div className="flex flex-col lg:flex-row items-center gap-6">
-                            <div className="shrink-0 flex items-center gap-3 lg:border-r lg:border-gray-200 lg:pr-6">
-                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shadow-inner text-ysrcp-blue">
-                                    <Info size={18} />
-                                </div>
-                                <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-[0.25em] leading-none whitespace-nowrap">Impact Analysis</h3>
-                            </div>
-                            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-x-8 gap-y-2.5 w-full">
-                                {["Income Security", "Modern Ports", "No Migration", "Marine Exports", "Local Jobs", "Community Dignity", "Coastal Safety", "Market Stability"].map((point, idx) => (
-                                    <div key={idx} className={`flex items-center gap-2 leading-none group transition-all ${idx < 4 ? 'text-[13px] font-black text-ysrcp-blue' : 'text-[11px] font-bold text-gray-500 hover:text-ysrcp-blue'}`}>
-                                        <div className={`rounded-full shrink-0 group-hover:scale-125 transition-transform shadow-sm ${idx < 4 ? 'w-2.5 h-2.5 bg-ysrcp-blue' : 'w-1.5 h-1.5 bg-ysrcp-green'}`}></div>
-                                        <span className="truncate">{point}</span>
-                                    </div>
-                                ))}
-                            </div>
-                          </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* OTHER PILLARS IMPACT SECTIONS (Dynamic) */}
-                {pillar.id !== 1 && details.impactPoints && (
-                  <>
-                    <div id="PillarImpactStrip" className="max-w-7xl mx-auto w-full px-4 py-0 mb-4">
+                    <div id="PillarImpactStrip" className="max-w-7xl mx-auto w-full px-4 py-0 mb-4" style={{ ['--pillar-accent' as string]: details.accentHex }}>
                       <div className="bg-gray-50/80 border border-gray-100 rounded-3xl p-5 shadow-sm border-l-4" style={{ borderLeftColor: details.accentHex }}>
                           <div className="flex flex-col lg:flex-row items-center gap-6">
                             <div className="shrink-0 flex items-center gap-3 lg:border-r lg:border-gray-200 lg:pr-6">
@@ -959,9 +934,9 @@ const PillarDetailPage: React.FC<PillarDetailPageProps> = ({ pillar, onBack }) =
                             </div>
                             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-x-8 gap-y-2.5 w-full">
                                 {details.impactPoints.slice(0, 8).map((point, idx) => (
-                                    <div key={idx} className={`flex items-center gap-2 leading-none group transition-all ${idx < 4 ? 'text-[13px] font-black' : 'text-[11px] font-bold text-gray-500 hover:text-ysrcp-blue'}`} style={idx < 4 ? { color: details.accentHex } : {}}>
-                                        <div className={`rounded-full shrink-0 group-hover:scale-125 transition-transform shadow-sm ${idx < 4 ? 'w-2.5 h-2.5' : 'w-1.5 h-1.5 bg-ysrcp-green'}`} style={idx < 4 ? { backgroundColor: details.accentHex } : {}}></div>
-                                        <span className="truncate">{point}</span>
+                                    <div key={idx} className={`flex items-center gap-2 leading-snug group transition-all ${idx < 4 ? 'text-[13px] font-black' : 'text-[11px] font-bold text-gray-500 hover:text-[var(--pillar-accent)]'}`} style={idx < 4 ? { color: details.accentHex } : {}}>
+                                        <div className={`rounded-full shrink-0 group-hover:scale-125 transition-transform shadow-sm ${idx < 4 ? 'w-2.5 h-2.5' : 'w-1.5 h-1.5 bg-accent-500 group-hover:bg-[var(--pillar-accent)]'}`} style={idx < 4 ? { backgroundColor: details.accentHex } : {}}></div>
+                                        <span>{point}</span>
                                     </div>
                                 ))}
                             </div>

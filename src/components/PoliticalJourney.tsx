@@ -21,7 +21,7 @@ export default function PoliticalJourney() {
         const idx = yearList.indexOf(prev);
         return yearList[(idx + 1) % yearList.length];
       });
-    }, 3000);
+    }, 6000);
     return () => clearInterval(timer);
   }, [showStayConnected]);
 
