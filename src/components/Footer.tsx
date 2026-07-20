@@ -238,13 +238,13 @@ const Footer: React.FC = () => {
         {/* CONTACT */}
         <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm text-gray-300">
           <a
-            href="mailto:globalcoordinator@ysrcpnriwing.org"
+            href="mailto:info@ysrcpnriwing.org"
             className="flex items-center gap-2 hover:text-white transition"
           >
             <div className="w-8 h-8 rounded-lg bg-primary-500/20 flex items-center justify-center">
               <Mail className="w-4 h-4 text-primary-300" />
             </div>
-            globalcoordinator@ysrcpnriwing.org
+            info@ysrcpnriwing.org
           </a>
           <a href="tel:9515511111" className="flex items-center gap-2 hover:text-white transition">
             <div className="w-8 h-8 rounded-lg bg-primary-500/20 flex items-center justify-center">

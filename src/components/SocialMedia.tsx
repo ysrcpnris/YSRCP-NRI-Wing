@@ -361,7 +361,7 @@ export default function PressMeetsAndSocial() {
           onTouchStart={() => (paused.current = true)}
           onTouchEnd={() => (paused.current = false)}
           style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
-          className="flex gap-3 sm:gap-4 overflow-x-auto mb-4 sm:mb-6 scrollbar-none scroll-smooth"
+          className="flex gap-3 sm:gap-4 overflow-x-auto mb-4 sm:mb-6 scrollbar-none"
         >
           {videos.slice(0, 6).map(Card)}
         </div>
@@ -373,7 +373,7 @@ export default function PressMeetsAndSocial() {
           onTouchStart={() => (paused.current = true)}
           onTouchEnd={() => (paused.current = false)}
           style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
-          className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none scroll-smooth"
+          className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none"
         >
           {videos.slice(6, 12).map(Card)}
         </div>
@@ -401,14 +401,13 @@ export default function PressMeetsAndSocial() {
             {
               title: "YSR Congress Party",
               desc: "Official Party Updates",
-              // Mirror the Jagan Anna handles confirmed by the client.
-              // Telegram swapped out for the official party website —
-              // tapping the globe icon takes visitors to ysrcongress.com.
+              // Party's own official handles (client-confirmed) — distinct
+              // from the Jagan Anna personal handles in the card above.
               colors: [
-                { icon: FacebookBrand,  url: "https://www.facebook.com/ysjagan/" },
-                { icon: XBrand,         url: "https://x.com/ysjagan/" },
-                { icon: InstagramBrand, url: "https://www.instagram.com/ysjagan/" },
-                { icon: WhatsAppBrand,  url: "https://whatsapp.com/channel/0029Va4JGNi42DccmaxNjf0q" },
+                { icon: FacebookBrand,  url: "https://www.facebook.com/ysrcpofficial" },
+                { icon: XBrand,         url: "https://x.com/YSRCParty" },
+                { icon: InstagramBrand, url: "https://www.instagram.com/ysrcongress" },
+                { icon: WhatsAppBrand,  url: "https://whatsapp.com/channel/0029Va90coAAInPsBx63tX0m" },
                 { icon: WebsiteBrand,   url: "https://www.ysrcongress.com" },
               ],
             },
