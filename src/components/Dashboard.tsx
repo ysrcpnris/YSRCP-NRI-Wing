@@ -7,6 +7,11 @@ import { useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 
 
+// Cap on the optional "Contributions" free-text field in the profile
+// editor. Enforced via the textarea's maxLength and again at save, since
+// maxLength does not apply to programmatic setting or some paste paths.
+const CONTRIBUTION_MAX_LENGTH = 1000;
+
 /**
  * ═══════════════════════════════════════════════════════════════
  * GEOGRAPHIC DATA STRUCTURES
@@ -3546,6 +3551,13 @@ const handleSaveProfile = async () => {
     const instagram =
       (document.getElementById("instagram") as HTMLInputElement)?.value || "";
 
+    // Optional retrospective free text. Length-capped here as well as via
+    // the textarea's maxLength, which does not apply to programmatic
+    // setting or some paste/autofill paths.
+    const contribution =
+      (document.getElementById("contribution") as HTMLTextAreaElement)?.value ||
+      "";
+
 // Run every free-text field through the shared hygiene sanitiser
 // before persisting. Strips control chars, zero-width / bidi chars.
 // Empty strings are normalised to NULL for optional fields so the DB
@@ -3577,6 +3589,11 @@ const updates = {
   twitter_id:         sanitizeText(twitter).trim(),
   linkedin_id:        sanitizeText(linkedin).trim(),
   instagram_id:       sanitizeText(instagram).trim(),
+
+  // Optional — empty string persisted as NULL so the column stays clean.
+  contribution:       sanitizeText(contribution)
+                        .trim()
+                        .slice(0, CONTRIBUTION_MAX_LENGTH) || null,
 
   // Active family member (optional — empty strings persisted as NULL).
   family_relation:    sanitizeText(familyRelation).trim() || null,
@@ -4469,6 +4486,34 @@ const handleSubmitSuggestion = async () => {
                   <span className="text-xs font-bold">{opt.name}</span>
                 </label>
               ))}
+            </div>
+
+            {/* Free-text counterpart to the checkboxes above. The
+                checkboxes are forward-looking ("how I'd like to help",
+                stored in user_contributions); this is retrospective
+                ("what I've already done", stored on profiles.contribution
+                — the column the admin Users tab and Excel export already
+                read and label "Contribution"). Optional. */}
+            <div className="mt-5 pt-4 border-t border-gray-100">
+              <label
+                htmlFor="contribution"
+                className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2"
+              >
+                Contributions
+              </label>
+              <textarea
+                id="contribution"
+                rows={4}
+                maxLength={CONTRIBUTION_MAX_LENGTH}
+                defaultValue={profile?.contribution ?? ''}
+                placeholder="e.g. Volunteered for the 2024 campaign in Guntur; organised an NRI fundraiser in Dallas"
+                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium resize-y focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none disabled:cursor-not-allowed"
+              />
+              <p className="text-[11px] text-gray-500 mt-1">
+                Have you contributed to YSRCP in any way? Share it here —
+                donations, volunteering, campaigns, events, or support of any
+                kind. Optional.
+              </p>
             </div>
           </div>
 

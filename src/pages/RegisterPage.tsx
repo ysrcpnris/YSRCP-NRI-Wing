@@ -25,11 +25,6 @@ import {
 const SUBMIT_COOLDOWN_SECONDS = 30;
 const SUBMIT_COOLDOWN_KEY = "register_submit_until";
 
-// Cap on the optional "Contributions" free-text field. Enforced in the
-// textarea via maxLength and again at submit, since maxLength does not
-// apply to programmatic setting or paste-then-autofill edge cases.
-const CONTRIBUTION_MAX_LENGTH = 1000;
-
 /**
  * Searchable input: users can type to filter the dropdown options
  * OR type a custom value that isn't in the list (for missing entries).
@@ -515,12 +510,10 @@ if (pwdError) {
       assembly_constituency: sanitizeText(formData.assembly_constituency).trim(),
       mandal: sanitizeText(formData.mandal).trim(),
       gender: formData.gender,
-      // Optional — sanitised and length-capped here as well as in the
-      // textarea, then trimmed. Empty string is fine; AuthContext drops
-      // empty values before they reach user_metadata.
-      contribution: sanitizeText(formData.contribution)
-        .trim()
-        .slice(0, CONTRIBUTION_MAX_LENGTH),
+      // NOTE: `contribution` is deliberately NOT collected here. It is a
+      // post-signup field, edited from Dashboard → Profile → "I want to
+      // contribute via". Keeping it out of registration keeps the signup
+      // form short and lets users answer it once they have context.
       referred_by: referredByCode,
     };
 
@@ -1272,40 +1265,6 @@ return (
                       setFormData({ ...formData, mandal: val })
                     }
                   />
-                </div>
-              </div>
-            </fieldset>
-
-            {/* ── Your Contribution ── optional free text. Persists to the
-                existing `profiles.contribution` column, which the admin
-                Users tab and the Excel export already read and label
-                "Contribution" — so nothing downstream needs changing. */}
-            <fieldset>
-              <legend className="section-heading w-full mb-4">
-                Your Contribution
-              </legend>
-
-              <div>
-                <label className="input-label">Contributions</label>
-                <textarea
-                  rows={4}
-                  maxLength={CONTRIBUTION_MAX_LENGTH}
-                  value={formData.contribution}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contribution: e.target.value })
-                  }
-                  className="input-field resize-y"
-                  placeholder="e.g. Volunteered for the 2024 campaign in Guntur; organised an NRI fundraiser in Dallas"
-                />
-                <div className="flex items-start justify-between gap-3 mt-1">
-                  <p className="text-[11px] text-gray-500">
-                    Have you contributed to YSRCP in any way? Share it here —
-                    donations, volunteering, campaigns, events, or support of
-                    any kind. Optional.
-                  </p>
-                  <span className="text-[11px] text-gray-400 shrink-0 tabular-nums">
-                    {formData.contribution.length}/{CONTRIBUTION_MAX_LENGTH}
-                  </span>
                 </div>
               </div>
             </fieldset>
