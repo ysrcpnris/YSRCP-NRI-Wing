@@ -25,6 +25,11 @@ import {
 const SUBMIT_COOLDOWN_SECONDS = 30;
 const SUBMIT_COOLDOWN_KEY = "register_submit_until";
 
+// Cap on the optional "Contributions" free-text field. Enforced in the
+// textarea via maxLength and again at submit, since maxLength does not
+// apply to programmatic setting or paste-then-autofill edge cases.
+const CONTRIBUTION_MAX_LENGTH = 1000;
+
 /**
  * Searchable input: users can type to filter the dropdown options
  * OR type a custom value that isn't in the list (for missing entries).
@@ -425,6 +430,13 @@ if (pwdError) {
       );
     }
 
+    // Gender is mandatory. The <select required> already blocks an empty
+    // submit in the browser, but re-check here so the rule still holds if
+    // the form is submitted programmatically or native validation is off.
+    if (!formData.gender.trim()) {
+      throw new Error('Please select your gender.');
+    }
+
     const currentCode = getCurrentCountryCode();
     const numberOnly = formData.mobile_number.slice(currentCode.length);
     const expected = phoneLengths[currentCode];
@@ -502,6 +514,13 @@ if (pwdError) {
       district: sanitizeText(formData.district).trim(),
       assembly_constituency: sanitizeText(formData.assembly_constituency).trim(),
       mandal: sanitizeText(formData.mandal).trim(),
+      gender: formData.gender,
+      // Optional — sanitised and length-capped here as well as in the
+      // textarea, then trimmed. Empty string is fine; AuthContext drops
+      // empty values before they reach user_metadata.
+      contribution: sanitizeText(formData.contribution)
+        .trim()
+        .slice(0, CONTRIBUTION_MAX_LENGTH),
       referred_by: referredByCode,
     };
 
@@ -672,6 +691,34 @@ return (
                     className="input-field"
                     placeholder="Last name"
                   />
+                </div>
+              </div>
+
+              {/* Gender is required here because event applicant lists and
+                  three sheets of the admin Excel export carry a Gender
+                  column. Collecting it at signup (rather than leaving it to
+                  the dashboard profile editor) is what keeps those columns
+                  populated. "Prefer not to say" is offered so the field can
+                  be mandatory without forcing a disclosure. */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="input-label">
+                    Gender <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.gender}
+                    onChange={(e) =>
+                      setFormData({ ...formData, gender: e.target.value })
+                    }
+                    className="input-field"
+                  >
+                    <option value="">— Select gender —</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </select>
                 </div>
               </div>
 
@@ -1225,6 +1272,40 @@ return (
                       setFormData({ ...formData, mandal: val })
                     }
                   />
+                </div>
+              </div>
+            </fieldset>
+
+            {/* ── Your Contribution ── optional free text. Persists to the
+                existing `profiles.contribution` column, which the admin
+                Users tab and the Excel export already read and label
+                "Contribution" — so nothing downstream needs changing. */}
+            <fieldset>
+              <legend className="section-heading w-full mb-4">
+                Your Contribution
+              </legend>
+
+              <div>
+                <label className="input-label">Contributions</label>
+                <textarea
+                  rows={4}
+                  maxLength={CONTRIBUTION_MAX_LENGTH}
+                  value={formData.contribution}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contribution: e.target.value })
+                  }
+                  className="input-field resize-y"
+                  placeholder="e.g. Volunteered for the 2024 campaign in Guntur; organised an NRI fundraiser in Dallas"
+                />
+                <div className="flex items-start justify-between gap-3 mt-1">
+                  <p className="text-[11px] text-gray-500">
+                    Have you contributed to YSRCP in any way? Share it here —
+                    donations, volunteering, campaigns, events, or support of
+                    any kind. Optional.
+                  </p>
+                  <span className="text-[11px] text-gray-400 shrink-0 tabular-nums">
+                    {formData.contribution.length}/{CONTRIBUTION_MAX_LENGTH}
+                  </span>
                 </div>
               </div>
             </fieldset>

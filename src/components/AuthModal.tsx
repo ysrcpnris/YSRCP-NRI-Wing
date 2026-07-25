@@ -647,8 +647,14 @@ const handleSubmit = async (e: React.FormEvent) => {
       whatsapp_number: formData.whatsapp_number,
       country_of_residence: formData.country_of_residence,
       state_abroad: formData.state_abroad,
+      // city_abroad and assembly_constituency were previously missing from
+      // this payload even though the form collects both — the user filled
+      // them in and they were silently discarded on submit. Assembly
+      // constituency in particular is what the leader-matching relies on.
+      city_abroad: formData.city_abroad,
       indian_state: formData.indian_state,
       district: formData.district,
+      assembly_constituency: formData.assembly_constituency,
       mandal: formData.mandal,
       village: formData.village,
       gender: formData.gender,

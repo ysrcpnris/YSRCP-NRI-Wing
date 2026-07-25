@@ -519,6 +519,10 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
     "assembly_constituency",
     "mandal",
     "village",
+    // `gender` is collected at signup (required on /register, optional in
+    // the modal). It must be listed here or it never reaches
+    // user_metadata, and the DB trigger has nothing to read.
+    "gender",
     "profession",
     "organization",
     "designation",
