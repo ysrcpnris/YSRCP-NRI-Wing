@@ -164,6 +164,20 @@ export default function EmailVerifiedPage() {
   useEffect(() => {
     if (loading) return;
     if (user && isVerified) {
+      // Clicking the unique link we emailed proves control of the inbox —
+      // which is exactly what the login OTP proves. Without this, a
+      // freshly-verified user is bounced from /dashboard to /verify-otp
+      // and asked to prove the same thing twice in under a minute, for a
+      // code that was never sent (only signIn() sends one).
+      //
+      // Stamping the same flag VerifyOtpPage writes lets the route guards
+      // treat this verification as satisfying the two-step check for the
+      // usual 8-hour window. Their next login still requires password +
+      // OTP as normal, so the security property is unchanged.
+      try {
+        localStorage.setItem("otp_verified_at", String(Date.now()));
+      } catch { /* ignore — guards will fall back to asking for an OTP */ }
+
       const t = window.setTimeout(() => {
         if (mountedRef.current) {
           navigate(resolvePostVerifyTarget(), { replace: true });

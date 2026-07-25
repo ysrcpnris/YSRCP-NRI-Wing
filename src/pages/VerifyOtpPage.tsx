@@ -51,6 +51,11 @@ export default function VerifyOtpPage() {
     }
   });
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // True until we know whether a code is already pending — and, if not,
+  // until the one we send on arrival has gone out. Suppresses the
+  // "expired" UI during that window so the page never opens on an error.
+  const [initializing, setInitializing] = useState(true);
+  const autoSentRef = useRef(false);
 
   // Fall back to the session email if the user reloaded the page and
   // we lost the router state. If neither is available we bounce to
@@ -70,6 +75,47 @@ export default function VerifyOtpPage() {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // Only signIn() sends an OTP. Anyone who reaches this page by another
+  // route — a direct visit, a bookmark, a guard redirect — has no code in
+  // their inbox, and the countdown below would render "expired" with
+  // Resend disabled for 30 seconds. Send one on arrival so the page is
+  // never a dead end.
+  useEffect(() => {
+    if (!email || autoSentRef.current) return;
+
+    let pending = false;
+    try {
+      const sentAt = parseInt(localStorage.getItem("otp_sent_at") || "0", 10);
+      pending = sentAt > 0 && Date.now() - sentAt < OTP_EXPIRY_MS;
+    } catch { /* treat as not pending */ }
+
+    // A code from signIn() is still live — leave it alone rather than
+    // invalidating it by requesting another.
+    if (pending) {
+      setInitializing(false);
+      return;
+    }
+
+    autoSentRef.current = true;
+    (async () => {
+      const { error: sErr } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false },
+      });
+      if (sErr) {
+        setInitializing(false);
+        setError("Couldn't send the code. Tap Resend to try again.");
+        return;
+      }
+      try {
+        localStorage.setItem("otp_sent_at", String(Date.now()));
+      } catch { /* ignore */ }
+      setTimeLeftMs(OTP_EXPIRY_MS);
+      setResendCooldown(30);
+      setInitializing(false);
+    })();
+  }, [email]);
 
   // 1-second tick for the OTP countdown. Reads otp_sent_at every tick
   // so a tab reload doesn't reset the timer to the full 5 minutes.
@@ -109,7 +155,10 @@ export default function VerifyOtpPage() {
     return `${mm}:${String(ss).padStart(2, "0")}`;
   };
 
-  const expired = timeLeftMs <= 0;
+  // While the arrival-send is in flight there is no code yet, but it is
+  // not "expired" either — showing that would be a lie the user can't act
+  // on, since Resend is still cooling down.
+  const expired = !initializing && timeLeftMs <= 0;
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,17 +277,27 @@ export default function VerifyOtpPage() {
             and shows "expired" once the timer hits zero. */}
         <div
           className={`mb-4 px-3 py-2 rounded-lg border text-center text-sm font-semibold flex items-center justify-center gap-2 ${
-            expired
+            initializing
+              ? "bg-gray-50 border-gray-200 text-gray-600"
+              : expired
               ? "bg-red-50 border-red-200 text-red-700"
               : timeLeftMs < 60_000
               ? "bg-amber-50 border-amber-200 text-amber-800"
               : "bg-blue-50 border-blue-200 text-blue-800"
           }`}
         >
-          <Clock size={14} />
-          {expired
-            ? "Code expired — tap Resend below"
-            : `Code expires in ${formatTimer(timeLeftMs)}`}
+          {initializing ? (
+            <>
+              <Loader2 size={14} className="animate-spin" /> Sending your code…
+            </>
+          ) : (
+            <>
+              <Clock size={14} />
+              {expired
+                ? "Code expired — tap Resend below"
+                : `Code expires in ${formatTimer(timeLeftMs)}`}
+            </>
+          )}
         </div>
 
         <form onSubmit={handleVerify} className="space-y-4">
@@ -255,7 +314,7 @@ export default function VerifyOtpPage() {
                 setCode(e.target.value.replace(/\D/g, "").slice(0, 10))
               }
               placeholder="••••••"
-              disabled={expired}
+              disabled={expired || initializing}
               className={`input-field text-center text-2xl font-bold ${
                 code.length > 6 ? "tracking-[0.3em]" : "tracking-[0.5em]"
               }`}
@@ -270,7 +329,7 @@ export default function VerifyOtpPage() {
 
           <button
             type="submit"
-            disabled={verifying || code.length < 4 || expired}
+            disabled={verifying || code.length < 4 || expired || initializing}
             className="w-full btn-gradient py-3 text-base rounded-xl disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {verifying ? (
