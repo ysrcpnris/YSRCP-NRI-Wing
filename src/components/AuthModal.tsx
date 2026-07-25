@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { sanitizeTrim } from "../lib/sanitize";
 import ResetPassword from "./ResetPassword";
 
 type AuthModalProps = {
@@ -640,35 +641,41 @@ const handleSubmit = async (e: React.FormEvent) => {
       return;
     }
 
+    // Every free-text field goes through sanitizeTrim, matching what
+    // RegisterPage does at submit. This path previously sent raw values,
+    // which is how names arrived with trailing spaces — "Bhargav " +
+    // " " + "Tatiparthi " composed to "Bhargav  Tatiparthi" in
+    // full_name. Select/date fields are left alone; their values come
+    // from a fixed list, not from typing.
     const profilePayload: Record<string, unknown> = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
+      first_name: sanitizeTrim(formData.first_name),
+      last_name: sanitizeTrim(formData.last_name),
       mobile_number: formData.mobile_number,
       whatsapp_number: formData.whatsapp_number,
-      country_of_residence: formData.country_of_residence,
-      state_abroad: formData.state_abroad,
+      country_of_residence: sanitizeTrim(formData.country_of_residence),
+      state_abroad: sanitizeTrim(formData.state_abroad),
       // city_abroad and assembly_constituency were previously missing from
       // this payload even though the form collects both — the user filled
       // them in and they were silently discarded on submit. Assembly
       // constituency in particular is what the leader-matching relies on.
-      city_abroad: formData.city_abroad,
-      indian_state: formData.indian_state,
-      district: formData.district,
-      assembly_constituency: formData.assembly_constituency,
-      mandal: formData.mandal,
-      village: formData.village,
+      city_abroad: sanitizeTrim(formData.city_abroad),
+      indian_state: sanitizeTrim(formData.indian_state),
+      district: sanitizeTrim(formData.district),
+      assembly_constituency: sanitizeTrim(formData.assembly_constituency),
+      mandal: sanitizeTrim(formData.mandal),
+      village: sanitizeTrim(formData.village),
       gender: formData.gender,
       dob: formData.dob,
-      profession: formData.profession,
-      organization: formData.organization,
-      role_designation: formData.role_designation,
-      contribution: formData.contribution,
+      profession: sanitizeTrim(formData.profession),
+      organization: sanitizeTrim(formData.organization),
+      role_designation: sanitizeTrim(formData.role_designation),
+      contribution: sanitizeTrim(formData.contribution),
       participate_campaign: formData.participate_campaign,
-      suggestions: formData.suggestions,
-      instagram_id: formData.instagram_id,
-      facebook_id: formData.facebook_id,
-      twitter_id: formData.twitter_id,
-      linkedin_id: formData.linkedin_id,
+      suggestions: sanitizeTrim(formData.suggestions),
+      instagram_id: sanitizeTrim(formData.instagram_id),
+      facebook_id: sanitizeTrim(formData.facebook_id),
+      twitter_id: sanitizeTrim(formData.twitter_id),
+      linkedin_id: sanitizeTrim(formData.linkedin_id),
     };
 
     if (formData.referred_by?.trim()) {
