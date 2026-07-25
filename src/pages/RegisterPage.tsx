@@ -8,7 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 
-import { countriesData } from '../lib/countryCodes';
+import { countriesData, phoneCountriesData } from '../lib/countryCodes';
 import { getStates, getCities, hasStateData } from '../lib/locationData';
 import { indianAddressData } from '../lib/indianAddressData';
 
@@ -208,11 +208,20 @@ export default function RegisterPage() {
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Dial codes come from phoneCountriesData, NOT countriesData: that
+  // list omits India on purpose (it can't be a country of residence on
+  // an NRI portal) but +91 must be selectable, since most members have
+  // an Indian number as well as an overseas one.
+  const phoneCodeList = phoneCountriesData.map((country) => ({
+    name: country.name,
+    code: '+' + country.code,
+  }));
+
   // Distinct phone codes, sorted by numeric value of the code.
   // Two countries with the same code (e.g. +1 for US, Canada and many
   // Caribbean nations) collapse into a single option here.
   const distinctPhoneCodes = Array.from(
-    new Set(countryCodes.map((c) => c.code))
+    new Set(phoneCodeList.map((c) => c.code))
   ).sort(
     (a, b) =>
       parseInt(a.replace(/\D/g, ""), 10) - parseInt(b.replace(/\D/g, ""), 10)
@@ -307,8 +316,11 @@ export default function RegisterPage() {
 
   // Helper function to extract current country code from mobile number
   const getCurrentCountryCode = (): string => {
+    // Matched against phoneCodeList, not countryCodes — otherwise a
+    // number already saved as +91… would fail to resolve and the
+    // selector would silently fall back to the default.
     // Sort by code length descending to match longer codes first (e.g., +880 before +1)
-    const sortedCodes = [...countryCodes].sort((a, b) => b.code.length - a.code.length);
+    const sortedCodes = [...phoneCodeList].sort((a, b) => b.code.length - a.code.length);
     for (const cc of sortedCodes) {
       if (formData.mobile_number.startsWith(cc.code)) {
         return cc.code;

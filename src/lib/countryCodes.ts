@@ -263,3 +263,22 @@ export const countriesData: Country[] = [
   { name: "Zanzibar", code: "255" },
   { name: "Zimbabwe", code: "263" },
 ];
+
+// ---------------------------------------------------------------------
+// India is deliberately absent from countriesData above, and must stay
+// that way: this is a Non-Resident Indian portal, so "India" is not a
+// valid country of RESIDENCE and should not appear in that dropdown.
+//
+// It is very much a valid DIAL CODE though. Most members keep an Indian
+// number alongside their overseas one, and both the registration form
+// and the profile editor let them record it — but the dial-code
+// dropdown is built from this file, so leaving +91 out made the Indian
+// number impossible to enter.
+//
+// Phone inputs therefore use this list; country-of-residence inputs
+// keep using countriesData.
+// ---------------------------------------------------------------------
+export const phoneCountriesData: Country[] = [
+  ...countriesData,
+  { name: "India", code: "91" },
+].sort((a, b) => a.name.localeCompare(b.name));

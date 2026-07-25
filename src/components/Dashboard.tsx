@@ -1068,7 +1068,7 @@ import {
   isValidLettersOnly,
   isValidFamilyName,
 } from '../lib/sanitize';
-import { countriesData } from '../lib/countryCodes';
+import { countriesData, phoneCountriesData } from '../lib/countryCodes';
 import { getStates, getCities, hasStateData } from '../lib/locationData';
 // Imported under a different name because Dashboard.tsx has a local
 // `indianAddressData` constant defined at the top of the file for
@@ -1344,8 +1344,12 @@ function SearchableInput({
 // between the registration page and the profile-edit page. Two
 // countries with the same dial code (e.g. +1 for US, Canada and many
 // Caribbean nations) collapse into a single dropdown entry here.
+// Built from phoneCountriesData, which adds India. countriesData omits
+// it deliberately (not a valid country of residence on an NRI portal),
+// but +91 has to be selectable here — members routinely record an
+// Indian number alongside their overseas one.
 const PROFILE_PHONE_CODES = Array.from(
-  new Set(countriesData.map((c) => "+" + c.code))
+  new Set(phoneCountriesData.map((c) => "+" + c.code))
 ).sort(
   (a, b) =>
     parseInt(a.replace(/\D/g, ""), 10) - parseInt(b.replace(/\D/g, ""), 10)
