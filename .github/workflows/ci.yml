@@ -1,0 +1,52 @@
+name: CI
+
+# Runs on every PR into develop or main. Until this existed, nothing checked a
+# change before it reached production — Vercel simply deployed whatever landed
+# on main.
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # `npm run build` is bare `vite build` and does NOT typecheck.
+      - name: Build
+        run: npm run build
+        env:
+          # Vite needs these at build time or src/lib/supabase.ts throws on
+          # import. Values are irrelevant to a build — nothing connects.
+          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          VITE_SUPABASE_ANON_KEY: placeholder-anon-key
+          VITE_APP_URL: https://staging.ysrcpnriwing.org
+
+  # Typecheck is reported but does not block, because the repo currently has
+  # ~118 pre-existing tsc errors. Clear them, then move this into `build`
+  # above (or drop continue-on-error) so type errors fail the PR.
+  typecheck:
+    name: Typecheck (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: tsc --noEmit
+        run: npx tsc --noEmit
