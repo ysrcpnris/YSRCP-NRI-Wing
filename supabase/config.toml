@@ -1,0 +1,61 @@
+# Supabase CLI project config.
+#
+# This file is what makes supabase/ a recognised project. Without it the
+# GitHub integration finds no project at the working directory and does
+# nothing at all — no run, no error, and LAST MIGRATION stays empty. That
+# is exactly what happened when staging was first connected on 2026-08-03.
+#
+# project_id is a local label only. It does NOT bind this repo to one
+# Supabase project — which environment a migration lands in is decided by
+# the GitHub integration on each project, or by `supabase link` locally.
+
+project_id = "ysrcp-nri-wing"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+# Must match the Postgres major version of the hosted projects, or
+# `supabase db diff` produces misleading output against a local shadow db.
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+# Local-only mail catcher. Nothing here affects hosted email — staging and
+# production each carry their own SMTP and redirect settings, which is why
+# staging needs its own URL configuration or verification links point at
+# production.
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+# Overridden per environment in the dashboard. Left as the local dev value
+# so `supabase start` works out of the box.
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+
+[analytics]
+enabled = false
