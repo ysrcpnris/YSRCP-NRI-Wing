@@ -7,6 +7,8 @@ const cspDev = `
     'self'
     https://rcpcmjrahhzayqxexpkv.supabase.co
     wss://rcpcmjrahhzayqxexpkv.supabase.co
+    https://vaomqjcupmlfsivkrelx.supabase.co
+    wss://vaomqjcupmlfsivkrelx.supabase.co
     https://api.supabase.io
     ws://localhost:*
     https://www.googleapis.com
@@ -31,6 +33,7 @@ const cspDev = `
     data:
     blob:
     https://rcpcmjrahhzayqxexpkv.supabase.co
+    https://vaomqjcupmlfsivkrelx.supabase.co
     https://*.ytimg.com
     https://pbs.twimg.com
     https://ton.twimg.com
