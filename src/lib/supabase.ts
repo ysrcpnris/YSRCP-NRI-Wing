@@ -17,6 +17,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 
 export type Profile = {
+  /** Set once the five required wizard fields are present (migration
+   *  20260804100000). Null means the member has an account but has not
+   *  finished onboarding, and ProtectedRoute keeps them in the wizard. */
+  onboarding_completed_at?: string | null;
+  /** Voter fields. Readable only for the member's own row — column
+   *  privileges withhold them from coordinators (20260804094500). */
+  has_vote?: boolean | null;
+  epic_number?: string | null;
   id: string;
   // Personal Information
   first_name?: string;

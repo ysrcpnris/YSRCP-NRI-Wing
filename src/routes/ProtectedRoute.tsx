@@ -67,6 +67,20 @@ export default function ProtectedRoute() {
     return <Navigate to="/verify-otp" replace state={{ email: user.email }} />;
   }
 
+  // Onboarding gate. Registration now asks for six fields; the rest are
+  // collected at /complete-profile once the account exists and the email
+  // is verified. A member who has not finished it has no constituency
+  // and no mandal, so Local Connect has nothing to show and the wing
+  // cannot count them in any constituency — the dashboard would be a
+  // shell. Send them to the wizard instead.
+  //
+  // The flag is set by a database trigger, not by this page, so the app
+  // and the database cannot disagree about what "complete" means
+  // (migration 20260804100000).
+  if (!profile.onboarding_completed_at && pathname !== "/complete-profile") {
+    return <Navigate to="/complete-profile" replace />;
+  }
+
   // All good — render protected child routes
   return <Outlet />;
 }

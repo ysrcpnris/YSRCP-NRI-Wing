@@ -8,6 +8,7 @@ import { supabase } from "./lib/supabase";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 
 import About from "./components/About";
 import Mission from "./components/Mission";
@@ -274,6 +275,7 @@ function AppContent() {
           }
         />
         <Route element={<ProtectedRoute />}>
+          <Route path="/complete-profile" element={<CompleteProfilePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
 

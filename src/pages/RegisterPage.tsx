@@ -484,19 +484,23 @@ if (pwdError) {
       );
     }
 
-    // === Indian Address validations ===
-    if (!formData.indian_state.trim()) {
-      throw new Error('Please select your State from the India Address dropdown.');
-    }
-    if (!formData.district.trim()) {
-      throw new Error('Please select your District from the dropdown.');
-    }
-    if (!formData.assembly_constituency.trim()) {
-      throw new Error('Please select your Assembly Constituency from the dropdown.');
-    }
-    if (!formData.mandal.trim()) {
-      throw new Error('Please select your Mandal / Municipality from the dropdown.');
-    }
+    // === Andhra Pradesh address ===
+    // Deliberately NOT validated here any more. State, district,
+    // constituency and mandal moved to the post-verification wizard
+    // (/complete-profile), where they are asked with a real picker
+    // backed by ap_constituencies rather than free text.
+    //
+    // The reasoning: this form previously demanded that a stranger
+    // recall their home constituency and mandal before an account
+    // existed. Most people abroad do not hold that at their fingertips,
+    // and they left rather than look it up — so the wing got neither
+    // the data nor the member. Asked after verification, with a search
+    // box and an obvious payoff (your MLA, your mandal president), the
+    // same fields get answered.
+    //
+    // The database gate is profile_is_complete() in migration
+    // 20260804100000; ProtectedRoute keeps an incomplete profile in the
+    // wizard, so nothing is lost by not asking twice.
 
     // Pull the referral code from localStorage (set by /ref/:code redirect).
     const referredByCode = (() => {
@@ -515,13 +519,20 @@ if (pwdError) {
       last_name: sanitizeText(formData.last_name).trim(),
       mobile_number: formData.mobile_number,
       country_of_residence: sanitizeText(formData.country_of_residence).trim(),
-      state_abroad: sanitizeText(formData.state_abroad).trim(),
-      city_abroad: sanitizeText(formData.city_abroad).trim(),
-      indian_state: sanitizeText(formData.indian_state).trim(),
-      district: sanitizeText(formData.district).trim(),
-      assembly_constituency: sanitizeText(formData.assembly_constituency).trim(),
-      mandal: sanitizeText(formData.mandal).trim(),
-      gender: formData.gender,
+      // state_abroad, city_abroad, indian_state, district,
+      // assembly_constituency, mandal and gender are collected in the
+      // post-verification wizard, not here. They are still sent if the
+      // form happens to hold them — a member who arrives with values
+      // pre-filled should not have them discarded — but none is
+      // required to create the account.
+      state_abroad: sanitizeText(formData.state_abroad).trim() || undefined,
+      city_abroad: sanitizeText(formData.city_abroad).trim() || undefined,
+      indian_state: sanitizeText(formData.indian_state).trim() || undefined,
+      district: sanitizeText(formData.district).trim() || undefined,
+      assembly_constituency:
+        sanitizeText(formData.assembly_constituency).trim() || undefined,
+      mandal: sanitizeText(formData.mandal).trim() || undefined,
+      gender: formData.gender || undefined,
       // NOTE: `contribution` is deliberately NOT collected here. It is a
       // post-signup field, edited from Dashboard → Profile → "I want to
       // contribute via". Keeping it out of registration keeps the signup
