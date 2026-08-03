@@ -33,11 +33,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Columns are listed rather than `select("*")` on purpose. Since
+  // migration 20260804094500, `authenticated` holds column-level SELECT
+  // grants on profiles: epic_number, has_vote, dob and the family_*
+  // fields are withheld so a country coordinator cannot read them off
+  // another member's row. A wildcard asks for every column including
+  // those, and Postgres rejects the whole query with 42501 — which
+  // would break sign-in for everyone, not just coordinators.
+  //
+  // A member reading back their OWN voter fields uses the
+  // my_voter_details() RPC, which is scoped to auth.uid().
+  const PROFILE_COLUMNS = [
+    "id", "public_user_code", "first_name", "last_name", "full_name",
+    "email", "mobile_number", "whatsapp_number", "gender",
+    "country_of_residence", "state_abroad", "city_abroad",
+    "indian_state", "district", "assembly_constituency", "mandal", "village",
+    "profession", "organization", "designation", "occupation",
+    "contribution", "participate_campaign", "suggestions",
+    "facebook_id", "twitter_id", "instagram_id", "linkedin_id",
+    "profile_photo", "referral_code", "referred_by",
+    "role", "status", "created_at", "updated_at",
+  ].join(", ");
+
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select(PROFILE_COLUMNS)
         .eq("id", userId)
         .maybeSingle();
 
