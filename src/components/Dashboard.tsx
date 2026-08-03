@@ -1749,17 +1749,34 @@ useEffect(() => {
  * - Improve data consistency in dropdowns and form submissions
  */
 
-const normalizeDistrict = (value: string) => {
-  return value.replace(/district/i, "").trim();
-};
+/**
+ * These strip a trailing label that some stored values carry — "Guntur
+ * District" → "Guntur", "Tadepalligudem Mandal" → "Tadepalligudem".
+ *
+ * WHY THEY ARE ANCHORED
+ *   They were not, and the substrings occur INSIDE real place names:
+ *     'Achanta'       -> 'hanta'     (ac)
+ *     'Macherla'      -> 'Mherla'    (ac)
+ *     'Mandalapalle'  -> 'apalle'    (mandal)
+ *   These run when a profile is loaded into the edit form, so a member
+ *   from Achanta saw "hanta" in the field and saving wrote the mangled
+ *   value back — the stored constituency was being destroyed by the act
+ *   of opening the form.
+ *
+ *   Anchoring to a word at the END of the string is what was meant all
+ *   along: a label is a suffix, never a fragment in the middle.
+ */
+const stripTrailingLabel = (value: string, label: RegExp) =>
+  value.replace(label, "").replace(/[\s,-]+$/, "").trim();
 
-const normalizeMandal = (value: string) => {
-  return value.replace(/mandal/i, "").trim();
-};
+const normalizeDistrict = (value: string) =>
+  stripTrailingLabel(value, /\s*\bdistrict\b\s*$/i);
 
-const normalizeAssembly = (value: string) => {
-  return value.replace(/assembly constituency|ac/i, "").trim();
-};
+const normalizeMandal = (value: string) =>
+  stripTrailingLabel(value, /\s*\bmandal\b\s*$/i);
+
+const normalizeAssembly = (value: string) =>
+  stripTrailingLabel(value, /\s*\b(assembly\s+constituency|constituency|a\.?c\.?)\b\s*$/i);
 
 // ---------------- CONTRIBUTIONS ----------------
 /**
@@ -2235,6 +2252,38 @@ useEffect(() => {
     }[]
   >
 >({});
+
+  /**
+   * LOCAL CONNECT — the member's own constituency, district and state
+   * leaders, resolved server-side by my_local_connect().
+   *
+   * The RPC is SECURITY DEFINER and scoped to auth.uid(), so it needs no
+   * arguments and cannot be pointed at another member's constituency.
+   * It also deduplicates: a Regional Coordinator holding five district
+   * postings is one person to contact, not five cards.
+   */
+  type LocalConnectLeader = {
+    tier: "constituency" | "district" | "state";
+    role: string;
+    leader_name: string;
+    whatsapp: string | null;
+    whatsapp_alt: string | null;
+    photo_url: string | null;
+    place: string | null;
+  };
+  const [localConnect, setLocalConnect] = useState<LocalConnectLeader[]>([]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const { data, error } = await supabase.rpc("my_local_connect");
+      if (error) {
+        console.error("my_local_connect failed:", error);
+        return;
+      }
+      setLocalConnect((data as LocalConnectLeader[]) ?? []);
+    })();
+  }, [user?.id, profile?.assembly_constituency]);
 
 
   /**
@@ -3315,18 +3364,18 @@ const missingFieldToRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
       </div>
     </div>
   ); 
-const renderConnectSummary = () => {
-  const allLeaders = Object.values(leadersByRole).flat();
-  const firstRole = Object.keys(leadersByRole)[0];
-
-  return (
-    <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
-      <div className="flex items-center gap-3">
-        <span className="text-xs font-bold text-gray-600">Leadership Contacts</span>
-      </div>
+const renderConnectSummary = () => (
+  <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
+    <div className="flex items-center gap-3">
+      <span className="text-xs font-bold text-gray-600">Leadership Contacts</span>
+      {localConnect.length > 0 && (
+        <span className="text-xs text-gray-400">
+          {localConnect.length} for your area
+        </span>
+      )}
     </div>
-  );
-};
+  </div>
+);
 
 
   const renderServicesSummary = () => (
@@ -4811,16 +4860,32 @@ const handleSubmitSuggestion = async () => {
   );
 
 const renderConnectContent = () => {
-  // 🔹 Define the desired order of roles
-  const roleOrder = [
-    "Regional Coordinator",
-    "District President",
-    "Assembly Coordinator",
-  ];
-  // Global Coordinator(s) are always rendered first, regardless of address.
-  const FULL_ROLE_ORDER = ["Global Coordinator", ...roleOrder];
+  // Leaders come from my_local_connect() — see localConnect state below.
+  //
+  // WHY THIS NO LONGER MATCHES NAMES IN THE BROWSER
+  //   The previous version filtered leader_assignments by the member's
+  //   assembly_constituency string after passing it through
+  //   normalizeAssembly(). That matched on raw text, so it missed every
+  //   constituency the party records under a different spelling —
+  //   Palamaneru/Palamaner, Nandyala/Nandyal, Pulivendula/Pulivendla,
+  //   24 in all. Those members were told no leader was configured while
+  //   their coordinator sat in the table.
+  //
+  //   normalizeAssembly() also stripped the literal substring "ac"
+  //   anywhere in the name: 'Achanta' became 'hanta' and 'Macherla'
+  //   became 'Mherla', which could never match anything.
+  //
+  //   Resolution now happens in the database against an alias table
+  //   (migrations 20260804160000 / 20260804180000), so the app and any
+  //   admin report agree on who represents whom.
+  const roleRank: Record<string, number> = {
+    "Global Coordinator": 0,
+    "Regional Coordinator": 1,
+    "NRI Coordinator": 2,
+    "District President": 3,
+    "Assembly Coordinator": 4,
+  };
 
-  // 🔹 Create ordered array of leaders based on roleOrder
   const orderedLeaders: Array<{
     id: string;
     name: string;
@@ -4830,36 +4895,33 @@ const renderConnectContent = () => {
     role: string;
     phone?: string | null;
     email?: string | null;
-  }> = [];
+  }> = localConnect
+    .map((l, i) => ({
+      id: `${l.role}-${l.leader_name}-${i}`,
+      name: l.leader_name,
+      whatsapp_number: l.whatsapp,
+      whatsapp_number_2: l.whatsapp_alt,
+      photo_url: l.photo_url,
+      role: l.role,
+    }))
+    .sort((a, b) => (roleRank[a.role] ?? 9) - (roleRank[b.role] ?? 9));
 
-  FULL_ROLE_ORDER.forEach((role) => {
-    // Add any leaders for this role if they exist
-    if (leadersByRole[role] && leadersByRole[role].length > 0) {
-      leadersByRole[role].forEach((leader) => {
-        orderedLeaders.push({
-          ...leader,
-          role,
-        });
-      });
-    }
-
-    // Always insert the NRI Coordinator immediately after the Regional Coordinator
-    // if present, even when there are no Regional Coordinators assigned.
-    if (role === "Regional Coordinator" && nriCoordinator) {
-      // avoid duplicate if somehow already present
-      const already = orderedLeaders.find((l) => l.id === nriCoordinator.id && l.role === "NRI Coordinator");
-      if (!already) {
-        orderedLeaders.push({
-          id: nriCoordinator.id,
-          name: nriCoordinator.name,
-          whatsapp_number: nriCoordinator.phone,
-          role: "NRI Coordinator",
-          phone: nriCoordinator.phone,
-          email: nriCoordinator.email,
-        });
+  // The NRI coordinator is not part of the AP geography hierarchy, so
+  // my_local_connect() does not return them — they are appended here.
+  if (nriCoordinator && !orderedLeaders.some((l) => l.name === nriCoordinator.name)) {
+    orderedLeaders.splice(
+      Math.min(2, orderedLeaders.length),
+      0,
+      {
+        id: nriCoordinator.id,
+        name: nriCoordinator.name,
+        whatsapp_number: nriCoordinator.phone,
+        role: "NRI Coordinator",
+        phone: nriCoordinator.phone,
+        email: nriCoordinator.email,
       }
-    }
-  });
+    );
+  }
 
 
   const colorClasses = [
