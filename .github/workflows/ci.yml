@@ -34,13 +34,22 @@ jobs:
           VITE_SUPABASE_ANON_KEY: placeholder-anon-key
           VITE_APP_URL: https://staging.ysrcpnriwing.org
 
-  # Typecheck is reported but does not block, because the repo currently has
-  # ~118 pre-existing tsc errors. Clear them, then move this into `build`
-  # above (or drop continue-on-error) so type errors fail the PR.
+  # BLOCKING, unlike the advisory job this replaces.
+  #
+  # That job ran bare `npx tsc --noEmit`, which in this repo checks NOTHING:
+  # the root tsconfig.json is `"files": []` with project references only, so
+  # tsc has no inputs and always exits 0. It reported green on a Dashboard
+  # using <AbroadConnect /> with no import at all — and `vite build` bundled
+  # it happily, because Vite strips types without checking them. That would
+  # have shipped as a white screen on the Connect tab.
+  #
+  # Making `build` run tsc first is not an option: the repo carries 117
+  # inherited errors and every deploy would fail. So the gate is a budget —
+  # the count may not RISE. New errors block; old ones are tolerated until
+  # someone clears them, at which point the baseline drops.
   typecheck:
-    name: Typecheck (advisory)
+    name: Typecheck (no new errors)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -48,5 +57,5 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: tsc --noEmit
-        run: npx tsc --noEmit
+      - name: No new type errors
+        run: npm run typecheck:ci

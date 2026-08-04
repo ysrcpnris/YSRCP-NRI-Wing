@@ -9,7 +9,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "typecheck:ci": "node scripts/typecheck-budget.mjs"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
