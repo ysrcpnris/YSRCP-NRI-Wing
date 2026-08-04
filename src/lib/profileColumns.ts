@@ -49,6 +49,10 @@ export const PROFILE_COLUMNS_LIST = [
   // 20260805230000 — a column added later is NOT covered by the
   // existing column grants, so it had to be named to be readable.
   "contribution_areas",
+  // Free text from My Profile's "Tell us more". Distinct from
+  // `contribution`, which is the fixed-category select from signup —
+  // see 20260805231000 for why they must not be conflated.
+  "contribution_note",
   "participate_campaign",
   "suggestions",
   "facebook_id",

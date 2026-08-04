@@ -48,16 +48,38 @@ const CONTRIBUTION_AREAS = [
  * balloons into two more open.
  */
 const SECTION_ORDER = [
-  "voter", "contribute", "personal", "livenow", "apland", "work", "family", "social",
+  "voter", "contribute", "personal", "livenow", "apland", "work", "family", "social", "campaign",
 ] as const;
 type SectionKey = (typeof SECTION_ORDER)[number];
 
-/** "Would you like to join the organisation formally?" */
+/**
+ * "Would you like to join the organisation formally?" — the mock's copy
+ * promises a real consequence ("a coordinator will contact you"), but
+ * there is no column for it yet (see the profile-mapping review: the
+ * obvious candidate, participate_campaign, already means something
+ * else — see CAMPAIGN_OPTIONS below). Rendered, but NOT sent anywhere,
+ * and labelled as such, rather than accepting input that silently goes
+ * nowhere.
+ */
 const JOIN_OPTIONS = [
   { key: "yes", label: "Yes" },
   { key: "not_yet", label: "Not yet" },
   { key: "tell_me_more", label: "Tell me more" },
 ] as const;
+
+/**
+ * participate_campaign is an EXISTING column — collected at signup,
+ * per the mock, though no control in the current signup form actually
+ * writes to it (checked: AuthModal.tsx never renders it, and it is
+ * null on every staging profile). It keeps its original meaning here
+ * rather than being repurposed for "join formally?" above.
+ */
+const CAMPAIGN_OPTIONS = [
+  "Participate in election campaigns physically",
+  "Support digitally from abroad",
+  "Fund and sponsor",
+  "Not at this time",
+];
 
 type PrivateFields = {
   dob: string | null;
@@ -116,8 +138,10 @@ export default function MyProfile() {
     indian_state: "", district: "", assembly_constituency: "", mandal: "", village: "",
     profession: "", organization: "", designation: "",
     facebook_id: "", twitter_id: "", instagram_id: "", linkedin_id: "",
-    contribution: "", participate_campaign: "",
+    contribution_note: "", participate_campaign: "",
   });
+  // "Join formally?" is UI-only — see the comment on JOIN_OPTIONS.
+  const [joinFormally, setJoinFormally] = useState("");
   const [areas, setAreas] = useState<string[]>([]);
   const [hasVote, setHasVote] = useState<boolean | null>(null);
   const [epic, setEpic] = useState("");
@@ -173,7 +197,7 @@ export default function MyProfile() {
       organization: s("organization"), designation: s("designation"),
       facebook_id: s("facebook_id"), twitter_id: s("twitter_id"),
       instagram_id: s("instagram_id"), linkedin_id: s("linkedin_id"),
-      contribution: s("contribution"),
+      contribution_note: s("contribution_note"),
       participate_campaign: s("participate_campaign"),
     });
     setAreas(Array.isArray(p.contribution_areas) ? (p.contribution_areas as string[]) : []);
@@ -242,6 +266,9 @@ export default function MyProfile() {
     const incomplete = new Set<SectionKey>(
       strength.checks.filter((c) => !c.done).map((c) => c.section)
     );
+    // Not a completeness question — force open like the mock, since
+    // it's the flagged gap, not something to bury by default.
+    incomplete.add("campaign");
     setOpenSections(incomplete);
   }, [profile, strength]);
 
@@ -439,9 +466,9 @@ export default function MyProfile() {
               <div className="pt-field">
                 <label>Tell us more (optional)</label>
                 <textarea
-                  className="pt-inp" value={form.contribution} disabled={ro}
+                  className="pt-inp" value={form.contribution_note} disabled={ro}
                   maxLength={1000}
-                  onChange={(e) => set("contribution")(e.target.value)}
+                  onChange={(e) => set("contribution_note")(e.target.value)}
                 />
                 <div className="hint">Free text, up to 1,000 characters.</div>
               </div>
@@ -452,21 +479,53 @@ export default function MyProfile() {
                   {JOIN_OPTIONS.map((o) => (
                     <label
                       key={o.key}
-                      className={`pt-chk ${form.participate_campaign === o.key ? "on" : ""}`}
+                      className={`pt-chk ${joinFormally === o.key ? "on" : ""}`}
                     >
                       <input
                         type="radio" name="join" disabled={ro}
-                        checked={form.participate_campaign === o.key}
-                        onChange={() => set("participate_campaign")(o.key)}
+                        checked={joinFormally === o.key}
+                        onChange={() => setJoinFormally(o.key)}
                       />
                       {o.label}
                     </label>
                   ))}
                 </div>
-                <div className="hint">
-                  Saying yes puts you forward for a role in your country chapter.
-                  A coordinator will contact you.
+                <div className="hint" style={{ color: "var(--saffron)" }}>
+                  Not saved yet — there is no coordinator follow-up behind this
+                  answer today. Coming soon.
                 </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Campaign participation — the existing field the mock flags as
+              a gap: collected at signup with no edit UI until now. */}
+          <section
+            className="pt-card"
+            ref={(el) => { sectionRefs.current.campaign = el; }}
+            style={flash === "campaign" ? { boxShadow: "0 0 0 2px var(--navy)" } : undefined}
+          >
+            <div className="pt-card-h pt-card-h-toggle" onClick={() => toggleSection("campaign")}>
+              <div style={{ flex: 1 }}>
+                <h3>Campaign participation</h3>
+                <div className="sub">Collected at signup — not editable until now</div>
+              </div>
+              <span className="pt-pill" style={{ background: "var(--saffron-soft)", color: "var(--saffron)" }}>Gap</span>
+              <Chevron open={openSections.has("campaign")} />
+            </div>
+            <div className="pt-card-b" style={{ display: openSections.has("campaign") ? undefined : "none" }}>
+              <div className="pt-field" style={{ marginBottom: 0 }}>
+                <label>How would you like to take part?</label>
+                <select
+                  className="pt-inp" disabled={ro}
+                  value={form.participate_campaign}
+                  onChange={(e) => set("participate_campaign")(e.target.value)}
+                >
+                  <option value="">— Select —</option>
+                  {CAMPAIGN_OPTIONS.map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </section>
