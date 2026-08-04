@@ -65,7 +65,11 @@ people AS (
           ])[1 + (g % 20)] AS first_name,
     (ARRAY['Reddy','Naidu','Rao','Chowdary','Prasad','Kumar','Varma',
            'Sarma','Raju','Gupta'])[1 + (g % 10)] AS last_name,
-    CASE WHEN g % 3 = 0 THEN 'Female' ELSE 'Male' END AS gender,
+    -- Keyed off a different stride than the city pick (7). Using g % 3
+    -- for gender and g * 7 for the city made the two align periodically,
+    -- so Germany drew eight men in a row and the chapter screen showed
+    -- "women: 0" on a seed that is 1-in-3 female overall.
+    CASE WHEN (g * 5) % 8 < 3 THEN 'Female' ELSE 'Male' END AS gender,
     format('+4477009%05s', 10000 + g) AS mobile_number
   FROM generate_series(1, 60) AS g
 ),

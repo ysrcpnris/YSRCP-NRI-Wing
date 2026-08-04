@@ -8,6 +8,7 @@ import { supabase } from "./lib/supabase";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import ChapterDashboard from "./components/ChapterDashboard";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
 
 import About from "./components/About";
@@ -277,6 +278,10 @@ function AppContent() {
         <Route element={<ProtectedRoute />}>
           <Route path="/complete-profile" element={<CompleteProfilePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          {/* Chapter surface. Access is decided by the database — the RPCs
+              return an empty set to anyone without a chapter — so the route
+              itself needs no extra guard beyond being signed in. */}
+          <Route path="/chapter" element={<ChapterDashboard />} />
         </Route>
 
         {/* Support team auth (unified login + register) */}
