@@ -254,6 +254,40 @@ textarea{resize:vertical;min-height:78px}
 
 /* misc */
 .divider{height:1px;background:var(--line-2);margin:18px 0}
+
+/* ============================================================
+   PROFILE ACCORDION + EDIT/VIEW TOGGLE
+   Added to demonstrate the two open questions on My Profile:
+   (1) sections that collapse so a 9-section page doesn't read as
+       a wall of identical cards, (2) an Edit toggle rather than
+       always-editable fields, since this page carries restricted
+       data that loads a beat after the rest.
+   ============================================================ */
+.psec .card-h{cursor:pointer;user-select:none}
+.psec .card-h:hover{background:var(--card-2)}
+.psec .chev{margin-left:auto;flex:0 0 auto;color:var(--ink-4);
+  transition:transform .18s ease;font-size:11px}
+.psec.collapsed .chev{transform:rotate(-90deg)}
+.psec.collapsed .card-b{display:none}
+.psec .card-h .badges{display:flex;align-items:center;gap:8px}
+
+/* view mode: fields read as settled data, not an invitation to type */
+#m-profile.view-mode input,
+#m-profile.view-mode select,
+#m-profile.view-mode textarea{
+  pointer-events:none;background:var(--card-2);color:var(--ink-2);
+  border-color:var(--line-2)}
+#m-profile.view-mode .chk{pointer-events:none}
+#m-profile.view-mode #profileEditBar{display:flex}
+#m-profile.view-mode #profileSaveBar{display:none}
+#m-profile:not(.view-mode) #profileEditBar{display:none}
+#m-profile:not(.view-mode) #profileSaveBar{display:flex}
+
+/* checklist rows for incomplete fields become a real affordance,
+   not just a status readout */
+.strength-row.gap{cursor:pointer;border-radius:6px;margin:0 -6px;padding:3px 6px}
+.strength-row.gap:hover{background:var(--card-2)}
+.strength-row.gap:hover span:last-child{color:var(--navy)!important;text-decoration:underline}
 .empty{padding:30px;text-align:center;color:var(--ink-4);font-size:13px}
 .bar{height:6px;border-radius:6px;background:var(--line-2);overflow:hidden}
 .bar > i{display:block;height:100%;border-radius:6px;background:var(--navy)}
@@ -1128,18 +1162,25 @@ textarea{resize:vertical;min-height:78px}
 <!-- ============================================================
      MEMBER · PROFILE
      ============================================================ -->
-<section class="screen" id="m-profile">
-  <div class="sec-title">My Profile</div>
-  <p class="sec-note">What you record here decides which requests reach you, which leaders you're
-    connected to, and how the wing counts its strength in your constituency.</p>
+<section class="screen view-mode" id="m-profile">
+  <div class="row" style="justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+    <div>
+      <div class="sec-title">My Profile</div>
+      <p class="sec-note" style="margin-bottom:0">What you record here decides which requests reach you,
+        which leaders you're connected to, and how the wing counts its strength in your constituency.</p>
+    </div>
+    <div id="profileEditBar" style="flex:0 0 auto">
+      <button class="btn btn-go" onclick="enterProfileEdit()">✎ Edit profile</button>
+    </div>
+  </div>
 
-  <div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start">
+  <div class="grid" style="grid-template-columns:1.5fr 1fr;align-items:start;margin-top:14px">
     <div class="stack">
 
-      <div class="card">
-        <div class="card-h"><div style="flex:1"><h3>Are you on the voter roll?</h3>
+      <div class="card psec" id="sec-voter">
+        <div class="card-h" onclick="toggleSection('sec-voter')"><div style="flex:1"><h3>Are you on the voter roll?</h3>
           <div class="sub">New — helps the wing map NRI voters constituency by constituency</div></div>
-          <span class="pill p-green">New</span></div>
+          <div class="badges"><span class="pill p-green">New</span><span class="chev">▾</span></div></div>
         <div class="card-b">
           <div class="field">
             <label>Do you have a vote in Andhra Pradesh?</label>
@@ -1164,10 +1205,10 @@ textarea{resize:vertical;min-height:78px}
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-h"><div style="flex:1"><h3>How can you contribute?</h3>
+      <div class="card psec collapsed" id="sec-contribute">
+        <div class="card-h" onclick="toggleSection('sec-contribute')"><div style="flex:1"><h3>How can you contribute?</h3>
           <div class="sub">Pick everything that applies — this is how organisers find you</div></div>
-          <span class="pill p-green">New</span></div>
+          <div class="badges"><span class="pill p-green">New</span><span class="chev">▾</span></div></div>
         <div class="card-b">
           <div class="field">
             <label>Areas you can help with</label>
@@ -1196,9 +1237,10 @@ textarea{resize:vertical;min-height:78px}
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-h"><div style="flex:1"><h3>Personal details</h3>
-          <div class="sub">Existing fields — unchanged except the second number</div></div></div>
+      <div class="card psec" id="sec-personal">
+        <div class="card-h" onclick="toggleSection('sec-personal')"><div style="flex:1"><h3>Personal details</h3>
+          <div class="sub">Existing fields — unchanged except the second number</div></div>
+          <span class="chev">▾</span></div>
         <div class="card-b">
           <div class="row" style="gap:15px;align-items:center;padding:13px;background:var(--card-2);
                       border-radius:var(--r-sm);margin-bottom:16px">
@@ -1245,9 +1287,10 @@ textarea{resize:vertical;min-height:78px}
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-h"><div style="flex:1"><h3>Where you live now</h3>
-          <div class="sub">Your address abroad</div></div></div>
+      <div class="card psec collapsed" id="sec-livenow">
+        <div class="card-h" onclick="toggleSection('sec-livenow')"><div style="flex:1"><h3>Where you live now</h3>
+          <div class="sub">Your address abroad</div></div>
+          <span class="chev">▾</span></div>
         <div class="card-b">
           <div class="grid g3" style="gap:0 16px">
             <div class="field"><label>Country of residence</label>
@@ -1258,9 +1301,10 @@ textarea{resize:vertical;min-height:78px}
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-h"><div style="flex:1"><h3>Your place in Andhra Pradesh</h3>
-          <div class="sub">Decides which leaders and mandal president appear in Local Connect</div></div></div>
+      <div class="card psec collapsed" id="sec-apland">
+        <div class="card-h" onclick="toggleSection('sec-apland')"><div style="flex:1"><h3>Your place in Andhra Pradesh</h3>
+          <div class="sub">Decides which leaders and mandal president appear in Local Connect</div></div>
+          <span class="chev">▾</span></div>
         <div class="card-b">
           <div class="grid g2" style="gap:0 16px">
             <div class="field"><label>State</label><select><option>Andhra Pradesh</option><option>Telangana</option></select></div>
@@ -1278,9 +1322,10 @@ textarea{resize:vertical;min-height:78px}
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-h"><div style="flex:1"><h3>Work</h3>
-          <div class="sub">Used to match you to assistance requests from members in your field</div></div></div>
+      <div class="card psec collapsed" id="sec-work">
+        <div class="card-h" onclick="toggleSection('sec-work')"><div style="flex:1"><h3>Work</h3>
+          <div class="sub">Used to match you to assistance requests from members in your field</div></div>
+          <span class="chev">▾</span></div>
         <div class="card-b">
           <div class="grid g3" style="gap:0 16px">
             <div class="field"><label>Profession</label><input class="inp" value="Technology consulting"></div>
@@ -1290,9 +1335,10 @@ textarea{resize:vertical;min-height:78px}
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-h"><div style="flex:1"><h3>Active family member in AP</h3>
-          <div class="sub">Optional — someone at home the party can reach when you cannot be</div></div></div>
+      <div class="card psec collapsed" id="sec-family">
+        <div class="card-h" onclick="toggleSection('sec-family')"><div style="flex:1"><h3>Active family member in AP</h3>
+          <div class="sub">Optional — someone at home the party can reach when you cannot be</div></div>
+          <span class="chev">▾</span></div>
         <div class="card-b">
           <div class="grid g3" style="gap:0 16px">
             <div class="field"><label>Relationship</label><select><option>Father</option><option>Mother</option>
@@ -1311,9 +1357,10 @@ textarea{resize:vertical;min-height:78px}
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-h"><div style="flex:1"><h3>Social handles</h3>
-          <div class="sub">Optional — how the wing amplifies campaign content through members</div></div></div>
+      <div class="card psec" id="sec-social">
+        <div class="card-h" onclick="toggleSection('sec-social')"><div style="flex:1"><h3>Social handles</h3>
+          <div class="sub">Optional — how the wing amplifies campaign content through members</div></div>
+          <span class="chev">▾</span></div>
         <div class="card-b">
           <div class="grid g2" style="gap:0 16px">
             <div class="field"><label>Facebook</label><input class="inp" placeholder="facebook.com/…"></div>
@@ -1326,10 +1373,10 @@ textarea{resize:vertical;min-height:78px}
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-h"><div style="flex:1"><h3>Campaign participation</h3>
+      <div class="card psec" id="sec-campaign">
+        <div class="card-h" onclick="toggleSection('sec-campaign')"><div style="flex:1"><h3>Campaign participation</h3>
           <div class="sub">Collected at signup — not editable today</div></div>
-          <span class="pill p-saf">Gap</span></div>
+          <div class="badges"><span class="pill p-saf">Gap</span><span class="chev">▾</span></div></div>
         <div class="card-b">
           <div class="field" style="margin-bottom:0">
             <label>How would you like to take part?</label>
@@ -1342,9 +1389,9 @@ textarea{resize:vertical;min-height:78px}
           </div>
         </div>
       </div>
-      <div class="row" style="justify-content:flex-end;gap:9px">
-        <button class="btn btn-out">Cancel</button>
-        <button class="btn btn-go" onclick="toast('Profile saved')">Save profile</button>
+      <div class="row" id="profileSaveBar" style="justify-content:flex-end;gap:9px">
+        <button class="btn btn-out" onclick="cancelProfileEdit()">Cancel</button>
+        <button class="btn btn-go" onclick="saveProfile()">Save profile</button>
       </div>
     </div>
 
@@ -1378,10 +1425,14 @@ textarea{resize:vertical;min-height:78px}
             <div class="row"><span style="color:var(--navy)">✓</span> Work</div>
             <div class="row"><span style="color:var(--navy)">✓</span> Family contact in AP</div>
             <div class="row"><span style="color:var(--navy)">✓</span> Contribution areas</div>
-            <div class="row"><span style="color:var(--ink-4)">○</span> <span style="color:var(--ink-3)">EPIC number</span></div>
-            <div class="row"><span style="color:var(--ink-4)">○</span> <span style="color:var(--ink-3)">Second number</span></div>
-            <div class="row"><span style="color:var(--ink-4)">○</span> <span style="color:var(--ink-3)">Social handles</span></div>
+            <div class="row strength-row gap" onclick="jumpToSection('sec-voter')">
+              <span style="color:var(--ink-4)">○</span> <span style="color:var(--ink-3)">EPIC number</span></div>
+            <div class="row strength-row gap" onclick="jumpToSection('sec-personal')">
+              <span style="color:var(--ink-4)">○</span> <span style="color:var(--ink-3)">Second number</span></div>
+            <div class="row strength-row gap" onclick="jumpToSection('sec-social')">
+              <span style="color:var(--ink-4)">○</span> <span style="color:var(--ink-3)">Social handles</span></div>
           </div>
+          <div class="hint" style="margin-top:9px">Click an open circle to jump to that section.</div>
         </div>
       </div>
 
@@ -5049,6 +5100,57 @@ function approveRow(btn){
   toast('Approved — the member has been notified');
 }
 let tt;
+/* ---- My Profile: accordion + edit/view toggle -------------------
+   Default open/closed state is set directly in the markup (each
+   .psec starts with or without .collapsed) and is DERIVED from the
+   Profile Strength checklist below it: a section with an incomplete
+   (○) item starts open, a fully-checked (✓) section starts closed.
+   That keeps one definition of "done" instead of two. ---------- */
+/* Page order of the 9 profile sections — this IS the sequence "next"
+   means. Kept as one list rather than reading DOM order at click time
+   so the cascade below is obvious to a reader, not implicit. */
+const PROFILE_SECTION_ORDER=['sec-voter','sec-contribute','sec-personal',
+  'sec-livenow','sec-apland','sec-work','sec-family','sec-social','sec-campaign'];
+
+function toggleSection(id){
+  const el=document.getElementById(id);
+  const wasOpen=!el.classList.contains('collapsed');
+  el.classList.toggle('collapsed');
+  // Only closing cascades. Opening a section to peek at it should not
+  // also balloon two more open — that fights the whole point of
+  // collapsing in the first place.
+  if(wasOpen) revealNext(id,1);
+}
+/* Closing a section opens the next N after it in page order — "next"
+   meaning position, not current state, so it always reveals exactly
+   what's coming up rather than skipping ones that happen to already
+   be open. */
+function revealNext(fromId,count){
+  const i=PROFILE_SECTION_ORDER.indexOf(fromId);
+  if(i<0) return;
+  PROFILE_SECTION_ORDER.slice(i+1,i+1+count).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('collapsed');
+  });
+}
+function jumpToSection(id){
+  const el=document.getElementById(id);
+  el.classList.remove('collapsed');
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  el.style.boxShadow='0 0 0 2px var(--navy)';
+  setTimeout(()=>{el.style.boxShadow=''},900);
+}
+function enterProfileEdit(){
+  document.getElementById('m-profile').classList.remove('view-mode');
+}
+function cancelProfileEdit(){
+  document.getElementById('m-profile').classList.add('view-mode');
+}
+function saveProfile(){
+  toast('Profile saved');
+  document.getElementById('m-profile').classList.add('view-mode');
+}
+
 function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.style.transform='translate(-50%,0)';

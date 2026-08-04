@@ -27,7 +27,7 @@
  *   we send nothing rather than sending blanks.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/useAuth";
 import "../styles/prototype-tokens.css";
@@ -38,6 +38,19 @@ const CONTRIBUTION_AREAS = [
   { key: "technology", label: "Technology" },
   { key: "political", label: "Political" },
 ] as const;
+
+/**
+ * Same behaviour as docs/design/nri-wing-prototype.html, validated there
+ * first: closing a section opens the next one after it in this order —
+ * "next" is position, not current state, so it reveals what's actually
+ * coming up rather than skipping ones already open. Opening a section
+ * does NOT cascade; only closing does, so peeking at one section never
+ * balloons into two more open.
+ */
+const SECTION_ORDER = [
+  "voter", "contribute", "personal", "livenow", "apland", "work", "family", "social",
+] as const;
+type SectionKey = (typeof SECTION_ORDER)[number];
 
 /** "Would you like to join the organisation formally?" */
 const JOIN_OPTIONS = [
@@ -70,6 +83,21 @@ function Restricted({ value, loaded }: { value: string | null; loaded: boolean }
   return <>{value || <span style={{ color: "var(--ink-4)" }}>—</span>}</>;
 }
 
+/** Rotates to point right when its section is collapsed, matching the mock. */
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <span
+      style={{
+        marginLeft: "auto", color: "var(--ink-4)", fontSize: 11,
+        transition: "transform .18s ease",
+        transform: open ? "none" : "rotate(-90deg)",
+      }}
+    >
+      ▾
+    </span>
+  );
+}
+
 export default function MyProfile() {
   const { user, profile, refreshProfile } = useAuth();
 
@@ -98,6 +126,33 @@ export default function MyProfile() {
   const [family, setFamily] = useState({
     relation: "", name: "", mobile: "", village: "", designation: "",
   });
+
+  // ── accordion ──────────────────────────────────────────────────────
+  const [openSections, setOpenSections] = useState<Set<SectionKey>>(new Set());
+  const [flash, setFlash] = useState<SectionKey | null>(null);
+  const sectionRefs = useRef<Partial<Record<SectionKey, HTMLElement | null>>>({});
+  const accordionInited = useRef(false);
+
+  const toggleSection = (key: SectionKey) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      const wasOpen = next.has(key);
+      if (wasOpen) next.delete(key); else next.add(key);
+      // Only closing cascades — see the note on SECTION_ORDER above.
+      if (wasOpen) {
+        const i = SECTION_ORDER.indexOf(key);
+        SECTION_ORDER.slice(i + 1, i + 2).forEach((k) => next.add(k));
+      }
+      return next;
+    });
+  };
+
+  const jumpToSection = (key: SectionKey) => {
+    setOpenSections((prev) => new Set(prev).add(key));
+    sectionRefs.current[key]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setFlash(key);
+    setTimeout(() => setFlash(null), 900);
+  };
 
   const set = (k: keyof typeof form) => (v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -150,18 +205,22 @@ export default function MyProfile() {
   useEffect(() => { void loadPrivate(); }, [loadPrivate]);
 
   // ── profile strength, from what is actually filled ─────────────────
+  // Each check carries the section it belongs to. That mapping is the
+  // single source both the accordion's initial open/closed state and
+  // the checklist's click-to-jump use — one definition of "done" rather
+  // than two that could drift apart.
   const strength = useMemo(() => {
-    const checks: { label: string; done: boolean }[] = [
-      { label: "Personal details", done: !!(form.first_name && form.last_name && form.mobile_number) },
-      { label: "Address abroad", done: !!(form.country_of_residence && form.city_abroad) },
-      { label: "Constituency & mandal", done: !!(form.assembly_constituency && form.mandal) },
-      { label: "Work", done: !!form.profession },
-      { label: "Family contact in AP", done: privateLoaded && !!family.name },
-      { label: "Contribution areas", done: areas.length > 0 },
-      { label: "EPIC number", done: privateLoaded && !!epic },
-      { label: "Second number", done: !!form.whatsapp_number },
+    const checks: { label: string; done: boolean; section: SectionKey }[] = [
+      { label: "Personal details", section: "personal", done: !!(form.first_name && form.last_name && form.mobile_number) },
+      { label: "Address abroad", section: "livenow", done: !!(form.country_of_residence && form.city_abroad) },
+      { label: "Constituency & mandal", section: "apland", done: !!(form.assembly_constituency && form.mandal) },
+      { label: "Work", section: "work", done: !!form.profession },
+      { label: "Family contact in AP", section: "family", done: privateLoaded && !!family.name },
+      { label: "Contribution areas", section: "contribute", done: areas.length > 0 },
+      { label: "EPIC number", section: "voter", done: privateLoaded && !!epic },
+      { label: "Second number", section: "personal", done: !!form.whatsapp_number },
       {
-        label: "Social handles",
+        label: "Social handles", section: "social",
         done: !!(form.facebook_id || form.twitter_id || form.instagram_id || form.linkedin_id),
       },
     ];
@@ -171,6 +230,20 @@ export default function MyProfile() {
 
   const verdict =
     strength.pct >= 80 ? "Strong" : strength.pct >= 60 ? "Good" : "Needs attention";
+
+  // Open exactly the sections that need attention, once — computed from
+  // the checklist above so it can never disagree with what the rail
+  // shows. Re-runs harmlessly until profile data has actually arrived;
+  // the ref makes sure it only ever WRITES state that one time, so it
+  // never fights a manual toggle made after.
+  useEffect(() => {
+    if (accordionInited.current || !profile) return;
+    accordionInited.current = true;
+    const incomplete = new Set<SectionKey>(
+      strength.checks.filter((c) => !c.done).map((c) => c.section)
+    );
+    setOpenSections(incomplete);
+  }, [profile, strength]);
 
   // ── save ───────────────────────────────────────────────────────────
   const save = async () => {
@@ -276,8 +349,12 @@ export default function MyProfile() {
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* Are you on the voter roll? */}
-          <section className="pt-card">
-            <div className="pt-card-h">
+          <section
+            className="pt-card"
+            ref={(el) => { sectionRefs.current.voter = el; }}
+            style={flash === "voter" ? { boxShadow: "0 0 0 2px var(--navy)" } : undefined}
+          >
+            <div className="pt-card-h pt-card-h-toggle" onClick={() => toggleSection("voter")}>
               <div style={{ flex: 1 }}>
                 <h3>Are you on the voter roll?</h3>
                 <div className="sub">
@@ -285,8 +362,9 @@ export default function MyProfile() {
                 </div>
               </div>
               <span className="pt-pill pt-p-green">New</span>
+              <Chevron open={openSections.has("voter")} />
             </div>
-            <div className="pt-card-b">
+            <div className="pt-card-b" style={{ display: openSections.has("voter") ? undefined : "none" }}>
               <div className="pt-field">
                 <label>Do you have a vote in Andhra Pradesh?</label>
                 <div className="pt-radio-row">
@@ -322,15 +400,20 @@ export default function MyProfile() {
           </section>
 
           {/* How can you contribute? */}
-          <section className="pt-card">
-            <div className="pt-card-h">
+          <section
+            className="pt-card"
+            ref={(el) => { sectionRefs.current.contribute = el; }}
+            style={flash === "contribute" ? { boxShadow: "0 0 0 2px var(--navy)" } : undefined}
+          >
+            <div className="pt-card-h pt-card-h-toggle" onClick={() => toggleSection("contribute")}>
               <div style={{ flex: 1 }}>
                 <h3>How can you contribute?</h3>
                 <div className="sub">Pick everything that applies — this is how organisers find you</div>
               </div>
               <span className="pt-pill pt-p-green">New</span>
+              <Chevron open={openSections.has("contribute")} />
             </div>
-            <div className="pt-card-b">
+            <div className="pt-card-b" style={{ display: openSections.has("contribute") ? undefined : "none" }}>
               <div className="pt-field">
                 <label>Areas you can help with</label>
                 <div className="pt-checks">
@@ -389,11 +472,16 @@ export default function MyProfile() {
           </section>
 
           {/* Personal details */}
-          <section className="pt-card">
-            <div className="pt-card-h">
+          <section
+            className="pt-card"
+            ref={(el) => { sectionRefs.current.personal = el; }}
+            style={flash === "personal" ? { boxShadow: "0 0 0 2px var(--navy)" } : undefined}
+          >
+            <div className="pt-card-h pt-card-h-toggle" onClick={() => toggleSection("personal")}>
               <div style={{ flex: 1 }}><h3>Personal details</h3></div>
+              <Chevron open={openSections.has("personal")} />
             </div>
-            <div className="pt-card-b">
+            <div className="pt-card-b" style={{ display: openSections.has("personal") ? undefined : "none" }}>
               <div className="pt-grid pt-g2">
                 <Field label="First name" value={form.first_name} onChange={set("first_name")} />
                 <Field label="Last name" value={form.last_name} onChange={set("last_name")} />
@@ -423,9 +511,16 @@ export default function MyProfile() {
           </section>
 
           {/* Where you live now */}
-          <section className="pt-card">
-            <div className="pt-card-h"><div style={{ flex: 1 }}><h3>Where you live now</h3></div></div>
-            <div className="pt-card-b">
+          <section
+            className="pt-card"
+            ref={(el) => { sectionRefs.current.livenow = el; }}
+            style={flash === "livenow" ? { boxShadow: "0 0 0 2px var(--navy)" } : undefined}
+          >
+            <div className="pt-card-h pt-card-h-toggle" onClick={() => toggleSection("livenow")}>
+              <div style={{ flex: 1 }}><h3>Where you live now</h3></div>
+              <Chevron open={openSections.has("livenow")} />
+            </div>
+            <div className="pt-card-b" style={{ display: openSections.has("livenow") ? undefined : "none" }}>
               <div className="pt-grid pt-g2">
                 <Field label="Country of residence" value={form.country_of_residence} onChange={set("country_of_residence")} />
                 <Field label="State abroad" value={form.state_abroad} onChange={set("state_abroad")} />
@@ -435,14 +530,19 @@ export default function MyProfile() {
           </section>
 
           {/* Your place in Andhra Pradesh */}
-          <section className="pt-card">
-            <div className="pt-card-h">
+          <section
+            className="pt-card"
+            ref={(el) => { sectionRefs.current.apland = el; }}
+            style={flash === "apland" ? { boxShadow: "0 0 0 2px var(--navy)" } : undefined}
+          >
+            <div className="pt-card-h pt-card-h-toggle" onClick={() => toggleSection("apland")}>
               <div style={{ flex: 1 }}>
                 <h3>Your place in Andhra Pradesh</h3>
                 <div className="sub">Where you are from — separate from where you vote</div>
               </div>
+              <Chevron open={openSections.has("apland")} />
             </div>
-            <div className="pt-card-b">
+            <div className="pt-card-b" style={{ display: openSections.has("apland") ? undefined : "none" }}>
               <div className="pt-grid pt-g2">
                 <Field label="State" value={form.indian_state} onChange={set("indian_state")} />
                 <Field label="District" value={form.district} onChange={set("district")} />
@@ -456,9 +556,16 @@ export default function MyProfile() {
           </section>
 
           {/* Work */}
-          <section className="pt-card">
-            <div className="pt-card-h"><div style={{ flex: 1 }}><h3>Work</h3></div></div>
-            <div className="pt-card-b">
+          <section
+            className="pt-card"
+            ref={(el) => { sectionRefs.current.work = el; }}
+            style={flash === "work" ? { boxShadow: "0 0 0 2px var(--navy)" } : undefined}
+          >
+            <div className="pt-card-h pt-card-h-toggle" onClick={() => toggleSection("work")}>
+              <div style={{ flex: 1 }}><h3>Work</h3></div>
+              <Chevron open={openSections.has("work")} />
+            </div>
+            <div className="pt-card-b" style={{ display: openSections.has("work") ? undefined : "none" }}>
               <div className="pt-grid pt-g2">
                 <Field label="Profession" value={form.profession} onChange={set("profession")} />
                 <Field label="Organisation" value={form.organization} onChange={set("organization")} />
@@ -468,14 +575,19 @@ export default function MyProfile() {
           </section>
 
           {/* Active family member in AP */}
-          <section className="pt-card">
-            <div className="pt-card-h">
+          <section
+            className="pt-card"
+            ref={(el) => { sectionRefs.current.family = el; }}
+            style={flash === "family" ? { boxShadow: "0 0 0 2px var(--navy)" } : undefined}
+          >
+            <div className="pt-card-h pt-card-h-toggle" onClick={() => toggleSection("family")}>
               <div style={{ flex: 1 }}>
                 <h3>Active family member in AP</h3>
                 <div className="sub">Optional — fill only if you have an active YSRCP family member</div>
               </div>
+              <Chevron open={openSections.has("family")} />
             </div>
-            <div className="pt-card-b">
+            <div className="pt-card-b" style={{ display: openSections.has("family") ? undefined : "none" }}>
               {!privateLoaded && (
                 <div className="pt-note warn" style={{ marginBottom: 12 }}>
                   These fields could not be loaded, so they are shown read-only.
@@ -505,9 +617,16 @@ export default function MyProfile() {
           </section>
 
           {/* Social handles */}
-          <section className="pt-card">
-            <div className="pt-card-h"><div style={{ flex: 1 }}><h3>Social handles</h3></div></div>
-            <div className="pt-card-b">
+          <section
+            className="pt-card"
+            ref={(el) => { sectionRefs.current.social = el; }}
+            style={flash === "social" ? { boxShadow: "0 0 0 2px var(--navy)" } : undefined}
+          >
+            <div className="pt-card-h pt-card-h-toggle" onClick={() => toggleSection("social")}>
+              <div style={{ flex: 1 }}><h3>Social handles</h3></div>
+              <Chevron open={openSections.has("social")} />
+            </div>
+            <div className="pt-card-b" style={{ display: openSections.has("social") ? undefined : "none" }}>
               <div className="pt-grid pt-g2">
                 <Field label="Facebook" value={form.facebook_id} onChange={set("facebook_id")} />
                 <Field label="X / Twitter" value={form.twitter_id} onChange={set("twitter_id")} />
@@ -566,8 +685,15 @@ export default function MyProfile() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {strength.checks.map((c) => (
-                  <div key={c.label} style={{ display: "flex", alignItems: "center",
-                    gap: 9, fontSize: 12.5 }}>
+                  <div
+                    key={c.label}
+                    onClick={c.done ? undefined : () => jumpToSection(c.section)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 9, fontSize: 12.5,
+                      cursor: c.done ? "default" : "pointer",
+                      margin: "0 -6px", padding: "2px 6px", borderRadius: 6,
+                    }}
+                  >
                     <span style={{ color: c.done ? "var(--navy)" : "var(--ink-4)", width: 14 }}>
                       {c.done ? "✓" : "○"}
                     </span>
@@ -577,6 +703,11 @@ export default function MyProfile() {
                   </div>
                 ))}
               </div>
+              {strength.checks.some((c) => !c.done) && (
+                <div className="hint" style={{ marginTop: 9 }}>
+                  Click an open circle to jump to that section.
+                </div>
+              )}
             </div>
           </section>
         </aside>
