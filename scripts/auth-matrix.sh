@@ -532,17 +532,17 @@ if [ -n "$CL_ROLE" ]; then
 fi
 
 echo
-echo "Chapter rankings expose chapters, never members"
+echo "Leaderboard exposes a name and a score, nothing else"
 # The country scope is always the CALLER'S country — there is no
 # parameter to ask for another one, which is the control. These checks
 # assert that the shape stays that way.
-DE_RANK=$(rpc_rows chapter_rankings "$DE_MEMBER" '{"p_scope":"country"}')
+DE_RANK=$(rpc_rows member_rankings "$DE_MEMBER" '{"p_scope":"country"}')
 check "member gets their own country ranking" rows "$DE_RANK"
-check "member gets the global ranking"        rows "$(rpc_rows chapter_rankings "$DE_MEMBER" '{"p_scope":"global"}')"
-check "an invalid scope is refused"           error "$(rpc_rows chapter_rankings "$DE_MEMBER" '{"p_scope":"chapter"}')"
+check "member gets the global ranking"        rows "$(rpc_rows member_rankings "$DE_MEMBER" '{"p_scope":"global"}')"
+check "an invalid scope is refused"           error "$(rpc_rows member_rankings "$DE_MEMBER" '{"p_scope":"nonsense"}')"
 
 # A Germany member's country table must contain only Germany chapters.
-FOREIGN=$(curl -s -X POST "$SB_URL/rest/v1/rpc/chapter_rankings" -H "apikey: $SB_KEY" \
+FOREIGN=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
   -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
   -d '{"p_scope":"country"}' | python3 -c "
 import sys,json
@@ -553,17 +553,32 @@ except Exception: print('error')")
 check "no other country leaks into the country table" no "$FOREIGN"
 
 # The whole design rests on this: no row identifies a person.
-NAMED=$(curl -s -X POST "$SB_URL/rest/v1/rpc/chapter_rankings" -H "apikey: $SB_KEY" \
+NAMED=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
   -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
   -d '{"p_scope":"global"}' | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin)
   keys = set(d[0].keys()) if d else set()
-  leaky = keys & {'member_name','full_name','email','profile_id','mobile_number'}
+  # A leaderboard names people by design; what it must never carry is
+  # contact details or a handle into other tables.
+  leaky = keys & {'email','mobile_number','phone','city_abroad',
+                  'profile_id','id','chapter_id','dob'}
   print(','.join(sorted(leaky)) if leaky else 'none')
 except Exception: print('error')")
-check "rankings identify no individual" none "$NAMED"
+check "leaderboard carries no contact or id fields" none "$NAMED"
+
+# Both placings must be present, or the feature is half-built.
+BOTH=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d '{"p_scope":"global"}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  k=set(d[0].keys()) if d else set()
+  print('both' if {'country_place','global_place'} <= k else 'missing')
+except Exception: print('error')")
+check "every row carries both placings" both "$BOTH"
 
 echo
 echo "Chapter appointments are private to that chapter"
@@ -645,7 +660,7 @@ printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
 
 # A block that returns early or skips would otherwise leave the suite
 # green with fewer checks. Assert the count as well as the result.
-EXPECTED=${EXPECTED_CHECKS:-73}
+EXPECTED=${EXPECTED_CHECKS:-74}
 TOTAL=$((PASS + FAIL))
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   printf '\033[31mFAIL\033[0m ran %d checks, expected %d — a block was skipped.\n' \

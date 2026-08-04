@@ -27,30 +27,29 @@ import { supabase } from "../lib/supabase";
  */
 
 type Ranking = {
-  place: number;
-  chapter: string;
+  country_place: number;
+  global_place: number;
+  display_name: string;
   country: string;
-  members: number;
-  sharers: number;
   shares: number;
   clicks: number;
-  is_mine: boolean;
+  is_me: boolean;
+  country_total: number;
+  global_total: number;
   total_clicks: number;
 };
 
 /**
- * Chapter rankings.
+ * Digital Army leaderboard.
  *
- * CHAPTERS, NEVER MEMBERS. A member leaderboard would rank individuals
- * by political activity, and roughly 700 members are in the EU where
- * political opinion is an Article 9 special category — the whole
- * Digital Army design exists to avoid exactly that. Ranking chapters
- * gives the same competition and names nobody.
+ * Every member carries BOTH placings — their position in their country
+ * and their position across the wing — so the numbers on a person do
+ * not change between the two boards. The boards differ only in who is
+ * listed.
  *
- * Two scopes only: the caller's own country, and the whole wing. There
- * is no chapter-internal ranking, because clicks are counted at most
- * once per link per hour and below a certain volume that floor decides
- * the order rather than the effort.
+ * A row shows a name, a country and a score. Nothing else comes back
+ * from member_rankings(): no email, mobile, city, chapter or id.
+ * Members with no activity are omitted rather than ranked last.
  */
 const RANK_MINIMUM = 25;
 
@@ -63,11 +62,11 @@ function Rankings() {
     let live = true;
     setLoading(true);
     (async () => {
-      const { data, error } = await supabase.rpc("chapter_rankings", {
+      const { data, error } = await supabase.rpc("member_rankings", {
         p_scope: scope,
       });
       if (!live) return;
-      if (error) console.error("chapter_rankings failed:", error);
+      if (error) console.error("member_rankings failed:", error);
       setRows((data as Ranking[]) ?? []);
       setLoading(false);
     })();
@@ -76,6 +75,7 @@ function Rankings() {
     };
   }, [scope]);
 
+  const me = rows.find((r) => r.is_me);
   const total = rows[0]?.total_clicks ?? 0;
   const tooEarly = total < RANK_MINIMUM;
 
@@ -84,12 +84,12 @@ function Rankings() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
         <h3 className="font-bold text-gray-900 inline-flex items-center gap-2">
           <Trophy size={16} className="text-primary-600" />
-          Chapter rankings
+          Leaderboard
         </h3>
         <div className="flex gap-1">
           {([
             { k: "country" as const, label: "My country", Icon: MapPin },
-            { k: "global" as const, label: "Whole wing", Icon: Globe },
+            { k: "global" as const, label: "Worldwide", Icon: Globe },
           ]).map((t) => (
             <button
               key={t.k}
@@ -108,85 +108,116 @@ function Rankings() {
         </div>
       </div>
 
-      <p className="text-sm text-gray-500 mb-4">
-        Chapters, not people — we don’t rank individual members.
-      </p>
-
       {loading ? (
-        <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
-      ) : rows.length === 0 ? (
-        <p className="text-sm text-gray-500">No chapters to rank yet.</p>
+        <div className="h-32 bg-gray-100 rounded-xl animate-pulse mt-4" />
       ) : (
         <>
-          {/* With a handful of clicks the order is decided by the
-              once-per-hour counting floor rather than by effort. Say so
-              instead of presenting a table that looks authoritative. */}
-          {tooEarly && (
-            <div className="p-3 mb-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-sm text-amber-900">
-                Too early to rank meaningfully — {total}{" "}
-                {total === 1 ? "click" : "clicks"} counted so far. The order
-                below will shift a lot until there is more activity.
+          {/* Your own standing, both placings at once. Shown even when
+              you are far down the table, which is the point — you should
+              not have to hunt for yourself in 100 rows. */}
+          {me && (
+            <div className="mt-3 p-4 bg-primary-50 border border-primary-200 rounded-xl">
+              <p className="text-xs font-bold uppercase tracking-wide text-primary-700 mb-1">
+                Your standing
+              </p>
+              <p className="text-gray-900">
+                <span className="text-2xl font-black tabular-nums">
+                  #{me.country_place}
+                </span>{" "}
+                <span className="text-sm">
+                  of {me.country_total} in {me.country}
+                </span>
+                <span className="mx-2 text-gray-300">·</span>
+                <span className="text-2xl font-black tabular-nums">
+                  #{me.global_place}
+                </span>{" "}
+                <span className="text-sm">of {me.global_total} worldwide</span>
+              </p>
+              <p className="text-xs text-gray-600 mt-1 tabular-nums">
+                {me.shares} shared · {me.clicks} clicks on your links
               </p>
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200">
-                  <th className="py-2 pr-3 font-bold w-10">#</th>
-                  <th className="py-2 pr-4 font-bold">Chapter</th>
-                  <th className="py-2 pr-4 font-bold text-right">Members</th>
-                  <th className="py-2 pr-4 font-bold text-right">Sharing</th>
-                  <th className="py-2 font-bold text-right">Clicks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr
-                    key={`${r.country}-${r.chapter}`}
-                    className={`border-b border-gray-100 ${
-                      r.is_mine ? "bg-primary-50" : ""
-                    }`}
-                  >
-                    <td className="py-2.5 pr-3 tabular-nums font-bold text-gray-500">
-                      {r.place}
-                    </td>
-                    <td className="py-2.5 pr-4">
-                      <span className="font-semibold text-gray-900">
-                        {r.chapter}
-                      </span>
-                      {scope === "global" && (
-                        <span className="block text-xs text-gray-400">
-                          {r.country}
-                        </span>
-                      )}
-                      {r.is_mine && (
-                        <span className="ml-2 text-xs font-bold text-primary-700">
-                          your chapter
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-2.5 pr-4 text-right tabular-nums text-gray-600">
-                      {r.members}
-                    </td>
-                    <td className="py-2.5 pr-4 text-right tabular-nums text-gray-600">
-                      {r.sharers}
-                    </td>
-                    <td className="py-2.5 text-right tabular-nums font-semibold text-gray-900">
-                      {r.clicks}
-                    </td>
+          {tooEarly && rows.length > 0 && (
+            <div className="p-3 mt-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-900">
+                Too early to rank meaningfully — {total}{" "}
+                {total === 1 ? "click" : "clicks"} counted so far. Positions
+                will move a lot until there is more activity.
+              </p>
+            </div>
+          )}
+
+          {rows.length === 0 ? (
+            <p className="text-sm text-gray-500 mt-4">
+              Nobody has shared a campaign yet. Be the first — share one above
+              and you’ll appear here.
+            </p>
+          ) : (
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200">
+                    <th className="py-2 pr-3 font-bold w-12">
+                      {scope === "country" ? "Country" : "World"}
+                    </th>
+                    <th className="py-2 pr-4 font-bold">Member</th>
+                    <th className="py-2 pr-4 font-bold w-16 text-right">
+                      {scope === "country" ? "World" : "Country"}
+                    </th>
+                    <th className="py-2 pr-4 font-bold text-right">Shared</th>
+                    <th className="py-2 font-bold text-right">Clicks</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {rows.map((r, i) => (
+                    <tr
+                      key={`${r.display_name}-${r.country}-${i}`}
+                      className={`border-b border-gray-100 ${
+                        r.is_me ? "bg-primary-50" : ""
+                      }`}
+                    >
+                      <td className="py-2.5 pr-3 tabular-nums font-bold text-gray-900">
+                        {scope === "country" ? r.country_place : r.global_place}
+                      </td>
+                      <td className="py-2.5 pr-4">
+                        <span className="font-semibold text-gray-900">
+                          {r.display_name}
+                        </span>
+                        {scope === "global" && (
+                          <span className="block text-xs text-gray-400">
+                            {r.country}
+                          </span>
+                        )}
+                        {r.is_me && (
+                          <span className="ml-2 text-xs font-bold text-primary-700">
+                            you
+                          </span>
+                        )}
+                      </td>
+                      {/* The other placing, so both are visible at once. */}
+                      <td className="py-2.5 pr-4 text-right tabular-nums text-gray-400">
+                        #{scope === "country" ? r.global_place : r.country_place}
+                      </td>
+                      <td className="py-2.5 pr-4 text-right tabular-nums text-gray-600">
+                        {r.shares}
+                      </td>
+                      <td className="py-2.5 text-right tabular-nums font-semibold text-gray-900">
+                        {r.clicks}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <p className="text-xs text-gray-400 mt-3">
-            “Sharing” is how many members opened a composer — intent, not proof
-            of posting. Clicks are counted at most once per link per hour, so
-            these figures <strong>understate</strong> real reach.
+            “Shared” counts opening a composer — intent, not proof of posting.
+            Clicks are counted at most once per link per hour, so these figures
+            <strong> understate</strong> real reach. Only members who have
+            shared appear.
           </p>
         </>
       )}
