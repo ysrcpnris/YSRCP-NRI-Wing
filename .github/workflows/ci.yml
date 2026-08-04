@@ -11,11 +11,19 @@ name: CI
 # main, for instance) — that is what workflow_dispatch is for.
 #
 # THE TRADE-OFF, STATED PLAINLY
-#   With no push trigger, a broken commit can sit on develop for up to
-#   two days before anything notices. That is acceptable while develop is
-#   not deployed anywhere users can reach. It stops being acceptable the
-#   day develop starts auto-deploying to a staging URL people rely on —
-#   put the push trigger back then.
+#   With no push or pull_request trigger:
+#     · broken commits can land on develop unchecked for up to 2 days
+#     · these are NOT PR checks, so branch protection cannot require
+#       them — GitHub can only require a check that gets created
+#     · anything claiming "CI is blocking" is wrong while this is so
+#
+#   That is a deliberate cost decision, not an oversight. It is fine
+#   while develop deploys nowhere users reach.
+#
+#   BEFORE MERGING TO main, run the full set by hand — either locally,
+#   or from the Actions tab against the branch being merged. The
+#   pre-merge gate is a person, not a robot, until the triggers come
+#   back.
 on:
   schedule:
     # 03:00 UTC on odd days of the month — roughly every 2 days.

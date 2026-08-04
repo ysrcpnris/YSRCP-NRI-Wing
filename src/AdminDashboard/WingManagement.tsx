@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Shield, MapPin, Link2, CalendarDays, Megaphone,
-  Plus, Trash2, Search, Check, X, ExternalLink,
+  Trash2, Check, X, ExternalLink,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import RoleManager from "../components/RoleManager";
 
 /**
  * Wing management — the operational surface for everything slices 3, 4,
@@ -30,13 +31,6 @@ const TABS: { key: Tab; label: string; Icon: typeof Shield }[] = [
   { key: "campaigns", label: "Campaigns", Icon: Megaphone },
 ];
 
-const WING_ROLES = [
-  { value: "country_coordinator", label: "Country coordinator", needs: "country" },
-  { value: "cluster_lead", label: "Chapter lead", needs: "cluster" },
-  { value: "team_lead", label: "Team lead (read-only)", needs: "country" },
-  { value: "secretariat", label: "Secretariat (whole wing)", needs: "none" },
-];
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -60,201 +54,6 @@ function Banner({ msg, ok }: { msg: string; ok: boolean }) {
       }`}
     >
       {msg}
-    </div>
-  );
-}
-
-/* ── Roles ─────────────────────────────────────────────────────────── */
-function RolesTab() {
-  const [rows, setRows] = useState<any[]>([]);
-  const [clusters, setClusters] = useState<any[]>([]);
-  const [q, setQ] = useState("");
-  const [found, setFound] = useState<any[]>([]);
-  const [pick, setPick] = useState<any>(null);
-  const [role, setRole] = useState("country_coordinator");
-  const [country, setCountry] = useState("");
-  const [clusterId, setClusterId] = useState("");
-  const [title, setTitle] = useState("");
-  const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
-
-  const load = useCallback(async () => {
-    const [{ data: r }, { data: c }] = await Promise.all([
-      supabase.rpc("wing_roles_list"),
-      supabase.from("clusters").select("id, name, country").order("name"),
-    ]);
-    setRows(r ?? []);
-    setClusters(c ?? []);
-  }, []);
-  useEffect(() => { load(); }, [load]);
-
-  useEffect(() => {
-    if (!q.trim()) { setFound([]); return; }
-    const t = setTimeout(async () => {
-      const { data } = await supabase.rpc("search_members", { p_q: q });
-      setFound(data ?? []);
-    }, 250);
-    return () => clearTimeout(t);
-  }, [q]);
-
-  const grant = async () => {
-    if (!pick) return;
-    const { data, error } = await supabase.rpc("grant_wing_role", {
-      p_profile_id: pick.id,
-      p_role: role,
-      p_country: role === "secretariat" ? null : country || pick.country,
-      p_cluster_id: role === "cluster_lead" ? clusterId || null : null,
-      p_title: title || null,
-    });
-    const res = Array.isArray(data) ? data[0] : data;
-    if (error || !res?.ok) {
-      setMsg({ t: res?.message ?? "Could not grant that role.", ok: false });
-      return;
-    }
-    setMsg({ t: res.message, ok: true });
-    setPick(null); setQ(""); setTitle(""); setClusterId("");
-    load();
-  };
-
-  const revoke = async (id: string) => {
-    const { data } = await supabase.rpc("revoke_wing_role", { p_role_id: id });
-    const res = Array.isArray(data) ? data[0] : data;
-    setMsg({ t: res?.message ?? "Could not revoke.", ok: Boolean(res?.ok) });
-    load();
-  };
-
-  const needs = WING_ROLES.find((r) => r.value === role)?.needs;
-
-  return (
-    <div>
-      {msg && <Banner msg={msg.t} ok={msg.ok} />}
-
-      <div className="p-5 bg-white border border-gray-200 rounded-xl mb-6">
-        <h4 className="font-bold text-gray-900 mb-3">Appoint someone</h4>
-
-        <div className="relative mb-3">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            className={inputCls + " pl-9"}
-            placeholder="Search a member by name or email"
-            value={pick ? `${pick.full_name} · ${pick.email}` : q}
-            onChange={(e) => { setPick(null); setQ(e.target.value); }}
-          />
-          {found.length > 0 && !pick && (
-            <ul className="absolute z-30 left-0 right-0 mt-1 bg-white border border-gray-200
-                           rounded-lg shadow-lg max-h-56 overflow-auto">
-              {found.map((m) => (
-                <li key={m.id}
-                    onClick={() => { setPick(m); setCountry(m.country ?? ""); setFound([]); }}
-                    className="px-3 py-2 text-sm hover:bg-primary-50 cursor-pointer">
-                  <span className="font-semibold">{m.full_name}</span>
-                  <span className="text-gray-500 text-xs"> · {m.email} · {m.country}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Field label="Role">
-            <select className={inputCls} value={role} onChange={(e) => setRole(e.target.value)}>
-              {WING_ROLES.map((r) => (
-                <option key={r.value} value={r.value}>{r.label}</option>
-              ))}
-            </select>
-          </Field>
-
-          {needs !== "none" && (
-            <Field label="Country">
-              <input className={inputCls} value={country}
-                     onChange={(e) => setCountry(e.target.value)}
-                     placeholder="e.g. Germany" />
-            </Field>
-          )}
-
-          {needs === "cluster" && (
-            <Field label="Chapter">
-              <select className={inputCls} value={clusterId}
-                      onChange={(e) => setClusterId(e.target.value)}>
-                <option value="">Choose…</option>
-                {clusters
-                  .filter((c) => !country || c.country === country)
-                  .map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </Field>
-          )}
-
-          <Field label="Title (optional)">
-            <input className={inputCls} value={title}
-                   onChange={(e) => setTitle(e.target.value)}
-                   placeholder="e.g. Student Assistance Lead" />
-          </Field>
-        </div>
-
-        {/* Team lead is read-only by design — say so where it is chosen,
-            not only in a migration comment. */}
-        {role === "team_lead" && (
-          <p className="text-xs text-gray-500 mt-2">
-            A team lead can read their country’s members and cases but cannot
-            edit anything.
-          </p>
-        )}
-
-        <button
-          onClick={grant}
-          disabled={!pick}
-          className="mt-4 h-10 px-4 rounded-lg bg-primary-600 text-white text-sm font-bold
-                     inline-flex items-center gap-2 hover:bg-primary-700 disabled:opacity-50"
-        >
-          <Plus size={15} /> Grant role
-        </button>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200">
-              <th className="py-2 pr-4 font-bold">Member</th>
-              <th className="py-2 pr-4 font-bold">Role</th>
-              <th className="py-2 pr-4 font-bold">Scope</th>
-              <th className="py-2 pr-4 font-bold">Granted</th>
-              <th className="py-2 font-bold text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr><td colSpan={5} className="py-6 text-center text-gray-500">
-                Nobody holds a wing role yet.
-              </td></tr>
-            )}
-            {rows.map((r) => (
-              <tr key={r.role_id} className="border-b border-gray-100">
-                <td className="py-2.5 pr-4">
-                  <span className="font-semibold text-gray-900">{r.member_name}</span>
-                  <span className="block text-xs text-gray-500">{r.email}</span>
-                </td>
-                <td className="py-2.5 pr-4">
-                  {WING_ROLES.find((w) => w.value === r.role)?.label ?? r.role}
-                  {r.title && <span className="block text-xs text-gray-500">{r.title}</span>}
-                </td>
-                <td className="py-2.5 pr-4 text-gray-700">
-                  {r.chapter || r.country || "Whole wing"}
-                </td>
-                <td className="py-2.5 pr-4 text-gray-500 text-xs whitespace-nowrap">
-                  {new Date(r.granted_at).toLocaleDateString()}
-                  {r.granted_by_name && <span className="block">by {r.granted_by_name}</span>}
-                </td>
-                <td className="py-2.5 text-right">
-                  <button onClick={() => revoke(r.role_id)}
-                          className="text-xs font-bold text-red-600 hover:text-red-700
-                                     inline-flex items-center gap-1">
-                    <Trash2 size={13} /> Revoke
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 }
@@ -864,7 +663,7 @@ export default function WingManagement() {
         ))}
       </div>
 
-      {tab === "roles" && <RolesTab />}
+      {tab === "roles" && <RoleManager />}
       {tab === "chapters" && <ChaptersTab />}
       {tab === "handles" && <HandlesTab />}
       {tab === "appointments" && <AppointmentsTab />}

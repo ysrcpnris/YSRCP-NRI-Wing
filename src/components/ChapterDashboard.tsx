@@ -3,6 +3,7 @@ import { Search, Users, MapPin, TrendingUp, Mail, Phone } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import AssistanceQueue from "./AssistanceQueue";
 import FeedbackInbox from "./FeedbackInbox";
+import RoleManager from "./RoleManager";
 
 /**
  * Chapter surface — for country coordinators and chapter leads.
@@ -76,7 +77,7 @@ function StatCard({
 
 /* What a coordinator actually does: know who is in the chapter, clear
    the assistance queue, and read what the chapter is telling them. */
-type View = "members" | "queue" | "feedback";
+type View = "members" | "queue" | "feedback" | "team";
 
 function ChapterTabs({
   view,
@@ -89,6 +90,10 @@ function ChapterTabs({
     { key: "members", label: "Members" },
     { key: "queue", label: "Assistance queue" },
     { key: "feedback", label: "Feedback" },
+    // Delegation. A chapter lead appoints their own team lead here —
+    // grant_wing_role() bounds what they may offer, so this surface
+    // needs no rules of its own.
+    { key: "team", label: "Team" },
   ];
   return (
     <div className="flex gap-2 border-b border-gray-200 -mb-2">
@@ -189,6 +194,21 @@ export default function ChapterDashboard() {
       <div className="space-y-8">
         <ChapterTabs view={view} setView={setView} />
         <FeedbackInbox />
+      </div>
+    );
+  }
+
+  if (view === "team") {
+    return (
+      <div className="space-y-8">
+        <ChapterTabs view={view} setView={setView} />
+        <div>
+          <h2 className="text-xl font-black text-gray-900">Your team</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Appoint and remove people within the scope you hold.
+          </p>
+        </div>
+        <RoleManager />
       </div>
     );
   }

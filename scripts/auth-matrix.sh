@@ -355,5 +355,86 @@ curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/social_handles?label=in.(AMown,A
   -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
 
 echo
+echo "Write scope on the RPCs, not just the tables"
+# decide_booking() authorised through my_countries(), which includes
+# read-only team leads for READ. A team lead confirmed a booking.
+BOOK_SLOT=$(curl -s "$SB_URL/rest/v1/appointment_slots?select=id&mode=eq.manual&limit=1" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
+except Exception: print('')")
+if [ -n "$BOOK_SLOT" ]; then
+  curl -s -o /dev/null -X POST "$SB_URL/rest/v1/rpc/book_slot" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $MEMBER" -H "Content-Type: application/json" \
+    -d "{\"p_slot_id\":\"$BOOK_SLOT\"}"
+  PEND=$(curl -s -X POST "$SB_URL/rest/v1/rpc/slot_bookings" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" \
+    -d "{\"p_slot_id\":\"$BOOK_SLOT\"}" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print(next((x['booking_id'] for x in d if x['status']=='pending'), ''))
+except Exception: print('')")
+  if [ -n "$PEND" ]; then
+    DECIDE="{\"p_booking_id\":\"$PEND\",\"p_decision\":\"confirmed\"}"
+    check "team lead cannot decide a booking" refused \
+      "$(curl -s -X POST "$SB_URL/rest/v1/rpc/decide_booking" -H "apikey: $SB_KEY" \
+         -H "Authorization: Bearer $TEAM" -H "Content-Type: application/json" -d "$DECIDE" | msg)"
+    check "team lead cannot read slot bookings" none "$(rpc_rows slot_bookings "$TEAM" \
+      "{\"p_slot_id\":\"$BOOK_SLOT\"}")"
+    check "admin can decide a booking" ok \
+      "$(curl -s -X POST "$SB_URL/rest/v1/rpc/decide_booking" -H "apikey: $SB_KEY" \
+         -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d "$DECIDE" | msg)"
+  fi
+fi
+
+echo
+echo "Assistance content is not editable by a read-only role"
+# grievances_update and student_requests_update used READ predicates, so
+# a team lead could not adjudicate a case but could rewrite what it said.
+MEM_ID=$(curl -s "$SB_URL/auth/v1/user" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $MEMBER" | python3 -c "import sys,json;print(json.load(sys.stdin)['id'])")
+GRV_JSON="{\"profile_id\":\"$MEM_ID\",\"subject\":\"AMgrv\",\"description\":\"original\"}"
+curl -s -o /dev/null -X POST "$SB_URL/rest/v1/grievances" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $MEMBER" -H "Content-Type: application/json" -d "$GRV_JSON"
+GRV=$(curl -s "$SB_URL/rest/v1/grievances?select=id&subject=eq.AMgrv" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
+except Exception: print('')")
+if [ -n "$GRV" ]; then
+  check "team lead cannot rewrite a grievance" unchanged \
+    "$(wrote grievances "$GRV" subject "EDITED" "$TEAM")"
+  curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/grievances?id=eq.$GRV" \
+    -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
+fi
+
+echo
+echo "Rank is computed for the scope being acted on"
+# my_role_rank() took the best rank held ANYWHERE, so coordinator rank
+# in one country could be presented against cluster scope in another.
+check "cluster lead appoints team lead in own chapter" ok \
+  "$(grant "$CLUSTER" team_lead Germany "$DE_CLUSTER")"
+CL_ROLE=$(curl -s -X POST "$SB_URL/rest/v1/rpc/wing_roles_list" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $CLUSTER" -H "Content-Type: application/json" -d '{}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print(next((r['role_id'] for r in d if r['cluster_id'] and r['role']=='team_lead'), ''))
+except Exception: print('')")
+# wing_roles_list() excluded cluster scope, so a chapter lead could
+# create a role and never see it again to revoke it.
+check "chapter lead sees the role they granted" found \
+  "$([ -n "$CL_ROLE" ] && echo found || echo missing)"
+if [ -n "$CL_ROLE" ]; then
+  check "chapter lead revokes it" ok \
+    "$(curl -s -X POST "$SB_URL/rest/v1/rpc/revoke_wing_role" -H "apikey: $SB_KEY" \
+       -H "Authorization: Bearer $CLUSTER" -H "Content-Type: application/json" \
+       -d "{\"p_role_id\":\"$CL_ROLE\"}" | msg)"
+fi
+
+echo
 printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ] || [ "${EXPECT_FAIL_OK:-0}" = "1" ]
