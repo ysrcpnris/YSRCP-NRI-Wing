@@ -25,20 +25,36 @@
 -- =====================================================================
 
 -- ── structure ────────────────────────────────────────────────────────
--- A slot naming a chapter must name that chapter's country.
-DELETE FROM public.appointment_bookings b
- USING public.appointment_slots s
- WHERE b.slot_id = s.id
-   AND s.cluster_id IS NOT NULL
-   AND (s.country IS NULL
-        OR NOT EXISTS (SELECT 1 FROM public.clusters c
-                        WHERE c.id = s.cluster_id AND c.country = s.country));
+-- REPORT AND STOP, never delete.
+--
+-- This block used to DELETE inconsistent slots and their bookings so the
+-- constraint could be added. On staging that was two throwaway test
+-- rows. On production it would silently destroy appointment history —
+-- a record of who met whom — to make a schema change fit.
+--
+-- If production holds inconsistent rows, this migration halts and names
+-- them. Someone then repairs or explicitly removes them, and re-runs.
+-- A migration may refuse to proceed; it may not decide on its own that
+-- operational history is expendable.
+DO $$
+DECLARE bad int; detail text;
+BEGIN
+  SELECT count(*), string_agg(format('%s (%s)', s.title, s.id), '; ')
+    INTO bad, detail
+    FROM public.appointment_slots s
+   WHERE s.cluster_id IS NOT NULL
+     AND (s.country IS NULL
+          OR NOT EXISTS (SELECT 1 FROM public.clusters c
+                          WHERE c.id = s.cluster_id AND c.country = s.country));
 
-DELETE FROM public.appointment_slots s
- WHERE s.cluster_id IS NOT NULL
-   AND (s.country IS NULL
-        OR NOT EXISTS (SELECT 1 FROM public.clusters c
-                        WHERE c.id = s.cluster_id AND c.country = s.country));
+  IF bad > 0 THEN
+    RAISE EXCEPTION
+      E'% appointment slot(s) name a chapter inconsistently and must be '
+      'resolved before this constraint can be added:\n  %\n'
+      'Fix each by setting country to the chapter''s country, or delete '
+      'it deliberately, then re-run.', bad, detail;
+  END IF;
+END $$;
 
 ALTER TABLE public.appointment_slots
   DROP CONSTRAINT IF EXISTS appointment_slots_cluster_needs_country,
@@ -50,7 +66,10 @@ ALTER TABLE public.appointment_slots
   ADD  CONSTRAINT appointment_slots_cluster_country_fk
        FOREIGN KEY (cluster_id, country)
        REFERENCES public.clusters (id, country)
-       ON DELETE CASCADE;
+       -- RESTRICT, not CASCADE: deleting a chapter must not take its
+       -- appointments and every booking with it. Attendance history
+       -- should outlive a reorganisation of the chapter map.
+       ON DELETE RESTRICT;
 
 -- ── one predicate for every appointment function ─────────────────────
 CREATE OR REPLACE FUNCTION public.can_manage_slot(p_slot_id uuid)

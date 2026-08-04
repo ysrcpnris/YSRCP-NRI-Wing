@@ -566,11 +566,86 @@ except Exception: print('error')")
 check "rankings identify no individual" none "$NAMED"
 
 echo
+echo "Chapter appointments are private to that chapter"
+# open_slots() filtered correctly while the row policy let any member in
+# the COUNTRY read the slot straight from the table, meeting link and
+# all — and book_slot() never checked the chapter, so the UUID booked
+# even when the slot was correctly hidden.
+CHK_START=$(python3 -c "
+import datetime as d;n=d.datetime.now(d.timezone.utc)+d.timedelta(days=60)
+print(n.strftime('%Y-%m-%dT%H:%M:%SZ'))")
+CHK_END=$(python3 -c "
+import datetime as d;n=d.datetime.now(d.timezone.utc)+d.timedelta(days=60,hours=1)
+print(n.strftime('%Y-%m-%dT%H:%M:%SZ'))")
+CHK_JSON="{\"title\":\"AMchapteronly\",\"starts_at\":\"$CHK_START\",\"ends_at\":\"$CHK_END\",\"capacity\":3,\"mode\":\"auto\",\"chapter_id\":\"$DE_CHAPTER\",\"country\":\"Germany\",\"virtual_link\":\"https://secret.example.com/room\",\"is_published\":true}"
+curl -s -o /dev/null -X POST "$SB_URL/rest/v1/appointment_slots" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d "$CHK_JSON"
+CHK_ID=$(curl -s "$SB_URL/rest/v1/appointment_slots?select=id&title=eq.AMchapteronly" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
+except Exception: print('')")
+if [ -z "$CHK_ID" ]; then
+  echo "FATAL: could not create the chapter-only slot." >&2; exit 1
+fi
+
+# Move the Germany member to a city with no chapter: same country,
+# outside the chapter. That is the case the leak needed.
+curl -s -o /dev/null -X PATCH "$SB_URL/rest/v1/profiles?email=eq.t.de.b@example.test" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" \
+  -H "Content-Type: application/json" -d '{"city_abroad":"Bremen"}'
+
+OUT_ROW=$(curl -s "$SB_URL/rest/v1/appointment_slots?select=title&id=eq.$CHK_ID" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $DE_MEMBER" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print('visible' if isinstance(d,list) and d else 'hidden')
+except Exception: print('hidden')")
+check "out-of-chapter member cannot read the row" hidden "$OUT_ROW"
+
+OUT_RPC=$(curl -s -X POST "$SB_URL/rest/v1/rpc/open_slots" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" -d '{}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print('visible' if any(x['title']=='AMchapteronly' for x in d) else 'hidden')
+except Exception: print('error')")
+check "open_slots hides it from them too" hidden "$OUT_RPC"
+
+OUT_BOOK=$(curl -s -X POST "$SB_URL/rest/v1/rpc/book_slot" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d "{\"p_slot_id\":\"$CHK_ID\"}" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); r=d[0] if isinstance(d,list) and d else d
+  print('refused' if not r.get('ok') else 'BOOKED')
+except Exception: print('error')")
+check "and cannot book it by UUID" refused "$OUT_BOOK"
+
+# The meeting link must not come back through the table for anyone.
+LINK=$(curl -s "$SB_URL/rest/v1/appointment_slots?select=virtual_link&id=eq.$CHK_ID" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print('denied' if isinstance(d,dict) and d.get('code')=='42501' else 'READABLE')
+except Exception: print('denied')")
+check "virtual_link is not readable from the table" denied "$LINK"
+
+# Put the member back and clean up.
+curl -s -o /dev/null -X PATCH "$SB_URL/rest/v1/profiles?email=eq.t.de.b@example.test" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" \
+  -H "Content-Type: application/json" -d '{"city_abroad":"Berlin"}'
+curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/appointment_slots?id=eq.$CHK_ID" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
+
+echo
 printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
 
 # A block that returns early or skips would otherwise leave the suite
 # green with fewer checks. Assert the count as well as the result.
-EXPECTED=${EXPECTED_CHECKS:-69}
+EXPECTED=${EXPECTED_CHECKS:-73}
 TOTAL=$((PASS + FAIL))
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   printf '\033[31mFAIL\033[0m ran %d checks, expected %d — a block was skipped.\n' \

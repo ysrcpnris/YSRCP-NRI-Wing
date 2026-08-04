@@ -19,14 +19,17 @@ import { supabase } from "../lib/supabase";
  * sees offered here is already bounded by what the database will accept.
  */
 
+/* rank mirrors public.role_rank(). The database refuses anything at or
+   above the caller's own level in the target scope, so this list only
+   decides what is worth OFFERING — it is not the control. */
 const WING_ROLES = [
-  { value: "country_coordinator", label: "Country coordinator", scope: "country" },
-  { value: "chapter_lead",        label: "Chapter lead",        scope: "chapter" },
+  { value: "country_coordinator", label: "Country coordinator", scope: "country", rank: 2 },
+  { value: "chapter_lead",        label: "Chapter lead",        scope: "chapter", rank: 3 },
   // A team lead belongs to a country OR to a single chapter. A chapter
   // lead can only create the chapter-scoped kind — the appointee never
   // gets wider scope than whoever appointed them.
-  { value: "team_lead",           label: "Team lead (read-only)", scope: "either" },
-  { value: "secretariat",         label: "Secretariat (whole wing)", scope: "none" },
+  { value: "team_lead",           label: "Team lead (read-only)", scope: "either", rank: 4 },
+  { value: "secretariat",         label: "Secretariat (whole wing)", scope: "none", rank: 1 },
 ];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -95,6 +98,35 @@ export default function RoleManager() {
   const [title, setTitle] = useState("");
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
 
+  /**
+   * What this caller may actually appoint.
+   *
+   * The database is the control — grant_wing_role() computes rank for
+   * the target scope and refuses anything at or above the caller's own
+   * level. But offering a chapter lead the "Country coordinator" option
+   * just to reject it is a predictable failure, so the menu is narrowed
+   * to what will succeed.
+   *
+   * myRank comes from the server, not from anything the client decides.
+   */
+  const [myRank, setMyRank] = useState<number | null>(null);
+  const [myChapters, setMyChapters] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: rank }, { data: mine }] = await Promise.all([
+        supabase.rpc("my_role_rank"),
+        supabase.rpc("my_chapter_ids"),
+      ]);
+      setMyRank(typeof rank === "number" ? rank : 99);
+      setMyChapters((mine as string[]) ?? []);
+    })();
+  }, []);
+
+  // Strictly below the caller's own rank — the same rule the database
+  // applies, so nothing offered here can be refused for rank.
+  const grantable = WING_ROLES.filter((r) => myRank !== null && r.rank > myRank);
+
   const load = useCallback(async () => {
     const [{ data: r }, { data: c }] = await Promise.all([
       supabase.rpc("wing_roles_list"),
@@ -145,6 +177,13 @@ export default function RoleManager() {
     load();
   };
 
+  // If the caller cannot grant the default, move to the first they can.
+  useEffect(() => {
+    if (grantable.length && !grantable.some((r) => r.value === role)) {
+      setRole(grantable[0].value);
+    }
+  }, [grantable, role]);
+
   const scope = WING_ROLES.find((r) => r.value === role)?.scope;
   const wantsCountry = scope === "country" || scope === "chapter" || scope === "either";
   const wantsChapter = scope === "chapter" || scope === "either";
@@ -153,7 +192,21 @@ export default function RoleManager() {
     <div>
       {msg && <Banner msg={msg.t} ok={msg.ok} />}
 
-      <div className="p-5 bg-white border border-gray-200 rounded-xl mb-6">
+      {myRank !== null && grantable.length === 0 && (
+        <div className="p-5 bg-gray-50 border border-gray-200 rounded-xl mb-6">
+          <p className="font-bold text-gray-900">You can’t appoint anyone</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Appointments are made by someone senior to the role being
+            granted. Ask your coordinator or a wing administrator.
+          </p>
+        </div>
+      )}
+
+      <div
+        className={`p-5 bg-white border border-gray-200 rounded-xl mb-6 ${
+          myRank !== null && grantable.length === 0 ? "hidden" : ""
+        }`}
+      >
         <h4 className="font-bold text-gray-900 mb-3">Appoint someone</h4>
 
         <div className="relative mb-3">
@@ -182,7 +235,7 @@ export default function RoleManager() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Field label="Role">
             <select className={inputCls} value={role} onChange={(e) => setRole(e.target.value)}>
-              {WING_ROLES.map((r) => (
+              {grantable.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
             </select>
@@ -203,6 +256,9 @@ export default function RoleManager() {
                 <option value="">Choose…</option>
                 {chapters
                   .filter((c) => !country || c.country === country)
+                  // A chapter lead can only appoint inside chapters they
+                  // actually lead; an admin or coordinator sees them all.
+                  .filter((c) => (myRank ?? 99) <= 2 || myChapters.includes(c.id))
                   .map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
