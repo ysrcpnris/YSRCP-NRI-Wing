@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo ,useRef} from 'react';
 import { Listbox } from "@headlessui/react";
 import { ProfileDropdown } from './ProfileDropdown';
 import AbroadConnect from './AbroadConnect';
+import MyRequests from './MyRequests';
 import nriLogo from './nrilogo.png';
 import { useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
@@ -1038,6 +1039,7 @@ import {
   Users,
   Calendar,
   MessageSquare,
+  LifeBuoy,
   Bell,
   MapPin,
   ChevronDown,
@@ -1423,6 +1425,7 @@ const Dashboard: React.FC = () => {
     | "services"
     | "events"
     | "connect"
+    | "assistance"
     | "suggestions";
   const VALID_TABS: readonly Tab[] = [
     "overview",
@@ -1431,6 +1434,7 @@ const Dashboard: React.FC = () => {
     "services",
     "events",
     "connect",
+    "assistance",
     "suggestions",
   ];
 
@@ -6041,6 +6045,11 @@ const renderSuggestionsContent = () => (
     { id: "services" as const,    label: "Services",    icon: Briefcase,     color: "text-amber-600" },
     { id: "events" as const,      label: "Notifications", icon: Bell,        color: "text-pink-600", badge: unseenEventsCount || 0 },
     { id: "connect" as const,     label: "Leaders",     icon: MessageSquare, color: "text-primary-600" },
+    // Grievances and student assistance. Separate from Services, which
+    // already lists service_requests — this is the half that had no home:
+    // grievances were written by nothing and read by nothing, and
+    // student_requests had no UI at all.
+    { id: "assistance" as const,  label: "Assistance",  icon: LifeBuoy,      color: "text-rose-600" },
     { id: "suggestions" as const, label: "Feedback",    icon: Send,          color: "text-purple-600" },
   ];
 
@@ -6054,6 +6063,7 @@ const renderSuggestionsContent = () => (
       case "services":    return renderServicesContent();
       case "events":      return renderEventsContent();
       case "connect":     return renderConnectContent();
+      case "assistance":  return <MyRequests />;
       case "suggestions": return renderSuggestionsContent();
       default:            return renderOverviewContent();
     }

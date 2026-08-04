@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Search, Users, MapPin, TrendingUp, Mail, Phone } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import AssistanceQueue from "./AssistanceQueue";
 
 /**
  * Chapter surface — for country coordinators and chapter leads.
@@ -72,7 +73,42 @@ function StatCard({
   );
 }
 
+/* The coordinator has two jobs: know who is in the chapter, and clear
+   the queue. Those are the two views. */
+type View = "members" | "queue";
+
+function ChapterTabs({
+  view,
+  setView,
+}: {
+  view: View;
+  setView: (v: View) => void;
+}) {
+  const tabs: { key: View; label: string }[] = [
+    { key: "members", label: "Members" },
+    { key: "queue", label: "Assistance queue" },
+  ];
+  return (
+    <div className="flex gap-2 border-b border-gray-200 -mb-2">
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          onClick={() => setView(t.key)}
+          className={`h-10 px-4 text-sm font-bold border-b-2 -mb-px transition-colors ${
+            view === t.key
+              ? "border-primary-600 text-primary-700"
+              : "border-transparent text-gray-500 hover:text-gray-800"
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function ChapterDashboard() {
+  const [view, setView] = useState<View>("members");
   const [stats, setStats] = useState<Stat[]>([]);
   const [rows, setRows] = useState<RosterRow[]>([]);
   const [search, setSearch] = useState("");
@@ -133,6 +169,20 @@ export default function ChapterDashboard() {
     );
   }
 
+  /* Before the noAccess guard, deliberately. noAccess is derived from
+     chapter_stats() being empty, which is also true for a coordinator
+     whose country simply has no members yet — and that coordinator must
+     still be able to reach their queue. AssistanceQueue does its own
+     access check against its own RPC. */
+  if (view === "queue") {
+    return (
+      <div className="space-y-8">
+        <ChapterTabs view={view} setView={setView} />
+        <AssistanceQueue />
+      </div>
+    );
+  }
+
   if (noAccess) {
     return (
       <div className="p-6 bg-gray-50 border border-gray-200 rounded-xl">
@@ -165,6 +215,8 @@ export default function ChapterDashboard() {
           {stats.map((s) => s.country).filter((v, i, a) => a.indexOf(v) === i).join(", ")}
         </p>
       </div>
+
+      <ChapterTabs view={view} setView={setView} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Members" value={totals.members} Icon={Users} />
