@@ -100,8 +100,38 @@ SELECT p.id, v.wrole::public.wing_role, 'Germany',
    SELECT 1 FROM public.member_roles mr
     WHERE mr.profile_id = p.id AND mr.revoked_at IS NULL);
 
+-- ── a manual appointment slot for the authorization matrix ──────────
+-- The booking checks used to depend on whatever slot happened to exist,
+-- and skipped silently when none did — so the suite could report
+-- success having tested nothing. The slot is part of the fixture now.
+INSERT INTO public.appointment_slots
+  (title, starts_at, ends_at, capacity, mode, country, is_published, notes_label)
+SELECT 'FIXTURE manual slot',
+       now() + interval '30 days', now() + interval '30 days 1 hour',
+       5, 'manual', 'Germany', true, 'Why would you like to attend?'
+ WHERE NOT EXISTS (
+   SELECT 1 FROM public.appointment_slots WHERE title = 'FIXTURE manual slot');
+
+-- ── a second country for the cross-scope rank test ──────────────────
+-- One person holding country_coordinator in Germany AND cluster_lead in
+-- the USA is the shape that broke my_role_rank(): coordinator rank
+-- presented against USA scope. Without this fixture the exploit cannot
+-- be tested, and the scoped helper could be reverted with every check
+-- still green.
+INSERT INTO public.member_roles (profile_id, role, country, cluster_id, title)
+SELECT p.id, 'cluster_lead', 'United States',
+       (SELECT id FROM public.clusters WHERE country = 'United States'
+         ORDER BY name LIMIT 1),
+       'USA chapter lead (dual-role fixture)'
+  FROM public.profiles p
+ WHERE p.email = 't.de.a@example.test'
+   AND NOT EXISTS (
+     SELECT 1 FROM public.member_roles mr
+      WHERE mr.profile_id = p.id AND mr.role = 'cluster_lead'
+        AND mr.revoked_at IS NULL);
+
 DO $$
-DECLARE n_users int; n_roles int; n_admin int;
+DECLARE n_users int; n_roles int; n_admin int; n_slot int; n_dual int;
 BEGIN
   SELECT count(*) INTO n_users FROM public.profiles
    WHERE email LIKE 't.%@example.test';
@@ -119,6 +149,19 @@ BEGIN
   END IF;
   IF n_admin < 1 THEN
     RAISE EXCEPTION 'no admin fixture — admin-only paths would go untested';
+  END IF;
+
+  SELECT count(*) INTO n_slot FROM public.appointment_slots
+   WHERE title = 'FIXTURE manual slot';
+  IF n_slot < 1 THEN
+    RAISE EXCEPTION 'no fixture appointment — the booking checks would skip silently';
+  END IF;
+
+  SELECT count(*) INTO n_dual FROM public.member_roles mr
+    JOIN public.profiles p ON p.id = mr.profile_id
+   WHERE p.email = 't.de.a@example.test' AND mr.revoked_at IS NULL;
+  IF n_dual < 2 THEN
+    RAISE EXCEPTION 'the dual-role fixture is missing — the cross-scope rank exploit cannot be tested';
   END IF;
 
   RAISE NOTICE 'fixtures ready: % profiles, % wing roles, % admin', n_users, n_roles, n_admin;

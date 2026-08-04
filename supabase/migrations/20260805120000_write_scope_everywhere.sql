@@ -66,6 +66,15 @@ GRANT EXECUTE ON FUNCTION public.my_rank_in_cluster(uuid) TO authenticated;
 
 -- ── (6) one active grant per (person, role, scope) ───────────────────
 -- Collapse any existing duplicates first, keeping the earliest.
+--
+-- Ordered by (granted_at, id), not granted_at alone. Two rows inserted
+-- in the same transaction share a granted_at, so a granted_at-only
+-- comparison revokes NEITHER and the unique index below then fails to
+-- build. id is the tie-break that guarantees exactly one survivor.
+--
+-- Staging had no such pair so this passed there; production has not run
+-- this migration yet, which is why the fix belongs in the file rather
+-- than in a follow-up.
 UPDATE public.member_roles mr SET revoked_at = now()
  WHERE revoked_at IS NULL
    AND EXISTS (
@@ -75,7 +84,7 @@ UPDATE public.member_roles mr SET revoked_at = now()
         AND o.role = mr.role
         AND o.country IS NOT DISTINCT FROM mr.country
         AND o.cluster_id IS NOT DISTINCT FROM mr.cluster_id
-        AND o.granted_at < mr.granted_at
+        AND (o.granted_at, o.id) < (mr.granted_at, mr.id)
    );
 
 -- coalesce rather than NULLS NOT DISTINCT so this works on any

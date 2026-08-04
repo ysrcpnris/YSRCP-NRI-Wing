@@ -357,62 +357,158 @@ curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/social_handles?label=in.(AMown,A
 echo
 echo "Write scope on the RPCs, not just the tables"
 # decide_booking() authorised through my_countries(), which includes
-# read-only team leads for READ. A team lead confirmed a booking.
-BOOK_SLOT=$(curl -s "$SB_URL/rest/v1/appointment_slots?select=id&mode=eq.manual&limit=1" \
+# read-only team leads. A team lead confirmed a booking.
+#
+# The slot comes from staging_fixtures.sql, not from whatever happened to
+# be in the database. This block used to skip silently when it found
+# nothing, so the suite could report success having tested none of it.
+BOOK_SLOT=$(curl -s "$SB_URL/rest/v1/appointment_slots?select=id&title=eq.FIXTURE%20manual%20slot" \
   -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
 except Exception: print('')")
-if [ -n "$BOOK_SLOT" ]; then
-  curl -s -o /dev/null -X POST "$SB_URL/rest/v1/rpc/book_slot" -H "apikey: $SB_KEY" \
-    -H "Authorization: Bearer $MEMBER" -H "Content-Type: application/json" \
-    -d "{\"p_slot_id\":\"$BOOK_SLOT\"}"
-  PEND=$(curl -s -X POST "$SB_URL/rest/v1/rpc/slot_bookings" -H "apikey: $SB_KEY" \
-    -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" \
-    -d "{\"p_slot_id\":\"$BOOK_SLOT\"}" | python3 -c "
+if [ -z "$BOOK_SLOT" ]; then
+  echo "FATAL: the fixture appointment is missing. Re-run supabase/seeds/staging_fixtures.sql" >&2
+  exit 1
+fi
+# The fixture slot is Germany-scoped, and MEMBER is the USA fixture —
+# book_slot correctly refuses that, which is why this needs the German
+# member. The FATAL below caught exactly that mismatch.
+DE_MEMBER=$(tok t.de.b)
+# Idempotent: a previous run leaves a confirmed booking, and book_slot
+# correctly refuses a second. Cancel first so every run starts clean.
+curl -s -o /dev/null -X POST "$SB_URL/rest/v1/rpc/cancel_booking" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d "{\"p_slot_id\":\"$BOOK_SLOT\"}"
+curl -s -o /dev/null -X POST "$SB_URL/rest/v1/rpc/book_slot" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d "{\"p_slot_id\":\"$BOOK_SLOT\"}"
+PEND=$(curl -s -X POST "$SB_URL/rest/v1/rpc/slot_bookings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" \
+  -d "{\"p_slot_id\":\"$BOOK_SLOT\"}" | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin)
   print(next((x['booking_id'] for x in d if x['status']=='pending'), ''))
 except Exception: print('')")
-  if [ -n "$PEND" ]; then
-    DECIDE="{\"p_booking_id\":\"$PEND\",\"p_decision\":\"confirmed\"}"
-    check "team lead cannot decide a booking" refused \
-      "$(curl -s -X POST "$SB_URL/rest/v1/rpc/decide_booking" -H "apikey: $SB_KEY" \
-         -H "Authorization: Bearer $TEAM" -H "Content-Type: application/json" -d "$DECIDE" | msg)"
-    check "team lead cannot read slot bookings" none "$(rpc_rows slot_bookings "$TEAM" \
-      "{\"p_slot_id\":\"$BOOK_SLOT\"}")"
-    check "admin can decide a booking" ok \
-      "$(curl -s -X POST "$SB_URL/rest/v1/rpc/decide_booking" -H "apikey: $SB_KEY" \
-         -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d "$DECIDE" | msg)"
-  fi
+if [ -z "$PEND" ]; then
+  echo "FATAL: could not create a pending booking to test against." >&2
+  exit 1
 fi
+DECIDE="{\"p_booking_id\":\"$PEND\",\"p_decision\":\"confirmed\"}"
+check "team lead cannot decide a booking" refused \
+  "$(curl -s -X POST "$SB_URL/rest/v1/rpc/decide_booking" -H "apikey: $SB_KEY" \
+     -H "Authorization: Bearer $TEAM" -H "Content-Type: application/json" -d "$DECIDE" | msg)"
+check "team lead cannot read slot bookings" none \
+  "$(rpc_rows slot_bookings "$TEAM" "{\"p_slot_id\":\"$BOOK_SLOT\"}")"
+# JSON hoisted — nesting escaped quotes inside "$( ... )" splits on the
+# braces and posts a fragment, which has produced a false pass twice now.
+ATTEND_JSON="{\"p_booking_id\":\"$PEND\",\"p_attended\":true}"
+ATTEND_RES=$(curl -s -X POST "$SB_URL/rest/v1/rpc/mark_attendance" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $TEAM" -H "Content-Type: application/json" -d "$ATTEND_JSON" | python3 -c "
+import sys,json
+try: print('refused_false' if json.load(sys.stdin) is False else 'ALLOWED')
+except Exception: print('error')")
+check "team lead cannot mark attendance" refused_false "$ATTEND_RES"
+check "admin can decide a booking" ok \
+  "$(curl -s -X POST "$SB_URL/rest/v1/rpc/decide_booking" -H "apikey: $SB_KEY" \
+     -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d "$DECIDE" | msg)"
+# Release the seat, or the fixture slot fills over repeated runs.
+curl -s -o /dev/null -X POST "$SB_URL/rest/v1/rpc/cancel_booking" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d "{\"p_slot_id\":\"$BOOK_SLOT\"}"
+
+echo
+echo "Appointments cannot be published outside their scope"
+# cluster_id and country were stored independently with no consistency
+# rule, so a Germany chapter lead published a wing-wide slot and a
+# USA-scoped one, and USA members saw both.
+FAR=$(python3 -c "
+import datetime as d
+n=d.datetime.now(d.timezone.utc)+d.timedelta(days=40)
+print(n.strftime('%Y-%m-%dT%H:%M:%SZ'), (n+d.timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+FSTART=$(echo "$FAR" | cut -d' ' -f1); FEND=$(echo "$FAR" | cut -d' ' -f2)
+GLOBAL_JSON="{\"title\":\"AMglobal\",\"starts_at\":\"$FSTART\",\"ends_at\":\"$FEND\",\"capacity\":1,\"mode\":\"auto\",\"cluster_id\":\"$DE_CLUSTER\",\"country\":null,\"is_published\":true}"
+check "chapter lead cannot publish wing-wide" no \
+  "$(inserted appointment_slots "$CLUSTER" "$GLOBAL_JSON" title AMglobal)"
+XC_JSON="{\"title\":\"AMxcountry\",\"starts_at\":\"$FSTART\",\"ends_at\":\"$FEND\",\"capacity\":1,\"mode\":\"auto\",\"cluster_id\":\"$DE_CLUSTER\",\"country\":\"United States\",\"is_published\":true}"
+check "chapter lead cannot publish cross-country" no \
+  "$(inserted appointment_slots "$CLUSTER" "$XC_JSON" title AMxcountry)"
+OK_JSON="{\"title\":\"AMchapter\",\"starts_at\":\"$FSTART\",\"ends_at\":\"$FEND\",\"capacity\":1,\"mode\":\"auto\",\"cluster_id\":\"$DE_CLUSTER\",\"country\":\"Germany\",\"is_published\":true}"
+check "chapter lead publishes in own chapter" yes \
+  "$(inserted appointment_slots "$CLUSTER" "$OK_JSON" title AMchapter)"
+check "and can list it in slots_i_manage" yes \
+  "$(rpc_rows slots_i_manage "$CLUSTER" | sed 's/rows/yes/;s/none/no/')"
+curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/appointment_slots?title=in.(AMglobal,AMxcountry,AMchapter)" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
 
 echo
 echo "Assistance content is not editable by a read-only role"
 # grievances_update and student_requests_update used READ predicates, so
 # a team lead could not adjudicate a case but could rewrite what it said.
+# Filed by the GERMANY member: the coordinator under test covers
+# Germany, so a grievance from the USA member would be refused for the
+# right reason and fail the positive check for the wrong one.
+curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/grievances?subject=eq.AMgrv" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
+DE_MEMBER=${DE_MEMBER:-$(tok t.de.b)}
 MEM_ID=$(curl -s "$SB_URL/auth/v1/user" -H "apikey: $SB_KEY" \
-  -H "Authorization: Bearer $MEMBER" | python3 -c "import sys,json;print(json.load(sys.stdin)['id'])")
+  -H "Authorization: Bearer $DE_MEMBER" | python3 -c "import sys,json;print(json.load(sys.stdin)['id'])")
 GRV_JSON="{\"profile_id\":\"$MEM_ID\",\"subject\":\"AMgrv\",\"description\":\"original\"}"
 curl -s -o /dev/null -X POST "$SB_URL/rest/v1/grievances" -H "apikey: $SB_KEY" \
-  -H "Authorization: Bearer $MEMBER" -H "Content-Type: application/json" -d "$GRV_JSON"
-GRV=$(curl -s "$SB_URL/rest/v1/grievances?select=id&subject=eq.AMgrv" -H "apikey: $SB_KEY" \
-  -H "Authorization: Bearer $ADMIN" | python3 -c "
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" -d "$GRV_JSON"
+# Newest first: a stray AMgrv from an aborted earlier run (owned by a
+# different member, in a different country) would otherwise be picked
+# and the positive check would fail for the wrong reason.
+GRV=$(curl -s "$SB_URL/rest/v1/grievances?select=id&subject=eq.AMgrv&order=created_at.desc&limit=1" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
 except Exception: print('')")
-if [ -n "$GRV" ]; then
-  check "team lead cannot rewrite a grievance" unchanged \
-    "$(wrote grievances "$GRV" subject "EDITED" "$TEAM")"
-  curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/grievances?id=eq.$GRV" \
-    -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
+if [ -z "$GRV" ]; then
+  echo "FATAL: could not create a grievance to test against." >&2
+  exit 1
 fi
+check "team lead cannot rewrite a grievance" unchanged \
+  "$(wrote grievances "$GRV" subject "EDITED BY TEAM" "$TEAM")"
+# The positive half. Denial alone would still pass if the policy denied
+# everyone, which would be a different bug wearing the same green tick.
+check "coordinator CAN edit a grievance" CHANGED \
+  "$(wrote grievances "$GRV" subject "EDITED BY COORD" "$COORD")"
+curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/grievances?id=eq.$GRV" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
 
 echo
 echo "Rank is computed for the scope being acted on"
+# THE ORIGINAL EXPLOIT. t.de.a holds country_coordinator in Germany AND
+# cluster_lead in the USA (staging_fixtures.sql). my_role_rank() took
+# the best rank held ANYWHERE, so coordinator rank (2) could be
+# presented against USA cluster scope and appoint another chapter lead
+# there. Without this check the scoped helper could be swapped back for
+# the global one and every other assertion would stay green.
+US_CL=$(curl -s "$SB_URL/rest/v1/clusters?select=id&country=eq.United%20States&order=name&limit=1" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
+except Exception: print('')")
+check "dual-role user cannot use Germany rank in the USA" refused \
+  "$(grant "$COORD" cluster_lead "United States" "$US_CL")"
+check "dual-role user still appoints in their own country" ok \
+  "$(grant "$COORD" team_lead Germany)"
+DUAL_ROLE=$(curl -s -X POST "$SB_URL/rest/v1/rpc/wing_roles_list" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d '{}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print(next((r['role_id'] for r in d if r['profile_id']=='$VICTIM_ID'), ''))
+except Exception: print('')")
+[ -n "$DUAL_ROLE" ] && curl -s -o /dev/null -X POST "$SB_URL/rest/v1/rpc/revoke_wing_role" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" \
+  -d "{\"p_role_id\":\"$DUAL_ROLE\"}"
+
 # my_role_rank() took the best rank held ANYWHERE, so coordinator rank
 # in one country could be presented against cluster scope in another.
 check "cluster lead appoints team lead in own chapter" ok \
@@ -437,4 +533,16 @@ fi
 
 echo
 printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
+
+# A block that returns early or skips would otherwise leave the suite
+# green with fewer checks. Assert the count as well as the result.
+EXPECTED=${EXPECTED_CHECKS:-64}
+TOTAL=$((PASS + FAIL))
+if [ "$TOTAL" -ne "$EXPECTED" ]; then
+  printf '\033[31mFAIL\033[0m ran %d checks, expected %d — a block was skipped.\n' \
+    "$TOTAL" "$EXPECTED"
+  printf 'If you added or removed checks, update EXPECTED_CHECKS.\n'
+  exit 1
+fi
+
 [ "$FAIL" -eq 0 ] || [ "${EXPECT_FAIL_OK:-0}" = "1" ]
