@@ -175,6 +175,7 @@ export default function Appointments() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<Slot | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.rpc("open_slots");
@@ -182,6 +183,35 @@ export default function Appointments() {
     setSlots((data as Slot[]) ?? []);
     setLoading(false);
   }, []);
+
+  /**
+   * Cancelling is a direct UPDATE rather than an RPC because the policy
+   * already expresses the whole rule: a member may update their own
+   * booking, and only to 'cancelled'. Nothing else is reachable from
+   * here — a self-confirm is rejected by the same WITH CHECK.
+   *
+   * Freeing the seat is automatic: only confirmed bookings count toward
+   * capacity, so the row dropping out of that state releases it.
+   */
+  const cancel = useCallback(
+    async (slotId: string) => {
+      setCancelling(slotId);
+      const { data: sess } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("appointment_bookings")
+        .update({ status: "cancelled" })
+        .eq("slot_id", slotId)
+        .eq("profile_id", sess.user?.id ?? "")
+        .in("status", ["pending", "confirmed"]);
+      setCancelling(null);
+      if (error) {
+        console.error("cancel failed:", error);
+        return;
+      }
+      load();
+    },
+    [load]
+  );
 
   useEffect(() => {
     load();
@@ -270,20 +300,40 @@ export default function Appointments() {
                   </div>
 
                   <div className="shrink-0">
-                    {mine === "confirmed" ? (
-                      <span className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg
-                                       bg-emerald-50 text-emerald-800 border border-emerald-200
-                                       text-sm font-bold">
-                        <Check size={15} />
-                        Booked
-                      </span>
-                    ) : mine === "pending" ? (
-                      <span className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg
-                                       bg-amber-50 text-amber-800 border border-amber-200
-                                       text-sm font-bold">
-                        <Clock size={15} />
-                        Awaiting reply
-                      </span>
+                    {mine ? (
+                      /* Booked or awaiting — either way the member needs a
+                         way out. A held seat nobody can release is a seat
+                         lost, and on a capacity-1 leadership slot that is
+                         the whole appointment. */
+                      <div className="flex flex-col items-end gap-1.5">
+                        {mine === "confirmed" ? (
+                          <span className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg
+                                           bg-emerald-50 text-emerald-800 border border-emerald-200
+                                           text-sm font-bold">
+                            <Check size={15} />
+                            Booked
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg
+                                           bg-amber-50 text-amber-800 border border-amber-200
+                                           text-sm font-bold">
+                            <Clock size={15} />
+                            Awaiting reply
+                          </span>
+                        )}
+                        <button
+                          onClick={() => cancel(s.id)}
+                          disabled={cancelling === s.id}
+                          className="text-xs font-semibold text-gray-500 hover:text-red-600
+                                     disabled:opacity-50 transition-colors"
+                        >
+                          {cancelling === s.id
+                            ? "Cancelling…"
+                            : mine === "confirmed"
+                            ? "Cancel booking"
+                            : "Withdraw request"}
+                        </button>
+                      </div>
                     ) : full ? (
                       <span className="inline-flex items-center h-10 px-4 rounded-lg
                                        bg-gray-100 text-gray-500 text-sm font-bold">
