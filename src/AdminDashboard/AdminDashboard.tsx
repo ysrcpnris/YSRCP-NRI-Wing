@@ -9,6 +9,7 @@ import { Youtube } from "lucide-react";
 import { Quote } from "lucide-react";
 import * as XLSX from "xlsx";
 import Visited from "./Visited";
+import Intelligence from "./Intelligence";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
 import Suggestions from "./Suggestions";
@@ -627,6 +628,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
           </div>
           <nav className="space-y-2">
             <Item icon={Home} label="Dashboard" page="dashboard" />
+            <Item icon={BarChart3} label="Intelligence" page="intelligence" />
             <Item icon={Users} label="All Users" page="users" />
             <Item icon={CalendarDays} label="NRI Visits with Jagan Anna" page="visited" />
             <Item icon={Newspaper} label="Assistance" page="assistance" />
@@ -1420,6 +1422,7 @@ export default function AdminDashboard() {
         
         )}
       {currentPage === "users" && <UsersPage />}
+      {currentPage === "intelligence" && <Intelligence />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
       {currentPage === "serviceCategories" && <ServiceCategories />}
