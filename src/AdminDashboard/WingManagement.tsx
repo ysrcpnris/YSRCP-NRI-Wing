@@ -554,10 +554,24 @@ function AppointmentsTab() {
   };
 
   const create = async () => {
+    // new Date('').toISOString() throws RangeError, which would escape
+    // this handler and leave the form dead with no message. Validate
+    // before converting.
+    const start = new Date(form.starts_at);
+    const end = new Date(form.ends_at);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      setMsg({ t: "Please give the appointment a valid start and end time.", ok: false });
+      return;
+    }
+    if (end <= start) {
+      setMsg({ t: "The end time must be after the start time.", ok: false });
+      return;
+    }
+
     const { error } = await supabase.from("appointment_slots").insert({
       title: form.title,
-      starts_at: new Date(form.starts_at).toISOString(),
-      ends_at: new Date(form.ends_at).toISOString(),
+      starts_at: start.toISOString(),
+      ends_at: end.toISOString(),
       capacity: Number(form.capacity) || 1,
       mode: form.mode,
       country: form.country || null,
@@ -814,9 +828,12 @@ function CampaignsTab() {
       </div>
       {/* Honesty about what the number is. */}
       <p className="text-xs text-gray-400 mt-3">
-        Clicks are raw hits on members’ tracked links, counted once per link
-        per hour. They are not unique visitors, and we cannot see what anyone
-        liked or reposted on a social platform.
+        Clicks are counted at most <strong>once per link per hour</strong>, so
+        several people following the same member’s link within an hour count
+        once. That is a deliberate floor against inflation, and it means these
+        numbers <strong>understate</strong> real reach rather than estimating
+        it. They are not unique visitors, and we cannot see what anyone liked
+        or reposted on a social platform.
       </p>
     </div>
   );

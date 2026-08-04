@@ -85,7 +85,6 @@ jobs:
   database:
     name: Database tests
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -95,10 +94,19 @@ jobs:
       - run: npm ci
       - name: Write .env.local from secrets
         run: |
+          # A fork PR legitimately has no secrets — skip there. Anywhere
+          # else, a missing secret must FAIL, or a green "Database tests"
+          # check proves nothing ran. That was the hole: the job exited 0
+          # whenever the secret was absent, including on internal pushes.
           if [ -z "${{ secrets.STAGING_SUPABASE_URL }}" ]; then
-            echo "No staging secrets configured — skipping database tests."
-            echo "SKIP=1" >> "$GITHUB_ENV"
-            exit 0
+            if [ "${{ github.event_name }}" = "pull_request" ] && \
+               [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+              echo "Fork PR without secrets — database tests skipped."
+              echo "SKIP=1" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "::error::STAGING_SUPABASE_URL is not set. Database tests cannot run."
+            exit 1
           fi
           printf 'VITE_SUPABASE_URL=%s\n' "${{ secrets.STAGING_SUPABASE_URL }}" > .env.local
           printf 'VITE_SUPABASE_ANON_KEY=%s\n' "${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> .env.local

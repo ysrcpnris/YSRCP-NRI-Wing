@@ -93,6 +93,22 @@ if (fresh.length > 0) {
   process.exit(1);
 }
 
+/*
+ * A rise with no new fingerprint still means something changed — the
+ * same problem duplicated, e.g. a file copied. The earlier version
+ * passed silently in that case, so the total could climb indefinitely
+ * as long as every entry was "known".
+ */
+if (problems.length > baseline.total) {
+  console.error(
+    `Lint problems rose from ${baseline.total} to ${problems.length}. ` +
+      `No NEW kind of problem, so something known was duplicated — a file ` +
+      `copied, or a rule now firing in more places.\n` +
+      `Review it, then re-baseline with: npm run lint:ci -- --save`
+  );
+  process.exit(1);
+}
+
 console.log(
   problems.length < baseline.total
     ? `${problems.length} lint problems, down from ${baseline.total}. ` +

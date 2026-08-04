@@ -55,20 +55,23 @@ const api = (path, opts = {}, token) =>
 const rpc = (fn, body, token) =>
   api(`/rest/v1/rpc/${fn}`, { method: "POST", body: JSON.stringify(body ?? {}) }, token);
 
-// The exact column list AuthContext requests. Kept here deliberately:
-// if someone removes a column the app depends on, this test notices.
-const PROFILE_COLUMNS = [
-  "id", "public_user_code", "first_name", "last_name", "full_name",
-  "email", "mobile_number", "whatsapp_number", "gender",
-  "country_of_residence", "state_abroad", "city_abroad",
-  "indian_state", "district", "assembly_constituency", "mandal", "village",
-  "profession", "organization", "designation", "occupation",
-  "contribution", "participate_campaign", "suggestions",
-  "facebook_id", "twitter_id", "instagram_id", "linkedin_id",
-  "profile_photo", "referral_code", "referred_by",
-  "role", "status", "created_at", "updated_at",
-  "onboarding_completed_at",
-].join(", ");
+/*
+ * Parsed from src/lib/profileColumns.ts, not copied.
+ *
+ * This test previously kept its own duplicate of the list, so it could
+ * keep passing while the app's list drifted — which defeats the point,
+ * since noticing a missing column is exactly what it is for.
+ */
+const columnsSource = readFileSync(join(root, "src/lib/profileColumns.ts"), "utf8");
+const arrayBody = columnsSource.slice(
+  columnsSource.indexOf("PROFILE_COLUMNS_LIST = ["),
+  columnsSource.indexOf("];", columnsSource.indexOf("PROFILE_COLUMNS_LIST = ["))
+);
+const PROFILE_COLUMNS = [...arrayBody.matchAll(/"([a-z_]+)"/g)].map((m) => m[1]).join(", ");
+if (!PROFILE_COLUMNS.includes("onboarding_completed_at")) {
+  console.error("Could not parse profileColumns.ts — the array format changed.");
+  process.exit(2);
+}
 
 const main = async () => {
   console.log(`Member journey smoke test — ${URL}\n`);

@@ -1,66 +1,77 @@
 -- =====================================================================
--- READ-ONLY audit of production constituency values.
+-- READ-ONLY audit of production constituency and mandal values.
 --
 -- Nothing is installed and nothing is written. Safe to run on prod.
 --
--- Looks for values damaged by the unanchored normalizeAssembly regex
---   value.replace(/assembly constituency|ac/i, "")
--- which ran when a profile was loaded INTO the edit form, so saving
--- wrote the mangled value back:
---     Achanta      -> hanta
---     Macherla     -> Mherla
---     Mandalapalle -> apalle   (normalizeMandal, same flaw)
+-- Finds values damaged by the unanchored normalizeAssembly regex, which
+-- ran when a profile was loaded INTO the edit form — so saving wrote
+-- the mangled value back:
+--
+--     value.replace(/assembly constituency|ac/i, "")
+--     'Achanta'       -> 'hanta'
+--     'Macherla'      -> 'Mherla'
+--     'Mandalapalle'  -> 'apalle'   (normalizeMandal, same flaw)
+--
+-- WHY THE EARLIER VERSION FOUND NOTHING
+--   It compared lower(replace(name, 'ac', '')). replace() is
+--   case-SENSITIVE, so 'Achanta' (capital A, then 'c') contains no
+--   lowercase 'ac' and came through untouched — the headline example
+--   could never match. Lowercase first, then strip.
+--
+-- It also used a hardcoded list of a dozen names. This version derives
+-- from ap_constituencies (all 175) and ap_mandals, so it covers every
+-- real place rather than the ones I happened to think of.
 -- =====================================================================
 
--- 1. THE SMOKING GUN: values that become a real constituency when the
---    stripped 'ac' is put back. These are almost certainly corrupted.
-WITH known AS (
-  SELECT unnest(ARRAY[
-    'Achanta','Macherla','Chandragiri','Pathapatnam','Palakonda',
-    'Rajampet','Piduguralla','Darsi','Kaikaluru','Bhimavaram',
-    'Nagari','Satyavedu','Kavali','Atmakur','Udayagiri'
-  ]) AS name
-)
-SELECT 'LIKELY CORRUPTED' AS finding,
-       p.assembly_constituency AS stored_value,
-       k.name                  AS probably_meant,
-       count(*)                AS members
+-- 1. THE SIGNAL: a stored value that becomes a real constituency when
+--    the stripped 'ac' is restored.
+SELECT 'LIKELY CORRUPTED CONSTITUENCY' AS finding,
+       p.assembly_constituency          AS stored_value,
+       c.name                           AS probably_meant,
+       count(*)                         AS members
   FROM public.profiles p
-  JOIN known k
-    ON lower(k.name) <> lower(p.assembly_constituency)
-   AND (
-     -- stored value + 'ac' reinserted anywhere == a real name
-     lower(replace(k.name, 'ac', '')) = lower(btrim(p.assembly_constituency))
-   )
+  JOIN public.ap_constituencies c
+    ON replace(lower(c.name), 'ac', '') = lower(btrim(p.assembly_constituency))
+   AND lower(c.name) <> lower(btrim(p.assembly_constituency))
  WHERE p.assembly_constituency IS NOT NULL
    AND btrim(p.assembly_constituency) <> ''
  GROUP BY 1, 2, 3
 
 UNION ALL
 
--- 2. Same test for mandal.
+-- 2. Same test for mandal, against every seeded mandal.
 SELECT 'LIKELY CORRUPTED MANDAL',
-       p.mandal,
-       m.name,
-       count(*)
+       p.mandal, m.name, count(*)
   FROM public.profiles p
-  JOIN (SELECT unnest(ARRAY[
-          'Mandalapalle','Mandapeta','Mandasa','Chintalapudi'
-        ]) AS name) m
-    ON lower(m.name) <> lower(p.mandal)
-   AND lower(replace(m.name, 'mandal', '')) = lower(btrim(p.mandal))
+  JOIN public.ap_mandals m
+    ON replace(lower(m.name), 'mandal', '') = lower(btrim(p.mandal))
+   AND lower(m.name) <> lower(btrim(p.mandal))
  WHERE p.mandal IS NOT NULL AND btrim(p.mandal) <> ''
  GROUP BY 1, 2, 3
 
 UNION ALL
 
--- 3. Anything suspiciously short — a real constituency name is never
---    fewer than 4 characters, so these are worth eyeballing whatever
---    the cause.
-SELECT 'SUSPICIOUSLY SHORT',
-       p.assembly_constituency,
-       NULL,
-       count(*)
+-- 3. Constituencies that match nothing at all, canonical or alias.
+--    Some are spelling variants worth an alias row; some are damage.
+SELECT 'UNMATCHED CONSTITUENCY',
+       p.assembly_constituency, NULL, count(*)
+  FROM public.profiles p
+ WHERE p.assembly_constituency IS NOT NULL
+   AND btrim(p.assembly_constituency) <> ''
+   AND NOT EXISTS (
+     SELECT 1 FROM public.ap_constituencies c
+      WHERE lower(btrim(c.name)) = lower(btrim(p.assembly_constituency)))
+   AND NOT EXISTS (
+     SELECT 1 FROM public.ap_constituency_aliases a
+      WHERE lower(btrim(a.alias)) = lower(btrim(p.assembly_constituency)))
+ GROUP BY 1, 2, 3
+
+UNION ALL
+
+-- 4. Suspiciously short. Advisory only — verified false positives on
+--    staging: 'Tuni' and 'Undi' are genuine four-letter constituencies.
+SELECT 'SUSPICIOUSLY SHORT (advisory)',
+       p.assembly_constituency, NULL, count(*)
   FROM public.profiles p
  WHERE p.assembly_constituency IS NOT NULL
    AND length(btrim(p.assembly_constituency)) BETWEEN 1 AND 4

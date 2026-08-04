@@ -207,6 +207,153 @@ except Exception: print('error')")
   check "$T reads campaign_clicks" none "$R"
 done
 
+# ── the checks a review found missing ────────────────────────────────
+# Each block is here because something in it was broken and nothing
+# looked. Read the comments as a list of past defects.
+#
+# All write checks assert EFFECT, never HTTP status: PostgREST answers
+# 204 for an UPDATE or DELETE that RLS filtered to zero rows, which is
+# indistinguishable from success. Two earlier assertions in this file
+# got that wrong in both directions.
+
+fieldval() { # table id field token
+  curl -s "$SB_URL/rest/v1/$1?select=$3&id=eq.$2" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $4" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['$3'] if isinstance(d,list) and d else 'ABSENT')
+except Exception: print('ERROR')"
+}
+
+# Attempt a write, then report whether the stored value actually moved.
+wrote() { # table id field newvalue token
+  local before after
+  before=$(fieldval "$1" "$2" "$3" "$ADMIN")
+  curl -s -o /dev/null -X PATCH "$SB_URL/rest/v1/$1?id=eq.$2" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $5" -H "Content-Type: application/json" \
+    -d "$(python3 -c "import json,sys;print(json.dumps({sys.argv[1]:sys.argv[2]}))" "$3" "$4")"
+  after=$(fieldval "$1" "$2" "$3" "$ADMIN")
+  [ "$before" = "$after" ] && echo "unchanged" || echo "CHANGED"
+}
+
+# Insert and report whether a row landed, by label.
+inserted() { # table token json labelcol labelval
+  curl -s -o /dev/null -X POST "$SB_URL/rest/v1/$1" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $2" -H "Content-Type: application/json" -d "$3"
+  curl -s "$SB_URL/rest/v1/$1?select=$4&$4=eq.$5" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print('yes' if isinstance(d,list) and d else 'no')
+except Exception: print('no')"
+}
+
+msg() { python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); r=d[0] if isinstance(d,list) and d else d
+  print('ok' if r.get('ok') else 'refused')
+except Exception: print('error')"; }
+
+json() { python3 -c "import json,sys;print(json.dumps(json.loads(sys.argv[1])))" "$1"; }
+
+VICTIM_ID=$(curl -s "$SB_URL/rest/v1/profiles?select=id&email=eq.t.de.b@example.test" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
+except Exception: print('')")
+DE_CLUSTER=$(curl -s "$SB_URL/rest/v1/clusters?select=id&name=eq.Germany" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
+except Exception: print('')")
+US_CLUSTER=$(curl -s "$SB_URL/rest/v1/clusters?select=id&country=eq.United%20States&limit=1" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
+except Exception: print('')")
+
+echo
+echo "Team lead is read-only"
+# has_country_scope() was a READ predicate used by WRITE policies, so
+# widening reads for team_lead silently gave them write access.
+check "team lead cannot write another member's city" unchanged \
+  "$(wrote profiles "$VICTIM_ID" city_abroad Nowhere "$TEAM")"
+check "team lead cannot write another member's dob"  unchanged \
+  "$(wrote profiles "$VICTIM_ID" dob 1900-01-01 "$TEAM")"
+# JSON goes in a variable first. Nesting an escaped-quote literal inside
+# "$( ... )" inside another "..." splits on the braces, which silently
+# posted a fragment and made a passing check meaningless.
+ROLE_JSON="{\"profile_id\":\"$VICTIM_ID\",\"role\":\"team_lead\",\"country\":\"Germany\",\"title\":\"AMT\"}"
+RES=$(inserted member_roles "$TEAM" "$ROLE_JSON" title AMT)
+check "team lead cannot mint a role" no "$RES"
+
+echo
+echo "Cluster lead is bounded by their own chapter"
+OWN_JSON="{\"scope\":\"chapter\",\"platform\":\"telegram\",\"label\":\"AMown\",\"url\":\"https://example.com/o\",\"cluster_id\":\"$DE_CLUSTER\",\"country\":\"Germany\"}"
+RES=$(inserted social_handles "$CLUSTER" "$OWN_JSON" label AMown)
+check "cluster lead writes own chapter handle" yes "$RES"
+
+CROSS_JSON="{\"scope\":\"chapter\",\"platform\":\"telegram\",\"label\":\"AMcross\",\"url\":\"https://example.com/x\",\"cluster_id\":\"$US_CLUSTER\",\"country\":\"United States\"}"
+RES=$(inserted social_handles "$CLUSTER" "$CROSS_JSON" label AMcross)
+check "cluster lead cannot write another chapter" no "$RES"
+# The composite FK stops a handle naming one country and another
+# country's cluster — a phishing vector on a table of invite links.
+FK_JSON="{\"scope\":\"chapter\",\"platform\":\"telegram\",\"label\":\"AMfk\",\"url\":\"https://example.com/f\",\"cluster_id\":\"$US_CLUSTER\",\"country\":\"Germany\"}"
+RES=$(inserted social_handles "$ADMIN" "$FK_JSON" label AMfk)
+check "mismatched country/cluster is rejected" no "$RES"
+
+echo
+echo "Role delegation respects the rank ladder"
+grant() { # token role country cluster
+  local body
+  body=$(python3 -c "
+import json,sys
+p={'p_profile_id':sys.argv[1],'p_role':sys.argv[2]}
+if sys.argv[3]!='-': p['p_country']=sys.argv[3]
+if sys.argv[4]!='-': p['p_cluster_id']=sys.argv[4]
+print(json.dumps(p))" "$VICTIM_ID" "$2" "${3:--}" "${4:--}")
+  curl -s -X POST "$SB_URL/rest/v1/rpc/grant_wing_role" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $1" -H "Content-Type: application/json" -d "$body" | msg
+}
+check "coordinator cannot clone a coordinator" refused "$(grant "$COORD" country_coordinator Germany)"
+check "cluster lead cannot appoint a coordinator" refused "$(grant "$CLUSTER" country_coordinator Germany)"
+check "team lead cannot appoint anyone"          refused "$(grant "$TEAM" team_lead Germany)"
+check "cluster lead appoints in own chapter"     ok      "$(grant "$CLUSTER" team_lead Germany "$DE_CLUSTER")"
+
+# revoke_wing_role() wrote to a GENERATED column and threw 428C9 on
+# every call. Nothing exercised it, so it had never worked once.
+NEW_ROLE=$(curl -s -X POST "$SB_URL/rest/v1/rpc/wing_roles_list" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d '{}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print(next((r['role_id'] for r in d if r['profile_id']=='$VICTIM_ID'), ''))
+except Exception: print('')")
+if [ -n "$NEW_ROLE" ]; then
+  check "admin revokes a role" ok "$(curl -s -X POST "$SB_URL/rest/v1/rpc/revoke_wing_role" \
+    -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" \
+    -d "{\"p_role_id\":\"$NEW_ROLE\"}" | msg)"
+else
+  check "a role existed to revoke" found missing
+fi
+
+echo
+echo "Protected columns are unreachable through an RPC too"
+# admin_member_list() returns dob and family_* and once authorised any
+# scoped role, handing them to coordinators and read-only team leads.
+for T in MEMBER COORD CLUSTER TEAM; do
+  check "$T reads admin_member_list" none "$(rpc_rows admin_member_list "${!T}")"
+done
+check "admin reads admin_member_list" rows "$(rpc_rows admin_member_list "$ADMIN")"
+
+# Anything this section created.
+curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/social_handles?label=in.(AMown,AMcross,AMfk)" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
+
 echo
 printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ] || [ "${EXPECT_FAIL_OK:-0}" = "1" ]

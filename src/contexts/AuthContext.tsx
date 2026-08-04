@@ -6,6 +6,7 @@ import {
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase, Profile } from "../lib/supabase";
+import { PROFILE_COLUMNS } from "../lib/profileColumns";
 import { MESSAGES } from "../constants/messages";
 // AuthContext + useAuth + AuthContextType all live in ./useAuth so this
 // file can stay component-only — that lets Vite's Fast Refresh keep
@@ -43,23 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   //
   // A member reading back their OWN voter fields uses the
   // my_voter_details() RPC, which is scoped to auth.uid().
-  const PROFILE_COLUMNS = [
-    "id", "public_user_code", "first_name", "last_name", "full_name",
-    "email", "mobile_number", "whatsapp_number", "gender",
-    "country_of_residence", "state_abroad", "city_abroad",
-    "indian_state", "district", "assembly_constituency", "mandal", "village",
-    "profession", "organization", "designation", "occupation",
-    "contribution", "participate_campaign", "suggestions",
-    "facebook_id", "twitter_id", "instagram_id", "linkedin_id",
-    "profile_photo", "referral_code", "referred_by",
-    "role", "status", "created_at", "updated_at",
-    // ProtectedRoute gates on this. Omitting it made profile
-    // .onboarding_completed_at permanently undefined, so EVERY user —
-    // including members who had already finished — was redirected to
-    // /complete-profile forever. The column is readable; it was simply
-    // never asked for.
-    "onboarding_completed_at",
-  ].join(", ");
+  // Single source of truth — see src/lib/profileColumns.ts. The smoke
+  // test parses that same file, so the two cannot drift apart.
 
   const fetchProfile = async (userId: string) => {
     try {

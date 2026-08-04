@@ -37,8 +37,10 @@ records and the mapping is a judgement, not a rule.
 
 ## `repair_migration_history.sh` — WRITES, needs `--apply`
 
-Production ran the original 49 migrations under their old `new_NN_*`
-filenames. They were renamed to timestamps so environments are
+Production ran the original 47 migrations under their old `new_NN_*`
+filenames. (47 is the file count in the rename commit `8b4a2c5`;
+earlier notes said 49 from memory, and the script's assertion is what
+caught that.) They were renamed to timestamps so environments are
 reproducible, which means production's `supabase_migrations` table no
 longer matches the files on disk. Until that is reconciled,
 `supabase db push` against production will try to re-run everything.
