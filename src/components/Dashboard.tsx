@@ -4,6 +4,7 @@ import { Listbox } from "@headlessui/react";
 import { ProfileDropdown } from './ProfileDropdown';
 import AbroadConnect from './AbroadConnect';
 import MyRequests from './MyRequests';
+import Appointments from './Appointments';
 import nriLogo from './nrilogo.png';
 import { useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
@@ -1040,6 +1041,7 @@ import {
   Calendar,
   MessageSquare,
   LifeBuoy,
+  CalendarDays,
   Bell,
   MapPin,
   ChevronDown,
@@ -1426,6 +1428,7 @@ const Dashboard: React.FC = () => {
     | "events"
     | "connect"
     | "assistance"
+    | "appointments"
     | "suggestions";
   const VALID_TABS: readonly Tab[] = [
     "overview",
@@ -1435,6 +1438,7 @@ const Dashboard: React.FC = () => {
     "events",
     "connect",
     "assistance",
+    "appointments",
     "suggestions",
   ];
 
@@ -6050,6 +6054,7 @@ const renderSuggestionsContent = () => (
     // grievances were written by nothing and read by nothing, and
     // student_requests had no UI at all.
     { id: "assistance" as const,  label: "Assistance",  icon: LifeBuoy,      color: "text-rose-600" },
+    { id: "appointments" as const, label: "Appointments", icon: CalendarDays, color: "text-indigo-600" },
     { id: "suggestions" as const, label: "Feedback",    icon: Send,          color: "text-purple-600" },
   ];
 
@@ -6064,6 +6069,7 @@ const renderSuggestionsContent = () => (
       case "events":      return renderEventsContent();
       case "connect":     return renderConnectContent();
       case "assistance":  return <MyRequests />;
+      case "appointments": return <Appointments />;
       case "suggestions": return renderSuggestionsContent();
       default:            return renderOverviewContent();
     }
