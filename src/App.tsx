@@ -36,6 +36,7 @@ import Education from "./pages/Education";
 import Women from "./pages/Women";
 import StudentYouth from "./pages/Studentyouth";
 import ReferralRedirect from "./pages/ReferralRedirect";
+import CampaignRedirect from "./pages/CampaignRedirect";
 
 import AmmaVodi from "./pages/AmmaVodi";
 import NewsDetail from "./pages/NewsDetail";
@@ -218,6 +219,10 @@ function AppContent() {
         <Route path="/suggestions" element={<Navigate to="/glimpse" replace />} />
         <Route path="/glimpse" element={<Glimpse />} />
         <Route path="/ref/:code" element={<ReferralRedirect />} />
+        {/* Campaign links members post. PUBLIC and outside ProtectedRoute:
+            whoever clicks a shared link has no account, and requiring one
+            would defeat the entire point of sharing. */}
+        <Route path="/c/:shareId" element={<CampaignRedirect />} />
 
         <Route
           path="/about"

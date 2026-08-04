@@ -5,6 +5,7 @@ import { ProfileDropdown } from './ProfileDropdown';
 import AbroadConnect from './AbroadConnect';
 import MyRequests from './MyRequests';
 import Appointments from './Appointments';
+import DigitalArmy from './DigitalArmy';
 import nriLogo from './nrilogo.png';
 import { useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
@@ -1042,6 +1043,7 @@ import {
   MessageSquare,
   LifeBuoy,
   CalendarDays,
+  Megaphone,
   Bell,
   MapPin,
   ChevronDown,
@@ -1429,6 +1431,7 @@ const Dashboard: React.FC = () => {
     | "connect"
     | "assistance"
     | "appointments"
+    | "army"
     | "suggestions";
   const VALID_TABS: readonly Tab[] = [
     "overview",
@@ -1439,6 +1442,7 @@ const Dashboard: React.FC = () => {
     "connect",
     "assistance",
     "appointments",
+    "army",
     "suggestions",
   ];
 
@@ -6055,6 +6059,7 @@ const renderSuggestionsContent = () => (
     // student_requests had no UI at all.
     { id: "assistance" as const,  label: "Assistance",  icon: LifeBuoy,      color: "text-rose-600" },
     { id: "appointments" as const, label: "Appointments", icon: CalendarDays, color: "text-indigo-600" },
+    { id: "army" as const,        label: "Digital Army", icon: Megaphone,    color: "text-cyan-600" },
     { id: "suggestions" as const, label: "Feedback",    icon: Send,          color: "text-purple-600" },
   ];
 
@@ -6070,6 +6075,7 @@ const renderSuggestionsContent = () => (
       case "connect":     return renderConnectContent();
       case "assistance":  return <MyRequests />;
       case "appointments": return <Appointments />;
+      case "army":        return <DigitalArmy />;
       case "suggestions": return renderSuggestionsContent();
       default:            return renderOverviewContent();
     }
