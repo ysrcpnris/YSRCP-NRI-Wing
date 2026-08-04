@@ -656,11 +656,38 @@ curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/appointment_slots?id=eq.$CHK_ID"
   -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
 
 echo
+echo "Anonymous callers cannot reach SECURITY DEFINER code"
+# PostgreSQL grants EXECUTE to PUBLIC on every new function, and nothing
+# revoked it broadly — 39 SECURITY DEFINER functions were reachable by
+# anon, including admin_voter_rows. Nothing leaked, because auth.uid()
+# is NULL and every body failed closed. "Safe because the body happens
+# to check" is not the same as "unreachable".
+anon_status() {
+  # Body in a local first — an inline "${2:-{}}" default gets brace-split
+  # and posts a fragment, which returns 400 and reads like a pass.
+  local body="${2:-}"
+  [ -n "$body" ] || body='{}'
+  curl -s -o /dev/null -w '%{http_code}' -X POST "$SB_URL/rest/v1/rpc/$1" \
+    -H "apikey: $SB_KEY" -H "Content-Type: application/json" -d "$body"
+}
+for F in wing_roles_list my_chapter_ids my_role_rank my_grant_options \
+         admin_member_list admin_voter_rows member_rankings assistance_queue \
+         chapter_roster intel_headline; do
+  check "anon cannot call $F" 401 "$(anon_status "$F")"
+done
+
+# register_click stays open on purpose: a visitor following a member's
+# shared campaign link has no account by definition. If this ever fails,
+# every shared link 401s.
+check "anon CAN still follow a campaign link" 200 \
+  "$(anon_status register_click '{"p_share_id":"00000000-0000-0000-0000-000000000000"}')"
+
+echo
 printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
 
 # A block that returns early or skips would otherwise leave the suite
 # green with fewer checks. Assert the count as well as the result.
-EXPECTED=${EXPECTED_CHECKS:-74}
+EXPECTED=${EXPECTED_CHECKS:-85}
 TOTAL=$((PASS + FAIL))
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   printf '\033[31mFAIL\033[0m ran %d checks, expected %d — a block was skipped.\n' \

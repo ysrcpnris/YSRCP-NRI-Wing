@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, Search } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -76,7 +76,24 @@ type RoleRow = {
   granted_by_name: string | null;
 };
 
-type ChapterRow = { id: string; name: string; country: string };
+type GrantOption = {
+  scope_kind: "global" | "country" | "chapter";
+  country: string | null;
+  chapter_id: string | null;
+  chapter_name: string | null;
+  roles: string[];
+};
+
+/* Stable identity for a scope row, used as the <select> value. */
+const optionKey = (o: GrantOption) =>
+  `${o.scope_kind}:${o.chapter_id ?? o.country ?? "wing"}`;
+
+const optionLabel = (o: GrantOption) =>
+  o.scope_kind === "global"
+    ? "The whole wing"
+    : o.scope_kind === "chapter"
+    ? `${o.chapter_name} · ${o.country}`
+    : `${o.country} (country-wide)`;
 
 type MemberHit = {
   id: string;
@@ -88,55 +105,47 @@ type MemberHit = {
 
 export default function RoleManager() {
   const [rows, setRows] = useState<RoleRow[]>([]);
-  const [chapters, setChapters] = useState<ChapterRow[]>([]);
   const [q, setQ] = useState("");
   const [found, setFound] = useState<MemberHit[]>([]);
   const [pick, setPick] = useState<MemberHit | null>(null);
-  const [role, setRole] = useState("country_coordinator");
-  const [country, setCountry] = useState("");
-  const [chapterId, setChapterId] = useState("");
+  const [role, setRole] = useState("");
   const [title, setTitle] = useState("");
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
 
   /**
-   * What this caller may actually appoint.
+   * What this caller may appoint, and where — answered by the server.
    *
-   * The database is the control — grant_wing_role() computes rank for
-   * the target scope and refuses anything at or above the caller's own
-   * level. But offering a chapter lead the "Country coordinator" option
-   * just to reject it is a predictable failure, so the menu is narrowed
-   * to what will succeed.
+   * This was previously derived client-side from my_role_rank(), a
+   * single GLOBAL number, while grant_wing_role() computes rank for the
+   * TARGET scope. A Germany coordinator who also leads a USA chapter
+   * was offered USA operations the database then refused, and
+   * secretariat could never be offered at all: it is rank 1 and the
+   * filter was `rank > myRank`, so an admin at rank 1 failed `1 > 1`.
    *
-   * myRank comes from the server, not from anything the client decides.
+   * my_grant_options() returns the legal combinations. Nothing here
+   * derives capability — it renders what it is given, and sends back
+   * the scope it was handed rather than free-typed fields.
    */
-  const [myRank, setMyRank] = useState<number | null>(null);
-  const [myChapters, setMyChapters] = useState<string[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      const [{ data: rank }, { data: mine }] = await Promise.all([
-        supabase.rpc("my_role_rank"),
-        supabase.rpc("my_chapter_ids"),
-      ]);
-      setMyRank(typeof rank === "number" ? rank : 99);
-      setMyChapters((mine as string[]) ?? []);
-    })();
-  }, []);
-
-  // Strictly below the caller's own rank — the same rule the database
-  // applies, so nothing offered here can be refused for rank.
-  const grantable = WING_ROLES.filter((r) => myRank !== null && r.rank > myRank);
+  const [options, setOptions] = useState<GrantOption[]>([]);
+  const [optionsLoaded, setOptionsLoaded] = useState(false);
+  const [scopeKey, setScopeKey] = useState("");
 
   const load = useCallback(async () => {
-    const [{ data: r }, { data: c }] = await Promise.all([
-      supabase.rpc("wing_roles_list"),
-      supabase.from("chapters").select("id, name, country").order("name"),
-    ]);
-    setRows((r as RoleRow[]) ?? []);
-    setChapters((c as ChapterRow[]) ?? []);
+    const { data } = await supabase.rpc("wing_roles_list");
+    setRows((data as RoleRow[]) ?? []);
   }, []);
-  useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    load();
+    (async () => {
+      const { data, error } = await supabase.rpc("my_grant_options");
+      if (error) console.error("my_grant_options failed:", error);
+      setOptions((data as GrantOption[]) ?? []);
+      setOptionsLoaded(true);
+    })();
+  }, [load]);
+
+  // Debounced member search.
   useEffect(() => {
     if (!q.trim()) { setFound([]); return; }
     const t = setTimeout(async () => {
@@ -146,18 +155,32 @@ export default function RoleManager() {
     return () => clearTimeout(t);
   }, [q]);
 
+  const chosen = options.find((o) => optionKey(o) === scopeKey) ?? options[0];
+  // Memoised: a fresh [] each render would retrigger the effect below
+  // forever.
+  const rolesHere = useMemo(() => chosen?.roles ?? [], [chosen]);
+
+  // Keep the two selects consistent as the options arrive.
+  useEffect(() => {
+    if (options.length && !options.some((o) => optionKey(o) === scopeKey)) {
+      setScopeKey(optionKey(options[0]));
+    }
+  }, [options, scopeKey]);
+
+  useEffect(() => {
+    if (rolesHere.length && !rolesHere.includes(role)) setRole(rolesHere[0]);
+  }, [rolesHere, role]);
+
   const grant = async () => {
-    if (!pick) return;
+    if (!pick || !chosen) return;
     const { data, error } = await supabase.rpc("grant_wing_role", {
       p_profile_id: pick.id,
       p_role: role,
-      p_country: role === "secretariat" ? null : country || pick.country,
-      // Sent for a chapter lead, and for a team lead when a chapter was
-      // chosen — that is what makes a chapter-scoped team lead possible.
-      p_chapter_id:
-        role === "chapter_lead" || (role === "team_lead" && chapterId)
-          ? chapterId || null
-          : null,
+      // Scope comes from the option the server offered, never from a
+      // free-typed field — so a request cannot describe a scope the
+      // caller was never given.
+      p_country: chosen.scope_kind === "global" ? null : chosen.country,
+      p_chapter_id: chosen.scope_kind === "chapter" ? chosen.chapter_id : null,
       p_title: title || null,
     });
     const res = Array.isArray(data) ? data[0] : data;
@@ -166,7 +189,7 @@ export default function RoleManager() {
       return;
     }
     setMsg({ t: res.message, ok: true });
-    setPick(null); setQ(""); setTitle(""); setChapterId("");
+    setPick(null); setQ(""); setTitle("");
     load();
   };
 
@@ -177,125 +200,100 @@ export default function RoleManager() {
     load();
   };
 
-  // If the caller cannot grant the default, move to the first they can.
-  useEffect(() => {
-    if (grantable.length && !grantable.some((r) => r.value === role)) {
-      setRole(grantable[0].value);
-    }
-  }, [grantable, role]);
-
-  const scope = WING_ROLES.find((r) => r.value === role)?.scope;
-  const wantsCountry = scope === "country" || scope === "chapter" || scope === "either";
-  const wantsChapter = scope === "chapter" || scope === "either";
+  const canAppoint = !optionsLoaded || options.length > 0;
 
   return (
     <div>
       {msg && <Banner msg={msg.t} ok={msg.ok} />}
 
-      {myRank !== null && grantable.length === 0 && (
+      {optionsLoaded && options.length === 0 && (
         <div className="p-5 bg-gray-50 border border-gray-200 rounded-xl mb-6">
           <p className="font-bold text-gray-900">You can’t appoint anyone</p>
           <p className="text-sm text-gray-600 mt-1">
-            Appointments are made by someone senior to the role being
-            granted. Ask your coordinator or a wing administrator.
+            Appointments are made by someone senior to the role being granted,
+            within a country or chapter they cover. Ask your coordinator or a
+            wing administrator.
           </p>
         </div>
       )}
 
-      <div
-        className={`p-5 bg-white border border-gray-200 rounded-xl mb-6 ${
-          myRank !== null && grantable.length === 0 ? "hidden" : ""
-        }`}
-      >
-        <h4 className="font-bold text-gray-900 mb-3">Appoint someone</h4>
+      {canAppoint && (
+        <div className="p-5 bg-white border border-gray-200 rounded-xl mb-6">
+          <h4 className="font-bold text-gray-900 mb-3">Appoint someone</h4>
 
-        <div className="relative mb-3">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            className={inputCls + " pl-9"}
-            placeholder="Search a member by name or email"
-            value={pick ? `${pick.full_name} · ${pick.email}` : q}
-            onChange={(e) => { setPick(null); setQ(e.target.value); }}
-          />
-          {found.length > 0 && !pick && (
-            <ul className="absolute z-30 left-0 right-0 mt-1 bg-white border border-gray-200
-                           rounded-lg shadow-lg max-h-56 overflow-auto">
-              {found.map((m) => (
-                <li key={m.id}
-                    onClick={() => { setPick(m); setCountry(m.country ?? ""); setFound([]); }}
-                    className="px-3 py-2 text-sm hover:bg-primary-50 cursor-pointer">
-                  <span className="font-semibold">{m.full_name}</span>
-                  <span className="text-gray-500 text-xs"> · {m.email} · {m.country}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+          <div className="relative mb-3">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              className={inputCls + " pl-9"}
+              placeholder="Search a member by name or email"
+              value={pick ? `${pick.full_name} · ${pick.email}` : q}
+              onChange={(e) => { setPick(null); setQ(e.target.value); }}
+            />
+            {found.length > 0 && !pick && (
+              <ul className="absolute z-30 left-0 right-0 mt-1 bg-white border border-gray-200
+                             rounded-lg shadow-lg max-h-56 overflow-auto">
+                {found.map((m) => (
+                  <li key={m.id}
+                      onClick={() => { setPick(m); setFound([]); }}
+                      className="px-3 py-2 text-sm hover:bg-primary-50 cursor-pointer">
+                    <span className="font-semibold">{m.full_name}</span>
+                    <span className="text-gray-500 text-xs"> · {m.email} · {m.country}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Field label="Role">
-            <select className={inputCls} value={role} onChange={(e) => setRole(e.target.value)}>
-              {grantable.map((r) => (
-                <option key={r.value} value={r.value}>{r.label}</option>
-              ))}
-            </select>
-          </Field>
-
-          {wantsCountry && (
-            <Field label="Country">
-              <input className={inputCls} value={country}
-                     onChange={(e) => setCountry(e.target.value)}
-                     placeholder="e.g. Germany" />
-            </Field>
-          )}
-
-          {wantsChapter && (
-            <Field label="Chapter">
-              <select className={inputCls} value={chapterId}
-                      onChange={(e) => setChapterId(e.target.value)}>
-                <option value="">Choose…</option>
-                {chapters
-                  .filter((c) => !country || c.country === country)
-                  // A chapter lead can only appoint inside chapters they
-                  // actually lead; an admin or coordinator sees them all.
-                  .filter((c) => (myRank ?? 99) <= 2 || myChapters.includes(c.id))
-                  .map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {/* Scope first — it decides which roles are legal there. */}
+            <Field label="Where">
+              <select className={inputCls} value={scopeKey}
+                      onChange={(e) => setScopeKey(e.target.value)}>
+                {options.map((o) => (
+                  <option key={optionKey(o)} value={optionKey(o)}>
+                    {optionLabel(o)}
+                  </option>
+                ))}
               </select>
             </Field>
+
+            <Field label="Role">
+              <select className={inputCls} value={role}
+                      onChange={(e) => setRole(e.target.value)}>
+                {rolesHere.map((r: string) => (
+                  <option key={r} value={r}>
+                    {WING_ROLES.find((w) => w.value === r)?.label ?? r}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Title (optional)">
+              <input className={inputCls} value={title}
+                     onChange={(e) => setTitle(e.target.value)}
+                     placeholder="e.g. Student Assistance Lead" />
+            </Field>
+          </div>
+
+          {role === "team_lead" && (
+            <p className="text-xs text-gray-500 mt-2">
+              A team lead reads and edits nothing.{" "}
+              {chosen?.scope_kind === "chapter"
+                ? "Scoped to this chapter."
+                : "Scoped to the whole country."}
+            </p>
           )}
 
-          <Field label="Title (optional)">
-            <input className={inputCls} value={title}
-                   onChange={(e) => setTitle(e.target.value)}
-                   placeholder="e.g. Student Assistance Lead" />
-          </Field>
+          <button
+            onClick={grant}
+            disabled={!pick || !chosen}
+            className="mt-4 h-10 px-4 rounded-lg bg-primary-600 text-white text-sm font-bold
+                       inline-flex items-center gap-2 hover:bg-primary-700 disabled:opacity-50"
+          >
+            <Plus size={15} /> Grant role
+          </button>
         </div>
-
-        {/* Read-only by design, and the scope depends on whether a
-            chapter was named. Say both here, not only in a migration. */}
-        {role === "team_lead" && (
-          <p className="text-xs text-gray-500 mt-2">
-            A team lead reads and edits nothing.{" "}
-            {chapterId
-              ? "With a chapter chosen, they see only that chapter."
-              : "With no chapter chosen, they see the whole country — which only a country coordinator or administrator can grant."}
-          </p>
-        )}
-        {role === "chapter_lead" && !chapterId && (
-          <p className="text-xs text-amber-700 mt-2">
-            Choose the chapter this lead will run.
-          </p>
-        )}
-
-        <button
-          onClick={grant}
-          disabled={!pick}
-          className="mt-4 h-10 px-4 rounded-lg bg-primary-600 text-white text-sm font-bold
-                     inline-flex items-center gap-2 hover:bg-primary-700 disabled:opacity-50"
-        >
-          <Plus size={15} /> Grant role
-        </button>
-      </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -311,7 +309,7 @@ export default function RoleManager() {
           <tbody>
             {rows.length === 0 && (
               <tr><td colSpan={5} className="py-6 text-center text-gray-500">
-                Nobody holds a wing role yet.
+                Nobody holds a wing role here yet.
               </td></tr>
             )}
             {rows.map((r) => (
