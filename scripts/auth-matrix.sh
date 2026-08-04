@@ -309,6 +309,18 @@ check "mismatched country/chapter is rejected" no "$RES"
 
 echo
 echo "Role delegation respects the rank ladder"
+grant_to() { # token target_profile role [country] [chapter]
+  local body
+  body=$(python3 -c "
+import json,sys
+p={'p_profile_id':sys.argv[1],'p_role':sys.argv[2]}
+if len(sys.argv)>3 and sys.argv[3]!='-': p['p_country']=sys.argv[3]
+if len(sys.argv)>4 and sys.argv[4]!='-': p['p_chapter_id']=sys.argv[4]
+print(json.dumps(p))" "$2" "$3" "${4:--}" "${5:--}")
+  curl -s -X POST "$SB_URL/rest/v1/rpc/grant_wing_role" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $1" -H "Content-Type: application/json" -d "$body" | msg
+}
+
 grant() { # token role country chapter
   local body
   body=$(python3 -c "
@@ -737,63 +749,142 @@ except Exception: print('error')")
 check "secretariat gets countries but not the global option" country-yes-global-no "$SEC_OPTS"
 
 echo
-echo "Leaderboard: ties share a place, and you always see yourself"
-TIES=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
+echo "Leaderboard: ties, the top-100 cut, and separate totals"
+# These four checks were previously vacuous or would have passed against
+# the broken implementation:
+#   · "tied scores share a place" passed with no tie present
+#   · "caller always finds their row" used a caller inside the top 100
+#   · "totals are separate" only asserted both KEYS existed
+# Each now builds the exact condition it claims to test.
+#
+# A controlled scenario is created here and removed at the end, so the
+# suite stays idempotent and the assertions do not depend on whatever
+# activity happens to be in the database.
+RANK_SETUP=$(curl -s -X POST "$SB_URL/rest/v1/rpc/matrix_seed_ranking" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d '{}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); r=d[0] if isinstance(d,list) and d else d
+  print(f\"{r['active']}|{r['caller_place']}\")
+except Exception: print('error|0')")
+ACTIVE=$(echo "$RANK_SETUP" | cut -d'|' -f1)
+CALLER_PLACE=$(echo "$RANK_SETUP" | cut -d'|' -f2)
+if [ "$ACTIVE" = "error" ] || [ "${ACTIVE:-0}" -le 100 ]; then
+  echo "FATAL: ranking fixture produced only ${ACTIVE} active members; the" >&2
+  echo "       top-100 assertions cannot be exercised below that." >&2
+  exit 1
+fi
+
+# 1. Exact tie positions. Three members are given identical scores, so
+#    the placings must read 1,1,1 and the next must be 4 — not 1,2,3.
+TIE_SHAPE=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" \
+  -d '{"p_scope":"global"}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  top=[r['global_place'] for r in d[:4]]
+  print(','.join(str(x) for x in top))
+except Exception: print('error')")
+check "three tied members read 1,1,1 then 4" "1,1,1,4" "$TIE_SHAPE"
+
+# 2. A caller ranked BELOW the cut still sees themselves, flagged.
+BELOW=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d '{"p_scope":"global"}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  me=[r for r in d if r['is_me']]
+  if not me: print('absent'); raise SystemExit
+  m=me[0]
+  others=[r for r in d if not r['is_me']]
+  capped = all(r['global_place'] <= 100 for r in others)
+  print('below-and-flagged' if m['global_place'] > 100 and m['beyond_top'] and capped
+        else f\"place={m['global_place']} flag={m['beyond_top']} capped={capped}\")
+except Exception as e: print('error')")
+check "a caller below the top 100 sees themselves, flagged" below-and-flagged "$BELOW"
+
+# 3. The totals must differ in value, not merely exist. country_clicks
+#    has to equal the clicks of the country rows returned.
+TOTALS=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
   -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
   -d '{"p_scope":"country"}' | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin)
-  # Anyone on identical clicks and shares must hold the same place.
-  bad=[a for a in d for b in d
-       if a['clicks']==b['clicks'] and a['shares']==b['shares']
-       and a['country_place']!=b['country_place']]
-  print('shared' if not bad else 'SPLIT')
+  if not d: print('no-rows'); raise SystemExit
+  cc, gc = d[0]['country_clicks'], d[0]['global_clicks']
+  summed = sum(r['clicks'] for r in d)
+  # Every row here is in the caller's country, so the country total must
+  # match their sum, and the world must be at least as large.
+  print('consistent' if cc == summed and gc >= cc else f'cc={cc} sum={summed} gc={gc}')
 except Exception: print('error')")
-check "tied scores share a place" shared "$TIES"
+check "country total matches its rows and is <= global" consistent "$TOTALS"
 
-# A caller WITH activity must always find themselves, cap or no cap.
-# COORD has a share; DE_MEMBER does not, and its absence is correct —
-# the board deliberately omits members who have done nothing, so
-# asserting "always present" for an inactive caller tests the wrong
-# thing. That was this check's first mistake.
-SELF=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
-  -H "Authorization: Bearer $COORD" -H "Content-Type: application/json" \
-  -d '{"p_scope":"global"}' | python3 -c "
+check "and the two totals genuinely differ" differ \
+  "$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
+     -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+     -d '{"p_scope":"country"}' | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin)
-  print('present' if any(r['is_me'] for r in d) else 'absent')
-except Exception: print('error')")
-check "an active caller always finds their own row" present "$SELF"
+  print('differ' if d and d[0]['global_clicks'] > d[0]['country_clicks'] else 'same')
+except Exception: print('error')")"
 
-INACTIVE=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
-  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
-  -d '{"p_scope":"global"}' | python3 -c "
+curl -s -o /dev/null -X POST "$SB_URL/rest/v1/rpc/matrix_clear_ranking" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d '{}'
+
+echo
+echo "Secretariat: the administrator path actually works"
+# The denials were covered; the success path was not, so "administrators
+# only" was half proven — a rule that refuses everyone passes a denial
+# suite perfectly.
+NC_ID=$(curl -s "$SB_URL/rest/v1/profiles?select=id&email=eq.t.nc.a@example.test" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
+except Exception: print('')")
+if [ -z "$NC_ID" ]; then
+  echo "FATAL: the chapterless-country fixture is missing." >&2; exit 1
+fi
+
+check "admin CAN appoint a secretariat" ok "$(grant_to "$ADMIN" "$NC_ID" secretariat)"
+
+NEW_SEC=$(curl -s -X POST "$SB_URL/rest/v1/rpc/wing_roles_list" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d '{}' | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin)
-  print('absent' if not any(r['is_me'] for r in d) else 'listed')
-except Exception: print('error')")
-check "a member who has done nothing is not listed" absent "$INACTIVE"
+  print(next((r['role_id'] for r in d
+              if r['role']=='secretariat' and r['profile_id']=='$NC_ID'), ''))
+except Exception: print('')")
+check "the granted secretariat row exists" found \
+  "$([ -n "$NEW_SEC" ] && echo found || echo missing)"
 
-SEP=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
-  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
-  -d '{"p_scope":"country"}' | python3 -c "
+if [ -n "$NEW_SEC" ]; then
+  check "admin CAN revoke a secretariat" ok \
+    "$(curl -s -X POST "$SB_URL/rest/v1/rpc/revoke_wing_role" -H "apikey: $SB_KEY" \
+       -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" \
+       -d "{\"p_role_id\":\"$NEW_SEC\"}" | msg)"
+
+  STILL=$(curl -s -X POST "$SB_URL/rest/v1/rpc/wing_roles_list" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d '{}' | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin)
-  k=set(d[0].keys()) if d else set()
-  print('both' if {'country_clicks','global_clicks'} <= k else 'missing')
+  print('gone' if not any(r['role_id']=='$NEW_SEC' for r in d) else 'STILL ACTIVE')
 except Exception: print('error')")
-check "country and global click totals are separate" both "$SEP"
+  check "and it is genuinely revoked, not merely reported" gone "$STILL"
+fi
 
 echo
 printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
 
 # A block that returns early or skips would otherwise leave the suite
 # green with fewer checks. Assert the count as well as the result.
-EXPECTED=${EXPECTED_CHECKS:-94}
+EXPECTED=${EXPECTED_CHECKS:-98}
 TOTAL=$((PASS + FAIL))
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   printf '\033[31mFAIL\033[0m ran %d checks, expected %d — a block was skipped.\n' \

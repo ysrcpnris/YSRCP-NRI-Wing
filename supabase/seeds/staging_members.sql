@@ -5,8 +5,13 @@
 --
 -- This file lives in seeds/ and not migrations/ precisely so that
 -- `supabase db push` cannot pick it up. Production has 2,639 real
--- members; these 60 fabricated ones exist only so the chapter and admin
+-- members; these 130 fabricated ones exist only so the chapter and admin
 -- screens have plausible volume to render on staging.
+--
+-- 130 rather than 60 because the leaderboard caps at the top 100, and a
+-- test that a member BELOW the cut still sees their own standing needs
+-- more than 100 active members to be possible at all. A smaller seed
+-- made that regression untestable.
 --
 -- Everything here is invented. Names are common Telugu given and family
 -- names combined arithmetically, emails are @example.test (a reserved
@@ -71,7 +76,7 @@ people AS (
     -- "women: 0" on a seed that is 1-in-3 female overall.
     CASE WHEN (g * 5) % 8 < 3 THEN 'Female' ELSE 'Male' END AS gender,
     format('+4477009%05s', 10000 + g) AS mobile_number
-  FROM generate_series(1, 60) AS g
+  FROM generate_series(1, 130) AS g
 ),
 new_users AS (
   INSERT INTO auth.users (
