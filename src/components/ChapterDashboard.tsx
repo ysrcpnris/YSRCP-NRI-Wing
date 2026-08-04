@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Search, Users, MapPin, TrendingUp, Mail, Phone } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import AssistanceQueue from "./AssistanceQueue";
+import FeedbackInbox from "./FeedbackInbox";
 
 /**
  * Chapter surface — for country coordinators and chapter leads.
@@ -73,9 +74,9 @@ function StatCard({
   );
 }
 
-/* The coordinator has two jobs: know who is in the chapter, and clear
-   the queue. Those are the two views. */
-type View = "members" | "queue";
+/* What a coordinator actually does: know who is in the chapter, clear
+   the assistance queue, and read what the chapter is telling them. */
+type View = "members" | "queue" | "feedback";
 
 function ChapterTabs({
   view,
@@ -87,6 +88,7 @@ function ChapterTabs({
   const tabs: { key: View; label: string }[] = [
     { key: "members", label: "Members" },
     { key: "queue", label: "Assistance queue" },
+    { key: "feedback", label: "Feedback" },
   ];
   return (
     <div className="flex gap-2 border-b border-gray-200 -mb-2">
@@ -169,16 +171,24 @@ export default function ChapterDashboard() {
     );
   }
 
-  /* Before the noAccess guard, deliberately. noAccess is derived from
-     chapter_stats() being empty, which is also true for a coordinator
-     whose country simply has no members yet — and that coordinator must
-     still be able to reach their queue. AssistanceQueue does its own
+  /* Both of these sit before the noAccess guard, which is derived from
+     chapter_stats() being empty — also true for a coordinator whose
+     country simply has no members yet. Each of these does its own
      access check against its own RPC. */
   if (view === "queue") {
     return (
       <div className="space-y-8">
         <ChapterTabs view={view} setView={setView} />
         <AssistanceQueue />
+      </div>
+    );
+  }
+
+  if (view === "feedback") {
+    return (
+      <div className="space-y-8">
+        <ChapterTabs view={view} setView={setView} />
+        <FeedbackInbox />
       </div>
     );
   }
