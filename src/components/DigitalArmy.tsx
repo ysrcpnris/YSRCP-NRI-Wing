@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Megaphone, Copy, Check, Eye, Share2 } from "lucide-react";
+import { Megaphone, Copy, Check, Eye, Share2, Trophy, Globe, MapPin } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 /**
@@ -25,6 +25,174 @@ import { supabase } from "../lib/supabase";
  * proof of posting. The numbers are labelled accordingly: "opened to
  * share", never "posts".
  */
+
+type Ranking = {
+  place: number;
+  chapter: string;
+  country: string;
+  members: number;
+  sharers: number;
+  shares: number;
+  clicks: number;
+  is_mine: boolean;
+  total_clicks: number;
+};
+
+/**
+ * Chapter rankings.
+ *
+ * CHAPTERS, NEVER MEMBERS. A member leaderboard would rank individuals
+ * by political activity, and roughly 700 members are in the EU where
+ * political opinion is an Article 9 special category — the whole
+ * Digital Army design exists to avoid exactly that. Ranking chapters
+ * gives the same competition and names nobody.
+ *
+ * Two scopes only: the caller's own country, and the whole wing. There
+ * is no chapter-internal ranking, because clicks are counted at most
+ * once per link per hour and below a certain volume that floor decides
+ * the order rather than the effort.
+ */
+const RANK_MINIMUM = 25;
+
+function Rankings() {
+  const [scope, setScope] = useState<"country" | "global">("country");
+  const [rows, setRows] = useState<Ranking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let live = true;
+    setLoading(true);
+    (async () => {
+      const { data, error } = await supabase.rpc("chapter_rankings", {
+        p_scope: scope,
+      });
+      if (!live) return;
+      if (error) console.error("chapter_rankings failed:", error);
+      setRows((data as Ranking[]) ?? []);
+      setLoading(false);
+    })();
+    return () => {
+      live = false;
+    };
+  }, [scope]);
+
+  const total = rows[0]?.total_clicks ?? 0;
+  const tooEarly = total < RANK_MINIMUM;
+
+  return (
+    <section className="mt-10">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
+        <h3 className="font-bold text-gray-900 inline-flex items-center gap-2">
+          <Trophy size={16} className="text-primary-600" />
+          Chapter rankings
+        </h3>
+        <div className="flex gap-1">
+          {([
+            { k: "country" as const, label: "My country", Icon: MapPin },
+            { k: "global" as const, label: "Whole wing", Icon: Globe },
+          ]).map((t) => (
+            <button
+              key={t.k}
+              onClick={() => setScope(t.k)}
+              className={`h-9 px-3 rounded-lg text-sm font-bold inline-flex items-center gap-1.5
+                          border transition-colors ${
+                scope === t.k
+                  ? "bg-primary-600 text-white border-primary-600"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-primary-300"
+              }`}
+            >
+              <t.Icon size={14} />
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-500 mb-4">
+        Chapters, not people — we don’t rank individual members.
+      </p>
+
+      {loading ? (
+        <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-gray-500">No chapters to rank yet.</p>
+      ) : (
+        <>
+          {/* With a handful of clicks the order is decided by the
+              once-per-hour counting floor rather than by effort. Say so
+              instead of presenting a table that looks authoritative. */}
+          {tooEarly && (
+            <div className="p-3 mb-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-900">
+                Too early to rank meaningfully — {total}{" "}
+                {total === 1 ? "click" : "clicks"} counted so far. The order
+                below will shift a lot until there is more activity.
+              </p>
+            </div>
+          )}
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200">
+                  <th className="py-2 pr-3 font-bold w-10">#</th>
+                  <th className="py-2 pr-4 font-bold">Chapter</th>
+                  <th className="py-2 pr-4 font-bold text-right">Members</th>
+                  <th className="py-2 pr-4 font-bold text-right">Sharing</th>
+                  <th className="py-2 font-bold text-right">Clicks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr
+                    key={`${r.country}-${r.chapter}`}
+                    className={`border-b border-gray-100 ${
+                      r.is_mine ? "bg-primary-50" : ""
+                    }`}
+                  >
+                    <td className="py-2.5 pr-3 tabular-nums font-bold text-gray-500">
+                      {r.place}
+                    </td>
+                    <td className="py-2.5 pr-4">
+                      <span className="font-semibold text-gray-900">
+                        {r.chapter}
+                      </span>
+                      {scope === "global" && (
+                        <span className="block text-xs text-gray-400">
+                          {r.country}
+                        </span>
+                      )}
+                      {r.is_mine && (
+                        <span className="ml-2 text-xs font-bold text-primary-700">
+                          your chapter
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 pr-4 text-right tabular-nums text-gray-600">
+                      {r.members}
+                    </td>
+                    <td className="py-2.5 pr-4 text-right tabular-nums text-gray-600">
+                      {r.sharers}
+                    </td>
+                    <td className="py-2.5 text-right tabular-nums font-semibold text-gray-900">
+                      {r.clicks}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-xs text-gray-400 mt-3">
+            “Sharing” is how many members opened a composer — intent, not proof
+            of posting. Clicks are counted at most once per link per hour, so
+            these figures <strong>understate</strong> real reach.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
 
 type Campaign = {
   id: string;
@@ -245,6 +413,8 @@ export default function DigitalArmy() {
           ))}
         </div>
       )}
+
+      <Rankings />
 
       <p className="text-xs text-gray-400">
         We count clicks on the links we give you. We don’t track your social

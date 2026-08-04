@@ -532,11 +532,45 @@ if [ -n "$CL_ROLE" ]; then
 fi
 
 echo
+echo "Chapter rankings expose chapters, never members"
+# The country scope is always the CALLER'S country — there is no
+# parameter to ask for another one, which is the control. These checks
+# assert that the shape stays that way.
+DE_RANK=$(rpc_rows chapter_rankings "$DE_MEMBER" '{"p_scope":"country"}')
+check "member gets their own country ranking" rows "$DE_RANK"
+check "member gets the global ranking"        rows "$(rpc_rows chapter_rankings "$DE_MEMBER" '{"p_scope":"global"}')"
+check "an invalid scope is refused"           error "$(rpc_rows chapter_rankings "$DE_MEMBER" '{"p_scope":"chapter"}')"
+
+# A Germany member's country table must contain only Germany chapters.
+FOREIGN=$(curl -s -X POST "$SB_URL/rest/v1/rpc/chapter_rankings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d '{"p_scope":"country"}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print('yes' if any(r['country'] != 'Germany' for r in d) else 'no')
+except Exception: print('error')")
+check "no other country leaks into the country table" no "$FOREIGN"
+
+# The whole design rests on this: no row identifies a person.
+NAMED=$(curl -s -X POST "$SB_URL/rest/v1/rpc/chapter_rankings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d '{"p_scope":"global"}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  keys = set(d[0].keys()) if d else set()
+  leaky = keys & {'member_name','full_name','email','profile_id','mobile_number'}
+  print(','.join(sorted(leaky)) if leaky else 'none')
+except Exception: print('error')")
+check "rankings identify no individual" none "$NAMED"
+
+echo
 printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
 
 # A block that returns early or skips would otherwise leave the suite
 # green with fewer checks. Assert the count as well as the result.
-EXPECTED=${EXPECTED_CHECKS:-64}
+EXPECTED=${EXPECTED_CHECKS:-69}
 TOTAL=$((PASS + FAIL))
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   printf '\033[31mFAIL\033[0m ran %d checks, expected %d — a block was skipped.\n' \
