@@ -1,3 +1,114 @@
+# Deploying
+
+- [Staging](#deploying-develop-to-staging) — do this first, and keep it
+- [Production](#deploying-develop-to-production)
+
+---
+
+# Deploying `develop` to staging
+
+**There is no staging frontend today.** `staging.ysrcpnriwing.org` has no
+DNS record and never has; the only mention of it in the repo is a
+build-time placeholder in `ci.yml`, next to a comment saying the value is
+irrelevant to a build. Staging has so far been a *database only*
+(`vaomqjcupmlfsivkrelx`), exercised over the REST API. This section
+stands the web tier up for the first time.
+
+The staging database is already current — `supabase db push --dry-run`
+reports `upToDate: true`, all 107 migrations applied. So this is a
+frontend-only deploy, and unlike production it has **no ordering hazard**:
+the DB is already ahead, so the new bundle is the thing that makes them
+agree again.
+
+### The one setting that matters
+
+Vite inlines `VITE_*` at build time, so the Vercel **Preview**
+environment decides which database the staging site talks to.
+
+- Unset → `src/lib/supabase.ts` throws on import → white screen.
+- Inheriting Production values → **your staging site reads and writes the
+  live member database.** This is the failure to avoid.
+
+In Vercel → Settings → Environment Variables, add these to the
+**Preview** scope only (branch-scoped to `develop` if your plan allows):
+
+```
+VITE_SUPABASE_URL       https://vaomqjcupmlfsivkrelx.supabase.co
+VITE_SUPABASE_ANON_KEY  <staging anon key — it is in .env.local>
+VITE_APP_URL            https://staging.ysrcpnriwing.org
+```
+
+`vercel.json` and `index.html` already list **both** Supabase refs in the
+CSP `connect-src`, so no CSP change is needed for staging.
+
+`VITE_APP_URL` is not read anywhere in `src/` — auth redirects use
+`window.location.origin` at runtime. Set it for consistency, but it is
+not what makes login work. See the Supabase step below for what does.
+
+### Deploy
+
+Git integration (nothing to install; `develop` is already pushed):
+
+1. Vercel → Project → Settings → Git → confirm Preview deployments are
+   enabled for branches other than `main`.
+2. Set the Preview env vars above.
+3. Push to `develop`, or hit **Redeploy** on the latest `develop`
+   deployment so it picks up the new env vars. *Env var changes do not
+   apply to existing deployments — you must redeploy.*
+4. Copy the preview URL.
+
+Or with the CLI (`npm i -g vercel`, then `vercel login` — interactive):
+
+```bash
+vercel link
+vercel env add VITE_SUPABASE_URL preview
+vercel env add VITE_SUPABASE_ANON_KEY preview
+vercel deploy            # no --prod: this targets preview
+```
+
+### Allow the URL in Supabase, or logins will fail
+
+Staging Supabase → Authentication → URL Configuration. Add the staging
+URL to **Site URL** and **Redirect URLs**.
+
+Vercel gives every preview deployment a *different* random hostname, and
+email verification and password reset both bounce off
+`window.location.origin`. So either:
+
+- add a wildcard such as `https://*-<team>.vercel.app/**`, or
+- **preferred** — assign a stable domain (`staging.ysrcpnriwing.org`) to
+  the `develop` branch in Vercel → Settings → Domains, add the CNAME it
+  gives you, and allow-list just that.
+
+A stable hostname is worth the ten minutes; random URLs mean auth breaks
+on every redeploy.
+
+### Then actually open it
+
+This is the first time the app can be exercised the way a member reaches
+it, which `CLAUDE.md` requires and which no amount of REST testing
+substitutes for. Sign in as each fixture — password `StagingTest!2026`:
+
+| Account | Role |
+|---|---|
+| `t.us.a@example.test` | member |
+| `t.de.a@example.test` | country coordinator (DE) + chapter lead (US) |
+| `t.cl.a@example.test` | chapter lead |
+| `t.tl.a@example.test` | team lead |
+| `t.ae.a@example.test` | admin |
+| `t.sec.a@example.test` | secretariat |
+| `t.nc.a@example.test` | member in a chapterless country (Norway) |
+
+Check for the two defect classes that only appear on screen: a redirect
+loop to `/complete-profile`, and a field that saves an empty string over
+real data. Then check the Chapters rename reads correctly in the UI.
+
+If Vercel's Deployment Protection is on, preview URLs are SSO/password
+gated — turn it off for this deployment or share access, or testers will
+see a login wall that is not yours.
+
+---
+
 # Deploying `develop` to production
 
 Written for the first production release since the nine-slice rebuild.
