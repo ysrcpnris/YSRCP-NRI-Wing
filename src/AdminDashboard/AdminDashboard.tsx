@@ -10,6 +10,8 @@ import { Quote } from "lucide-react";
 import * as XLSX from "xlsx";
 import Visited from "./Visited";
 import Intelligence from "./Intelligence";
+import WingManagement from "./WingManagement";
+import AssistanceQueue from "../components/AssistanceQueue";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
 import Suggestions from "./Suggestions";
@@ -36,6 +38,8 @@ import {
   CalendarDays,
   Home,
   BarChart3,
+  Shield,
+  LifeBuoy,
   Users,
   FolderKanban,
   Newspaper,
@@ -628,6 +632,8 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
           <nav className="space-y-2">
             <Item icon={Home} label="Dashboard" page="dashboard" />
             <Item icon={BarChart3} label="Intelligence" page="intelligence" />
+            <Item icon={Shield} label="Wing Management" page="wingManagement" />
+            <Item icon={LifeBuoy} label="Grievances & Students" page="caseQueue" />
             <Item icon={Users} label="All Users" page="users" />
             <Item icon={CalendarDays} label="NRI Visits with Jagan Anna" page="visited" />
             <Item icon={Newspaper} label="Assistance" page="assistance" />
@@ -1424,6 +1430,8 @@ export default function AdminDashboard() {
         )}
       {currentPage === "users" && <UsersPage />}
       {currentPage === "intelligence" && <Intelligence />}
+      {currentPage === "wingManagement" && <WingManagement />}
+      {currentPage === "caseQueue" && <AssistanceQueue />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
       {currentPage === "serviceCategories" && <ServiceCategories />}

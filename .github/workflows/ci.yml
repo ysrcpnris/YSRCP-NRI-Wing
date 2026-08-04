@@ -59,3 +59,20 @@ jobs:
       - run: npm ci
       - name: No new type errors
         run: npm run typecheck:ci
+
+  # BLOCKING. ESLint could not run at all until typescript-eslint was
+  # upgraded — eslint 9.39 crashed loading a rule from the 8.8 plugin —
+  # so "lint passes" had never been true either way. Same budget shape
+  # as typecheck: 291 inherited problems tolerated, anything new fails.
+  lint:
+    name: Lint (no new problems)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: No new lint problems
+        run: npm run lint:ci

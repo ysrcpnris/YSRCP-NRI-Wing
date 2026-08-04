@@ -29,3 +29,7 @@ dist-ssr
 *.cjs
 users.sql
 migration_sql/
+
+# Supabase CLI scratch — linked project ref, pooler URL, versions.
+# Environment-specific and regenerated on `supabase link`.
+supabase/.temp/

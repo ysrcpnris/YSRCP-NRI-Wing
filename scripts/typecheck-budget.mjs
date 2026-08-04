@@ -90,6 +90,31 @@ if (!existsSync(baselineFile)) {
 }
 
 const baseline = JSON.parse(readFileSync(baselineFile, "utf8"));
+const known = new Set(baseline.fingerprints ?? []);
+
+/*
+ * Fingerprints first, count second.
+ *
+ * The original gate returned early whenever the TOTAL was at or below
+ * baseline, and only looked at fingerprints when the count rose. So a
+ * commit that fixed one inherited error and introduced one new error
+ * stayed at 117 and passed silently — the exact hole a reviewer found.
+ *
+ * A new error now fails regardless of the total.
+ */
+const fresh = known.size ? errors.filter((l) => !known.has(fingerprint(l))) : [];
+
+if (fresh.length > 0) {
+  console.error(
+    `${fresh.length} NEW type error${fresh.length === 1 ? "" : "s"} ` +
+      `(total ${errors.length}, baseline ${baseline.total}):\n`
+  );
+  for (const line of fresh) console.error(`  ${line}`);
+  console.error(
+    `\nFix them, or re-baseline with: npm run typecheck:ci -- --save`
+  );
+  process.exit(1);
+}
 
 if (errors.length <= baseline.total) {
   if (errors.length < baseline.total) {
@@ -103,30 +128,11 @@ if (errors.length <= baseline.total) {
   process.exit(0);
 }
 
-// Over budget. Show ONLY the errors that are not in the baseline —
-// listing every error in a file that grew buries the new one among the
-// inherited noise, and a report nobody can read gets ignored.
-console.error(`Type errors rose from ${baseline.total} to ${errors.length}.\n`);
-
-const known = new Set(baseline.fingerprints ?? []);
-const fresh = known.size
-  ? errors.filter((l) => !known.has(fingerprint(l)))
-  : [];
-
-if (fresh.length > 0) {
-  console.error("New errors:\n");
-  for (const line of fresh) console.error(`  ${line}`);
-} else {
-  // No fingerprints recorded (an older baseline), so fall back to
-  // reporting the files whose counts went up.
-  for (const [file, count] of byFile) {
-    const was = baseline.files?.[file] ?? 0;
-    if (count > was) console.error(`  ${file}: ${was} -> ${count}`);
-  }
-}
-
+// Count rose but every error is a known fingerprint — inherited errors
+// were duplicated (e.g. a file copied). Report it rather than passing
+// silently, since the baseline no longer describes reality.
 console.error(
-  `\nFix the new errors, or if they are genuinely pre-existing, ` +
-    `re-baseline with: npm run typecheck:ci -- --save`
+  `Type errors rose from ${baseline.total} to ${errors.length}, though all ` +
+    `are known fingerprints. Re-baseline with: npm run typecheck:ci -- --save`
 );
 process.exit(1);

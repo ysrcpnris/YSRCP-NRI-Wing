@@ -6,6 +6,7 @@ import AbroadConnect from './AbroadConnect';
 import MyRequests from './MyRequests';
 import Appointments from './Appointments';
 import DigitalArmy from './DigitalArmy';
+import ChapterDashboard from './ChapterDashboard';
 import nriLogo from './nrilogo.png';
 import { useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
@@ -1044,6 +1045,7 @@ import {
   LifeBuoy,
   CalendarDays,
   Megaphone,
+  Shield,
   Bell,
   MapPin,
   ChevronDown,
@@ -1432,6 +1434,7 @@ const Dashboard: React.FC = () => {
     | "assistance"
     | "appointments"
     | "army"
+    | "chapter"
     | "suggestions";
   const VALID_TABS: readonly Tab[] = [
     "overview",
@@ -1443,6 +1446,7 @@ const Dashboard: React.FC = () => {
     "assistance",
     "appointments",
     "army",
+    "chapter",
     "suggestions",
   ];
 
@@ -2084,6 +2088,21 @@ const [familyDesignationOther, setFamilyDesignationOther] = useState("");
  * member's date of birth and every family field.
  */
 const [dob, setDob] = useState("");
+
+/**
+ * Does this member hold a wing role? /chapter was reachable only by
+ * typing the URL, so a coordinator had no way to find their own chapter
+ * surface. chapter_stats() returns nothing to someone with no role, so
+ * asking it is also the access check.
+ */
+const [hasChapterRole, setHasChapterRole] = useState(false);
+useEffect(() => {
+  if (!user?.id) return;
+  (async () => {
+    const { data } = await supabase.rpc("chapter_stats");
+    setHasChapterRole(Array.isArray(data) && data.length > 0);
+  })();
+}, [user?.id]);
 const [privateLoaded, setPrivateLoaded] = useState(false);
 const [privateOriginal, setPrivateOriginal] = useState<{
   dob: string | null;
@@ -6129,7 +6148,11 @@ const renderSuggestionsContent = () => (
     { id: "appointments" as const, label: "Appointments", icon: CalendarDays, color: "text-indigo-600" },
     { id: "army" as const,        label: "Digital Army", icon: Megaphone,    color: "text-cyan-600" },
     { id: "suggestions" as const, label: "Feedback",    icon: Send,          color: "text-purple-600" },
-  ];
+  ].concat(
+    hasChapterRole
+      ? [{ id: "chapter" as any, label: "My Chapter", icon: Shield, color: "text-primary-700" }]
+      : []
+  );
 
   const activeNav = navItems.find((n) => n.id === activeTab)!;
 
@@ -6144,6 +6167,7 @@ const renderSuggestionsContent = () => (
       case "assistance":  return <MyRequests />;
       case "appointments": return <Appointments />;
       case "army":        return <DigitalArmy />;
+      case "chapter":     return <ChapterDashboard />;
       case "suggestions": return renderSuggestionsContent();
       default:            return renderOverviewContent();
     }
