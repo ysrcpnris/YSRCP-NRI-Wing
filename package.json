@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "typecheck:ci": "node scripts/typecheck-budget.mjs",
-    "lint:ci": "node scripts/lint-budget.mjs"
+    "lint:ci": "node scripts/lint-budget.mjs",
+    "smoke": "node scripts/smoke-member-journey.mjs",
+    "test:auth": "bash scripts/auth-matrix.sh"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",

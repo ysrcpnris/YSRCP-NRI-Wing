@@ -76,3 +76,35 @@ jobs:
       - run: npm ci
       - name: No new lint problems
         run: npm run lint:ci
+
+  # Authorization and member-journey tests need a live database, so they
+  # run only where the staging secrets exist. They are the two suites
+  # that would have caught the review's findings: auth-matrix for the
+  # privilege escalation, smoke for the redirect loop and the data
+  # erasure. Skipped rather than failed on a fork PR with no secrets.
+  database:
+    name: Database tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Write .env.local from secrets
+        run: |
+          if [ -z "${{ secrets.STAGING_SUPABASE_URL }}" ]; then
+            echo "No staging secrets configured — skipping database tests."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          printf 'VITE_SUPABASE_URL=%s\n' "${{ secrets.STAGING_SUPABASE_URL }}" > .env.local
+          printf 'VITE_SUPABASE_ANON_KEY=%s\n' "${{ secrets.STAGING_SUPABASE_ANON_KEY }}" >> .env.local
+      - name: Authorization matrix
+        if: env.SKIP != '1'
+        run: npm run test:auth
+      - name: Member journey
+        if: env.SKIP != '1'
+        run: npm run smoke
