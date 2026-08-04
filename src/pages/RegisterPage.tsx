@@ -664,7 +664,7 @@ return (
                 {/* State / Province and City moved to /complete-profile.
                     Country stays because it decides the member's chapter
                     and is needed before anything country-scoped can be
-                    shown. The city is what maps a member to a cluster, so
+                    shown. The city is what maps a member to a chapter, so
                     the wizard asks for it there. */}
                 <div>
                   <label className="input-label">

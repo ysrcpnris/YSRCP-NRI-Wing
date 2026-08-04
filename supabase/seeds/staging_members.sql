@@ -46,7 +46,7 @@ WITH cities AS (
   SELECT country, city,
          row_number() OVER (ORDER BY country, city) - 1 AS n,
          count(*) OVER () AS total
-    FROM public.cluster_cities
+    FROM public.chapter_cities
 ),
 seats AS (
   SELECT c.name AS constituency, d.name AS district,

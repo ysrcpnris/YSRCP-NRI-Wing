@@ -17,7 +17,7 @@ import { countriesData } from "../lib/countryCodes";
  * abandons it when asked to recall their home constituency; a verified
  * member who has already committed answers the same question. Same
  * fields, far better completion — and section 1 pays off immediately by
- * naming the cluster and coordinator the member has just joined.
+ * naming the chapter and coordinator the member has just joined.
  *
  * Country, city, constituency and gender gate the dashboard — plus
  * mandal, but only where that constituency has mandals loaded.

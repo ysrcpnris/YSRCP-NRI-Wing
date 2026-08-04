@@ -4,7 +4,7 @@
 #
 # WHY THIS EXISTS
 #   Nine slices were built and reported complete with no test that ran
-#   as an admin, a cluster lead or a team lead. A code review then found
+#   as an admin, a chapter lead or a team lead. A code review then found
 #   a one-request privilege escalation, an admin who could not read the
 #   user list, and a member who could close their own case. Every one of
 #   them is a two-line check here.
@@ -19,7 +19,7 @@
 # Requires the fixtures created by supabase/seeds/staging_fixtures.sql:
 #   t.us.a  member          no role
 #   t.de.a  coordinator     country_coordinator, Germany
-#   t.cl.a  cluster lead    cluster_lead, Germany cluster
+#   t.cl.a  chapter lead    chapter_lead, Germany chapter
 #   t.tl.a  team lead       team_lead, Germany (read-only)
 #   t.ae.a  admin           profiles.role = 'admin'
 # =====================================================================
@@ -74,9 +74,9 @@ except Exception: print('error')"
 }
 
 echo "Authorization matrix — $SB_URL"
-MEMBER=$(tok t.us.a); COORD=$(tok t.de.a); CLUSTER=$(tok t.cl.a)
+MEMBER=$(tok t.us.a); COORD=$(tok t.de.a); CHAPTER=$(tok t.cl.a)
 TEAM=$(tok t.tl.a);   ADMIN=$(tok t.ae.a)
-for n in MEMBER COORD CLUSTER TEAM ADMIN; do
+for n in MEMBER COORD CHAPTER TEAM ADMIN; do
   [ -n "${!n}" ] || { echo "FATAL: no token for $n — are the fixtures seeded?" >&2; exit 1; }
 done
 MEMBER_ID=$(curl -s "$SB_URL/auth/v1/user" -H "apikey: $SB_KEY" \
@@ -138,7 +138,7 @@ echo "Scope — admin sees everything, team lead writes nothing"
 check "admin reads chapter_roster"        rows "$(rpc_rows chapter_roster "$ADMIN")"
 check "admin reads assistance_queue"      rows "$(rpc_rows assistance_queue "$ADMIN")"
 check "coordinator reads roster"          rows "$(rpc_rows chapter_roster "$COORD")"
-check "cluster lead reads roster"         rows "$(rpc_rows chapter_roster "$CLUSTER")"
+check "chapter lead reads roster"         rows "$(rpc_rows chapter_roster "$CHAPTER")"
 check "team lead reads roster"            rows "$(rpc_rows chapter_roster "$TEAM")"
 check "plain member reads roster"         none "$(rpc_rows chapter_roster "$MEMBER")"
 
@@ -152,8 +152,8 @@ check "admin calls intel_headline"        rows "$(rpc_rows intel_headline "$ADMI
 
 echo
 echo "Chapter map is admin-only"
-check "coordinator creates a cluster"     403 "$(status POST clusters "$COORD" '{"name":"X","country":"Germany"}')"
-check "member creates a cluster"          403 "$(status POST clusters "$MEMBER" '{"name":"Y","country":"Germany"}')"
+check "coordinator creates a chapter"     403 "$(status POST chapters "$COORD" '{"name":"X","country":"Germany"}')"
+check "member creates a chapter"          403 "$(status POST chapters "$MEMBER" '{"name":"Y","country":"Germany"}')"
 
 echo
 echo "Feedback"
@@ -263,13 +263,13 @@ import sys,json
 try:
   d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
 except Exception: print('')")
-DE_CLUSTER=$(curl -s "$SB_URL/rest/v1/clusters?select=id&name=eq.Germany" -H "apikey: $SB_KEY" \
+DE_CHAPTER=$(curl -s "$SB_URL/rest/v1/chapters?select=id&name=eq.Germany" -H "apikey: $SB_KEY" \
   -H "Authorization: Bearer $ADMIN" | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
 except Exception: print('')")
-US_CLUSTER=$(curl -s "$SB_URL/rest/v1/clusters?select=id&country=eq.United%20States&limit=1" \
+US_CHAPTER=$(curl -s "$SB_URL/rest/v1/chapters?select=id&country=eq.United%20States&limit=1" \
   -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
 import sys,json
 try:
@@ -292,37 +292,37 @@ RES=$(inserted member_roles "$TEAM" "$ROLE_JSON" title AMT)
 check "team lead cannot mint a role" no "$RES"
 
 echo
-echo "Cluster lead is bounded by their own chapter"
-OWN_JSON="{\"scope\":\"chapter\",\"platform\":\"telegram\",\"label\":\"AMown\",\"url\":\"https://example.com/o\",\"cluster_id\":\"$DE_CLUSTER\",\"country\":\"Germany\"}"
-RES=$(inserted social_handles "$CLUSTER" "$OWN_JSON" label AMown)
-check "cluster lead writes own chapter handle" yes "$RES"
+echo "Chapter lead is bounded by their own chapter"
+OWN_JSON="{\"scope\":\"chapter\",\"platform\":\"telegram\",\"label\":\"AMown\",\"url\":\"https://example.com/o\",\"chapter_id\":\"$DE_CHAPTER\",\"country\":\"Germany\"}"
+RES=$(inserted social_handles "$CHAPTER" "$OWN_JSON" label AMown)
+check "chapter lead writes own chapter handle" yes "$RES"
 
-CROSS_JSON="{\"scope\":\"chapter\",\"platform\":\"telegram\",\"label\":\"AMcross\",\"url\":\"https://example.com/x\",\"cluster_id\":\"$US_CLUSTER\",\"country\":\"United States\"}"
-RES=$(inserted social_handles "$CLUSTER" "$CROSS_JSON" label AMcross)
-check "cluster lead cannot write another chapter" no "$RES"
+CROSS_JSON="{\"scope\":\"chapter\",\"platform\":\"telegram\",\"label\":\"AMcross\",\"url\":\"https://example.com/x\",\"chapter_id\":\"$US_CHAPTER\",\"country\":\"United States\"}"
+RES=$(inserted social_handles "$CHAPTER" "$CROSS_JSON" label AMcross)
+check "chapter lead cannot write another chapter" no "$RES"
 # The composite FK stops a handle naming one country and another
-# country's cluster — a phishing vector on a table of invite links.
-FK_JSON="{\"scope\":\"chapter\",\"platform\":\"telegram\",\"label\":\"AMfk\",\"url\":\"https://example.com/f\",\"cluster_id\":\"$US_CLUSTER\",\"country\":\"Germany\"}"
+# country's chapter — a phishing vector on a table of invite links.
+FK_JSON="{\"scope\":\"chapter\",\"platform\":\"telegram\",\"label\":\"AMfk\",\"url\":\"https://example.com/f\",\"chapter_id\":\"$US_CHAPTER\",\"country\":\"Germany\"}"
 RES=$(inserted social_handles "$ADMIN" "$FK_JSON" label AMfk)
-check "mismatched country/cluster is rejected" no "$RES"
+check "mismatched country/chapter is rejected" no "$RES"
 
 echo
 echo "Role delegation respects the rank ladder"
-grant() { # token role country cluster
+grant() { # token role country chapter
   local body
   body=$(python3 -c "
 import json,sys
 p={'p_profile_id':sys.argv[1],'p_role':sys.argv[2]}
 if sys.argv[3]!='-': p['p_country']=sys.argv[3]
-if sys.argv[4]!='-': p['p_cluster_id']=sys.argv[4]
+if sys.argv[4]!='-': p['p_chapter_id']=sys.argv[4]
 print(json.dumps(p))" "$VICTIM_ID" "$2" "${3:--}" "${4:--}")
   curl -s -X POST "$SB_URL/rest/v1/rpc/grant_wing_role" -H "apikey: $SB_KEY" \
     -H "Authorization: Bearer $1" -H "Content-Type: application/json" -d "$body" | msg
 }
 check "coordinator cannot clone a coordinator" refused "$(grant "$COORD" country_coordinator Germany)"
-check "cluster lead cannot appoint a coordinator" refused "$(grant "$CLUSTER" country_coordinator Germany)"
+check "chapter lead cannot appoint a coordinator" refused "$(grant "$CHAPTER" country_coordinator Germany)"
 check "team lead cannot appoint anyone"          refused "$(grant "$TEAM" team_lead Germany)"
-check "cluster lead appoints in own chapter"     ok      "$(grant "$CLUSTER" team_lead Germany "$DE_CLUSTER")"
+check "chapter lead appoints in own chapter"     ok      "$(grant "$CHAPTER" team_lead Germany "$DE_CHAPTER")"
 
 # revoke_wing_role() wrote to a GENERATED column and threw 428C9 on
 # every call. Nothing exercised it, so it had never worked once.
@@ -345,7 +345,7 @@ echo
 echo "Protected columns are unreachable through an RPC too"
 # admin_member_list() returns dob and family_* and once authorised any
 # scoped role, handing them to coordinators and read-only team leads.
-for T in MEMBER COORD CLUSTER TEAM; do
+for T in MEMBER COORD CHAPTER TEAM; do
   check "$T reads admin_member_list" none "$(rpc_rows admin_member_list "${!T}")"
 done
 check "admin reads admin_member_list" rows "$(rpc_rows admin_member_list "$ADMIN")"
@@ -421,7 +421,7 @@ curl -s -o /dev/null -X POST "$SB_URL/rest/v1/rpc/cancel_booking" -H "apikey: $S
 
 echo
 echo "Appointments cannot be published outside their scope"
-# cluster_id and country were stored independently with no consistency
+# chapter_id and country were stored independently with no consistency
 # rule, so a Germany chapter lead published a wing-wide slot and a
 # USA-scoped one, and USA members saw both.
 FAR=$(python3 -c "
@@ -429,17 +429,17 @@ import datetime as d
 n=d.datetime.now(d.timezone.utc)+d.timedelta(days=40)
 print(n.strftime('%Y-%m-%dT%H:%M:%SZ'), (n+d.timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
 FSTART=$(echo "$FAR" | cut -d' ' -f1); FEND=$(echo "$FAR" | cut -d' ' -f2)
-GLOBAL_JSON="{\"title\":\"AMglobal\",\"starts_at\":\"$FSTART\",\"ends_at\":\"$FEND\",\"capacity\":1,\"mode\":\"auto\",\"cluster_id\":\"$DE_CLUSTER\",\"country\":null,\"is_published\":true}"
+GLOBAL_JSON="{\"title\":\"AMglobal\",\"starts_at\":\"$FSTART\",\"ends_at\":\"$FEND\",\"capacity\":1,\"mode\":\"auto\",\"chapter_id\":\"$DE_CHAPTER\",\"country\":null,\"is_published\":true}"
 check "chapter lead cannot publish wing-wide" no \
-  "$(inserted appointment_slots "$CLUSTER" "$GLOBAL_JSON" title AMglobal)"
-XC_JSON="{\"title\":\"AMxcountry\",\"starts_at\":\"$FSTART\",\"ends_at\":\"$FEND\",\"capacity\":1,\"mode\":\"auto\",\"cluster_id\":\"$DE_CLUSTER\",\"country\":\"United States\",\"is_published\":true}"
+  "$(inserted appointment_slots "$CHAPTER" "$GLOBAL_JSON" title AMglobal)"
+XC_JSON="{\"title\":\"AMxcountry\",\"starts_at\":\"$FSTART\",\"ends_at\":\"$FEND\",\"capacity\":1,\"mode\":\"auto\",\"chapter_id\":\"$DE_CHAPTER\",\"country\":\"United States\",\"is_published\":true}"
 check "chapter lead cannot publish cross-country" no \
-  "$(inserted appointment_slots "$CLUSTER" "$XC_JSON" title AMxcountry)"
-OK_JSON="{\"title\":\"AMchapter\",\"starts_at\":\"$FSTART\",\"ends_at\":\"$FEND\",\"capacity\":1,\"mode\":\"auto\",\"cluster_id\":\"$DE_CLUSTER\",\"country\":\"Germany\",\"is_published\":true}"
+  "$(inserted appointment_slots "$CHAPTER" "$XC_JSON" title AMxcountry)"
+OK_JSON="{\"title\":\"AMchapter\",\"starts_at\":\"$FSTART\",\"ends_at\":\"$FEND\",\"capacity\":1,\"mode\":\"auto\",\"chapter_id\":\"$DE_CHAPTER\",\"country\":\"Germany\",\"is_published\":true}"
 check "chapter lead publishes in own chapter" yes \
-  "$(inserted appointment_slots "$CLUSTER" "$OK_JSON" title AMchapter)"
+  "$(inserted appointment_slots "$CHAPTER" "$OK_JSON" title AMchapter)"
 check "and can list it in slots_i_manage" yes \
-  "$(rpc_rows slots_i_manage "$CLUSTER" | sed 's/rows/yes/;s/none/no/')"
+  "$(rpc_rows slots_i_manage "$CHAPTER" | sed 's/rows/yes/;s/none/no/')"
 curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/appointment_slots?title=in.(AMglobal,AMxcountry,AMchapter)" \
   -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
 
@@ -483,19 +483,19 @@ curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/grievances?id=eq.$GRV" \
 echo
 echo "Rank is computed for the scope being acted on"
 # THE ORIGINAL EXPLOIT. t.de.a holds country_coordinator in Germany AND
-# cluster_lead in the USA (staging_fixtures.sql). my_role_rank() took
+# chapter_lead in the USA (staging_fixtures.sql). my_role_rank() took
 # the best rank held ANYWHERE, so coordinator rank (2) could be
-# presented against USA cluster scope and appoint another chapter lead
+# presented against USA chapter scope and appoint another chapter lead
 # there. Without this check the scoped helper could be swapped back for
 # the global one and every other assertion would stay green.
-US_CL=$(curl -s "$SB_URL/rest/v1/clusters?select=id&country=eq.United%20States&order=name&limit=1" \
+US_CL=$(curl -s "$SB_URL/rest/v1/chapters?select=id&country=eq.United%20States&order=name&limit=1" \
   -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN" | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
 except Exception: print('')")
 check "dual-role user cannot use Germany rank in the USA" refused \
-  "$(grant "$COORD" cluster_lead "United States" "$US_CL")"
+  "$(grant "$COORD" chapter_lead "United States" "$US_CL")"
 check "dual-role user still appoints in their own country" ok \
   "$(grant "$COORD" team_lead Germany)"
 DUAL_ROLE=$(curl -s -X POST "$SB_URL/rest/v1/rpc/wing_roles_list" -H "apikey: $SB_KEY" \
@@ -510,24 +510,24 @@ except Exception: print('')")
   -d "{\"p_role_id\":\"$DUAL_ROLE\"}"
 
 # my_role_rank() took the best rank held ANYWHERE, so coordinator rank
-# in one country could be presented against cluster scope in another.
-check "cluster lead appoints team lead in own chapter" ok \
-  "$(grant "$CLUSTER" team_lead Germany "$DE_CLUSTER")"
+# in one country could be presented against chapter scope in another.
+check "chapter lead appoints team lead in own chapter" ok \
+  "$(grant "$CHAPTER" team_lead Germany "$DE_CHAPTER")"
 CL_ROLE=$(curl -s -X POST "$SB_URL/rest/v1/rpc/wing_roles_list" -H "apikey: $SB_KEY" \
-  -H "Authorization: Bearer $CLUSTER" -H "Content-Type: application/json" -d '{}' | python3 -c "
+  -H "Authorization: Bearer $CHAPTER" -H "Content-Type: application/json" -d '{}' | python3 -c "
 import sys,json
 try:
   d=json.load(sys.stdin)
-  print(next((r['role_id'] for r in d if r['cluster_id'] and r['role']=='team_lead'), ''))
+  print(next((r['role_id'] for r in d if r['chapter_id'] and r['role']=='team_lead'), ''))
 except Exception: print('')")
-# wing_roles_list() excluded cluster scope, so a chapter lead could
+# wing_roles_list() excluded chapter scope, so a chapter lead could
 # create a role and never see it again to revoke it.
 check "chapter lead sees the role they granted" found \
   "$([ -n "$CL_ROLE" ] && echo found || echo missing)"
 if [ -n "$CL_ROLE" ]; then
   check "chapter lead revokes it" ok \
     "$(curl -s -X POST "$SB_URL/rest/v1/rpc/revoke_wing_role" -H "apikey: $SB_KEY" \
-       -H "Authorization: Bearer $CLUSTER" -H "Content-Type: application/json" \
+       -H "Authorization: Bearer $CHAPTER" -H "Content-Type: application/json" \
        -d "{\"p_role_id\":\"$CL_ROLE\"}" | msg)"
 fi
 

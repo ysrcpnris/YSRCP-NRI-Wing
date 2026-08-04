@@ -10,7 +10,7 @@ import { supabase } from "../lib/supabase";
  * own team ("local to that chapter, student assistance or something
  * else in future"), and until now that existed only as an RPC — the
  * one UI calling grant_wing_role() was admin-only, and wing_roles_list()
- * did not return cluster-scoped grants, so a chapter lead could create
+ * did not return chapter-scoped grants, so a chapter lead could create
  * a role through a raw call and never see it again to revoke it.
  *
  * The component holds no authority of its own. grant_wing_role() and
@@ -21,7 +21,7 @@ import { supabase } from "../lib/supabase";
 
 const WING_ROLES = [
   { value: "country_coordinator", label: "Country coordinator", scope: "country" },
-  { value: "cluster_lead",        label: "Chapter lead",        scope: "cluster" },
+  { value: "chapter_lead",        label: "Chapter lead",        scope: "chapter" },
   // A team lead belongs to a country OR to a single chapter. A chapter
   // lead can only create the chapter-scoped kind — the appointee never
   // gets wider scope than whoever appointed them.
@@ -57,7 +57,7 @@ function Banner({ msg, ok }: { msg: string; ok: boolean }) {
 }
 
 /* Shapes returned by wing_roles_list(), search_members() and the
-   clusters table. Typed rather than `any` so a column removed from an
+   chapters table. Typed rather than `any` so a column removed from an
    RPC shows up here instead of as undefined at runtime. */
 type RoleRow = {
   role_id: string;
@@ -67,13 +67,13 @@ type RoleRow = {
   role: string;
   country: string | null;
   chapter: string | null;
-  cluster_id: string | null;
+  chapter_id: string | null;
   title: string | null;
   granted_at: string;
   granted_by_name: string | null;
 };
 
-type ClusterRow = { id: string; name: string; country: string };
+type ChapterRow = { id: string; name: string; country: string };
 
 type MemberHit = {
   id: string;
@@ -85,23 +85,23 @@ type MemberHit = {
 
 export default function RoleManager() {
   const [rows, setRows] = useState<RoleRow[]>([]);
-  const [clusters, setClusters] = useState<ClusterRow[]>([]);
+  const [chapters, setChapters] = useState<ChapterRow[]>([]);
   const [q, setQ] = useState("");
   const [found, setFound] = useState<MemberHit[]>([]);
   const [pick, setPick] = useState<MemberHit | null>(null);
   const [role, setRole] = useState("country_coordinator");
   const [country, setCountry] = useState("");
-  const [clusterId, setClusterId] = useState("");
+  const [chapterId, setChapterId] = useState("");
   const [title, setTitle] = useState("");
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
 
   const load = useCallback(async () => {
     const [{ data: r }, { data: c }] = await Promise.all([
       supabase.rpc("wing_roles_list"),
-      supabase.from("clusters").select("id, name, country").order("name"),
+      supabase.from("chapters").select("id, name, country").order("name"),
     ]);
     setRows((r as RoleRow[]) ?? []);
-    setClusters((c as ClusterRow[]) ?? []);
+    setChapters((c as ChapterRow[]) ?? []);
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -122,9 +122,9 @@ export default function RoleManager() {
       p_country: role === "secretariat" ? null : country || pick.country,
       // Sent for a chapter lead, and for a team lead when a chapter was
       // chosen — that is what makes a chapter-scoped team lead possible.
-      p_cluster_id:
-        role === "cluster_lead" || (role === "team_lead" && clusterId)
-          ? clusterId || null
+      p_chapter_id:
+        role === "chapter_lead" || (role === "team_lead" && chapterId)
+          ? chapterId || null
           : null,
       p_title: title || null,
     });
@@ -134,7 +134,7 @@ export default function RoleManager() {
       return;
     }
     setMsg({ t: res.message, ok: true });
-    setPick(null); setQ(""); setTitle(""); setClusterId("");
+    setPick(null); setQ(""); setTitle(""); setChapterId("");
     load();
   };
 
@@ -146,8 +146,8 @@ export default function RoleManager() {
   };
 
   const scope = WING_ROLES.find((r) => r.value === role)?.scope;
-  const wantsCountry = scope === "country" || scope === "cluster" || scope === "either";
-  const wantsCluster = scope === "cluster" || scope === "either";
+  const wantsCountry = scope === "country" || scope === "chapter" || scope === "either";
+  const wantsChapter = scope === "chapter" || scope === "either";
 
   return (
     <div>
@@ -196,12 +196,12 @@ export default function RoleManager() {
             </Field>
           )}
 
-          {wantsCluster && (
+          {wantsChapter && (
             <Field label="Chapter">
-              <select className={inputCls} value={clusterId}
-                      onChange={(e) => setClusterId(e.target.value)}>
+              <select className={inputCls} value={chapterId}
+                      onChange={(e) => setChapterId(e.target.value)}>
                 <option value="">Choose…</option>
-                {clusters
+                {chapters
                   .filter((c) => !country || c.country === country)
                   .map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
@@ -220,12 +220,12 @@ export default function RoleManager() {
         {role === "team_lead" && (
           <p className="text-xs text-gray-500 mt-2">
             A team lead reads and edits nothing.{" "}
-            {clusterId
+            {chapterId
               ? "With a chapter chosen, they see only that chapter."
               : "With no chapter chosen, they see the whole country — which only a country coordinator or administrator can grant."}
           </p>
         )}
-        {role === "cluster_lead" && !clusterId && (
+        {role === "chapter_lead" && !chapterId && (
           <p className="text-xs text-amber-700 mt-2">
             Choose the chapter this lead will run.
           </p>

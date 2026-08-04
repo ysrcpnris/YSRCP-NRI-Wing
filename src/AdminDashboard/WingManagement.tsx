@@ -60,26 +60,26 @@ function Banner({ msg, ok }: { msg: string; ok: boolean }) {
 
 /* ── Chapters ──────────────────────────────────────────────────────── */
 function ChaptersTab() {
-  const [clusters, setClusters] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [cityName, setCityName] = useState("");
-  const [cityCluster, setCityCluster] = useState("");
+  const [cityChapter, setCityChapter] = useState("");
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
 
   const load = useCallback(async () => {
     const [{ data: c }, { data: cc }] = await Promise.all([
-      supabase.from("clusters").select("id, name, country").order("country"),
-      supabase.from("cluster_cities").select("country, city, cluster_id").order("country"),
+      supabase.from("chapters").select("id, name, country").order("country"),
+      supabase.from("chapter_cities").select("country, city, chapter_id").order("country"),
     ]);
-    setClusters(c ?? []);
+    setChapters(c ?? []);
     setCities(cc ?? []);
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const addCluster = async () => {
-    const { error } = await supabase.from("clusters").insert({ name, country });
+  const addChapter = async () => {
+    const { error } = await supabase.from("chapters").insert({ name, country });
     setMsg(error
       ? { t: "Only a wing administrator can change the chapter map.", ok: false }
       : { t: "Chapter created.", ok: true });
@@ -87,10 +87,10 @@ function ChaptersTab() {
   };
 
   const addCity = async () => {
-    const cl = clusters.find((c) => c.id === cityCluster);
+    const cl = chapters.find((c) => c.id === cityChapter);
     if (!cl) return;
-    const { error } = await supabase.from("cluster_cities")
-      .insert({ country: cl.country, city: cityName, cluster_id: cl.id });
+    const { error } = await supabase.from("chapter_cities")
+      .insert({ country: cl.country, city: cityName, chapter_id: cl.id });
     setMsg(error
       ? { t: "Could not add that city — it may already belong to a chapter.", ok: false }
       : { t: "City added.", ok: true });
@@ -118,7 +118,7 @@ function ChaptersTab() {
               <input className={inputCls} value={country} onChange={(e) => setCountry(e.target.value)}
                      placeholder="e.g. United States" />
             </Field>
-            <button onClick={addCluster} disabled={!name || !country}
+            <button onClick={addChapter} disabled={!name || !country}
                     className="h-10 px-4 rounded-lg bg-primary-600 text-white text-sm font-bold
                                disabled:opacity-50 hover:bg-primary-700">
               Create chapter
@@ -130,10 +130,10 @@ function ChaptersTab() {
           <h4 className="font-bold text-gray-900 mb-3">Add a city to a chapter</h4>
           <div className="space-y-3">
             <Field label="Chapter">
-              <select className={inputCls} value={cityCluster}
-                      onChange={(e) => setCityCluster(e.target.value)}>
+              <select className={inputCls} value={cityChapter}
+                      onChange={(e) => setCityChapter(e.target.value)}>
                 <option value="">Choose…</option>
-                {clusters.map((c) => (
+                {chapters.map((c) => (
                   <option key={c.id} value={c.id}>{c.name} · {c.country}</option>
                 ))}
               </select>
@@ -142,7 +142,7 @@ function ChaptersTab() {
               <input className={inputCls} value={cityName}
                      onChange={(e) => setCityName(e.target.value)} placeholder="e.g. Portland" />
             </Field>
-            <button onClick={addCity} disabled={!cityName || !cityCluster}
+            <button onClick={addCity} disabled={!cityName || !cityChapter}
                     className="h-10 px-4 rounded-lg bg-primary-600 text-white text-sm font-bold
                                disabled:opacity-50 hover:bg-primary-700">
               Add city
@@ -152,15 +152,15 @@ function ChaptersTab() {
       </div>
 
       <h4 className="font-bold text-gray-900 mt-8 mb-3">
-        {clusters.length} chapters · {cities.length} cities
+        {chapters.length} chapters · {cities.length} cities
       </h4>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {clusters.map((c) => (
+        {chapters.map((c) => (
           <div key={c.id} className="p-4 bg-white border border-gray-200 rounded-xl">
             <p className="font-bold text-gray-900 text-sm">{c.name}</p>
             <p className="text-xs text-gray-500">{c.country}</p>
             <p className="text-xs text-gray-600 mt-2">
-              {cities.filter((x) => x.cluster_id === c.id).map((x) => x.city).join(", ") ||
+              {cities.filter((x) => x.chapter_id === c.id).map((x) => x.city).join(", ") ||
                "No cities yet"}
             </p>
           </div>
@@ -173,27 +173,27 @@ function ChaptersTab() {
 /* ── Handles ───────────────────────────────────────────────────────── */
 function HandlesTab() {
   const [rows, setRows] = useState<any[]>([]);
-  const [clusters, setClusters] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<any[]>([]);
   const [form, setForm] = useState({
     scope: "chapter", platform: "whatsapp", label: "", url: "",
-    cluster_id: "", member_count: "", description: "",
+    chapter_id: "", member_count: "", description: "",
   });
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
 
   const load = useCallback(async () => {
     const [{ data: h }, { data: c }] = await Promise.all([
       supabase.from("social_handles")
-        .select("id, scope, platform, label, url, country, member_count, count_as_of, cluster_id")
+        .select("id, scope, platform, label, url, country, member_count, count_as_of, chapter_id")
         .order("scope").order("label"),
-      supabase.from("clusters").select("id, name, country").order("name"),
+      supabase.from("chapters").select("id, name, country").order("name"),
     ]);
     setRows(h ?? []);
-    setClusters(c ?? []);
+    setChapters(c ?? []);
   }, []);
   useEffect(() => { load(); }, [load]);
 
   const add = async () => {
-    const cl = clusters.find((c) => c.id === form.cluster_id);
+    const cl = chapters.find((c) => c.id === form.chapter_id);
     if (form.scope === "chapter" && !cl) {
       setMsg({ t: "Pick the chapter this belongs to.", ok: false });
       return;
@@ -203,8 +203,8 @@ function HandlesTab() {
       platform: form.platform,
       label: form.label,
       url: form.url,
-      cluster_id: form.scope === "chapter" ? cl!.id : null,
-      // country must match the cluster's — a composite FK enforces it,
+      chapter_id: form.scope === "chapter" ? cl!.id : null,
+      // country must match the chapter's — a composite FK enforces it,
       // so deriving it here rather than asking is the only safe option.
       country: form.scope === "chapter" ? cl!.country : null,
       member_count: form.member_count ? Number(form.member_count) : null,
@@ -247,10 +247,10 @@ function HandlesTab() {
           </Field>
           {form.scope === "chapter" && (
             <Field label="Chapter">
-              <select className={inputCls} value={form.cluster_id}
-                      onChange={(e) => setForm({ ...form, cluster_id: e.target.value })}>
+              <select className={inputCls} value={form.chapter_id}
+                      onChange={(e) => setForm({ ...form, chapter_id: e.target.value })}>
                 <option value="">Choose…</option>
-                {clusters.map((c) => (
+                {chapters.map((c) => (
                   <option key={c.id} value={c.id}>{c.name} · {c.country}</option>
                 ))}
               </select>

@@ -28,7 +28,7 @@ BEGIN
 END $$;
 
 INSERT INTO public.social_handles
-  (scope, platform, label, url, handle, cluster_id, country,
+  (scope, platform, label, url, handle, chapter_id, country,
    member_count, count_as_of, description, sort_order)
 SELECT
   'chapter',
@@ -43,7 +43,7 @@ SELECT
   DATE '2026-07-12',
   v.description,
   v.sort_order
-FROM public.clusters c
+FROM public.chapters c
 CROSS JOIN (VALUES
   ('whatsapp', '%s — Members Group',    240, 'Main chapter group',            10),
   ('whatsapp', '%s — Events & Meetups', 130, 'Local events and volunteering', 20),
@@ -51,13 +51,13 @@ CROSS JOIN (VALUES
 ) AS v(platform, label_fmt, member_count, description, sort_order)
 WHERE NOT EXISTS (
   SELECT 1 FROM public.social_handles sh
-   WHERE sh.cluster_id = c.id AND sh.sort_order = v.sort_order
+   WHERE sh.chapter_id = c.id AND sh.sort_order = v.sort_order
 );
 
 DO $$
 DECLARE n int; chapters int;
 BEGIN
-  SELECT count(*), count(DISTINCT cluster_id) INTO n, chapters
+  SELECT count(*), count(DISTINCT chapter_id) INTO n, chapters
     FROM public.social_handles WHERE scope = 'chapter';
   RAISE NOTICE 'placeholder handles: % across % chapters', n, chapters;
 END $$;

@@ -4,10 +4,10 @@
 -- DO NOT RUN THIS AGAINST PRODUCTION.
 --
 -- Nine slices were built and reported complete with no test that ever
--- ran as an admin, a cluster lead or a team lead. A review then found
+-- ran as an admin, a chapter lead or a team lead. A review then found
 -- that admins could not read the user list, could not delete feedback,
 -- and got zero rows from the chapter RPCs — all latent from the slice
--- that introduced them. Cluster and team leads, meanwhile, silently
+-- that introduced them. Chapter and team leads, meanwhile, silently
 -- held whole-country authority.
 --
 -- Every one of those is caught by scripts/auth-matrix.sh, and only if
@@ -16,7 +16,7 @@
 --   t.us.a   member, United States   no wing role
 --   t.de.a   country_coordinator     Germany
 --   t.de.b   member, Germany         no wing role
---   t.cl.a   cluster_lead            Germany chapter
+--   t.cl.a   chapter_lead            Germany chapter
 --   t.tl.a   team_lead               Germany (read-only)
 --   t.ae.a   admin                   profiles.role = 'admin'
 --
@@ -70,7 +70,7 @@ SELECT u.id, u.email, v.first, 'Fixture', v.first || ' Fixture', 'Male',
     ('t.us.a@example.test', 'Member US',   'United States', 'San Jose',  'user'),
     ('t.de.a@example.test', 'Coordinator', 'Germany',       'Frankfurt', 'user'),
     ('t.de.b@example.test', 'Member DE',   'Germany',       'Berlin',    'user'),
-    ('t.cl.a@example.test', 'Cluster',     'Germany',       'Munich',    'user'),
+    ('t.cl.a@example.test', 'Chapter',     'Germany',       'Munich',    'user'),
     ('t.tl.a@example.test', 'Team',        'Germany',       'Hamburg',   'user'),
     ('t.ae.a@example.test', 'Admin',       'UAE',           'Dubai',     'admin')
   ) v(email, first, country, city, prole)
@@ -84,15 +84,15 @@ UPDATE public.profiles SET role = 'admin' WHERE email = 't.ae.a@example.test';
 
 -- ── wing roles ───────────────────────────────────────────────────────
 -- member_roles_scope_ck: country_coordinator and team_lead carry a
--- country and no cluster; cluster_lead carries both.
-INSERT INTO public.member_roles (profile_id, role, country, cluster_id, title)
+-- country and no chapter; chapter_lead carries both.
+INSERT INTO public.member_roles (profile_id, role, country, chapter_id, title)
 SELECT p.id, v.wrole::public.wing_role, 'Germany',
-       CASE WHEN v.wrole = 'cluster_lead'
-            THEN (SELECT id FROM public.clusters WHERE name = 'Germany') END,
+       CASE WHEN v.wrole = 'chapter_lead'
+            THEN (SELECT id FROM public.chapters WHERE name = 'Germany') END,
        v.title
   FROM (VALUES
     ('t.de.a@example.test', 'country_coordinator', 'Germany Coordinator'),
-    ('t.cl.a@example.test', 'cluster_lead',        'Germany Chapter Lead'),
+    ('t.cl.a@example.test', 'chapter_lead',        'Germany Chapter Lead'),
     ('t.tl.a@example.test', 'team_lead',           'Student Assistance Lead')
   ) v(email, wrole, title)
   JOIN public.profiles p ON p.email = v.email
@@ -113,21 +113,21 @@ SELECT 'FIXTURE manual slot',
    SELECT 1 FROM public.appointment_slots WHERE title = 'FIXTURE manual slot');
 
 -- ── a second country for the cross-scope rank test ──────────────────
--- One person holding country_coordinator in Germany AND cluster_lead in
+-- One person holding country_coordinator in Germany AND chapter_lead in
 -- the USA is the shape that broke my_role_rank(): coordinator rank
 -- presented against USA scope. Without this fixture the exploit cannot
 -- be tested, and the scoped helper could be reverted with every check
 -- still green.
-INSERT INTO public.member_roles (profile_id, role, country, cluster_id, title)
-SELECT p.id, 'cluster_lead', 'United States',
-       (SELECT id FROM public.clusters WHERE country = 'United States'
+INSERT INTO public.member_roles (profile_id, role, country, chapter_id, title)
+SELECT p.id, 'chapter_lead', 'United States',
+       (SELECT id FROM public.chapters WHERE country = 'United States'
          ORDER BY name LIMIT 1),
        'USA chapter lead (dual-role fixture)'
   FROM public.profiles p
  WHERE p.email = 't.de.a@example.test'
    AND NOT EXISTS (
      SELECT 1 FROM public.member_roles mr
-      WHERE mr.profile_id = p.id AND mr.role = 'cluster_lead'
+      WHERE mr.profile_id = p.id AND mr.role = 'chapter_lead'
         AND mr.revoked_at IS NULL);
 
 DO $$
