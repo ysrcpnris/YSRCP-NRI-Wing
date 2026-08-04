@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo ,useRef} from 'react';
 import { Listbox } from "@headlessui/react";
 import { ProfileDropdown } from './ProfileDropdown';
+import AbroadConnect from './AbroadConnect';
 import nriLogo from './nrilogo.png';
 import { useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
@@ -4932,7 +4933,15 @@ const renderConnectContent = () => {
   ];
 
   return (
-    <div className="pt-4">
+    <div className="pt-4 space-y-10">
+      {/* LOCAL CONNECT — the leaders of the member's home constituency
+          in AP. Admin-owned: these come from the party roster, not from
+          anything a chapter can edit. */}
+      <div>
+        <h3 className="font-bold text-gray-900">Local Connect</h3>
+        <p className="text-sm text-gray-500 mt-0.5 mb-4">
+          Party leaders for your home constituency in Andhra Pradesh.
+        </p>
       {orderedLeaders.length === 0 ? (
         <div className="text-xs text-gray-500">
           No leadership contacts configured yet.
@@ -5037,6 +5046,14 @@ const renderConnectContent = () => {
           })}
         </div>
       )}
+      </div>
+
+      {/* ABROAD CONNECT — the member's own chapter groups and handles,
+          plus the party's national channels. Chapter-owned: a chapter
+          lead edits their own rows, admin edits anything, and the
+          visibility rule (own chapter + national only) is enforced by
+          my_social_handles() rather than here. */}
+      <AbroadConnect />
     </div>
   );
 };
