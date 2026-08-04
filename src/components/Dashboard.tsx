@@ -4986,24 +4986,55 @@ const renderConnectContent = () => {
     "Assembly Coordinator": 4,
   };
 
-  const orderedLeaders: Array<{
+  /**
+   * One card per PERSON, not per posting.
+   *
+   * A leader can legitimately hold more than one role that reaches the
+   * same member — Y.S. Jagan Mohan Reddy is both party President and
+   * the Assembly Coordinator for Pulivendla, so a member from Pulivendla
+   * was shown the same person twice as if they were two unrelated
+   * contacts.
+   *
+   * The roster keeps both facts, which is right; the UI merges them and
+   * shows every role that applies to this member as its own badge. The
+   * card sorts by the most senior role the person holds.
+   */
+  const byPerson = new Map<string, {
     id: string;
     name: string;
     whatsapp_number: string | null;
     whatsapp_number_2?: string | null;
     photo_url?: string | null;
     role: string;
+    roles: string[];
     phone?: string | null;
     email?: string | null;
-  }> = localConnect
-    .map((l, i) => ({
-      id: `${l.role}-${l.leader_name}-${i}`,
+  }>();
+
+  localConnect.forEach((l) => {
+    const key = l.leader_name;
+    const existing = byPerson.get(key);
+    if (existing) {
+      if (!existing.roles.includes(l.role)) existing.roles.push(l.role);
+      // Keep the most senior role for ordering.
+      if ((roleRank[l.role] ?? 9) < (roleRank[existing.role] ?? 9)) {
+        existing.role = l.role;
+      }
+      existing.photo_url = existing.photo_url ?? l.photo_url;
+      return;
+    }
+    byPerson.set(key, {
+      id: `${l.leader_name}`,
       name: l.leader_name,
       whatsapp_number: l.whatsapp,
       whatsapp_number_2: l.whatsapp_alt,
       photo_url: l.photo_url,
       role: l.role,
-    }))
+      roles: [l.role],
+    });
+  });
+
+  const orderedLeaders = Array.from(byPerson.values())
     .sort((a, b) => (roleRank[a.role] ?? 9) - (roleRank[b.role] ?? 9));
 
   // The NRI coordinator is not part of the AP geography hierarchy, so
@@ -5017,6 +5048,7 @@ const renderConnectContent = () => {
         name: nriCoordinator.name,
         whatsapp_number: nriCoordinator.phone,
         role: "NRI Coordinator",
+        roles: ["NRI Coordinator"],
         phone: nriCoordinator.phone,
         email: nriCoordinator.email,
       }
@@ -5052,7 +5084,7 @@ const renderConnectContent = () => {
 
             return (
               <div
-                key={`${leader.id}-${leader.role}`}
+                key={leader.id}
                 // h-full + flex-col make every card the same vertical height
                 // as the tallest one in the row (CSS grid stretches cells by
                 // default), so different name lengths or one-vs-two WhatsApp
@@ -5061,12 +5093,20 @@ const renderConnectContent = () => {
                 rounded-xl p-4 flex flex-col items-center text-center h-full
                 shadow-sm hover:shadow-md transition-all`}
               >
-                {/* ROLE */}
-                <span
-                  className={`text-[9px] font-black uppercase tracking-widest mb-1 ${colors.text}`}
-                >
-                  {leader.role}
-                </span>
+                {/* ROLES — every posting this person holds that reaches
+                    this member. Usually one; two when someone is both a
+                    state office-holder and the member's own assembly
+                    coordinator. */}
+                <div className="flex flex-wrap gap-1 justify-center mb-1">
+                  {(leader.roles ?? [leader.role]).map((r: string) => (
+                    <span
+                      key={r}
+                      className={`text-[9px] font-black uppercase tracking-widest ${colors.text}`}
+                    >
+                      {r}
+                    </span>
+                  ))}
+                </div>
 
                 {/* AVATAR */}
                 <div
