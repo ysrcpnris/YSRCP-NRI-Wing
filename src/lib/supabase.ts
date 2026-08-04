@@ -52,6 +52,7 @@ export type Profile = {
 
   // Engagement & Participation
   contribution?: string;
+  contribution_areas?: string[];
   participate_campaign?: string;
   suggestions?: string;
   // Referral Information

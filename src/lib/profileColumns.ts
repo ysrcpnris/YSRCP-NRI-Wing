@@ -45,6 +45,10 @@ export const PROFILE_COLUMNS_LIST = [
   "designation",
   "occupation",
   "contribution",
+  // Multi-select from the prototype. Granted explicitly in
+  // 20260805230000 — a column added later is NOT covered by the
+  // existing column grants, so it had to be named to be readable.
+  "contribution_areas",
   "participate_campaign",
   "suggestions",
   "facebook_id",
