@@ -96,13 +96,18 @@ export default function Users() {
     const allRows: Row[] = [];
     try {
       while (true) {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select(
-            "id, public_user_code, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, created_at"
-          )
-          .order("created_at", { ascending: false })
-          .range(offset, offset + batchSize - 1);
+        // admin_member_list(), not a direct select.
+        //
+        // dob and every family_* column are revoked from the
+        // `authenticated` role, and that role is what an admin's JWT
+        // uses too — so selecting them here failed the WHOLE statement
+        // with 42501 and this screen listed nobody. The RPC is
+        // SECURITY DEFINER with its own scope check: an admin sees
+        // everyone, a coordinator sees their own countries.
+        const { data, error } = await supabase.rpc("admin_member_list", {
+          p_limit: batchSize,
+          p_offset: offset,
+        });
         if (error) {
           console.error("fetchUsers error:", error);
           break;

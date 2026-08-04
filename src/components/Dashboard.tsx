@@ -2073,6 +2073,58 @@ const [familyVillage, setFamilyVillage] = useState("");
 const [familyDesignation, setFamilyDesignation] = useState("");
 const [familyDesignationOther, setFamilyDesignationOther] = useState("");
 
+/**
+ * dob and family_* are withheld from the `authenticated` role at the
+ * column level, so they are absent from the profile AuthContext loads.
+ * They come from my_private_profile() instead.
+ *
+ * privateLoaded gates the save. If this fetch never succeeded, the
+ * inputs hold '' — and submitting '' would erase real data. Previously
+ * that is exactly what happened: editing a phone number wiped the
+ * member's date of birth and every family field.
+ */
+const [dob, setDob] = useState("");
+const [privateLoaded, setPrivateLoaded] = useState(false);
+const [privateOriginal, setPrivateOriginal] = useState<{
+  dob: string | null;
+  hadFamily: boolean;
+}>({ dob: null, hadFamily: false });
+
+useEffect(() => {
+  if (!user?.id) return;
+  (async () => {
+    const { data, error } = await supabase.rpc("my_private_profile");
+    if (error) {
+      console.error("my_private_profile failed:", error);
+      setPrivateLoaded(false);
+      return;
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) {
+      setPrivateLoaded(false);
+      return;
+    }
+    setDob(row.dob || "");
+    setFamilyRelation(row.family_relation || "");
+    setFamilyName(row.family_name || "");
+    setFamilyMobile(row.family_mobile || "");
+    setFamilyVillage(row.family_village || "");
+    // The designation is either one of the known options or free text
+    // shown under "Other" — the same split the old hydration did.
+    {
+      const desig = row.family_designation || "";
+      const known = FAMILY_DESIGNATIONS.includes(desig);
+      setFamilyDesignation(known ? desig : (desig ? "Other" : ""));
+      setFamilyDesignationOther(known ? "" : desig);
+    }
+    setPrivateOriginal({
+      dob: row.dob ?? null,
+      hadFamily: Boolean(row.family_name || row.family_mobile),
+    });
+    setPrivateLoaded(true);
+  })();
+}, [user?.id]);
+
   /**
    * ═══════════════════════════════════════════════════════════════
    * PROFESSIONAL DETAILS STATE
@@ -2211,16 +2263,11 @@ useEffect(() => {
   setMandal(profile.mandal ? normalizeMandal(profile.mandal) : "");
 
   // Hydrate active-family-member fields (optional — may be null)
-  setFamilyRelation((profile as any).family_relation || "");
-  setFamilyName((profile as any).family_name || "");
-  setFamilyMobile((profile as any).family_mobile || "");
-  setFamilyVillage((profile as any).family_village || "");
-  {
-    const loadedDesig = (profile as any).family_designation || "";
-    const isKnown = FAMILY_DESIGNATIONS.includes(loadedDesig);
-    setFamilyDesignation(isKnown ? loadedDesig : (loadedDesig ? "Other" : ""));
-    setFamilyDesignationOther(isKnown ? "" : loadedDesig);
-  }
+  // family_* and dob are NOT on the profile object — they are column-
+  // restricted and loaded by the my_private_profile() effect above.
+  // Re-hydrating them from `profile` here would blank the loaded values
+  // every time the profile object changed.
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
@@ -3481,16 +3528,11 @@ const resetEditsFromProfile = () => {
   setProfession(profile.profession || "");
   setRoleDesignation(profile.role_designation || "");
   setOrganization(profile.organization || "");
-  setFamilyRelation((profile as any).family_relation || "");
-  setFamilyName((profile as any).family_name || "");
-  setFamilyMobile((profile as any).family_mobile || "");
-  setFamilyVillage((profile as any).family_village || "");
-  {
-    const loadedDesig = (profile as any).family_designation || "";
-    const isKnown = FAMILY_DESIGNATIONS.includes(loadedDesig);
-    setFamilyDesignation(isKnown ? loadedDesig : (loadedDesig ? "Other" : ""));
-    setFamilyDesignationOther(isKnown ? "" : loadedDesig);
-  }
+  // family_* and dob are NOT on the profile object — they are column-
+  // restricted and loaded by the my_private_profile() effect above.
+  // Re-hydrating them from `profile` here would blank the loaded values
+  // every time the profile object changed.
+
   // Uncontrolled social inputs — restore via direct DOM write.
   const setSocial = (id: string, val: string) => {
     const el = document.getElementById(id) as HTMLInputElement | null;
@@ -3591,7 +3633,6 @@ const handleSaveProfile = async () => {
       }
     }
 
-    const dob = (document.getElementById("dob") as HTMLInputElement)?.value || null;
     if (dob) {
       const dobDate = new Date(dob);
       const today = new Date();
@@ -3646,7 +3687,6 @@ const updates = {
   assembly_constituency: sanitizeText(assembly).trim() || null,
   mandal:                sanitizeText(mandal).trim() || null,
 
-  dob,
   profession:         sanitizeText(profession).trim(),
   role_designation:   sanitizeText(roleDesignation).trim(),
   organization:       sanitizeText(organization).trim(),
@@ -3661,14 +3701,14 @@ const updates = {
                         .trim()
                         .slice(0, CONTRIBUTION_MAX_LENGTH) || null,
 
-  // Active family member (optional — empty strings persisted as NULL).
-  family_relation:    sanitizeText(familyRelation).trim() || null,
-  family_name:        sanitizeText(familyName).trim() || null,
-  family_mobile:      sanitizeText(familyMobile).trim() || null,
-  family_village:     sanitizeText(familyVillage).trim() || null,
-  family_designation: familyDesignation === 'Other'
-    ? sanitizeText(familyDesignationOther).trim() || null
-    : sanitizeText(familyDesignation).trim() || null,
+  // dob and family_* are NOT sent here. They are withheld from the
+  // authenticated role at the column level, so AuthContext never loads
+  // them, so these inputs would submit '' -> NULL and erase whatever
+  // the member actually had. A profile save must never destroy a field
+  // the form could not read.
+  //
+  // They go through update_my_private_profile() below, which treats
+  // NULL as "leave unchanged".
 
   updated_at: new Date().toISOString(),
 };
@@ -3682,6 +3722,29 @@ const updates = {
     if (error) {
       console.error("PROFILE UPDATE ERROR:", error);
       throw error;
+    }
+
+    // Private fields, only if this session actually loaded them. If the
+    // RPC failed or was never called, privateLoaded stays false and we
+    // send nothing rather than sending blanks.
+    if (privateLoaded) {
+      const { error: privErr } = await supabase.rpc("update_my_private_profile", {
+        p_dob:                sanitizeText(dob).trim() || null,
+        p_family_relation:    sanitizeText(familyRelation).trim() || null,
+        p_family_name:        sanitizeText(familyName).trim() || null,
+        p_family_mobile:      sanitizeText(familyMobile).trim() || null,
+        p_family_village:     sanitizeText(familyVillage).trim() || null,
+        p_family_designation: familyDesignation === 'Other'
+          ? sanitizeText(familyDesignationOther).trim() || null
+          : sanitizeText(familyDesignation).trim() || null,
+        // Clearing is explicit: the member emptied a field that had a
+        // value, rather than the field never having loaded.
+        p_clear_dob:    privateOriginal.dob !== null && !sanitizeText(dob).trim(),
+        p_clear_family: privateOriginal.hadFamily &&
+                        !sanitizeText(familyName).trim() &&
+                        !sanitizeText(familyMobile).trim(),
+      });
+      if (privErr) console.error("PRIVATE PROFILE UPDATE ERROR:", privErr);
     }
 
     await refreshProfile();
@@ -4063,10 +4126,15 @@ const handleSubmitSuggestion = async () => {
                 <input
                   id="dob"
                   type="date"
-                  defaultValue={profile?.dob || ""}
+                  /* Controlled, from my_private_profile(). It was
+                     defaultValue={profile?.dob}, and profile never
+                     carries dob (column-restricted), so it rendered
+                     blank and saving wrote that blank back. */
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
                   max={new Date().toISOString().split("T")[0]}
                   min="1900-01-01"
-                  onChange={() => clearFieldError('dob')}
+                  onBlur={() => clearFieldError('dob')}
                   className={`w-full p-3 bg-gray-50 border rounded-lg text-sm font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none transition-all ${profileFieldErrors.dob ? 'border-red-400' : 'border-gray-200'}`}
                 />
                 {profileFieldErrors.dob && <p className="text-xs text-red-500 mt-1">{profileFieldErrors.dob}</p>}

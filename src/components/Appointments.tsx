@@ -185,26 +185,26 @@ export default function Appointments() {
   }, []);
 
   /**
-   * Cancelling is a direct UPDATE rather than an RPC because the policy
-   * already expresses the whole rule: a member may update their own
-   * booking, and only to 'cancelled'. Nothing else is reachable from
-   * here — a self-confirm is rejected by the same WITH CHECK.
+   * Cancelling goes through cancel_booking(), not a direct UPDATE.
    *
-   * Freeing the seat is automatic: only confirmed bookings count toward
-   * capacity, so the row dropping out of that state releases it.
+   * appointment_bookings grants no INSERT, UPDATE or DELETE to
+   * `authenticated` at all: booking is book_slot() (row lock plus
+   * capacity), deciding is decide_booking() (capacity again), and
+   * cancelling is here. A direct write let an admin confirm past
+   * capacity and let a member set their own status, so the table is
+   * simply not writable from a client.
+   *
+   * Freeing the seat is automatic — only confirmed bookings count
+   * toward capacity, so leaving that state releases it.
    */
   const cancel = useCallback(
     async (slotId: string) => {
       setCancelling(slotId);
-      const { data: sess } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from("appointment_bookings")
-        .update({ status: "cancelled" })
-        .eq("slot_id", slotId)
-        .eq("profile_id", sess.user?.id ?? "")
-        .in("status", ["pending", "confirmed"]);
+      const { data, error } = await supabase.rpc("cancel_booking", {
+        p_slot_id: slotId,
+      });
       setCancelling(null);
-      if (error) {
+      if (error || data === false) {
         console.error("cancel failed:", error);
         return;
       }

@@ -63,7 +63,6 @@ import {
 
 /* ---------- CONFIG ---------- */
 // Supabase table storing member profile data
-const TABLE_NAME = "profiles";
 
 const CONTINENTS = [
   "Asia",
@@ -1089,12 +1088,14 @@ export default function AdminDashboard() {
 
       try {
         while (active) {
-          const { data, error } = await supabase
-            .from(TABLE_NAME)
-            .select(
-              "id, public_user_code, first_name, last_name, full_name, email, mobile_number, whatsapp_number, gender, dob, contribution, profession, organization, designation, country_of_residence, state_abroad, city_abroad, indian_state, district, assembly_constituency, mandal, village, family_relation, family_name, family_mobile, family_village, family_designation, referral_code, referred_by, role, created_at"
-            )
-            .range(offset, offset + batchSize - 1);
+          // Same reason as Users.tsx: dob and family_* are revoked from
+          // the authenticated role, which is the role an admin JWT uses,
+          // so a direct select failed the entire statement with 42501
+          // and every admin statistics screen showed zero members.
+          const { data, error } = await supabase.rpc("admin_member_list", {
+            p_limit: batchSize,
+            p_offset: offset,
+          });
 
           if (!active) return;
 

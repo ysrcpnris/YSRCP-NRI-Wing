@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
-import { Eye, EyeOff, MapPin } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -9,8 +9,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 import { countriesData, phoneCountriesData } from '../lib/countryCodes';
-import { getStates, getCities, hasStateData } from '../lib/locationData';
-import { indianAddressData } from '../lib/indianAddressData';
 
 // Free-text sanitiser shared with every other form that accepts
 // user input - see src/lib/sanitize.ts for the rationale and the
@@ -29,101 +27,6 @@ const SUBMIT_COOLDOWN_KEY = "register_submit_until";
  * Searchable input: users can type to filter the dropdown options
  * OR type a custom value that isn't in the list (for missing entries).
  */
-function SearchableInput({
-  value,
-  options,
-  onChange,
-  placeholder,
-  required,
-  disabled,
-  requireSelection,
-}: {
-  value: string;
-  options: string[];
-  onChange: (val: string) => void;
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
-  requireSelection?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState('');
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setDraft('');
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const isEditing = open && requireSelection;
-  const q = (isEditing ? draft : value).trim().toLowerCase();
-  const sorted = [...options].sort((a, b) => a.localeCompare(b));
-  const filtered = q
-    ? sorted.filter((o) => o.toLowerCase().includes(q))
-    : sorted;
-
-  return (
-    <div ref={wrapRef} className="relative">
-      <input
-        type="text"
-        required={required}
-        disabled={disabled}
-        placeholder={placeholder}
-        value={isEditing ? draft : value}
-        onChange={(e) => {
-          if (requireSelection) {
-            setDraft(e.target.value);
-            onChange('');
-          } else {
-            onChange(e.target.value);
-          }
-          setOpen(true);
-        }}
-        onFocus={() => {
-          setDraft('');
-          setOpen(true);
-        }}
-        className="input-field disabled:bg-gray-100 disabled:cursor-not-allowed"
-      />
-      {open && !disabled && filtered.length > 0 && (
-        <ul className="absolute z-40 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-          {filtered.map((opt) => (
-            <li
-              key={opt}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                onChange(opt);
-                setDraft('');
-                setOpen(false);
-              }}
-              className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
-                value === opt ? 'bg-primary-50 font-medium text-primary-700' : ''
-              }`}
-            >
-              {opt}
-            </li>
-          ))}
-        </ul>
-      )}
-      {requireSelection && open && !disabled && filtered.length === 0 && draft.length > 0 && (
-        <p className="text-[11px] text-red-500 mt-1">
-          No match found. Please select from the dropdown.
-        </p>
-      )}
-      {!requireSelection && open && !disabled && filtered.length === 0 && value.length > 0 && (
-        <p className="text-[11px] text-gray-500 mt-1">
-          No match — your typed value will be saved as-is.
-        </p>
-      )}
-    </div>
-  );
-}
 const getPasswordError = (password: string): string | null => {
   if (password.length < 8) return "Password must be at least 8 characters";
   if (password.length > 16) return "Password must be 16 characters or fewer";
@@ -157,13 +60,8 @@ export default function RegisterPage() {
   const [countrySearch, setCountrySearch] = useState('');
   const countryDropdownRef = useRef<HTMLDivElement>(null);
 
-  const [showStateDropdown, setShowStateDropdown] = useState(false);
-  const [stateSearch, setStateSearch] = useState('');
-  const stateDropdownRef = useRef<HTMLDivElement>(null);
-
-  const [showCityDropdown, setShowCityDropdown] = useState(false);
-  const [citySearch, setCitySearch] = useState('');
-  const cityDropdownRef = useRef<HTMLDivElement>(null);
+  // State/city dropdown state removed with those fields — they are
+  // collected at /complete-profile now.
 
   const isMounted = useRef(true);
 
@@ -233,12 +131,6 @@ export default function RegisterPage() {
       const t = e.target as Node;
       if (countryDropdownRef.current && !countryDropdownRef.current.contains(t)) {
         setShowCountryDropdown(false);
-      }
-      if (stateDropdownRef.current && !stateDropdownRef.current.contains(t)) {
-        setShowStateDropdown(false);
-      }
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(t)) {
-        setShowCityDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -437,13 +329,10 @@ if (pwdError) {
       );
     }
 
-    // Gender is mandatory. The <select required> already blocks an empty
-    // submit in the browser, but re-check here so the rule still holds if
-    // the form is submitted programmatically or native validation is off.
-    if (!formData.gender.trim()) {
-      throw new Error('Please select your gender.');
-    }
-
+    // Gender is NOT collected at signup. It, the constituency, mandal
+    // and the rest are asked for at /complete-profile once the account
+    // exists — that is what the onboarding split was for. Signup is six
+    // fields: first name, last name, mobile, country, email, password.
     const currentCode = getCurrentCountryCode();
     const numberOnly = formData.mobile_number.slice(currentCode.length);
     const expected = phoneLengths[currentCode];
@@ -463,25 +352,15 @@ if (pwdError) {
       }
     }
 
-    // === Mandatory location validations ===
+    // Country of residence is the one location field kept at signup:
+    // it decides which chapter the member belongs to and is needed
+    // before anything country-scoped can be shown to them.
+    //
+    // State and city are asked for at /complete-profile. Requiring them
+    // here is what the onboarding split removed — the comments claimed
+    // it had happened while the validation still enforced them.
     if (!formData.country_of_residence.trim()) {
       throw new Error('Please select the country you currently live in.');
-    }
-    if (!formData.state_abroad.trim()) {
-      const needsSelect = hasStateData(formData.country_of_residence);
-      throw new Error(
-        needsSelect
-          ? 'Please select your State / Province from the dropdown.'
-          : 'Please enter your State / Province.'
-      );
-    }
-    if (!formData.city_abroad.trim()) {
-      const stateList = getCities(formData.country_of_residence, formData.state_abroad);
-      throw new Error(
-        stateList.length > 0
-          ? 'Please select your City from the dropdown.'
-          : 'Please enter your City.'
-      );
     }
 
     // === Andhra Pradesh address ===
@@ -710,33 +589,11 @@ return (
                 </div>
               </div>
 
-              {/* Gender is required here because event applicant lists and
-                  three sheets of the admin Excel export carry a Gender
-                  column. Collecting it at signup (rather than leaving it to
-                  the dashboard profile editor) is what keeps those columns
-                  populated. "Prefer not to say" is offered so the field can
-                  be mandatory without forcing a disclosure. */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="input-label">
-                    Gender <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={formData.gender}
-                    onChange={(e) =>
-                      setFormData({ ...formData, gender: e.target.value })
-                    }
-                    className="input-field"
-                  >
-                    <option value="">— Select gender —</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                    <option value="Prefer not to say">Prefer not to say</option>
-                  </select>
-                </div>
-              </div>
+              {/* Gender moved to /complete-profile. It is still collected —
+                  event applicant lists and the admin export carry a Gender
+                  column, and profile_is_complete() requires it — but after
+                  the account exists rather than as a barrier to creating
+                  one. */}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <div className="relative" ref={countryDropdownRef}>
@@ -804,196 +661,11 @@ return (
                   )}
                 </div>
 
-                {/* STATE / PROVINCE — searchable dropdown or free-text fallback */}
-                <div className="relative" ref={stateDropdownRef}>
-                  <label className="input-label">
-                    State / Province <span className="text-red-500">*</span>
-                  </label>
-                  {(() => {
-                    const stateList = getStates(formData.country_of_residence);
-                    const countryHasStates = hasStateData(formData.country_of_residence);
-
-                    if (!formData.country_of_residence || !countryHasStates) {
-                      return (
-                        <>
-                          <input
-                            type="text"
-                            required
-                            value={formData.state_abroad}
-                            disabled={!formData.country_of_residence}
-                            placeholder={
-                              !formData.country_of_residence
-                                ? "Select a country first"
-                                : "Enter your state or province"
-                            }
-                            onChange={(e) => {
-                              setFormData({ ...formData, state_abroad: e.target.value, city_abroad: '' });
-                            }}
-                            className="input-field disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          />
-                          {formData.country_of_residence && (
-                            <p className="text-[11px] text-gray-500 mt-1">
-                              No state list available — please type your state manually.
-                            </p>
-                          )}
-                        </>
-                      );
-                    }
-
-                    return (
-                      <>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Search or type state / province"
-                          value={
-                            showStateDropdown
-                              ? stateSearch
-                              : formData.state_abroad
-                          }
-                          onChange={(e) => {
-                            setStateSearch(e.target.value);
-                            setFormData({ ...formData, state_abroad: '', city_abroad: '' });
-                            setShowStateDropdown(true);
-                          }}
-                          onFocus={() => {
-                            setStateSearch(formData.state_abroad || '');
-                            setShowStateDropdown(true);
-                          }}
-                          className="input-field"
-                        />
-                        {showStateDropdown && (
-                          <ul className="absolute z-40 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                            {stateList
-                              .filter((s) =>
-                                s.toLowerCase().includes(stateSearch.toLowerCase())
-                              )
-                              .map((s) => (
-                                <li
-                                  key={s}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    setFormData({ ...formData, state_abroad: s, city_abroad: '' });
-                                    setStateSearch('');
-                                    setShowStateDropdown(false);
-                                  }}
-                                  className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
-                                    formData.state_abroad === s ? 'bg-primary-50 font-medium text-primary-700' : ''
-                                  }`}
-                                >
-                                  {s}
-                                </li>
-                              ))}
-                            {stateList.filter((s) =>
-                              s.toLowerCase().includes(stateSearch.toLowerCase())
-                            ).length === 0 && stateSearch.length > 0 && (
-                              <li className="px-4 py-2 text-sm text-red-500">
-                                No match found. Please select from the dropdown.
-                              </li>
-                            )}
-                          </ul>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                {/* CITY — searchable dropdown or free-text fallback */}
-                <div className="relative" ref={cityDropdownRef}>
-                  <label className="input-label">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  {(() => {
-                    const cityList = getCities(formData.country_of_residence, formData.state_abroad);
-                    const canUseDropdown = cityList.length > 0;
-
-                    if (!canUseDropdown) {
-                      return (
-                        <>
-                          <input
-                            type="text"
-                            required
-                            value={formData.city_abroad}
-                            disabled={!formData.state_abroad}
-                            placeholder={
-                              !formData.state_abroad
-                                ? "Select a state first"
-                                : "Enter your city"
-                            }
-                            onChange={(e) => {
-                              setFormData({ ...formData, city_abroad: e.target.value });
-                            }}
-                            className="input-field disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          />
-                          {formData.state_abroad && (
-                            <p className="text-[11px] text-gray-500 mt-1">
-                              No city list available — please type your city manually.
-                            </p>
-                          )}
-                        </>
-                      );
-                    }
-
-                    return (
-                      <>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Search or type city"
-                          value={
-                            showCityDropdown
-                              ? citySearch
-                              : formData.city_abroad
-                          }
-                          onChange={(e) => {
-                            setCitySearch(e.target.value);
-                            setFormData({ ...formData, city_abroad: '' });
-                            setShowCityDropdown(true);
-                          }}
-                          onFocus={() => {
-                            setCitySearch(formData.city_abroad || '');
-                            setShowCityDropdown(true);
-                          }}
-                          className="input-field"
-                        />
-                        {showCityDropdown && (
-                          <ul className="absolute z-40 w-full mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                            {cityList
-                              .filter((c) =>
-                                c.toLowerCase().includes(citySearch.toLowerCase())
-                              )
-                              .map((c) => (
-                                <li
-                                  key={c}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    setFormData({ ...formData, city_abroad: c });
-                                    setCitySearch('');
-                                    setShowCityDropdown(false);
-                                  }}
-                                  className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary-50 transition-colors ${
-                                    formData.city_abroad === c ? 'bg-primary-50 font-medium text-primary-700' : ''
-                                  }`}
-                                >
-                                  {c}
-                                </li>
-                              ))}
-                            {cityList.filter((c) =>
-                              c.toLowerCase().includes(citySearch.toLowerCase())
-                            ).length === 0 && citySearch.length > 0 && (
-                              <li className="px-4 py-2 text-sm text-red-500">
-                                No match found. Please select from the dropdown.
-                              </li>
-                            )}
-                          </ul>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-
+                {/* State / Province and City moved to /complete-profile.
+                    Country stays because it decides the member's chapter
+                    and is needed before anything country-scoped can be
+                    shown. The city is what maps a member to a cluster, so
+                    the wizard asks for it there. */}
                 <div>
                   <label className="input-label">
                     Email ID <span className="text-red-500">*</span>
@@ -1162,135 +834,14 @@ return (
               </div>
             </fieldset>
 
-            {/* ── India Address Details ── */}
-            <fieldset>
-              <legend className="section-heading w-full mb-4 flex items-center gap-2">
-                <MapPin size={16} />
-                India Address Details
-              </legend>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="input-label">
-                    State <span className="text-red-500">*</span>
-                  </label>
-                  <SearchableInput
-                    required
-                    requireSelection
-                    placeholder="Search and select state"
-                    value={formData.indian_state}
-                    options={Object.keys(indianAddressData)}
-                    onChange={(val) =>
-                      setFormData({
-                        ...formData,
-                        indian_state: val,
-                        district: '',
-                        assembly_constituency: '',
-                        mandal: '',
-                      })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="input-label">
-                    District <span className="text-red-500">*</span>
-                  </label>
-                  <SearchableInput
-                    required
-                    requireSelection
-                    disabled={!formData.indian_state}
-                    placeholder={
-                      formData.indian_state
-                        ? 'Search and select district'
-                        : 'Select a state first'
-                    }
-                    value={formData.district}
-                    options={
-                      formData.indian_state
-                        ? (indianAddressData[formData.indian_state] || []).map(
-                            (d) => d.name
-                          )
-                        : []
-                    }
-                    onChange={(val) =>
-                      setFormData({
-                        ...formData,
-                        district: val,
-                        assembly_constituency: '',
-                        mandal: '',
-                      })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="input-label">
-                    Assembly Constituency <span className="text-red-500">*</span>
-                  </label>
-                  <SearchableInput
-                    required
-                    requireSelection
-                    disabled={!formData.district}
-                    placeholder={
-                      formData.district
-                        ? 'Search and select constituency'
-                        : 'Select a district first'
-                    }
-                    value={formData.assembly_constituency}
-                    options={
-                      formData.indian_state && formData.district
-                        ? (
-                            indianAddressData[formData.indian_state]?.find(
-                              (d) => d.name === formData.district
-                            )?.constituencies || []
-                          ).map((c) => c.name)
-                        : []
-                    }
-                    onChange={(val) =>
-                      setFormData({
-                        ...formData,
-                        assembly_constituency: val,
-                        mandal: '',
-                      })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="input-label">
-                    Mandal / Municipality <span className="text-red-500">*</span>
-                  </label>
-                  <SearchableInput
-                    required
-                    requireSelection
-                    disabled={!formData.assembly_constituency}
-                    placeholder={
-                      formData.assembly_constituency
-                        ? 'Search and select mandal'
-                        : 'Select a constituency first'
-                    }
-                    value={formData.mandal}
-                    options={
-                      formData.indian_state &&
-                      formData.district &&
-                      formData.assembly_constituency
-                        ? indianAddressData[formData.indian_state]
-                            ?.find((d) => d.name === formData.district)
-                            ?.constituencies.find(
-                              (c) => c.name === formData.assembly_constituency
-                            )?.mandals || []
-                        : []
-                    }
-                    onChange={(val) =>
-                      setFormData({ ...formData, mandal: val })
-                    }
-                  />
-                </div>
-              </div>
-            </fieldset>
+            {/* India address details moved to /complete-profile.
+                They were mandatory here — including a free-text
+                constituency and mandal, which is precisely the data
+                problem ConstituencyPicker was built to solve: 2,429
+                members had entered 240 distinct strings for 175 real
+                constituencies. The wizard collects them against the
+                reference tables, so what gets stored is always a
+                known value. */}
 
             {/* Validation errors are shown right above the Submit
                 button so the user sees them at the bottom of the form

@@ -53,6 +53,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     "facebook_id", "twitter_id", "instagram_id", "linkedin_id",
     "profile_photo", "referral_code", "referred_by",
     "role", "status", "created_at", "updated_at",
+    // ProtectedRoute gates on this. Omitting it made profile
+    // .onboarding_completed_at permanently undefined, so EVERY user —
+    // including members who had already finished — was redirected to
+    // /complete-profile forever. The column is readable; it was simply
+    // never asked for.
+    "onboarding_completed_at",
   ].join(", ");
 
   const fetchProfile = async (userId: string) => {
