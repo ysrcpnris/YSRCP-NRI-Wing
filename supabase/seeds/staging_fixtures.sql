@@ -130,8 +130,81 @@ SELECT p.id, 'chapter_lead', 'United States',
       WHERE mr.profile_id = p.id AND mr.role = 'chapter_lead'
         AND mr.revoked_at IS NULL);
 
+-- ── a secretariat, so the role can be tested as a CALLER ────────────
+-- Granting secretariat was tightened to is_admin() while revoking still
+-- accepted has_global_scope() — so the role could remove its own peers.
+-- Nothing caught it because no fixture ever held the role.
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, created_at, updated_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change,
+  raw_app_meta_data, raw_user_meta_data, is_super_admin)
+SELECT '00000000-0000-0000-0000-000000000000', gen_random_uuid(),
+       'authenticated', 'authenticated', 't.sec.a@example.test',
+       crypt('StagingTest!2026', gen_salt('bf')),
+       now(), now(), now(), '', '', '', '',
+       '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, false
+ WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 't.sec.a@example.test');
+
+UPDATE auth.users
+   SET encrypted_password = crypt('StagingTest!2026', gen_salt('bf')),
+       email_confirmed_at = coalesce(email_confirmed_at, now())
+ WHERE email = 't.sec.a@example.test';
+
+-- handle_new_user() on auth.users creates a profile automatically, so
+-- an INSERT guarded by NOT EXISTS never runs and the trigger's version
+-- (no country, no name) is what survives. Insert then correct.
+INSERT INTO public.profiles (id, email)
+SELECT u.id, u.email FROM auth.users u
+ WHERE u.email = 't.sec.a@example.test'
+   AND NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id);
+
+UPDATE public.profiles
+   SET first_name = 'Secretariat', last_name = 'Fixture',
+       full_name = 'Secretariat Fixture', gender = 'Male',
+       country_of_residence = 'Singapore', city_abroad = 'Singapore',
+       assembly_constituency = 'Nandyal', district = 'Nandyal'
+ WHERE email = 't.sec.a@example.test';
+
+INSERT INTO public.member_roles (profile_id, role, country, chapter_id, title)
+SELECT p.id, 'secretariat', NULL, NULL, 'Secretariat fixture'
+  FROM public.profiles p
+ WHERE p.email = 't.sec.a@example.test'
+   AND NOT EXISTS (
+     SELECT 1 FROM public.member_roles mr
+      WHERE mr.profile_id = p.id AND mr.role = 'secretariat' AND mr.revoked_at IS NULL);
+
+-- ── a member in a country with NO chapter ───────────────────────────
+-- my_grant_options() derived countries only from chapters, so a country
+-- with members and no chapter offered nobody to appoint — precisely
+-- where a coordinator is most needed.
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, created_at, updated_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change,
+  raw_app_meta_data, raw_user_meta_data, is_super_admin)
+SELECT '00000000-0000-0000-0000-000000000000', gen_random_uuid(),
+       'authenticated', 'authenticated', 't.nc.a@example.test',
+       crypt('StagingTest!2026', gen_salt('bf')),
+       now(), now(), now(), '', '', '', '',
+       '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, false
+ WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 't.nc.a@example.test');
+
+INSERT INTO public.profiles (id, email)
+SELECT u.id, u.email FROM auth.users u
+ WHERE u.email = 't.nc.a@example.test'
+   AND NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id);
+
+UPDATE public.profiles
+   SET first_name = 'NoChapter', last_name = 'Fixture',
+       full_name = 'NoChapter Fixture', gender = 'Female',
+       country_of_residence = 'Norway', city_abroad = 'Oslo',
+       assembly_constituency = 'Nandyal', district = 'Nandyal'
+ WHERE email = 't.nc.a@example.test';
+
 DO $$
 DECLARE n_users int; n_roles int; n_admin int; n_slot int; n_dual int;
+        n_sec int; n_nochapter int;
 BEGIN
   SELECT count(*) INTO n_users FROM public.profiles
    WHERE email LIKE 't.%@example.test';
@@ -164,5 +237,20 @@ BEGIN
     RAISE EXCEPTION 'the dual-role fixture is missing — the cross-scope rank exploit cannot be tested';
   END IF;
 
-  RAISE NOTICE 'fixtures ready: % profiles, % wing roles, % admin', n_users, n_roles, n_admin;
+  SELECT count(*) INTO n_sec FROM public.member_roles
+   WHERE role = 'secretariat' AND revoked_at IS NULL;
+  IF n_sec < 1 THEN
+    RAISE EXCEPTION 'no secretariat fixture — that role would go untested as a caller';
+  END IF;
+
+  SELECT count(*) INTO n_nochapter FROM public.profiles p
+   WHERE p.country_of_residence IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM public.chapters c
+                      WHERE c.country = p.country_of_residence);
+  IF n_nochapter < 1 THEN
+    RAISE EXCEPTION 'no member in a chapterless country — the grant-options gap would stay latent';
+  END IF;
+
+  RAISE NOTICE 'fixtures ready: % profiles, % wing roles, % admin, % secretariat, % in chapterless countries',
+               n_users, n_roles, n_admin, n_sec, n_nochapter;
 END $$;

@@ -76,7 +76,8 @@ except Exception: print('error')"
 echo "Authorization matrix — $SB_URL"
 MEMBER=$(tok t.us.a); COORD=$(tok t.de.a); CHAPTER=$(tok t.cl.a)
 TEAM=$(tok t.tl.a);   ADMIN=$(tok t.ae.a)
-for n in MEMBER COORD CHAPTER TEAM ADMIN; do
+SECRETARIAT=$(tok t.sec.a)
+for n in MEMBER COORD CHAPTER TEAM ADMIN SECRETARIAT; do
   [ -n "${!n}" ] || { echo "FATAL: no token for $n — are the fixtures seeded?" >&2; exit 1; }
 done
 MEMBER_ID=$(curl -s "$SB_URL/auth/v1/user" -H "apikey: $SB_KEY" \
@@ -683,11 +684,116 @@ check "anon CAN still follow a campaign link" 200 \
   "$(anon_status register_click '{"p_share_id":"00000000-0000-0000-0000-000000000000"}')"
 
 echo
+echo "Secretariat is appointed and removed by administrators only"
+# Granting was tightened to is_admin() while revoking still accepted
+# has_global_scope() — which includes secretariat, so the role could
+# remove its own peers while the message said otherwise. Nothing caught
+# it because no fixture held the role.
+SEC_ROLE=$(curl -s -X POST "$SB_URL/rest/v1/rpc/wing_roles_list" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d '{}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print(next((r['role_id'] for r in d if r['role']=='secretariat'), ''))
+except Exception: print('')")
+if [ -z "$SEC_ROLE" ]; then
+  echo "FATAL: no secretariat fixture — re-run supabase/seeds/staging_fixtures.sql" >&2
+  exit 1
+fi
+check "secretariat cannot revoke a peer secretariat" refused \
+  "$(curl -s -X POST "$SB_URL/rest/v1/rpc/revoke_wing_role" -H "apikey: $SB_KEY" \
+     -H "Authorization: Bearer $SECRETARIAT" -H "Content-Type: application/json" \
+     -d "{\"p_role_id\":\"$SEC_ROLE\"}" | msg)"
+check "secretariat cannot appoint a secretariat" refused \
+  "$(grant "$SECRETARIAT" secretariat)"
+check "coordinator cannot revoke a secretariat" refused \
+  "$(curl -s -X POST "$SB_URL/rest/v1/rpc/revoke_wing_role" -H "apikey: $SB_KEY" \
+     -H "Authorization: Bearer $COORD" -H "Content-Type: application/json" \
+     -d "{\"p_role_id\":\"$SEC_ROLE\"}" | msg)"
+
+echo
+echo "Grant options cover countries without a chapter"
+# Countries came only from `chapters`, so a country with members and no
+# chapter offered nobody to appoint — exactly where a coordinator is
+# most needed.
+OPTS=$(curl -s -X POST "$SB_URL/rest/v1/rpc/my_grant_options" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" -d '{}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  c=[r['country'] for r in d if r['scope_kind']=='country']
+  print('yes' if 'Norway' in c else 'no')
+except Exception: print('error')")
+check "admin can appoint into a chapterless country" yes "$OPTS"
+
+SEC_OPTS=$(curl -s -X POST "$SB_URL/rest/v1/rpc/my_grant_options" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $SECRETARIAT" -H "Content-Type: application/json" -d '{}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  kinds={r['scope_kind'] for r in d}
+  print('country-yes-global-no' if 'country' in kinds and 'global' not in kinds else 'wrong')
+except Exception: print('error')")
+check "secretariat gets countries but not the global option" country-yes-global-no "$SEC_OPTS"
+
+echo
+echo "Leaderboard: ties share a place, and you always see yourself"
+TIES=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d '{"p_scope":"country"}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  # Anyone on identical clicks and shares must hold the same place.
+  bad=[a for a in d for b in d
+       if a['clicks']==b['clicks'] and a['shares']==b['shares']
+       and a['country_place']!=b['country_place']]
+  print('shared' if not bad else 'SPLIT')
+except Exception: print('error')")
+check "tied scores share a place" shared "$TIES"
+
+# A caller WITH activity must always find themselves, cap or no cap.
+# COORD has a share; DE_MEMBER does not, and its absence is correct —
+# the board deliberately omits members who have done nothing, so
+# asserting "always present" for an inactive caller tests the wrong
+# thing. That was this check's first mistake.
+SELF=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $COORD" -H "Content-Type: application/json" \
+  -d '{"p_scope":"global"}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print('present' if any(r['is_me'] for r in d) else 'absent')
+except Exception: print('error')")
+check "an active caller always finds their own row" present "$SELF"
+
+INACTIVE=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d '{"p_scope":"global"}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  print('absent' if not any(r['is_me'] for r in d) else 'listed')
+except Exception: print('error')")
+check "a member who has done nothing is not listed" absent "$INACTIVE"
+
+SEP=$(curl -s -X POST "$SB_URL/rest/v1/rpc/member_rankings" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $DE_MEMBER" -H "Content-Type: application/json" \
+  -d '{"p_scope":"country"}' | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin)
+  k=set(d[0].keys()) if d else set()
+  print('both' if {'country_clicks','global_clicks'} <= k else 'missing')
+except Exception: print('error')")
+check "country and global click totals are separate" both "$SEP"
+
+echo
 printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
 
 # A block that returns early or skips would otherwise leave the suite
 # green with fewer checks. Assert the count as well as the result.
-EXPECTED=${EXPECTED_CHECKS:-85}
+EXPECTED=${EXPECTED_CHECKS:-94}
 TOTAL=$((PASS + FAIL))
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   printf '\033[31mFAIL\033[0m ran %d checks, expected %d — a block was skipped.\n' \

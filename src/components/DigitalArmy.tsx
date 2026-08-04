@@ -36,7 +36,9 @@ type Ranking = {
   is_me: boolean;
   country_total: number;
   global_total: number;
-  total_clicks: number;
+  country_clicks: number;
+  global_clicks: number;
+  beyond_top: boolean;
 };
 
 /**
@@ -76,8 +78,14 @@ function Rankings() {
   }, [scope]);
 
   const me = rows.find((r) => r.is_me);
-  const total = rows[0]?.total_clicks ?? 0;
+  // Judge maturity by the activity in the board being shown. A country
+  // board was previously assessed on WORLDWIDE clicks, so a quiet
+  // country looked settled because other countries were busy.
+  const total =
+    scope === "country" ? rows[0]?.country_clicks ?? 0 : rows[0]?.global_clicks ?? 0;
   const tooEarly = total < RANK_MINIMUM;
+  // The caller's row is returned even below the cut, so say which it is.
+  const listed = rows.filter((r) => !r.beyond_top);
 
   return (
     <section className="mt-10">
@@ -136,6 +144,11 @@ function Rankings() {
               <p className="text-xs text-gray-600 mt-1 tabular-nums">
                 {me.shares} shared · {me.clicks} clicks on your links
               </p>
+              {me.beyond_top && (
+                <p className="text-xs text-primary-800/80 mt-1">
+                  You’re outside the top 100 below, so your row is shown here.
+                </p>
+              )}
             </div>
           )}
 
@@ -149,7 +162,7 @@ function Rankings() {
             </div>
           )}
 
-          {rows.length === 0 ? (
+          {listed.length === 0 ? (
             <p className="text-sm text-gray-500 mt-4">
               Nobody has shared a campaign yet. Be the first — share one above
               and you’ll appear here.
@@ -171,7 +184,7 @@ function Rankings() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r, i) => (
+                  {listed.map((r, i) => (
                     <tr
                       key={`${r.display_name}-${r.country}-${i}`}
                       className={`border-b border-gray-100 ${
