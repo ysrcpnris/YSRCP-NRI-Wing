@@ -283,23 +283,28 @@ export default function MyLocalConnect() {
               <div className="pt-card-h"><h3>State leadership</h3></div>
               <div className="pt-card-b" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {stateLeaders.map((r, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div key={i} style={{
+                    display: "flex", alignItems: "center", gap: 14,
+                    padding: "10px 14px", borderRadius: "var(--r-sm)",
+                    border: "1px solid var(--navy)", background: "var(--navy-soft)",
+                  }}>
                     <div style={{
-                      width: 34, height: 34, borderRadius: "50%", flex: "0 0 34px",
+                      width: 40, height: 40, borderRadius: "50%", flex: "0 0 40px",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 12, fontWeight: 700, color: "#fff",
+                      fontSize: 13, fontWeight: 700, color: "#fff",
                       background: "linear-gradient(145deg, var(--navy) 0%, var(--navy-lift) 100%)",
                       backgroundImage: r.photo_url ? `url(${r.photo_url})` : undefined,
                       backgroundSize: "cover", backgroundPosition: "center",
+                      border: "2px solid #fff", boxShadow: "0 0 0 1px var(--navy)",
                     }}>
                       {!r.photo_url && initials(r.leader_name)}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>{r.leader_name}</div>
+                      <div style={{ fontWeight: 600, fontSize: 13.5 }}>{r.leader_name}</div>
                       <div style={{ fontSize: 11.5, color: "var(--ink-4)" }}>{r.role}</div>
                     </div>
                     {r.whatsapp && (
-                      <a className="pt-btn pt-btn-out" style={{ padding: "5px 11px", fontSize: 12, textDecoration: "none" }}
+                      <a className="pt-btn pt-btn-go" style={{ padding: "6px 13px", fontSize: 12, textDecoration: "none" }}
                          href={waLink(r.whatsapp, r.leader_name)} target="_blank" rel="noreferrer">
                         WhatsApp
                       </a>
