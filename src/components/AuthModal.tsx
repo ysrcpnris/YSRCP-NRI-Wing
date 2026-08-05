@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { sanitizeTrim } from "../lib/sanitize";
 import ResetPassword from "./ResetPassword";
+import StagingQuickLogin from "./StagingQuickLogin";
 
 type AuthModalProps = {
   mode: "signin" | "signup";
@@ -761,6 +762,8 @@ const handleSubmit = async (e: React.FormEvent) => {
                   : "Register to become part of our global community"}
               </p>
             </div>
+
+            {mode === "signin" && !forgotPassword && <StagingQuickLogin />}
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm">

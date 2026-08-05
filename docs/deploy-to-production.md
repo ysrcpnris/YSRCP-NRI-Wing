@@ -36,7 +36,20 @@ In Vercel → Settings → Environment Variables, add these to the
 VITE_SUPABASE_URL       https://vaomqjcupmlfsivkrelx.supabase.co
 VITE_SUPABASE_ANON_KEY  <staging anon key — it is in .env.local>
 VITE_APP_URL            https://staging.ysrcpnriwing.org
+VITE_STAGING_MODE       true
 ```
+
+**`VITE_STAGING_MODE` must NEVER be set on the Production environment.**
+It switches on `StagingQuickLogin` (src/components/StagingQuickLogin.tsx)
+— a button per fixture account that signs in directly and stamps
+`otp_verified_at` itself, skipping the real email-OTP hand-off
+entirely. That's exactly right for `@example.test` accounts with no
+real inbox, and exactly wrong for a real member. The component also
+refuses to render on the production hostname as a second, independent
+gate — but the env var is the one that actually matters. If you ever
+see the amber "Staging quick sign-in" box on www.ysrcpnriwing.org,
+this variable leaked into the wrong Vercel environment; unset it
+immediately.
 
 `vercel.json` and `index.html` already list **both** Supabase refs in the
 CSP `connect-src`, so no CSP change is needed for staging.
