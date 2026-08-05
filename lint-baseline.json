@@ -1,5 +1,5 @@
 {
-  "total": 299,
+  "total": 295,
   "fingerprints": [
     "src/AdminDashboard/AdminDashboard.tsx::@typescript-eslint/ban-ts-comment::Use \"@ts-expect-error\" instead of \"@ts-ignore\", as \"@ts-ignore\" will do nothing if the following line is error-free.",
     "src/AdminDashboard/AdminDashboard.tsx::@typescript-eslint/no-explicit-any::Unexpected any. Specify a different type.",
@@ -84,7 +84,6 @@
     "src/components/Dashboard.tsx::@typescript-eslint/no-unused-vars::'missingFieldToRefMap' is assigned a value but never used.",
     "src/components/Dashboard.tsx::@typescript-eslint/no-unused-vars::'profileEditMode' is assigned a value but never used.",
     "src/components/Dashboard.tsx::@typescript-eslint/no-unused-vars::'profileFieldErrors' is assigned a value but never used.",
-    "src/components/Dashboard.tsx::@typescript-eslint/no-unused-vars::'renderConnectSummary' is assigned a value but never used.",
     "src/components/Dashboard.tsx::@typescript-eslint/no-unused-vars::'renderEventsSummary' is assigned a value but never used.",
     "src/components/Dashboard.tsx::@typescript-eslint/no-unused-vars::'renderProfileSummary' is assigned a value but never used.",
     "src/components/Dashboard.tsx::@typescript-eslint/no-unused-vars::'renderReferralsSummary' is assigned a value but never used.",

@@ -7,6 +7,7 @@ import Appointments from './Appointments';
 import MyProfile from './MyProfile';
 import MyServiceRequests from './MyServiceRequests';
 import Grievances from './Grievances';
+import MyLocalConnect from './MyLocalConnect';
 import DigitalArmy from './DigitalArmy';
 import ChapterDashboard from './ChapterDashboard';
 import nriLogo from './nrilogo.png';
@@ -1376,6 +1377,7 @@ const Dashboard: React.FC = () => {
     | "services"
     | "events"
     | "connect"
+    | "abroad"
     | "assistance"
     | "appointments"
     | "army"
@@ -1389,6 +1391,7 @@ const Dashboard: React.FC = () => {
     "services",
     "events",
     "connect",
+    "abroad",
     "assistance",
     "appointments",
     "army",
@@ -2210,28 +2213,8 @@ useEffect(() => {
    * It also deduplicates: a Regional Coordinator holding five district
    * postings is one person to contact, not five cards.
    */
-  type LocalConnectLeader = {
-    tier: "constituency" | "district" | "state";
-    role: string;
-    leader_name: string;
-    whatsapp: string | null;
-    whatsapp_alt: string | null;
-    photo_url: string | null;
-    place: string | null;
-  };
-  const [localConnect, setLocalConnect] = useState<LocalConnectLeader[]>([]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    (async () => {
-      const { data, error } = await supabase.rpc("my_local_connect");
-      if (error) {
-        console.error("my_local_connect failed:", error);
-        return;
-      }
-      setLocalConnect((data as LocalConnectLeader[]) ?? []);
-    })();
-  }, [user?.id, profile?.assembly_constituency]);
+  // LocalConnectLeader/localConnect and their fetch effect were replaced
+  // by <MyLocalConnect />'s own fetch of my_local_connect().
 
 
   /**
@@ -2246,12 +2229,8 @@ useEffect(() => {
    * - Displayed in "Leadership Connect" section with other leaders
    */
 
-  const [nriCoordinator, setNriCoordinator] = useState<{
-    id: string;
-    name: string;
-    phone: string | null;
-    email: string | null;
-  } | null>(null);
+  // nriCoordinator state and its "2.5 NRI COORDINATOR" fetch below were
+  // only ever read by renderConnectContent(), removed with it.
 
   /**
    * ═══════════════════════════════════════════════════════════════
@@ -2878,25 +2857,6 @@ if (!district || !assembly) {
 }
 
       // =======================
-      // 2.5 NRI COORDINATOR
-      // =======================
-      const { data: nriData, error: nriError } = await supabase
-        .from("coordinators")
-        .select("id, name, phone, email")
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-
-      if (nriError) {
-        console.error("NRI Coordinator fetch error:", nriError);
-      } else if (nriData) {
-        setNriCoordinator(nriData);
-      }
-
-
-
-
-      // =======================
       // 3. EVENTS
       // =======================
   // Pull `kind` so the UI can decide whether to render an "Apply" button
@@ -3226,18 +3186,8 @@ const missingFieldToRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
       </div>
     </div>
   ); 
-const renderConnectSummary = () => (
-  <div className="flex flex-wrap items-center justify-between w-full gap-4 mt-1 opacity-90">
-    <div className="flex items-center gap-3">
-      <span className="text-xs font-bold text-gray-600">Leadership Contacts</span>
-      {localConnect.length > 0 && (
-        <span className="text-xs text-gray-400">
-          {localConnect.length} for your area
-        </span>
-      )}
-    </div>
-  </div>
-);
+// renderConnectSummary() was dead — defined, never called — and read
+// the now-removed localConnect state. Removed with it.
 
 
   const renderServicesSummary = () => (
@@ -3876,243 +3826,9 @@ const handleSubmitSuggestion = async () => {
     </div>
   );
 
-const renderConnectContent = () => {
-  // Leaders come from my_local_connect() — see localConnect state below.
-  //
-  // WHY THIS NO LONGER MATCHES NAMES IN THE BROWSER
-  //   The previous version filtered leader_assignments by the member's
-  //   assembly_constituency string after passing it through
-  //   normalizeAssembly(). That matched on raw text, so it missed every
-  //   constituency the party records under a different spelling —
-  //   Palamaneru/Palamaner, Nandyala/Nandyal, Pulivendula/Pulivendla,
-  //   24 in all. Those members were told no leader was configured while
-  //   their coordinator sat in the table.
-  //
-  //   normalizeAssembly() also stripped the literal substring "ac"
-  //   anywhere in the name: 'Achanta' became 'hanta' and 'Macherla'
-  //   became 'Mherla', which could never match anything.
-  //
-  //   Resolution now happens in the database against an alias table
-  //   (migrations 20260804160000 / 20260804180000), so the app and any
-  //   admin report agree on who represents whom.
-  const roleRank: Record<string, number> = {
-    "Global Coordinator": 0,
-    "Regional Coordinator": 1,
-    "NRI Coordinator": 2,
-    "District President": 3,
-    "Assembly Coordinator": 4,
-  };
-
-  /**
-   * One card per PERSON, not per posting.
-   *
-   * A leader can legitimately hold more than one role that reaches the
-   * same member — Y.S. Jagan Mohan Reddy is both party President and
-   * the Assembly Coordinator for Pulivendla, so a member from Pulivendla
-   * was shown the same person twice as if they were two unrelated
-   * contacts.
-   *
-   * The roster keeps both facts, which is right; the UI merges them and
-   * shows every role that applies to this member as its own badge. The
-   * card sorts by the most senior role the person holds.
-   */
-  const byPerson = new Map<string, {
-    id: string;
-    name: string;
-    whatsapp_number: string | null;
-    whatsapp_number_2?: string | null;
-    photo_url?: string | null;
-    role: string;
-    roles: string[];
-    phone?: string | null;
-    email?: string | null;
-  }>();
-
-  localConnect.forEach((l) => {
-    const key = l.leader_name;
-    const existing = byPerson.get(key);
-    if (existing) {
-      if (!existing.roles.includes(l.role)) existing.roles.push(l.role);
-      // Keep the most senior role for ordering.
-      if ((roleRank[l.role] ?? 9) < (roleRank[existing.role] ?? 9)) {
-        existing.role = l.role;
-      }
-      existing.photo_url = existing.photo_url ?? l.photo_url;
-      return;
-    }
-    byPerson.set(key, {
-      id: `${l.leader_name}`,
-      name: l.leader_name,
-      whatsapp_number: l.whatsapp,
-      whatsapp_number_2: l.whatsapp_alt,
-      photo_url: l.photo_url,
-      role: l.role,
-      roles: [l.role],
-    });
-  });
-
-  const orderedLeaders = Array.from(byPerson.values())
-    .sort((a, b) => (roleRank[a.role] ?? 9) - (roleRank[b.role] ?? 9));
-
-  // The NRI coordinator is not part of the AP geography hierarchy, so
-  // my_local_connect() does not return them — they are appended here.
-  if (nriCoordinator && !orderedLeaders.some((l) => l.name === nriCoordinator.name)) {
-    orderedLeaders.splice(
-      Math.min(2, orderedLeaders.length),
-      0,
-      {
-        id: nriCoordinator.id,
-        name: nriCoordinator.name,
-        whatsapp_number: nriCoordinator.phone,
-        role: "NRI Coordinator",
-        roles: ["NRI Coordinator"],
-        phone: nriCoordinator.phone,
-        email: nriCoordinator.email,
-      }
-    );
-  }
-
-
-  const colorClasses = [
-    { text: "text-emerald-600", border: "border-emerald-200" },
-    { text: "text-teal-600", border: "border-teal-200" },
-    { text: "text-primary-600", border: "border-blue-200" },
-    { text: "text-purple-600", border: "border-purple-200" },
-  ];
-
-  return (
-    <div className="pt-4 space-y-10">
-      {/* LOCAL CONNECT — the leaders of the member's home constituency
-          in AP. Admin-owned: these come from the party roster, not from
-          anything a chapter can edit. */}
-      <div>
-        <h3 className="font-bold text-gray-900">Local Connect</h3>
-        <p className="text-sm text-gray-500 mt-0.5 mb-4">
-          Party leaders for your home constituency in Andhra Pradesh.
-        </p>
-      {orderedLeaders.length === 0 ? (
-        <div className="text-xs text-gray-500">
-          No leadership contacts configured yet.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {orderedLeaders.map((leader, idx) => {
-            const colors = colorClasses[idx % colorClasses.length];
-
-            return (
-              <div
-                key={leader.id}
-                // h-full + flex-col make every card the same vertical height
-                // as the tallest one in the row (CSS grid stretches cells by
-                // default), so different name lengths or one-vs-two WhatsApp
-                // buttons never produce a ragged edge.
-                className={`bg-white border ${colors.border}
-                rounded-xl p-4 flex flex-col items-center text-center h-full
-                shadow-sm hover:shadow-md transition-all`}
-              >
-                {/* ROLES — every posting this person holds that reaches
-                    this member. Usually one; two when someone is both a
-                    state office-holder and the member's own assembly
-                    coordinator. */}
-                <div className="flex flex-wrap gap-1 justify-center mb-1">
-                  {(leader.roles ?? [leader.role]).map((r: string) => (
-                    <span
-                      key={r}
-                      className={`text-[9px] font-black uppercase tracking-widest ${colors.text}`}
-                    >
-                      {r}
-                    </span>
-                  ))}
-                </div>
-
-                {/* AVATAR */}
-                <div
-                  className="w-16 h-16 rounded-full bg-gray-100
-                             border border-gray-300 flex items-center
-                             justify-center mb-3 overflow-hidden flex-shrink-0"
-                >
-                  {leader.photo_url ? (
-                    <img
-                      src={leader.photo_url}
-                      alt={leader.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <span className="text-lg font-black text-gray-600">
-                      {leader.name?.charAt(0) || "L"}
-                    </span>
-                  )}
-                </div>
-
-                {/* NAME — clamped to two lines with a fixed minimum height
-                    so long names don't push the rest of the card down.
-                    The full name is still available on hover via title. */}
-                <h4
-                  title={leader.name || "Leader"}
-                  className="text-sm font-bold text-gray-900 mb-4 line-clamp-2 min-h-[2.5rem] leading-tight px-1"
-                >
-                  {leader.name || "Leader"}
-                </h4>
-
-                {/* WHATSAPP BUTTONS — primary always, secondary only when set.
-                    mt-auto pins the buttons to the bottom of the card so the
-                    primary button lines up across cards even when names
-                    differ in length or the secondary number is missing. */}
-                <div className="w-full space-y-1.5 mt-auto">
-                  <button
-                    onClick={() => {
-                      const digits = leader.whatsapp_number?.replace(/\D/g, "");
-                      if (!digits || digits === "0000000000") {
-                        showToast("WhatsApp contact not available", "error");
-                        return;
-                      }
-                      window.open(`https://wa.me/${digits}`, "_blank");
-                      showToast(`Opening WhatsApp with ${leader.name}`, "info");
-                    }}
-                    className="w-full py-2 rounded-lg bg-whatsapp-500
-                               hover:bg-whatsapp-600 text-white font-bold
-                               text-xs flex items-center justify-center
-                               gap-1.5 transition-colors shadow-sm"
-                  >
-                    <MessageSquare size={14} fill="white" /> WhatsApp
-                  </button>
-
-                  {leader.whatsapp_number_2 && (
-                    <button
-                      onClick={() => {
-                        const phone = leader.whatsapp_number_2!.replace(/\D/g, "");
-                        window.open(`https://wa.me/${phone}`, "_blank");
-                        showToast(`Opening WhatsApp with ${leader.name}`, "info");
-                      }}
-                      className="w-full py-2 rounded-lg bg-white border
-                                 border-whatsapp-500 text-whatsapp-600
-                                 hover:bg-whatsapp-50 font-bold text-xs
-                                 flex items-center justify-center gap-1.5
-                                 transition-colors"
-                    >
-                      <MessageSquare size={14} /> Alt. WhatsApp
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      </div>
-
-      {/* ABROAD CONNECT — the member's own chapter groups and handles,
-          plus the party's national channels. Chapter-owned: a chapter
-          lead edits their own rows, admin edits anything, and the
-          visibility rule (own chapter + national only) is enforced by
-          my_social_handles() rather than here. */}
-      <AbroadConnect />
-    </div>
-  );
-};
+  // renderConnectContent() is replaced by <MyLocalConnect /> (built to
+  // docs/design/nri-wing-prototype.html) and the existing <AbroadConnect />,
+  // now on its own tab instead of embedded at the end of this one.
 
   // SERVICE_UI (the old per-category icon/colour map) and its consumer
   // were replaced by <MyServiceRequests />, built to
@@ -4667,7 +4383,8 @@ const renderSuggestionsContent = () => (
     { id: "referrals" as const,   label: "My Network",  icon: Users,         color: "text-emerald-600" },
     { id: "services" as const,    label: "Services",    icon: Briefcase,     color: "text-amber-600" },
     { id: "events" as const,      label: "Notifications", icon: Bell,        color: "text-pink-600", badge: unseenEventsCount || 0 },
-    { id: "connect" as const,     label: "Leaders",     icon: MessageSquare, color: "text-primary-600" },
+    { id: "connect" as const,     label: "Local Connect",  icon: MessageSquare, color: "text-primary-600" },
+    { id: "abroad" as const,      label: "Abroad Connect", icon: Users,         color: "text-primary-600" },
     // Grievances and student assistance. Separate from Services, which
     // already lists service_requests — this is the half that had no home:
     // grievances were written by nothing and read by nothing, and
@@ -4695,7 +4412,9 @@ const renderSuggestionsContent = () => (
       case "services":    return <MyServiceRequests />;
       case "grievances":  return <Grievances />;
       case "events":      return renderEventsContent();
-      case "connect":     return renderConnectContent();
+      // Built to docs/design/nri-wing-prototype.html.
+      case "connect":     return <MyLocalConnect />;
+      case "abroad":      return <AbroadConnect />;
       case "assistance":  return <MyRequests />;
       case "appointments": return <Appointments />;
       case "army":        return <DigitalArmy />;

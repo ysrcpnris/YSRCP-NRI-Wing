@@ -1,5 +1,5 @@
 {
-  "total": 136,
+  "total": 135,
   "files": {
     "src/AdminDashboard/AdminDashboard.tsx": 3,
     "src/AdminDashboard/AdminProfileMenu.tsx": 1,
@@ -16,7 +16,7 @@
     "src/App.tsx": 16,
     "src/components/AuthModal.tsx": 3,
     "src/components/Contact.tsx": 4,
-    "src/components/Dashboard.tsx": 36,
+    "src/components/Dashboard.tsx": 35,
     "src/components/Development.tsx": 1,
     "src/components/Events.tsx": 5,
     "src/components/Glimpse.tsx": 1,
@@ -123,7 +123,6 @@
     "src/components/Dashboard.tsx::error TS6133: 'missingFieldToRefMap' is declared but its value is never read.",
     "src/components/Dashboard.tsx::error TS6133: 'profileEditMode' is declared but its value is never read.",
     "src/components/Dashboard.tsx::error TS6133: 'profileFieldErrors' is declared but its value is never read.",
-    "src/components/Dashboard.tsx::error TS6133: 'renderConnectSummary' is declared but its value is never read.",
     "src/components/Dashboard.tsx::error TS6133: 'renderEventsSummary' is declared but its value is never read.",
     "src/components/Dashboard.tsx::error TS6133: 'renderProfileSummary' is declared but its value is never read.",
     "src/components/Dashboard.tsx::error TS6133: 'renderReferralsSummary' is declared but its value is never read.",
