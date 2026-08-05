@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo ,useRef} from 'react';
 import { ProfileDropdown } from './ProfileDropdown';
 import MyAbroadConnect from './MyAbroadConnect';
 import MyAssistanceBoard from './MyAssistanceBoard';
+import '../styles/prototype-tokens.css';
 import MyRequests from './MyRequests';
 import Appointments from './Appointments';
 import MyProfile from './MyProfile';
@@ -4621,25 +4622,26 @@ const renderSuggestionsContent = () => (
 
       <aside
         className={`
+          pt-navrail
           fixed md:static inset-y-0 left-0 z-50 w-72 md:w-64
-          bg-white border-r border-gray-200
           flex flex-col
           transform transition-transform duration-300
           ${mobileNavOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
         {/* Sidebar top — logo & close btn */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,.09)" }}>
           <div className="flex items-center gap-3">
             <img src={nriLogo} alt="logo" className="h-9 w-9 rounded-full object-cover" />
             <div>
-              <h1 className="font-black text-sm text-gray-900 leading-none">NRI Wing</h1>
-              <p className="text-[10px] text-gray-500 tracking-wider uppercase mt-0.5">Member Portal</p>
+              <h1 className="pt-navrail-brand-name">NRI Wing</h1>
+              <p className="pt-navrail-brand-sub">Member Portal</p>
             </div>
           </div>
           <button
             onClick={() => setMobileNavOpen(false)}
-            className="md:hidden p-1.5 rounded-lg hover:bg-gray-100"
+            className="md:hidden p-1.5 rounded-lg"
+            style={{ color: "rgba(255,255,255,.7)" }}
             aria-label="Close navigation"
           >
             <X size={18} />
@@ -4658,21 +4660,12 @@ const renderSuggestionsContent = () => (
                   setActiveTab(item.id);
                   setMobileNavOpen(false);
                 }}
-                className={`
-                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                  ${
-                    isActive
-                      ? "bg-primary-50 text-primary-700 border border-primary-100"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }
-                `}
+                className={`pt-navrail-btn ${isActive ? "on" : ""}`}
               >
-                <Icon size={18} className={isActive ? "text-primary-600" : "text-gray-400"} />
+                <Icon size={16} className="ico" />
                 <span className="flex-1 text-left">{item.label}</span>
                 {(item as any).badge > 0 && (
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                    {(item as any).badge}
-                  </span>
+                  <span className="pt-navrail-count">{(item as any).badge}</span>
                 )}
               </button>
             );
@@ -4680,9 +4673,9 @@ const renderSuggestionsContent = () => (
         </nav>
 
         {/* Sidebar bottom — status + logout */}
-        <div className="p-3 border-t border-gray-100 space-y-2">
-          <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-            <span className={`w-1.5 h-1.5 rounded-full ${loadingDashboard ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
+        <div className="pt-navrail-foot space-y-2">
+          <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: "rgba(255,255,255,.4)" }}>
+            <span className={`w-1.5 h-1.5 rounded-full ${loadingDashboard ? "bg-amber-400 animate-pulse" : "bg-emerald-400"}`} />
             {loadingDashboard ? "Syncing..." : "Online"}
           </div>
           <button
@@ -4694,7 +4687,8 @@ const renderSuggestionsContent = () => (
                 console.error(e);
               }
             }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition"
+            style={{ color: "rgba(255,120,110,.85)" }}
           >
             <LogOut size={18} />
             Logout
