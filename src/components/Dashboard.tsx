@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo ,useRef} from 'react';
 import { ProfileDropdown } from './ProfileDropdown';
-import AbroadConnect from './AbroadConnect';
+import MyAbroadConnect from './MyAbroadConnect';
 import MyRequests from './MyRequests';
 import Appointments from './Appointments';
 import MyProfile from './MyProfile';
@@ -4414,7 +4414,7 @@ const renderSuggestionsContent = () => (
       case "events":      return renderEventsContent();
       // Built to docs/design/nri-wing-prototype.html.
       case "connect":     return <MyLocalConnect />;
-      case "abroad":      return <AbroadConnect />;
+      case "abroad":      return <MyAbroadConnect />;
       case "assistance":  return <MyRequests />;
       case "appointments": return <Appointments />;
       case "army":        return <DigitalArmy />;

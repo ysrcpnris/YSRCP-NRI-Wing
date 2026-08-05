@@ -146,6 +146,7 @@ textarea.pt-inp { resize: vertical; min-height: 78px; }
 .pt-btn-go:hover { box-shadow: 0 4px 14px -4px rgba(30, 107, 214, .55); }
 .pt-btn-out { border-color: var(--line); background: var(--card); color: var(--ink-2); }
 .pt-btn-out:hover { border-color: var(--navy); color: var(--navy); }
+.pt-btn-sm { padding: 5px 11px; font-size: 12px; }
 
 .pt-note { background: var(--card-2); border-left: 3px solid var(--navy);
   padding: 11px 14px; border-radius: 0 var(--r-sm) var(--r-sm) 0;
