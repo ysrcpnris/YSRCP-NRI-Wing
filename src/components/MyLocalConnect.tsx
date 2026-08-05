@@ -75,7 +75,20 @@ function initials(name: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
+// Per-tier CTA copy, matching the mock: the mandal card is the primary,
+// most-actionable contact (blue), constituency and district are outline —
+// all three still resolve to the same real action (a WhatsApp message to
+// that leader), there is no separate "raise an issue" backend for this
+// card. The copy signals purpose, the link is honest about what happens.
+const TIER_CTA: Record<ConnectRow["tier"], { label: string; primary: boolean }> = {
+  constituency: { label: "Request a connect", primary: false },
+  mandal: { label: "Raise a local issue", primary: true },
+  district: { label: "Escalate an issue", primary: false },
+  state: { label: "Message on WhatsApp", primary: false },
+};
+
 function LeaderCard({ row }: { row: ConnectRow }) {
+  const cta = TIER_CTA[row.tier];
   return (
     <div className="pt-card" style={{ overflow: "hidden" }}>
       <div style={{
@@ -89,7 +102,11 @@ function LeaderCard({ row }: { row: ConnectRow }) {
           width: 76, height: 76, borderRadius: "50%", margin: "15px auto 13px",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 24, fontWeight: 700, color: "#fff",
-          background: "rgba(255,255,255,.16)", border: "3px solid rgba(255,255,255,.45)",
+          // Mandal is the primary/most-actionable card — its avatar fill
+          // is solid green rather than the translucent-white every other
+          // tier gets, echoing the primary blue CTA below it.
+          background: row.tier === "mandal" ? "var(--green)" : "rgba(255,255,255,.16)",
+          border: "3px solid rgba(255,255,255,.45)",
           overflow: "hidden", backgroundImage: row.photo_url ? `url(${row.photo_url})` : undefined,
           backgroundSize: "cover", backgroundPosition: "center",
         }}>
@@ -103,10 +120,10 @@ function LeaderCard({ row }: { row: ConnectRow }) {
       <div style={{ padding: "14px 18px", display: "flex", gap: 8 }}>
         {row.whatsapp ? (
           <a
-            className="pt-btn pt-btn-go" style={{ flex: 1, textDecoration: "none" }}
+            className={`pt-btn ${cta.primary ? "pt-btn-go" : "pt-btn-out"}`} style={{ flex: 1, textDecoration: "none" }}
             href={waLink(row.whatsapp, row.leader_name)} target="_blank" rel="noreferrer"
           >
-            Message on WhatsApp
+            {cta.label}
           </a>
         ) : (
           <span className="pt-btn pt-btn-out" style={{ flex: 1, opacity: 0.6, cursor: "default" }}>
@@ -173,7 +190,15 @@ export default function MyLocalConnect() {
         <div className="pt-card"><div style={{ padding: 30, textAlign: "center", color: "var(--ink-4)" }}>Loading…</div></div>
       ) : (
         <>
+          {/* Card order follows the mock: constituency, then mandal (the
+              primary, most-actionable contact — centered and blue), then
+              district. Not a strict top-down hierarchy walk (district
+              actually outranks constituency) — it's ordered by which
+              contact a member reaches for first day to day. */}
           <div className="pt-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", marginBottom: 16 }}>
+            {constituency ? <LeaderCard row={constituency} /> : (
+              <div className="pt-card"><div className="pt-card-b" style={{ textAlign: "center", color: "var(--ink-4)", fontSize: 12.5 }}>No constituency coordinator on file</div></div>
+            )}
             {mandal ? <LeaderCard row={mandal} /> : (
               <div className="pt-card">
                 <div className="pt-card-b" style={{ textAlign: "center", color: "var(--ink-4)", fontSize: 12.5 }}>
@@ -181,9 +206,6 @@ export default function MyLocalConnect() {
                   {myMandalName ? `${myMandalName} — no Mandal President appointed yet` : "Complete your profile to see your mandal"}
                 </div>
               </div>
-            )}
-            {constituency ? <LeaderCard row={constituency} /> : (
-              <div className="pt-card"><div className="pt-card-b" style={{ textAlign: "center", color: "var(--ink-4)", fontSize: 12.5 }}>No constituency coordinator on file</div></div>
             )}
             {district ? <LeaderCard row={district} /> : (
               <div className="pt-card"><div className="pt-card-b" style={{ textAlign: "center", color: "var(--ink-4)", fontSize: 12.5 }}>No district leadership on file</div></div>
