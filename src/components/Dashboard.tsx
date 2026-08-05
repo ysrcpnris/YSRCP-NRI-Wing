@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect, useMemo ,useRef} from 'react';
-import { Listbox } from "@headlessui/react";
 import { ProfileDropdown } from './ProfileDropdown';
 import AbroadConnect from './AbroadConnect';
 import MyRequests from './MyRequests';
 import Appointments from './Appointments';
 import MyProfile from './MyProfile';
+import MyServiceRequests from './MyServiceRequests';
+import Grievances from './Grievances';
 import DigitalArmy from './DigitalArmy';
 import ChapterDashboard from './ChapterDashboard';
 import nriLogo from './nrilogo.png';
@@ -978,65 +979,9 @@ const CONTRIBUTION_MAX_LENGTH = 1000;
       },
     ],
   };
-const SERVICE_CONFIG = {
-  student: {
-    label: "Student Support",
-    subs: {
-      "Education Guidance": [
-        "Course Selection",
-        "University Shortlisting",
-        "Scholarship Assistance",
-      ],
-      "Visa Support": [
-        "Student Visa",
-        "Documentation Review",
-        "Interview Preparation",
-      ],
-    },
-  },
-
-  legal: {
-    label: "Legal Advisor",
-    subs: {
-      "Immigration Law": [
-        "PR / Citizenship",
-        "Visa Extension",
-      ],
-      "Property Issues": [
-        "Land Dispute",
-        "Registration Help",
-      ],
-    },
-  },
-
-  career: {
-    label: "Career Coach",
-    subs: {
-      "Job Support": [
-        "Resume Review",
-        "Interview Preparation",
-      ],
-      "Career Switch": [
-        "IT Transition",
-        "Skill Roadmap",
-      ],
-    },
-  },
-
-  local: {
-    label: "Local Connector",
-    subs: {
-      "Community Help": [
-        "Local Events",
-        "Volunteer Groups",
-      ],
-      "Government Services": [
-        "Certificates",
-        "Office Guidance",
-      ],
-    },
-  },
-};
+// SERVICE_CONFIG (the old hardcoded taxonomy, superseded by
+// service_categories/service_options) was replaced by
+// <MyServiceRequests />'s live fetch of those tables.
 
 import {
   User,
@@ -1052,7 +997,6 @@ import {
   ChevronDown,
   LogOut,
   Briefcase,
-  GraduationCap,
   Scale,
   Check,
   ArrowRight,
@@ -1436,6 +1380,7 @@ const Dashboard: React.FC = () => {
     | "appointments"
     | "army"
     | "chapter"
+    | "grievances"
     | "suggestions";
   const VALID_TABS: readonly Tab[] = [
     "overview",
@@ -1448,6 +1393,7 @@ const Dashboard: React.FC = () => {
     "appointments",
     "army",
     "chapter",
+    "grievances",
     "suggestions",
   ];
 
@@ -1482,67 +1428,10 @@ const Dashboard: React.FC = () => {
    * - Improve UX by persisting user's section preference
    */
   
- const [selectedService, setSelectedService] = useState<keyof typeof SERVICE_CONFIG | null>(null);
-const [selectedSub, setSelectedSub] = useState<string | null>(null);
-const [selectedInner, setSelectedInner] = useState<string | null>(null);
-  useEffect(() => {
-    setSelectedSub(null);
-    setSelectedInner(null);
-  }, [selectedService]);
-
-  // Service taxonomy (categories + options per service_type) — admin-managed
-  // in the DB. Shape: { student: { "Education Guidance": ["Course Selection", ...] } }
-  // Replaces what used to live in SERVICE_CONFIG.subs.
-  const [serviceSubs, setServiceSubs] = useState<Record<string, Record<string, string[]>>>({});
-
-  const fetchServiceTaxonomy = async () => {
-    const [{ data: cats }, { data: opts }] = await Promise.all([
-      supabase
-        .from("service_categories")
-        .select("id, service_type, name, sort_order")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true }),
-      supabase
-        .from("service_options")
-        .select("id, category_id, name, sort_order")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true }),
-    ]);
-
-    const grouped: Record<string, Record<string, string[]>> = {};
-    const catById: Record<string, { service_type: string; name: string }> = {};
-    for (const c of cats || []) {
-      grouped[c.service_type] ??= {};
-      grouped[c.service_type][c.name] = [];
-      catById[c.id] = { service_type: c.service_type, name: c.name };
-    }
-    for (const o of opts || []) {
-      const c = catById[o.category_id];
-      if (!c) continue;
-      grouped[c.service_type]?.[c.name]?.push(o.name);
-    }
-    setServiceSubs(grouped);
-  };
-
-  useEffect(() => {
-    fetchServiceTaxonomy();
-    const channel = supabase
-      .channel("service-taxonomy")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "service_categories" },
-        () => fetchServiceTaxonomy()
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "service_options" },
-        () => fetchServiceTaxonomy()
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  // selectedService/selectedSub/selectedInner (cascading picker state)
+  // and serviceSubs/fetchServiceTaxonomy (the live service_categories /
+  // service_options fetch) were replaced by <MyServiceRequests />'s own
+  // version of the same fetch.
 
   /**
    * ═══════════════════════════════════════════════════════════════
@@ -1558,30 +1447,9 @@ const [selectedInner, setSelectedInner] = useState<string | null>(null);
   
   const [activeReferralCount, setActiveReferralCount] = useState<number>(0);
 
-  const [submittingService, setSubmittingService] = useState(false);
-
-  // Current user's own service requests (for "My Service Requests" list)
-  type MyServiceRequest = {
-    id: string;
-    service_type: string;
-    service_category: string | null;
-    service_option: string | null;
-    description: string | null;
-    // 'pending' | 'in_progress' | 'resolved' | 'rejected'
-    status: string;
-    assigned_to: string | null;
-    action_taken: string | null;
-    admin_comments: string | null;
-    team_reply: string | null;
-    team_resolved_at: string | null;
-    created_at: string;
-  };
-  const [myRequests, setMyRequests] = useState<MyServiceRequest[]>([]);
-  const [loadingMyRequests, setLoadingMyRequests] = useState(false);
-  // Active tab in the My Service Requests filter strip.
-  const [serviceRequestTab, setServiceRequestTab] = useState<
-    "all" | "pending" | "in_progress" | "resolved" | "other"
-  >("all");
+  // submittingService, MyServiceRequest, and myRequests/loadingMyRequests/
+  // serviceRequestTab (the old filter strip state) were replaced by
+  // <MyServiceRequests />'s own internal state.
   // Active tab in the Notifications view (formerly "Active Events" /
   // "Previous Events").
   const [notificationTab, setNotificationTab] = useState<"active" | "previous">("active");
@@ -2438,7 +2306,6 @@ useEffect(() => {
    * - Used to clear form after submission
    */
 
-  const serviceMessageRef = useRef<HTMLTextAreaElement | null>(null);
   const suggestionRef = useRef<HTMLTextAreaElement | null>(null);
 
  // ---------------- REFERRAL STATS ----------------
@@ -2506,44 +2373,8 @@ const toggleSection = async (section: SectionKey) => {
   }
 };
 
-const fetchMyServiceRequests = async () => {
-  if (!user) return;
-  setLoadingMyRequests(true);
-  const { data, error } = await supabase
-    .from("service_requests")
-    .select(
-      "id, service_type, service_category, service_option, description, status, assigned_to, action_taken, admin_comments, team_reply, team_resolved_at, created_at"
-    )
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-  if (!error && data) setMyRequests(data as MyServiceRequest[]);
-  setLoadingMyRequests(false);
-};
-
-useEffect(() => {
-  fetchMyServiceRequests();
-  // Realtime: when admin assigns a team or the team replies / resolves,
-  // the user's list should update without a manual refresh. Filter by
-  // user_id so we only listen to our own rows.
-  if (!user?.id) return;
-  const channel = supabase
-    .channel(`my-service-requests-${user.id}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "service_requests",
-        filter: `user_id=eq.${user.id}`,
-      },
-      () => fetchMyServiceRequests()
-    )
-    .subscribe();
-  return () => {
-    supabase.removeChannel(channel);
-  };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [user?.id]);
+// fetchMyServiceRequests() and its realtime subscription were replaced
+// by <MyServiceRequests />'s own fetch + effect.
 
 // Realtime: keep My Network in sync the moment a referral row is inserted
 // (referrer_id matches the current user for both direct/active children
@@ -2713,57 +2544,8 @@ const handleCancelApply = async (event: EventItem) => {
   showToast("Application cancelled", "success");
 };
 
-const handleSubmitService = async () => {
-  // Sanitise + trim before length-checking so a textarea full of
-  // zero-width chars doesn't pass the "is filled" guard while
-  // actually being empty after the strip.
-  const message = sanitizeText(serviceMessageRef.current?.value || "").trim();
-
-  if (!selectedService || !selectedSub || !selectedInner) {
-    showToast("Please complete service selection", "error");
-    return;
-  }
-
-  if (!message) {
-    showToast("Please describe your requirement", "error");
-    return;
-  }
-
-  if (!user) return;
-
-  try {
-    setSubmittingService(true);
-
-    const { error } = await supabase
-      .from("service_requests")
-      .insert({
-        user_id: user.id,
-        applicant_name: fullName,
-        current_location: countryOfResidence || "India",
-
-        service_type: selectedService,
-        service_category: selectedSub,
-        service_option: selectedInner,
-        description: message,
-        status: "pending",
-      });
-
-    if (error) throw error;
-
-    serviceMessageRef.current!.value = "";
-    setSelectedService(null);
-    setSelectedSub(null);
-    setSelectedInner(null);
-
-    showToast("Service request submitted successfully!", "success");
-    fetchMyServiceRequests();
-  } catch (err) {
-    console.error(err);
-    showToast("Failed to submit request", "error");
-  } finally {
-    setSubmittingService(false);
-  }
-};
+// handleSubmitService() was replaced by <MyServiceRequests />'s own
+// submit(), built to docs/design/nri-wing-prototype.html.
 
 
 
@@ -4332,438 +4114,9 @@ const renderConnectContent = () => {
   );
 };
 
-const SERVICE_UI = {
-  student: {
-    icon: <GraduationCap size={22} className="text-primary-600" />,
-    bg: "bg-blue-50",
-  },
-  legal: {
-    icon: <Scale size={22} className="text-purple-600" />,
-    bg: "bg-purple-50",
-  },
-  career: {
-    icon: <Briefcase size={22} className="text-orange-600" />,
-    bg: "bg-orange-50",
-  },
-  local: {
-    icon: <Users size={22} className="text-green-600" />,
-    bg: "bg-green-50",
-  },
-};
-
-const renderServicesContent = () => (
-  <div className="pt-4">
-    {/* ================= SERVICES GRID ================= */}
-    {!selectedService ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Object.entries(SERVICE_CONFIG).map(([key, cfg]) => {
-          const ui = SERVICE_UI[key as keyof typeof SERVICE_UI];
-
-          return (
-            <div
-              key={key}
-              onClick={() => {
-                setSelectedService(key as keyof typeof SERVICE_CONFIG);
-                setSelectedSub(null);
-                setSelectedInner(null);
-              }}
-              className="bg-white border border-gray-200 rounded-2xl px-6 py-8
-                         text-center cursor-pointer transition-all
-                         hover:border-indigo-400 hover:shadow-md"
-            >
-              <div
-                className={`w-14 h-14 mx-auto mb-4 rounded-2xl
-                            flex items-center justify-center ${ui.bg}`}
-              >
-                {ui.icon}
-              </div>
-
-              <h3 className="text-sm font-bold text-gray-900 mb-2">
-                {cfg.label}
-              </h3>
-
-              <span className="text-[11px] font-bold text-gray-400 uppercase">
-                Request Info →
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    ) : (
-
-      /* ================= REQUEST FORM ================= */
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-
-        {/* BACK */}
-        <button
-          onClick={() => {
-            setSelectedService(null);
-            setSelectedSub(null);
-            setSelectedInner(null);
-          }}
-          className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-lg text-sm font-semibold text-primary-700 bg-primary-50 border border-primary-100 hover:bg-primary-100 transition"
-        >
-          ← Back to Services
-        </button>
-
-        <h3 className="text-lg font-black mb-6">
-          {SERVICE_CONFIG[selectedService].label}
-        </h3>
-
-        {/* NAME + COUNTRY */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-          <input
-            value={fullName}
-            disabled
-            className="w-full p-3 bg-gray-100 border rounded-lg
-                       text-xs font-bold"
-          />
-          <input
-            value={countryOfResidence || "India"}
-            disabled
-            className="w-full p-3 bg-gray-100 border rounded-lg
-                       text-xs font-bold"
-          />
-        </div>
-
-        {/* CATEGORY */}
-       <div className="mb-4">
-  <label className="text-xs font-bold block mb-2">
-    Select Category
-  </label>
-
-  <Listbox
-    value={selectedSub}
-    onChange={(value) => {
-      setSelectedSub(value);
-      setSelectedInner(null);
-    }}
-  >
-    <div className="relative">
-      <Listbox.Button
-        className="w-full h-11 px-3 bg-gray-50 border border-gray-300
-                   rounded-lg flex items-center justify-between
-                   text-sm font-semibold"
-      >
-        <span className="truncate">
-          {selectedSub || "Select Category"}
-        </span>
-        <ChevronDown size={18} className="text-gray-500" />
-      </Listbox.Button>
-
-      <Listbox.Options
-        className="absolute z-50 mt-1 w-full max-h-56 overflow-auto
-                   rounded-lg bg-white border border-gray-200
-                   shadow-lg text-sm"
-      >
-        {Object.keys(serviceSubs[selectedService] || {})
-          .filter((sub) => sub !== selectedSub) // ⭐ same trick
-          .map((sub) => (
-            <Listbox.Option
-              key={sub}
-              value={sub}
-              className={({ active }) =>
-                `cursor-pointer px-3 py-2 ${
-                  active
-                    ? "bg-primary-100 text-primary-900"
-                    : "text-gray-900"
-                }`
-              }
-            >
-              {sub}
-            </Listbox.Option>
-          ))}
-      </Listbox.Options>
-    </div>
-  </Listbox>
-</div>
-
-
-        {/* OPTION (ADDRESS-STYLE LISTBOX) */}
-        <div className="mb-4">
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-            Select Option
-          </label>
-
-          <Listbox
-            value={selectedInner}
-            onChange={setSelectedInner}
-            disabled={!selectedSub}
-          >
-            <div className="relative">
-              <Listbox.Button
-                className="w-full h-11 px-3 bg-gray-50 border border-gray-300
-                           rounded-lg flex items-center justify-between
-                           text-sm font-semibold disabled:bg-gray-100"
-              >
-                <span className="truncate">
-                  {selectedInner || "Select Option"}
-                </span>
-                <ChevronDown size={18} className="text-gray-500" />
-              </Listbox.Button>
-
-              <Listbox.Options
-                className="absolute z-50 mt-1 w-full max-h-56 overflow-auto
-                           rounded-lg bg-white border border-gray-200
-                           shadow-lg text-sm"
-              >
-                {selectedSub &&
-                  ((serviceSubs[selectedService] || {})[selectedSub] || [])
-                    .filter((opt: string) => opt !== selectedInner) // ⭐ KEY LINE
-                    .map((opt: string) => (
-                      <Listbox.Option
-                        key={opt}
-                        value={opt}
-                        className={({ active }) =>
-                          `cursor-pointer px-3 py-2 ${
-                            active
-                              ? "bg-primary-100 text-primary-900"
-                              : "text-gray-900"
-                          }`
-                        }
-                      >
-                        {opt}
-                      </Listbox.Option>
-                    ))}
-              </Listbox.Options>
-            </div>
-          </Listbox>
-        </div>
-
-        {/* MESSAGE */}
-        <textarea
-          ref={serviceMessageRef}
-          rows={4}
-          className="w-full p-3 border rounded-lg text-xs mb-4"
-          placeholder="Describe your requirement..."
-        />
-
-        {/* SUBMIT */}
-        <button
-          onClick={handleSubmitService}
-          disabled={!selectedInner || submittingService}
-          className="w-full bg-primary-600 text-white py-2 rounded-lg
-                     text-xs font-bold disabled:opacity-60"
-        >
-          {submittingService ? "Submitting..." : "Submit Request"}
-        </button>
-      </div>
-    )}
-
-    {/* ================= MY SERVICE REQUESTS ================= */}
-    <div className="mt-10">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-gray-900">My Service Requests</h3>
-        <button
-          onClick={fetchMyServiceRequests}
-          className="text-xs font-semibold text-primary-600 hover:text-primary-800"
-        >
-          Refresh
-        </button>
-      </div>
-
-      {/* Status tabs — let the user filter their submissions by stage.
-          "Other" rolls up rejected + anything we don't recognise so the
-          active/resolved tabs stay clean. Counts per tab so users can
-          see at a glance how many are in each bucket. */}
-      {(() => {
-        // Defined inside an IIFE so the JSX can reference these locals
-        // without exporting them to the outer scope.
-        return null;
-      })()}
-      {(() => {
-        const counts = {
-          all: myRequests.length,
-          pending: myRequests.filter((r) => r.status === "pending" || !r.status).length,
-          in_progress: myRequests.filter((r) => r.status === "in_progress").length,
-          resolved: myRequests.filter((r) => r.status === "resolved").length,
-          other: myRequests.filter(
-            (r) =>
-              r.status &&
-              !["pending", "in_progress", "resolved"].includes(r.status as string)
-          ).length,
-        };
-        const tabs = [
-          { id: "all" as const,         label: "All",          count: counts.all },
-          { id: "pending" as const,     label: "Pending",      count: counts.pending },
-          { id: "in_progress" as const, label: "In progress",  count: counts.in_progress },
-          { id: "resolved" as const,    label: "Resolved",     count: counts.resolved },
-          { id: "other" as const,       label: "Other",        count: counts.other },
-        ];
-        return (
-          <div className="flex flex-wrap gap-1.5 mb-4 border-b border-gray-200 pb-2">
-            {tabs.map((t) => {
-              const active = serviceRequestTab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setServiceRequestTab(t.id)}
-                  className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
-                    active
-                      ? "bg-primary-600 text-white border-primary-600"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  {t.label}
-                  <span
-                    className={`ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 ${
-                      active
-                        ? "bg-white/20 text-white"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {t.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        );
-      })()}
-
-      {(() => {
-        const filtered = myRequests.filter((r) => {
-          if (serviceRequestTab === "all") return true;
-          if (serviceRequestTab === "pending") return r.status === "pending" || !r.status;
-          if (serviceRequestTab === "other") {
-            return (
-              r.status &&
-              !["pending", "in_progress", "resolved"].includes(r.status as string)
-            );
-          }
-          return r.status === serviceRequestTab;
-        });
-        if (loadingMyRequests) {
-          return <p className="text-xs text-gray-500">Loading...</p>;
-        }
-        if (myRequests.length === 0) {
-          return (
-            <p className="text-xs text-gray-500">
-              You haven't submitted any requests yet.
-            </p>
-          );
-        }
-        if (filtered.length === 0) {
-          return (
-            <p className="text-xs text-gray-500">
-              No requests in this tab.
-            </p>
-          );
-        }
-        return (
-        <div className="space-y-4">
-          {filtered.map((r) => {
-            const statusLabel =
-              r.status === "resolved"
-                ? "Resolved"
-                : r.status === "rejected"
-                ? "Rejected"
-                : r.status === "in_progress"
-                ? "In progress"
-                : "Pending";
-            const statusStyle =
-              r.status === "resolved"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : r.status === "rejected"
-                ? "bg-red-50 text-red-700 border-red-200"
-                : r.status === "in_progress"
-                ? "bg-blue-50 text-blue-700 border-blue-200"
-                : "bg-amber-50 text-amber-700 border-amber-200";
-
-            const hasAdminContext = r.assigned_to || r.action_taken || r.admin_comments;
-
-            return (
-              <article
-                key={r.id}
-                className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
-              >
-                {/* HEADER strip */}
-                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/60 flex items-start justify-between gap-3 flex-wrap">
-                  <div className="min-w-0">
-                    <p className="text-sm font-extrabold text-gray-900 capitalize truncate">
-                      {r.service_type}
-                      {r.service_category ? ` · ${r.service_category}` : ""}
-                      {r.service_option ? ` · ${r.service_option}` : ""}
-                    </p>
-                    <p className="text-[11px] text-gray-500 mt-0.5">
-                      Submitted {new Date(r.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusStyle}`}
-                  >
-                    {statusLabel}
-                  </span>
-                </div>
-
-                {/* BODY */}
-                <div className="p-4 space-y-3">
-                  {r.description && (
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
-                        Your message
-                      </p>
-                      <p className="text-[13px] text-gray-800 whitespace-pre-wrap">
-                        {r.description}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Admin context — shown once admin has routed / annotated. */}
-                  {hasAdminContext && (
-                    <div className="bg-blue-50/60 border border-blue-100 rounded-lg p-3 space-y-1.5">
-                      {r.assigned_to && (
-                        <p className="text-[12px] text-gray-800">
-                          <span className="font-bold">Routed to:</span> {r.assigned_to}
-                        </p>
-                      )}
-                      {r.action_taken && (
-                        <p className="text-[12px] text-gray-800">
-                          <span className="font-bold">Action:</span> {r.action_taken}
-                        </p>
-                      )}
-                      {r.admin_comments && (
-                        <p className="text-[12px] text-gray-800">
-                          <span className="font-bold">Notes:</span> {r.admin_comments}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Team reply — shown distinctly so it reads as a real response. */}
-                  {r.team_reply && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-1">
-                        Reply from {r.assigned_to || "the support team"}
-                      </p>
-                      <p className="text-[13px] text-gray-900 whitespace-pre-wrap">
-                        {r.team_reply}
-                      </p>
-                      {r.team_resolved_at && r.status === "resolved" && (
-                        <p className="text-[11px] text-emerald-700 mt-2">
-                          ✓ Marked resolved on{" "}
-                          {new Date(r.team_resolved_at).toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Empty hint when admin hasn't done anything yet */}
-                  {!hasAdminContext && !r.team_reply && (
-                    <p className="text-[12px] text-gray-400 italic">
-                      Awaiting review by the admin.
-                    </p>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-        );
-      })()}
-    </div>
-  </div>
-);
+  // SERVICE_UI (the old per-category icon/colour map) and its consumer
+  // were replaced by <MyServiceRequests />, built to
+  // docs/design/nri-wing-prototype.html.
 
 const renderEventsContent = () => {
   // An event is "active" if it has a future date OR no date at all
@@ -5320,6 +4673,7 @@ const renderSuggestionsContent = () => (
     // grievances were written by nothing and read by nothing, and
     // student_requests had no UI at all.
     { id: "assistance" as const,  label: "Assistance",  icon: LifeBuoy,      color: "text-rose-600" },
+    { id: "grievances" as const,  label: "Grievances",  icon: Scale,         color: "text-red-600" },
     { id: "appointments" as const, label: "Appointments", icon: CalendarDays, color: "text-indigo-600" },
     { id: "army" as const,        label: "Digital Army", icon: Megaphone,    color: "text-cyan-600" },
     { id: "suggestions" as const, label: "Feedback",    icon: Send,          color: "text-purple-600" },
@@ -5337,7 +4691,9 @@ const renderSuggestionsContent = () => (
       // Built to docs/design/nri-wing-prototype.html.
       case "profile":     return <MyProfile />;
       case "referrals":   return renderReferralsContent();
-      case "services":    return renderServicesContent();
+      // Built to docs/design/nri-wing-prototype.html.
+      case "services":    return <MyServiceRequests />;
+      case "grievances":  return <Grievances />;
       case "events":      return renderEventsContent();
       case "connect":     return renderConnectContent();
       case "assistance":  return <MyRequests />;

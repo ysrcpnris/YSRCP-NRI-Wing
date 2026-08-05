@@ -1,5 +1,5 @@
 {
-  "total": 311,
+  "total": 299,
   "fingerprints": [
     "src/AdminDashboard/AdminDashboard.tsx::@typescript-eslint/ban-ts-comment::Use \"@ts-expect-error\" instead of \"@ts-ignore\", as \"@ts-ignore\" will do nothing if the following line is error-free.",
     "src/AdminDashboard/AdminDashboard.tsx::@typescript-eslint/no-explicit-any::Unexpected any. Specify a different type.",
