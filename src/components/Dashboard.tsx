@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo ,useRef} from 'react';
 import { ProfileDropdown } from './ProfileDropdown';
 import MyAbroadConnect from './MyAbroadConnect';
+import MyAssistanceBoard from './MyAssistanceBoard';
 import MyRequests from './MyRequests';
 import Appointments from './Appointments';
 import MyProfile from './MyProfile';
@@ -1011,6 +1012,7 @@ import {
   Sparkles,
   TrendingUp,
   ArrowUpRight,
+  HandHeart,
 } from 'lucide-react';
 import { FacebookBrand, XBrand, InstagramBrand, LinkedInBrand } from './BrandIcons';
 import { supabase } from '../lib/supabase';
@@ -1378,6 +1380,7 @@ const Dashboard: React.FC = () => {
     | "events"
     | "connect"
     | "abroad"
+    | "board"
     | "assistance"
     | "appointments"
     | "army"
@@ -1392,6 +1395,7 @@ const Dashboard: React.FC = () => {
     "events",
     "connect",
     "abroad",
+    "board",
     "assistance",
     "appointments",
     "army",
@@ -4385,6 +4389,13 @@ const renderSuggestionsContent = () => (
     { id: "events" as const,      label: "Notifications", icon: Bell,        color: "text-pink-600", badge: unseenEventsCount || 0 },
     { id: "connect" as const,     label: "Local Connect",  icon: MessageSquare, color: "text-primary-600" },
     { id: "abroad" as const,      label: "Abroad Connect", icon: Users,         color: "text-primary-600" },
+    // The public community board — distinct from "Assistance" below,
+    // which is the member's own private cases (student_requests/
+    // service_requests/grievances, routed to a mentor/admin). This is
+    // a new subsystem (assistance_posts/assistance_offers) built with
+    // the user's explicit sign-off after checking the mock's model
+    // against the schema and finding no board existed at all.
+    { id: "board" as const,       label: "Assistance Board", icon: HandHeart,   color: "text-rose-600" },
     // Grievances and student assistance. Separate from Services, which
     // already lists service_requests — this is the half that had no home:
     // grievances were written by nothing and read by nothing, and
@@ -4415,6 +4426,7 @@ const renderSuggestionsContent = () => (
       // Built to docs/design/nri-wing-prototype.html.
       case "connect":     return <MyLocalConnect />;
       case "abroad":      return <MyAbroadConnect />;
+      case "board":       return <MyAssistanceBoard />;
       case "assistance":  return <MyRequests />;
       case "appointments": return <Appointments />;
       case "army":        return <DigitalArmy />;
