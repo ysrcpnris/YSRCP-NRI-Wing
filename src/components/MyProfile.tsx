@@ -369,7 +369,7 @@ export default function MyProfile() {
 
       <div style={{ marginBottom: 16 }}>
         {ro ? (
-          <button className="pt-btn pt-btn-out" onClick={() => setEdit(true)}>
+          <button className="pt-btn pt-btn-go" onClick={() => setEdit(true)}>
             Edit profile
           </button>
         ) : (
