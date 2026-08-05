@@ -182,6 +182,17 @@ export default function MyProfile() {
     setForm((f) => ({ ...f, [k]: v }));
 
   // ── load ───────────────────────────────────────────────────────────
+  // formLoaded flips only once `form` genuinely holds real data. The
+  // accordion-init effect below depends on THIS, not on `profile` —
+  // depending on `profile` fired the init effect in the same
+  // effect-flush as this one, before `setForm` had actually taken
+  // effect, so it always computed completeness off the still-empty
+  // initial `form` and (wrongly) opened every section. Caught by
+  // actually loading the page in a browser, not by any exploit test —
+  // the API-level checks never render a UI, so this class of bug is
+  // invisible to them by construction.
+  const [formLoaded, setFormLoaded] = useState(false);
+
   useEffect(() => {
     if (!profile) return;
     const p = profile as Record<string, unknown>;
@@ -201,6 +212,7 @@ export default function MyProfile() {
       participate_campaign: s("participate_campaign"),
     });
     setAreas(Array.isArray(p.contribution_areas) ? (p.contribution_areas as string[]) : []);
+    setFormLoaded(true);
   }, [profile]);
 
   const loadPrivate = useCallback(async () => {
@@ -257,11 +269,12 @@ export default function MyProfile() {
 
   // Open exactly the sections that need attention, once — computed from
   // the checklist above so it can never disagree with what the rail
-  // shows. Re-runs harmlessly until profile data has actually arrived;
-  // the ref makes sure it only ever WRITES state that one time, so it
+  // shows. Gated on formLoaded, NOT profile — see the comment on
+  // formLoaded above for why that distinction is the whole fix. The
+  // ref makes sure this only ever WRITES state that one time, so it
   // never fights a manual toggle made after.
   useEffect(() => {
-    if (accordionInited.current || !profile) return;
+    if (accordionInited.current || !formLoaded) return;
     accordionInited.current = true;
     const incomplete = new Set<SectionKey>(
       strength.checks.filter((c) => !c.done).map((c) => c.section)
@@ -270,7 +283,7 @@ export default function MyProfile() {
     // it's the flagged gap, not something to bury by default.
     incomplete.add("campaign");
     setOpenSections(incomplete);
-  }, [profile, strength]);
+  }, [formLoaded, strength]);
 
   // ── save ───────────────────────────────────────────────────────────
   const save = async () => {
