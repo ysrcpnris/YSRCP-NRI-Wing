@@ -66,6 +66,20 @@ const PLATFORM_ICON: Record<Handle["platform"], string> = {
   x: "𝕏", facebook: "f", instagram: "◉", youtube: "▶", whatsapp: "◆", telegram: "✈", website: "🌐",
 };
 
+// Brand colours, not the app's own palette — these read as "which
+// platform" at a glance precisely because they don't match anything
+// else on the page. Instagram keeps its real gradient; everything
+// else is the platform's own flat brand colour.
+const PLATFORM_COLOR: Record<Handle["platform"], string> = {
+  x: "#000000",
+  facebook: "#1877F2",
+  instagram: "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
+  youtube: "#FF0000",
+  whatsapp: "#25D366",
+  telegram: "#229ED9",
+  website: "var(--navy)",
+};
+
 const TIER_LABEL: Record<LeadershipRow["tier"], string> = {
   coordinator: "Country Coordinator",
   chapter_lead: "Chapter Lead",
@@ -275,8 +289,15 @@ export default function MyAbroadConnect() {
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, paddingBottom: 14 }}>
                     {nationalHandles.map((h) => (
                       <a key={`${h.platform}-${h.label}`} href={h.url} target="_blank" rel="noreferrer"
-                         className="pt-btn pt-btn-out" style={{ textDecoration: "none", fontSize: 12.5, padding: "7px 11px" }}>
-                        {PLATFORM_ICON[h.platform]} {h.handle || h.label}
+                         className="pt-btn pt-btn-out" style={{ textDecoration: "none", fontSize: 12.5, padding: "6px 11px 6px 6px" }}>
+                        <span style={{
+                          width: 22, height: 22, borderRadius: 6, background: PLATFORM_COLOR[h.platform],
+                          color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 11, flex: "0 0 22px",
+                        }}>
+                          {PLATFORM_ICON[h.platform]}
+                        </span>
+                        {h.handle || h.label}
                       </a>
                     ))}
                   </div>
@@ -292,8 +313,9 @@ export default function MyAbroadConnect() {
                     {chapterHandles.map((h) => (
                       <div key={`${h.platform}-${h.label}`} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: "1px solid var(--line-2)" }}>
                         <div style={{
-                          width: 30, height: 30, borderRadius: 8, background: "rgba(37,211,102,.14)",
-                          display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 30px",
+                          width: 30, height: 30, borderRadius: 8, background: PLATFORM_COLOR[h.platform],
+                          color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                          flex: "0 0 30px", fontSize: 13,
                         }}>
                           {PLATFORM_ICON[h.platform]}
                         </div>
