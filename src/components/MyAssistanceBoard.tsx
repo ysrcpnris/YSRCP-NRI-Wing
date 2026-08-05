@@ -343,10 +343,13 @@ export default function MyAssistanceBoard() {
                     <div style={{ marginTop: 10 }}>
                       <span className="pt-pill" style={{ background: "var(--line-2)", color: "var(--ink-3)" }}>You offered to help</span>
                       {p.my_shared && (
-                        contact && contact !== "hidden" ? (
+                        contact ? (
                           <div style={{ marginTop: 8, fontSize: 12.5 }}>
-                            {contact.whatsapp && <div>WhatsApp: {contact.whatsapp}</div>}
-                            {contact.mobile && <div>Mobile: {contact.mobile}</div>}
+                            {contact !== "hidden" && contact.whatsapp && <div>WhatsApp: {contact.whatsapp}</div>}
+                            {contact !== "hidden" && contact.mobile && <div>Mobile: {contact.mobile}</div>}
+                            {(contact === "hidden" || (!contact.whatsapp && !contact.mobile)) && (
+                              <div style={{ color: "var(--ink-4)" }}>No phone number on file.</div>
+                            )}
                           </div>
                         ) : (
                           <button className="pt-btn pt-btn-out pt-btn-sm" style={{ marginLeft: 8 }} onClick={() => void viewContact(p.my_offer_id!)}>
