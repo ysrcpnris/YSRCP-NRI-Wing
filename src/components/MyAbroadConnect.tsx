@@ -51,6 +51,7 @@ type Stats = {
 };
 
 type Handle = {
+  id: string;
   scope: "national" | "chapter";
   platform: "x" | "facebook" | "instagram" | "youtube" | "whatsapp" | "telegram" | "website";
   label: string;
@@ -288,7 +289,8 @@ export default function MyAbroadConnect() {
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, paddingBottom: 14 }}>
                     {nationalHandles.map((h) => (
-                      <a key={`${h.platform}-${h.label}`} href={h.url} target="_blank" rel="noreferrer"
+                      <a key={h.id} href={h.url} target="_blank" rel="noreferrer"
+                         onClick={() => void supabase.rpc("log_handle_join", { p_handle_id: h.id })}
                          className="pt-btn pt-btn-out" style={{ textDecoration: "none", fontSize: 12.5, padding: "6px 11px 6px 6px" }}>
                         <span style={{
                           width: 22, height: 22, borderRadius: 6, background: PLATFORM_COLOR[h.platform],
@@ -311,7 +313,7 @@ export default function MyAbroadConnect() {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                     {chapterHandles.map((h) => (
-                      <div key={`${h.platform}-${h.label}`} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: "1px solid var(--line-2)" }}>
+                      <div key={h.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: "1px solid var(--line-2)" }}>
                         <div style={{
                           width: 30, height: 30, borderRadius: 8, background: PLATFORM_COLOR[h.platform],
                           color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
@@ -320,7 +322,9 @@ export default function MyAbroadConnect() {
                           {PLATFORM_ICON[h.platform]}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <a href={h.url} target="_blank" rel="noreferrer" style={{ fontWeight: 600, fontSize: 13, textDecoration: "none" }}>
+                          <a href={h.url} target="_blank" rel="noreferrer"
+                             onClick={() => void supabase.rpc("log_handle_join", { p_handle_id: h.id })}
+                             style={{ fontWeight: 600, fontSize: 13, textDecoration: "none" }}>
                             {h.label}
                           </a>
                           <div style={{ fontSize: 11.5, color: "var(--ink-4)" }}>

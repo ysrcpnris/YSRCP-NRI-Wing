@@ -6,6 +6,7 @@ import FeedbackInbox from "./FeedbackInbox";
 import RoleManager from "./RoleManager";
 import MyChapterMembers from "./MyChapterMembers";
 import MyChapterClusters from "./MyChapterClusters";
+import MyChapterTeam from "./MyChapterTeam";
 
 /**
  * Chapter surface — for country coordinators and chapter leads.
@@ -153,10 +154,12 @@ export default function ChapterDashboard() {
     return (
       <div className="space-y-8">
         <ChapterTabs view={view} setView={setView} />
+        {/* Built to docs/design/nri-wing-prototype.html (screen c-team). */}
+        <MyChapterTeam />
         <div>
-          <h2 className="text-xl font-black text-gray-900">Your team</h2>
+          <h2 className="text-xl font-black text-gray-900">Appoint or remove someone</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Appoint and remove people within the scope you hold.
+            Search a member, then grant or revoke a role within the scope you hold.
           </p>
         </div>
         <RoleManager />
