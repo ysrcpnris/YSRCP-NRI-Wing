@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect, useMemo ,useRef} from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ProfileDropdown } from './ProfileDropdown';
 import MyAbroadConnect from './MyAbroadConnect';
 import MyAssistanceBoard from './MyAssistanceBoard';
+import MyHome from './MyHome';
 import '../styles/prototype-tokens.css';
 import MyRequests from './MyRequests';
 import Appointments from './Appointments';
@@ -1002,7 +1003,6 @@ import {
   Briefcase,
   Scale,
   Check,
-  ArrowRight,
   Send,
   CheckCircle,
   Info,
@@ -1011,8 +1011,6 @@ import {
   Menu,
   X,
   Sparkles,
-  TrendingUp,
-  ArrowUpRight,
   HandHeart,
 } from 'lucide-react';
 import { FacebookBrand, XBrand, InstagramBrand, LinkedInBrand } from './BrandIcons';
@@ -3077,6 +3075,40 @@ const missingProfileFields = useMemo(
       .map(({ key, label }) => ({ key, label })),
   [profileChecklist]
 );
+
+// For MyHome's "People you referred" stat — same activeReferrals array
+// the Referrals tab already fetches, just counted by calendar month
+// rather than re-queried.
+const _now = new Date();
+const referralCountThisMonth = activeReferrals.filter((r) => {
+  const d = new Date(r.created_at);
+  return d.getFullYear() === _now.getFullYear() && d.getMonth() === _now.getMonth();
+}).length;
+
+const copyReferralLink = async () => {
+  if (!referralLink) {
+    showToast('Referral link not ready yet', 'info');
+    return;
+  }
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(referralLink);
+      showToast('Referral Link Copied!');
+      return;
+    }
+    const ta = document.createElement('textarea');
+    ta.value = referralLink;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast(ok ? 'Referral Link Copied!' : 'Copy failed — please copy manually', ok ? undefined : 'info');
+  } catch {
+    showToast('Copy failed — please copy manually', 'info');
+  }
+};
 const missingFieldToRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
   photo: profilePhotoRef,
   mobile: personalInfoRef,
@@ -4176,214 +4208,10 @@ const renderSuggestionsContent = () => (
 // );
 
   /* ============================================================
-     OVERVIEW TAB — new landing view with stats & quick actions
-  ============================================================ */
-  const renderOverviewContent = () => {
-    const firstName = profile?.first_name || "there";
-    const activeCount = activeReferrals?.length || 0;
-    const passiveCount = passiveReferrals?.length || 0;
-    // Only count events that haven't already happened (or have no date) —
-    // past events shouldn't be advertised as "active" on the dashboard tile.
-    const _today = (() => {
-      const d = new Date();
-      d.setHours(0, 0, 0, 0);
-      return d.getTime();
-    })();
-    const eventsCount =
-      events?.filter((e) => !e.date || new Date(e.date).getTime() >= _today)
-        .length || 0;
-    const unseen = unseenEventsCount || 0;
-
-    return (
-      <div className="space-y-6">
-        {/* WELCOME HERO */}
-        <div className="relative bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500 rounded-2xl p-6 md:p-8 text-white overflow-hidden shadow-lg">
-          <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute -left-8 -bottom-8 w-40 h-40 bg-accent-500/20 rounded-full blur-3xl" />
-          <div className="relative z-10">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold tracking-widest uppercase opacity-90">Welcome back</span>
-              {profile?.public_user_code && (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(profile.public_user_code!);
-                      showToast("User ID copied");
-                    } catch {
-                      showToast("Copy failed", "error");
-                    }
-                  }}
-                  title="Click to copy your User ID"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 border border-white/25 text-[11px] font-mono font-semibold hover:bg-white/25 transition"
-                >
-                  <span className="opacity-80">ID:</span>
-                  <span>{profile.public_user_code}</span>
-                </button>
-              )}
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold mb-1">
-              Hi {firstName}!
-            </h1>
-            <p className="text-sm md:text-base text-white/80 max-w-xl">
-              Your NRI Wing portal — stay connected, contribute, and grow with the community.
-            </p>
-
-            <div className="flex flex-wrap gap-2 mt-5">
-              <button
-                onClick={() => setActiveTab("services")}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary-700 rounded-lg font-semibold text-sm hover:bg-gray-50 transition"
-              >
-                Submit a request <ArrowUpRight size={14} />
-              </button>
-              <button
-                onClick={() => setActiveTab("referrals")}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 text-white border border-white/20 backdrop-blur-sm rounded-lg font-semibold text-sm hover:bg-white/20 transition"
-              >
-                Invite Members <ArrowUpRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* STAT CARDS */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <button
-            onClick={() => setActiveTab("profile")}
-            className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 text-left hover:shadow-card-hover hover:-translate-y-1 transition group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
-              <User size={18} />
-            </div>
-            <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
-              {profileCompletion}%
-            </p>
-            <p className="text-xs text-gray-500 mt-1.5">Profile complete</p>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("referrals")}
-            className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 text-left hover:shadow-card-hover hover:-translate-y-1 transition group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
-              <Users size={18} />
-            </div>
-            <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
-              {activeCount}
-            </p>
-            <p className="text-xs text-gray-500 mt-1.5">Direct referrals</p>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("referrals")}
-            className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 text-left hover:shadow-card-hover hover:-translate-y-1 transition group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
-              <TrendingUp size={18} />
-            </div>
-            <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
-              {passiveCount}
-            </p>
-            <p className="text-xs text-gray-500 mt-1.5">Passive network</p>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("events")}
-            className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 text-left hover:shadow-card-hover hover:-translate-y-1 transition group relative"
-          >
-            {unseen > 0 && (
-              <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
-                +{unseen} new
-              </span>
-            )}
-            <div className="w-10 h-10 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-3 group-hover:scale-110 transition">
-              <Bell size={18} />
-            </div>
-            <p className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 leading-none">
-              {eventsCount}
-            </p>
-            <p className="text-xs text-gray-500 mt-1.5">Notifications</p>
-          </button>
-        </div>
-
-        {/* QUICK NAV CARDS */}
-        <div>
-          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Quick links</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            <button
-              onClick={() => setActiveTab("profile")}
-              className="group flex items-start gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-card hover:border-primary-300 transition text-left"
-            >
-              <div className="w-11 h-11 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0">
-                <User size={20} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 text-sm">Complete your profile</h3>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  Add your personal, address & professional details
-                </p>
-              </div>
-              <ArrowRight size={16} className="text-gray-300 group-hover:text-primary-600 group-hover:translate-x-1 transition mt-1" />
-            </button>
-
-            <button
-              onClick={() => setActiveTab("connect")}
-              className="group flex items-start gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-card hover:border-primary-300 transition text-left"
-            >
-              <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-                <MessageSquare size={20} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 text-sm">Leadership Connect</h3>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  Reach out to your local leaders & coordinators
-                </p>
-              </div>
-              <ArrowRight size={16} className="text-gray-300 group-hover:text-amber-600 group-hover:translate-x-1 transition mt-1" />
-            </button>
-
-            <button
-              onClick={() => setActiveTab("services")}
-              className="group flex items-start gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-card hover:border-primary-300 transition text-left"
-            >
-              <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                <Briefcase size={20} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 text-sm">Services Hub</h3>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  Request student, legal, career or local support
-                </p>
-              </div>
-              <ArrowRight size={16} className="text-gray-300 group-hover:text-emerald-600 group-hover:translate-x-1 transition mt-1" />
-            </button>
-
-            <button
-              onClick={() => setActiveTab("suggestions")}
-              className="group flex items-start gap-4 bg-white border border-gray-200 rounded-xl p-4 hover:shadow-card hover:border-primary-300 transition text-left"
-            >
-              <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
-                <Send size={20} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 text-sm">Share feedback</h3>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  Send suggestions to improve the portal
-                </p>
-              </div>
-              <ArrowRight size={16} className="text-gray-300 group-hover:text-purple-600 group-hover:translate-x-1 transition mt-1" />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  /* ============================================================
      SIDEBAR NAV CONFIG
   ============================================================ */
   const navItems = [
-    { id: "overview" as const,    label: "Overview",    icon: Home,          color: "text-primary-600" },
+    { id: "overview" as const,    label: "Home",         icon: Home,          color: "text-primary-600" },
     { id: "profile" as const,     label: "Profile",     icon: User,          color: "text-primary-600" },
     { id: "referrals" as const,   label: "My Network",  icon: Users,         color: "text-emerald-600" },
     { id: "services" as const,    label: "Services",    icon: Briefcase,     color: "text-amber-600" },
@@ -4414,9 +4242,22 @@ const renderSuggestionsContent = () => (
 
   const activeNav = navItems.find((n) => n.id === activeTab)!;
 
+  const renderHome = () => (
+    <MyHome
+      profileCompletion={profileCompletion}
+      nextMissingFieldLabel={missingProfileFields[0]?.label ?? null}
+      referralCount={activeReferrals.length}
+      referralCountThisMonth={referralCountThisMonth}
+      referralLink={referralLink}
+      onCopyReferralLink={copyReferralLink}
+      onNavigate={(tab) => setActiveTab(tab as Tab)}
+    />
+  );
+
   const renderActiveContent = () => {
     switch (activeTab) {
-      case "overview":    return renderOverviewContent();
+      // Built to docs/design/nri-wing-prototype.html (screen m-home).
+      case "overview":    return renderHome();
       // Built to docs/design/nri-wing-prototype.html.
       case "profile":     return <MyProfile />;
       case "referrals":   return renderReferralsContent();
@@ -4433,7 +4274,7 @@ const renderSuggestionsContent = () => (
       case "army":        return <DigitalArmy />;
       case "chapter":     return <ChapterDashboard />;
       case "suggestions": return renderSuggestionsContent();
-      default:            return renderOverviewContent();
+      default:            return renderHome();
     }
   };
 
