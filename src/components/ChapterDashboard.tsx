@@ -7,6 +7,7 @@ import RoleManager from "./RoleManager";
 import MyChapterMembers from "./MyChapterMembers";
 import MyChapterClusters from "./MyChapterClusters";
 import MyChapterTeam from "./MyChapterTeam";
+import MyChapterHome from "./MyChapterHome";
 
 /**
  * Chapter surface — for country coordinators and chapter leads.
@@ -59,7 +60,7 @@ function StatCard({
 /* What a coordinator actually does: know who is in the chapter, clear
    the assistance queue, read what the chapter is telling them, group
    cities into clusters, and read what the chapter is telling them. */
-type View = "members" | "queue" | "feedback" | "team" | "clusters";
+type View = "home" | "members" | "queue" | "feedback" | "team" | "clusters";
 
 function ChapterTabs({
   view,
@@ -69,6 +70,7 @@ function ChapterTabs({
   setView: (v: View) => void;
 }) {
   const tabs: { key: View; label: string }[] = [
+    { key: "home", label: "Home" },
     { key: "members", label: "Members" },
     { key: "queue", label: "Assistance queue" },
     { key: "feedback", label: "Feedback" },
@@ -98,7 +100,7 @@ function ChapterTabs({
 }
 
 export default function ChapterDashboard() {
-  const [view, setView] = useState<View>("members");
+  const [view, setView] = useState<View>("home");
   const [stats, setStats] = useState<Stat[]>([]);
   const [loading, setLoading] = useState(true);
   const [noAccess, setNoAccess] = useState(false);
@@ -185,6 +187,16 @@ export default function ChapterDashboard() {
           This area is for country coordinators and chapter leads. If you
           believe you should have access, contact your country coordinator.
         </p>
+      </div>
+    );
+  }
+
+  if (view === "home") {
+    return (
+      <div className="space-y-8">
+        <ChapterTabs view={view} setView={setView} />
+        {/* Built to docs/design/nri-wing-prototype.html (screen c-home). */}
+        <MyChapterHome country={stats[0]?.country ?? ""} onNavigate={setView} />
       </div>
     );
   }
