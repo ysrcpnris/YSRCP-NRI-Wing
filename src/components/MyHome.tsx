@@ -193,7 +193,7 @@ export default function MyHome({
           <div style={{ fontSize: 10.5, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--ink-4)", fontWeight: 600 }}>Profile strength</div>
           <div style={{ fontFamily: "var(--serif)", fontSize: 29, fontWeight: 600 }}>{profileCompletion}<span style={{ fontSize: 16, color: "var(--ink-4)" }}>%</span></div>
           <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 5 }}>
-            {profileCompletion >= 100 ? "Complete" : nextMissingFieldLabel ? `Add ${nextMissingFieldLabel} to finish` : "Keep going"}
+            {profileCompletion >= 100 ? "Complete" : nextMissingFieldLabel ? `${nextMissingFieldLabel} to finish` : "Keep going"}
           </div>
         </div>
       </div>
@@ -289,7 +289,7 @@ export default function MyHome({
               </div>
               <button className="pt-btn pt-btn-go" style={{ width: "100%" }} onClick={onCopyReferralLink}>Copy invite link</button>
               <div className="pt-divider" />
-              <div className="row" style={{ justifyContent: "space-between", fontSize: 12.5 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12.5 }}>
                 <span style={{ color: "var(--ink-3)" }}>Joined through you</span>
                 <b>{referralCount} member{referralCount === 1 ? "" : "s"}</b>
               </div>
