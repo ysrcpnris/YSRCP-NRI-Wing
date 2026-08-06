@@ -8,6 +8,8 @@ import MyChapterMembers from "./MyChapterMembers";
 import MyChapterClusters from "./MyChapterClusters";
 import MyChapterTeam from "./MyChapterTeam";
 import MyChapterHome from "./MyChapterHome";
+import MyChapterAssist from "./MyChapterAssist";
+import MyChapterEvents from "./MyChapterEvents";
 
 /**
  * Chapter surface — for country coordinators and chapter leads.
@@ -60,7 +62,7 @@ function StatCard({
 /* What a coordinator actually does: know who is in the chapter, clear
    the assistance queue, read what the chapter is telling them, group
    cities into clusters, and read what the chapter is telling them. */
-type View = "home" | "members" | "queue" | "feedback" | "team" | "clusters";
+type View = "home" | "members" | "assist" | "events" | "queue" | "feedback" | "team" | "clusters";
 
 function ChapterTabs({
   view,
@@ -72,6 +74,8 @@ function ChapterTabs({
   const tabs: { key: View; label: string }[] = [
     { key: "home", label: "Home" },
     { key: "members", label: "Members" },
+    { key: "assist", label: "Assistance" },
+    { key: "events", label: "Events" },
     { key: "queue", label: "Assistance queue" },
     { key: "feedback", label: "Feedback" },
     // Delegation. A chapter lead appoints their own team lead here —
@@ -134,6 +138,26 @@ export default function ChapterDashboard() {
      chapter_stats() being empty — also true for a coordinator whose
      country simply has no members yet. Each of these does its own
      access check against its own RPC. */
+  if (view === "assist") {
+    return (
+      <div className="space-y-8">
+        <ChapterTabs view={view} setView={setView} />
+        {/* Built to docs/design/nri-wing-prototype.html (screen c-assist). */}
+        <MyChapterAssist country={stats[0]?.country ?? ""} />
+      </div>
+    );
+  }
+
+  if (view === "events") {
+    return (
+      <div className="space-y-8">
+        <ChapterTabs view={view} setView={setView} />
+        {/* Built to docs/design/nri-wing-prototype.html (screen c-events). */}
+        <MyChapterEvents country={stats[0]?.country ?? ""} />
+      </div>
+    );
+  }
+
   if (view === "queue") {
     return (
       <div className="space-y-8">
