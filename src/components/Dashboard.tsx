@@ -4,6 +4,7 @@ import { ProfileDropdown } from './ProfileDropdown';
 import MyAbroadConnect from './MyAbroadConnect';
 import MyAssistanceBoard from './MyAssistanceBoard';
 import MyHome from './MyHome';
+import MyFeedback from './MyFeedback';
 import '../styles/prototype-tokens.css';
 import MyRequests from './MyRequests';
 import Appointments from './Appointments';
@@ -2257,38 +2258,14 @@ useEffect(() => {
    * ═══════════════════════════════════════════════════════════════
    * FORM SUBMISSION TRACKING
    * ═══════════════════════════════════════════════════════════════
-   * Why these are used:
-   * - submittingSuggestion: Tracks suggestion form submission state
+   * Why this is used:
    * - loadingDashboard: Tracks initial data loading for all sections
    * - Disables buttons during async operations to prevent double-submit
    * - Shows loading indicators to user
    * - Improves UX with visual feedback
    */
 
-  const [submittingSuggestion, setSubmittingSuggestion] = useState(false);
-  // The user's own past suggestions, listed below the form so they
-  // can see what they've already sent to the admin team.
-  const [mySuggestions, setMySuggestions] = useState<
-    Array<{ id: number; suggestion: string; suggestion_date: string | null; created_at: string }>
-  >([]);
-  const [suggRefreshing, setSuggRefreshing] = useState(false);
-  // Set when the user has just submitted — shows a friendly thank-you
-  // panel until they navigate away or write a new suggestion.
-  const [suggestionThanks, setSuggestionThanks] = useState<boolean>(false);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
-
-  /**
-   * ═══════════════════════════════════════════════════════════════
-   * FORM REFERENCES
-   * ═══════════════════════════════════════════════════════════════
-   * Why these are used:
-   * - serviceMessageRef: Accesses textarea for service request message
-   * - suggestionRef: Accesses textarea for user suggestions/feedback
-   * - Allows programmatic access to form values
-   * - Used to clear form after submission
-   */
-
-  const suggestionRef = useRef<HTMLTextAreaElement | null>(null);
 
  // ---------------- REFERRAL STATS ----------------
   /**
@@ -2692,10 +2669,6 @@ useEffect(() => {
 // Refresh button and the Realtime listener can reuse the same logic.
 await fetchReferrals();
 
-// Load the user's own past suggestions so they can see them under
-// the form when they open the Feedback tab.
-void fetchMySuggestions();
-
      // 2. Leaders (NEW NORMALIZED LOGIC)
     // Even when the user has no Indian district/assembly (e.g., NRIs abroad),
     // we still fetch the GLOBAL coordinator(s) so they appear on every user's
@@ -2929,35 +2902,6 @@ if (eventsError) {
       day: d.getDate().toString(),
     };
   };
-
-const fullName = (() => {
-  // Primary: Use profile first_name if available
-  if (profile?.first_name) {
-    const last = profile.last_name && profile.last_name !== profile.first_name
-      ? ` ${profile.last_name}`  
-      : '';
-    return `${profile.first_name}${last}`;
-  }
-  
-  // Secondary: Use profile last_name if first_name missing
-  if (profile?.last_name) {
-    return profile.last_name;
-  }
-  
-  // Tertiary: Use auth metadata as fallback (profile might be null temporarily during token refresh)
-  if (user?.user_metadata?.first_name) {
-    const last = user.user_metadata?.last_name ? ` ${user.user_metadata.last_name}` : '';
-    return `${user.user_metadata.first_name}${last}`;
-  }
-  
-  // Final fallback: Use full_name from auth metadata
-  if (user?.user_metadata?.full_name) {
-    return String(user.user_metadata.full_name);
-  }
-  
-  return 'Member';
-})();
-
 
       // ======>Uncommet this after buying the domain==========
 // const referralLink =
@@ -3547,68 +3491,6 @@ const updates = {
 };
 
 
-// Load the current user's previous suggestions so they can see what
-// they've already submitted under the form. Falls back gracefully if
-// `user_id` was never linked on legacy rows by also matching `name`.
-const fetchMySuggestions = async () => {
-  if (!user?.id) return;
-  setSuggRefreshing(true);
-  const { data, error } = await supabase
-    .from("suggestions")
-    .select("id, suggestion, suggestion_date")
-    .eq("user_id", user.id)
-    .order("suggestion_date", { ascending: false })
-    .limit(50);
-  if (!error && data) {
-    setMySuggestions(data as any);
-  }
-  setSuggRefreshing(false);
-};
-
-const handleSubmitSuggestion = async () => {
-  // Strip control / zero-width chars before trimming so a paste-attack
-  // that's "100% invisible characters" doesn't bypass the empty check.
-  const message = sanitizeText(suggestionRef.current?.value || "").trim();
-
-  if (!message) {
-    showToast("Please enter your suggestion", "error");
-    return;
-  }
-
-  try {
-    setSubmittingSuggestion(true);
-
-    const { error } = await supabase.from("suggestions").insert({
-      name: fullName,
-      country: countryOfResidence || "India",
-      suggestion: message,
-      suggestion_date: new Date().toISOString().split("T")[0],
-      // Capture the submitter's contact details so admin can follow up
-      // from the All Suggestions table without cross-referencing profiles.
-      user_id: user?.id || null,
-      mobile_number: profile?.mobile_number || null,
-      email: profile?.email || null,
-    });
-
-    if (error) throw error;
-
-    if (suggestionRef.current) {
-      suggestionRef.current.value = "";
-    }
-
-    setSuggestionThanks(true);
-    void fetchMySuggestions();
-    showToast("Suggestion submitted — thank you!", "success");
-  } catch (err) {
-    console.error("Suggestion error:", err);
-    showToast("Failed to submit suggestion", "error");
-  } finally {
-    setSubmittingSuggestion(false);
-  }
-};
-
-
-
   // --- EXPANDED CONTENT RENDERERS ---
 
  
@@ -4042,156 +3924,6 @@ const renderEventsContent = () => {
   );
 };
 
-const renderSuggestionsContent = () => (
-  <div className="pt-4">
-    <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-
-      {/* Title + Subtitle */}
-      <div>
-        <h3 className="text-sm font-black text-gray-800">
-          Suggestions
-        </h3>
-        <p className="text-xs text-gray-500 mt-1">
-          Share your ideas & feedback
-        </p>
-      </div>
-
-      {/* Name */}
-      <div>
-        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
-          Name
-        </label>
-        <input
-          value={fullName}
-          disabled
-          className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg
-                     text-sm font-bold text-gray-600 cursor-not-allowed"
-        />
-      </div>
-
-      {/* Country */}
-      <div>
-        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
-          Country
-        </label>
-        <input
-          value={countryOfResidence || "India"}
-          disabled
-          className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg
-                     text-sm font-bold text-gray-600 cursor-not-allowed"
-        />
-      </div>
-
-      {/* Suggestion */}
-      <div>
-        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
-          Your Suggestion
-        </label>
-
-        <textarea
-          ref={suggestionRef}
-          rows={4}
-          className="w-full p-3 bg-white border border-gray-300 rounded-lg
-                     text-sm outline-none focus:ring-2 focus:ring-primary-500
-                     resize-none"
-          placeholder="Write your suggestion here..."
-        />
-      </div>
-
-      {/* Submit Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleSubmitSuggestion}
-          disabled={submittingSuggestion}
-          className="px-6 py-2 bg-primary-600 text-white text-xs font-bold
-                     rounded-lg hover:bg-primary-700 disabled:opacity-60"
-        >
-          {submittingSuggestion ? "Submitting..." : "Submit Suggestion"}
-        </button>
-      </div>
-
-      {/* Thank-you banner — shown after a successful submit until the
-          user starts typing a new one or refreshes. */}
-      {suggestionThanks && (
-        <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
-          <span className="text-2xl" aria-hidden>🙏</span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-emerald-800">
-              Thank you for your suggestion!
-            </p>
-            <p className="text-xs text-emerald-700 mt-0.5">
-              Your feedback has been shared with the admin team. We read every
-              submission — keep them coming!
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSuggestionThanks(false)}
-            className="text-emerald-700/60 hover:text-emerald-900 text-lg leading-none"
-            aria-label="Dismiss"
-          >
-            ×
-          </button>
-        </div>
-      )}
-    </div>
-
-    {/* ============== PREVIOUS SUGGESTIONS ============== */}
-    {/* Lists every suggestion the current user has submitted. Hidden
-        when there's nothing to show (e.g. brand-new account). */}
-    {mySuggestions.length > 0 && (
-      <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-black text-gray-800">
-              Your previous suggestions
-            </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {mySuggestions.length}{" "}
-              {mySuggestions.length === 1 ? "suggestion" : "suggestions"} sent so far
-            </p>
-          </div>
-          <button
-            onClick={() => void fetchMySuggestions()}
-            disabled={suggRefreshing}
-            className="flex items-center gap-1.5 text-[11px] font-semibold text-primary-600 hover:text-primary-800 disabled:opacity-60"
-          >
-            <svg
-              className={`w-3 h-3 ${suggRefreshing ? 'animate-spin' : ''}`}
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-            >
-              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            {suggRefreshing ? 'Refreshing…' : 'Refresh'}
-          </button>
-        </div>
-
-        <ul className="divide-y divide-gray-100">
-          {mySuggestions.map((s) => {
-            const dateStr = s.suggestion_date
-              ? new Date(s.suggestion_date).toLocaleDateString("en-IN", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "";
-            return (
-              <li key={s.id} className="py-3 first:pt-0 last:pb-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
-                  {dateStr}
-                </p>
-                <p className="text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed">
-                  {s.suggestion}
-                </p>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    )}
-  </div>
-);
-
   //  NOTIFICATIONS DISABLED
 // const renderNotificationsContent = () => (
 //   <div className="pt-4 ">
@@ -4273,7 +4005,8 @@ const renderSuggestionsContent = () => (
       case "appointments": return <Appointments />;
       case "army":        return <DigitalArmy />;
       case "chapter":     return <ChapterDashboard />;
-      case "suggestions": return renderSuggestionsContent();
+      // Built to docs/design/nri-wing-prototype.html.
+      case "suggestions": return <MyFeedback />;
       default:            return renderHome();
     }
   };

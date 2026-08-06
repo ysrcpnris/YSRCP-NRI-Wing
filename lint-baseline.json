@@ -1,5 +1,5 @@
 {
-  "total": 295,
+  "total": 289,
   "fingerprints": [
     "src/AdminDashboard/AdminDashboard.tsx::@typescript-eslint/ban-ts-comment::Use \"@ts-expect-error\" instead of \"@ts-ignore\", as \"@ts-ignore\" will do nothing if the following line is error-free.",
     "src/AdminDashboard/AdminDashboard.tsx::@typescript-eslint/no-explicit-any::Unexpected any. Specify a different type.",
@@ -93,7 +93,7 @@
     "src/components/Dashboard.tsx::@typescript-eslint/no-unused-vars::'toggleSection' is assigned a value but never used.",
     "src/components/Dashboard.tsx::@typescript-eslint/no-unused-vars::'uploading' is assigned a value but never used.",
     "src/components/Dashboard.tsx::react-hooks/exhaustive-deps::React Hook useEffect has a missing dependency: 'FAMILY_DESIGNATIONS'. Either include it or remove the dependency array.",
-    "src/components/Dashboard.tsx::react-hooks/exhaustive-deps::React Hook useEffect has missing dependencies: 'fetchMySuggestions', 'fetchReferrals', 'normalizeAssembly', and 'normalizeDistrict'. Either include them or remove the dependency array.",
+    "src/components/Dashboard.tsx::react-hooks/exhaustive-deps::React Hook useEffect has missing dependencies: 'fetchReferrals', 'normalizeAssembly', and 'normalizeDistrict'. Either include them or remove the dependency array.",
     "src/components/Dashboard.tsx::react-hooks/exhaustive-deps::React Hook useEffect has missing dependencies: 'organization', 'profession', and 'roleDesignation'. Either include them or remove the dependency array.",
     "src/components/Dashboard.tsx::react-hooks/rules-of-hooks::React Hook \"useEffect\" is called conditionally. React Hooks must be called in the exact same order in every component render.",
     "src/components/Dashboard.tsx::react-hooks/rules-of-hooks::React Hook \"useEffect\" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?",
