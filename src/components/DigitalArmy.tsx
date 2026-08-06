@@ -1,30 +1,151 @@
 import { useCallback, useEffect, useState } from "react";
-import { Megaphone, Copy, Check, Eye, Share2, Trophy, Globe, MapPin } from "lucide-react";
+import { Megaphone, Copy, Check, Eye, Share2, Trophy, Globe, MapPin, Link2, Unlink } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 /**
  * Digital Army — campaigns members can amplify.
  *
- * WHAT THIS MEASURES, AND WHAT IT DOES NOT
+ * WHAT THIS MEASURES BY DEFAULT, AND WHAT IT DOES NOT
  *   It counts links we generated being clicked. It does not know, and
  *   deliberately cannot know, whether a member liked or reposted
- *   anything on X, Facebook or Instagram:
+ *   anything on X, Facebook or Instagram BY WATCHING THEIR ACCOUNT:
  *     · X's developer terms forbid deriving political affiliation from
  *       platform data — which is precisely what "who liked the party's
- *       post" would be.
+ *       post" would be, read off X's own engagement data.
  *     · Instagram's Basic Display API was withdrawn in December 2024.
  *     · Around 700 members are in the EU, where political opinion is an
  *       Article 9 special category.
  *
- *   So sharing happens through intent URLs: we hand the member a
- *   pre-written post and open the platform's own composer. What they do
- *   there is between them and the platform. We count the clicks on our
- *   own link, which is our property to measure.
+ *   So sharing happens through intent URLs by default: we hand the
+ *   member a pre-written post and open the platform's own composer.
+ *   What they do there is between them and the platform. We count the
+ *   clicks on our own link, which is our property to measure.
+ *
+ * X CONNECT — A DIFFERENT, NARROWER THING, OFF BY DEFAULT
+ *   Below that is a genuinely different capability: a member can
+ *   connect THEIR OWN X account (OAuth 2.0 + PKCE, revocable any time)
+ *   and then explicitly click Like/Repost on a specific campaign post.
+ *   This never reads anyone's engagement — it performs exactly one
+ *   write, for exactly the member who asked for it, with a token they
+ *   granted for that purpose. See 20260806100000_x_connect_like_repost.sql
+ *   for the full reasoning. Gated on VITE_X_INTEGRATION_ENABLED, which
+ *   stays unset (dark) until the team registers a Developer App on X
+ *   and sets X_CLIENT_ID/X_CLIENT_SECRET as Edge Function secrets —
+ *   until then the connect button simply doesn't render.
  *
  * A share is recorded when the member opens the composer — intent, not
  * proof of posting. The numbers are labelled accordingly: "opened to
  * share", never "posts".
  */
+
+const X_INTEGRATION_ENABLED = import.meta.env.VITE_X_INTEGRATION_ENABLED === "true";
+
+type XStatus = { connected: boolean; x_username: string | null };
+
+/** Connect/disconnect card, plus the one-time toast reading ?x_connected=1
+ *  / ?x_error=... left by x-oauth-callback. Renders nothing at all when
+ *  the feature is off — no half-built UI teasing something not live. */
+function XConnectCard() {
+  const [status, setStatus] = useState<XStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [banner, setBanner] = useState<{ text: string; kind: "ok" | "err" } | null>(null);
+
+  const load = useCallback(async () => {
+    const { data, error } = await supabase.rpc("my_x_connection_status");
+    if (!error) {
+      const row = Array.isArray(data) ? data[0] : data;
+      setStatus(row ?? { connected: false, x_username: null });
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get("x_connected");
+    const err = params.get("x_error");
+    if (connected || err) {
+      setBanner(
+        connected
+          ? { text: "X account connected.", kind: "ok" }
+          : { text: err === "not_configured" ? "X connect isn't turned on yet." : `Couldn't connect X (${err}).`, kind: "err" }
+      );
+      // Strip the params so a refresh doesn't re-show the toast.
+      const url = new URL(window.location.href);
+      url.searchParams.delete("x_connected");
+      url.searchParams.delete("x_error");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [load]);
+
+  const connect = async () => {
+    setBusy(true);
+    setBanner(null);
+    const { data, error } = await supabase.functions.invoke("x-oauth-start");
+    setBusy(false);
+    if (error || !data?.url) {
+      setBanner({
+        text: data?.error === "not_configured" ? "X connect isn't turned on yet." : "Couldn't start X connect.",
+        kind: "err",
+      });
+      return;
+    }
+    window.location.href = data.url;
+  };
+
+  const disconnect = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc("disconnect_x");
+    setBusy(false);
+    if (!error) {
+      setStatus({ connected: false, x_username: null });
+      setBanner({ text: "X account disconnected.", kind: "ok" });
+    }
+  };
+
+  if (!status) return null;
+
+  return (
+    <div className="p-4 bg-white border border-gray-200 rounded-xl mb-4">
+      {banner && (
+        <p className={`text-sm mb-3 ${banner.kind === "ok" ? "text-emerald-700" : "text-amber-700"}`}>
+          {banner.text}
+        </p>
+      )}
+      {status.connected ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-gray-700">
+            <Link2 size={14} className="inline mr-1.5 text-emerald-600" />
+            Connected as <span className="font-semibold">@{status.x_username}</span> — Like/Repost
+            buttons on campaigns below use this account.
+          </p>
+          <button
+            onClick={disconnect}
+            disabled={busy}
+            className="h-8 px-3 rounded-lg border border-gray-200 text-xs font-bold text-gray-600
+                       hover:border-red-300 hover:text-red-600 inline-flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <Unlink size={12} /> Disconnect
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-gray-700">
+            Connect your own X account to Like/Repost campaign posts in one click, without
+            leaving the app.
+          </p>
+          <button
+            onClick={connect}
+            disabled={busy}
+            className="h-8 px-3 rounded-lg bg-black text-white text-xs font-bold
+                       inline-flex items-center gap-1.5 disabled:opacity-50 shrink-0"
+          >
+            <Link2 size={12} /> {busy ? "…" : "Connect X"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 type Ranking = {
   country_place: number;
@@ -250,6 +371,9 @@ type Campaign = {
   ends_at: string | null;
   my_shares: number;
   my_clicks: number;
+  x_post_id: string | null;
+  x_liked: boolean | null;
+  x_reposted: boolean | null;
 };
 
 const PLATFORM_LABEL: Record<string, string> = {
@@ -347,6 +471,33 @@ export default function DigitalArmy() {
     [load]
   );
 
+  /** Like/Repost via the member's own connected X account (x-action Edge
+   *  Function). Distinct from `share` above: this performs a real write
+   *  on X using a token the member explicitly granted, not an intent link. */
+  const [xBusy, setXBusy] = useState<string | null>(null);
+  const [xNotice, setXNotice] = useState<string | null>(null);
+  const xAction = useCallback(
+    async (c: Campaign, action: "like" | "repost") => {
+      const key = `${c.id}-${action}`;
+      setXBusy(key);
+      setXNotice(null);
+      const { data, error } = await supabase.functions.invoke("x-action", {
+        body: { campaign_id: c.id, action },
+      });
+      setXBusy(null);
+      if (error || !data?.ok) {
+        setXNotice(
+          data?.error === "not_connected"
+            ? "Connect your X account above first."
+            : `Couldn't ${action} on X — try again in a moment.`
+        );
+        return;
+      }
+      load();
+    },
+    [load]
+  );
+
   if (loading) {
     return (
       <div className="space-y-3">
@@ -366,6 +517,9 @@ export default function DigitalArmy() {
           far it travels.
         </p>
       </div>
+
+      {X_INTEGRATION_ENABLED && <XConnectCard />}
+      {xNotice && <p className="text-sm text-amber-700 -mt-2">{xNotice}</p>}
 
       {campaigns.length === 0 ? (
         <div className="p-8 bg-gray-50 border border-gray-200 rounded-xl text-center">
@@ -452,6 +606,34 @@ export default function DigitalArmy() {
                     </>
                   )}
                 </button>
+
+                {/* Real writes on the member's own connected X account —
+                    distinct from the intent-link "Share on X" button above,
+                    which only opens X's composer. Only shown when a) the
+                    feature is turned on and b) this campaign has a live
+                    X post to act on. */}
+                {X_INTEGRATION_ENABLED && c.x_post_id && (
+                  <>
+                    <button
+                      onClick={() => xAction(c, "like")}
+                      disabled={xBusy === `${c.id}-like` || !!c.x_liked}
+                      className="h-9 px-4 rounded-lg border border-gray-300 text-sm font-bold
+                                 text-gray-700 hover:border-primary-300 disabled:opacity-50
+                                 inline-flex items-center gap-1.5"
+                    >
+                      {c.x_liked ? "Liked ✓" : xBusy === `${c.id}-like` ? "…" : "Like on X"}
+                    </button>
+                    <button
+                      onClick={() => xAction(c, "repost")}
+                      disabled={xBusy === `${c.id}-repost` || !!c.x_reposted}
+                      className="h-9 px-4 rounded-lg border border-gray-300 text-sm font-bold
+                                 text-gray-700 hover:border-primary-300 disabled:opacity-50
+                                 inline-flex items-center gap-1.5"
+                    >
+                      {c.x_reposted ? "Reposted ✓" : xBusy === `${c.id}-repost` ? "…" : "Repost on X"}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
