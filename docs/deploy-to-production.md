@@ -54,6 +54,51 @@ immediately.
 `vercel.json` and `index.html` already list **both** Supabase refs in the
 CSP `connect-src`, so no CSP change is needed for staging.
 
+### Activating X Connect (Digital Army — optional, off by default)
+
+`src/components/DigitalArmy.tsx` ships a "Connect X" feature — a member
+links their own X account and can Like/Repost campaign posts in one
+click, via three Edge Functions (`x-oauth-start`, `x-oauth-callback`,
+`x-action`) and the `20260806100000_x_connect_like_repost.sql` schema.
+It is dead-code-eliminated from the bundle and 501s at the API layer
+until every piece below exists — nothing here ships live by accident.
+
+**This is a team decision, not a deploy step.** It needs a Developer
+App registered on X's side (billing, pay-per-use, ~$0.01/action as of
+this writing) and adds a real credential-storage surface (a leaked
+token there is account takeover on a real member's real X account, not
+a data leak). Read the migration's own header comment before turning
+this on anywhere.
+
+To activate, once the team has decided:
+
+1. Register a Developer App at developer.x.com under the party's own
+   X account. Set its OAuth 2.0 redirect URI to
+   `https://<project-ref>.supabase.co/functions/v1/x-oauth-callback`
+   for **each** environment (staging and production point at different
+   Supabase projects, so this is two separate redirect URIs registered
+   on the same X app, or two X apps — either works).
+2. Deploy the three functions if not already: `supabase functions
+   deploy x-oauth-start x-oauth-callback x-action --no-verify-jwt`.
+   `--no-verify-jwt` is required — `x-oauth-callback` is hit by X's
+   redirect directly, with no Supabase-format auth header to verify;
+   the other two check the caller's JWT themselves in code.
+3. Set Edge Function secrets **per Supabase project** (`supabase
+   secrets set KEY=value`, after `supabase link` to the right project):
+   ```
+   X_CLIENT_ID       <from the Developer App>
+   X_CLIENT_SECRET   <from the Developer App>
+   X_REDIRECT_URI    https://<project-ref>.supabase.co/functions/v1/x-oauth-callback
+   APP_URL           https://staging.ysrcpnriwing.org   (or the real prod domain)
+   ```
+   Getting `APP_URL` wrong per-project sends the post-connect redirect
+   to the wrong site — caught once already setting this up for staging,
+   where it silently defaulted to production.
+4. Set `VITE_STAGING_MODE`-style: add `VITE_X_INTEGRATION_ENABLED=true`
+   to the Vercel environment you're activating for, then redeploy
+   (same "env var changes need a fresh build" rule as everywhere else
+   in this doc).
+
 `VITE_APP_URL` is not read anywhere in `src/` — auth redirects use
 `window.location.origin` at runtime. Set it for consistency, but it is
 not what makes login work. See the Supabase step below for what does.
