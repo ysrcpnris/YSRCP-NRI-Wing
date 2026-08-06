@@ -5,6 +5,7 @@ import AssistanceQueue from "./AssistanceQueue";
 import FeedbackInbox from "./FeedbackInbox";
 import RoleManager from "./RoleManager";
 import MyChapterMembers from "./MyChapterMembers";
+import MyChapterClusters from "./MyChapterClusters";
 
 /**
  * Chapter surface — for country coordinators and chapter leads.
@@ -55,8 +56,9 @@ function StatCard({
 }
 
 /* What a coordinator actually does: know who is in the chapter, clear
-   the assistance queue, and read what the chapter is telling them. */
-type View = "members" | "queue" | "feedback" | "team";
+   the assistance queue, read what the chapter is telling them, group
+   cities into clusters, and read what the chapter is telling them. */
+type View = "members" | "queue" | "feedback" | "team" | "clusters";
 
 function ChapterTabs({
   view,
@@ -73,6 +75,7 @@ function ChapterTabs({
     // grant_wing_role() bounds what they may offer, so this surface
     // needs no rules of its own.
     { key: "team", label: "Team" },
+    { key: "clusters", label: "Clusters" },
   ];
   return (
     <div className="flex gap-2 border-b border-gray-200 -mb-2">
@@ -157,6 +160,16 @@ export default function ChapterDashboard() {
           </p>
         </div>
         <RoleManager />
+      </div>
+    );
+  }
+
+  if (view === "clusters") {
+    return (
+      <div className="space-y-8">
+        <ChapterTabs view={view} setView={setView} />
+        {/* Built to docs/design/nri-wing-prototype.html (screen c-clusters). */}
+        <MyChapterClusters country={stats[0]?.country ?? ""} />
       </div>
     );
   }
