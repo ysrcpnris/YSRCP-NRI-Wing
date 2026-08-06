@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
-import { Search, Users, MapPin, TrendingUp, Mail, Phone } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Users, MapPin, TrendingUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import AssistanceQueue from "./AssistanceQueue";
 import FeedbackInbox from "./FeedbackInbox";
 import RoleManager from "./RoleManager";
+import MyChapterMembers from "./MyChapterMembers";
 
 /**
  * Chapter surface — for country coordinators and chapter leads.
@@ -19,20 +20,6 @@ import RoleManager from "./RoleManager";
  * reintroduce them.
  */
 
-type RosterRow = {
-  id: string;
-  full_name: string | null;
-  email: string | null;
-  mobile_number: string | null;
-  city_abroad: string | null;
-  country: string | null;
-  chapter: string | null;
-  constituency: string | null;
-  district: string | null;
-  joined_at: string;
-  total_count: number;
-};
-
 type Stat = {
   country: string;
   chapter: string;
@@ -41,14 +28,6 @@ type Stat = {
   cities: number;
   women: number;
 };
-
-const PAGE = 50;
-
-function initials(name: string | null): string {
-  if (!name) return "??";
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "??";
-}
 
 function StatCard({
   label,
@@ -117,51 +96,20 @@ function ChapterTabs({
 export default function ChapterDashboard() {
   const [view, setView] = useState<View>("members");
   const [stats, setStats] = useState<Stat[]>([]);
-  const [rows, setRows] = useState<RosterRow[]>([]);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [noAccess, setNoAccess] = useState(false);
 
-  const total = rows[0]?.total_count ?? 0;
-
-  const loadRoster = useCallback(async (q: string, pageIndex: number) => {
-    const { data, error } = await supabase.rpc("chapter_roster", {
-      p_search: q || null,
-      p_limit: PAGE,
-      p_offset: pageIndex * PAGE,
-    });
-    if (error) {
-      console.error("chapter_roster failed:", error);
-      return;
-    }
-    setRows((data as RosterRow[]) ?? []);
-  }, []);
-
   useEffect(() => {
     (async () => {
-      const [{ data: s }, { data: r }] = await Promise.all([
-        supabase.rpc("chapter_stats"),
-        supabase.rpc("chapter_roster", { p_limit: PAGE, p_offset: 0 }),
-      ]);
+      const { data: s } = await supabase.rpc("chapter_stats");
       const statRows = (s as Stat[]) ?? [];
       setStats(statRows);
-      setRows((r as RosterRow[]) ?? []);
       // An empty stats result means the caller holds no chapter — which
       // is a legitimate answer, not a failure.
       setNoAccess(statRows.length === 0);
       setLoading(false);
     })();
   }, []);
-
-  // Debounced so typing a name is one query at rest.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setPage(0);
-      loadRoster(search, 0);
-    }, 250);
-    return () => clearTimeout(t);
-  }, [search, loadRoster]);
 
   if (loading) {
     return (
@@ -235,8 +183,6 @@ export default function ChapterDashboard() {
     { members: 0, new30: 0, cities: 0, women: 0 }
   );
 
-  const pages = Math.ceil(total / PAGE);
-
   return (
     <div className="space-y-8">
       <div>
@@ -299,203 +245,8 @@ export default function ChapterDashboard() {
         </div>
       )}
 
-      <div>
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <h3 className="font-bold text-gray-900">
-            Members{" "}
-            <span className="font-normal text-gray-500 tabular-nums">
-              ({total})
-            </span>
-          </h3>
-          <div className="relative w-full max-w-xs">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Name, email or city"
-              className="w-full h-10 pl-9 pr-3 bg-gray-50 border border-gray-300 rounded-lg
-                         text-sm focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none"
-            />
-          </div>
-        </div>
-
-        {rows.length === 0 ? (
-          <p className="text-sm text-gray-500 py-8 text-center">
-            {search ? `No members match “${search}”.` : "No members yet."}
-          </p>
-        ) : (
-          <>
-            {/* Cards on small screens, table on wide — a 7-column table is
-                unreadable on a phone, and coordinators do use phones. */}
-            <div className="space-y-3 md:hidden">
-              {rows.map((r) => (
-                <div
-                  key={r.id}
-                  className="p-4 bg-white border border-gray-200 rounded-xl flex items-center gap-3"
-                >
-                  <div
-                    className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center
-                               bg-gradient-to-br from-primary-500 to-accent-500
-                               text-white font-black text-xs"
-                  >
-                    {initials(r.full_name)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-gray-900 text-sm truncate">
-                      {r.full_name || "—"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {r.city_abroad || "—"} · {r.constituency || "—"}
-                    </p>
-                  </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    {r.email && (
-                      <a
-                        href={`mailto:${r.email}`}
-                        aria-label={`Email ${r.full_name ?? "member"}`}
-                        className="w-9 h-9 rounded-lg border border-gray-200 flex items-center
-                                   justify-center text-gray-500 hover:text-primary-600
-                                   hover:border-primary-300"
-                      >
-                        <Mail size={15} />
-                      </a>
-                    )}
-                    {r.mobile_number && (
-                      <a
-                        href={`tel:${r.mobile_number}`}
-                        aria-label={`Call ${r.full_name ?? "member"}`}
-                        className="w-9 h-9 rounded-lg border border-gray-200 flex items-center
-                                   justify-center text-gray-500 hover:text-primary-600
-                                   hover:border-primary-300"
-                      >
-                        <Phone size={15} />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200">
-                    <th className="py-2 pr-4 font-bold">Member</th>
-                    <th className="py-2 pr-4 font-bold">City</th>
-                    <th className="py-2 pr-4 font-bold">Constituency</th>
-                    <th className="py-2 pr-4 font-bold">Joined</th>
-                    <th className="py-2 font-bold text-right">Contact</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center
-                                       bg-gradient-to-br from-primary-500 to-accent-500
-                                       text-white font-black text-[10px]"
-                          >
-                            {initials(r.full_name)}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 truncate">
-                              {r.full_name || "—"}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate">
-                              {r.email || "—"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4 text-gray-700">{r.city_abroad || "—"}</td>
-                      <td className="py-3 pr-4 text-gray-700">
-                        {r.constituency || "—"}
-                        {r.district && (
-                          <span className="block text-xs text-gray-400">
-                            {r.district}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 pr-4 text-gray-500 tabular-nums whitespace-nowrap">
-                        {new Date(r.joined_at).toLocaleDateString(undefined, {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td className="py-3 text-right">
-                        <div className="flex gap-1.5 justify-end">
-                          {r.email && (
-                            <a
-                              href={`mailto:${r.email}`}
-                              aria-label={`Email ${r.full_name ?? "member"}`}
-                              className="w-8 h-8 rounded-lg border border-gray-200 inline-flex
-                                         items-center justify-center text-gray-500
-                                         hover:text-primary-600 hover:border-primary-300"
-                            >
-                              <Mail size={14} />
-                            </a>
-                          )}
-                          {r.mobile_number && (
-                            <a
-                              href={`tel:${r.mobile_number}`}
-                              aria-label={`Call ${r.full_name ?? "member"}`}
-                              className="w-8 h-8 rounded-lg border border-gray-200 inline-flex
-                                         items-center justify-center text-gray-500
-                                         hover:text-primary-600 hover:border-primary-300"
-                            >
-                              <Phone size={14} />
-                            </a>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {pages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <p className="text-xs text-gray-500 tabular-nums">
-                  {page * PAGE + 1}–{Math.min((page + 1) * PAGE, total)} of {total}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    disabled={page === 0}
-                    onClick={() => {
-                      const p = page - 1;
-                      setPage(p);
-                      loadRoster(search, p);
-                    }}
-                    className="h-9 px-3 rounded-lg border border-gray-200 text-sm font-semibold
-                               disabled:opacity-40 hover:border-primary-300"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    disabled={page >= pages - 1}
-                    onClick={() => {
-                      const p = page + 1;
-                      setPage(p);
-                      loadRoster(search, p);
-                    }}
-                    className="h-9 px-3 rounded-lg border border-gray-200 text-sm font-semibold
-                               disabled:opacity-40 hover:border-primary-300"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {/* Built to docs/design/nri-wing-prototype.html (screen c-members). */}
+      <MyChapterMembers />
     </div>
   );
 }
