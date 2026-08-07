@@ -15,6 +15,8 @@ import AdminRolesAccess from "./AdminRolesAccess";
 import AdminGrievances from "./AdminGrievances";
 import AdminAssistance from "./AdminAssistance";
 import AdminLocalConnect from "./AdminLocalConnect";
+import AdminLinks from "./AdminLinks";
+import AdminMembers from "./AdminMembers";
 import AssistanceQueue from "../components/AssistanceQueue";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
@@ -642,6 +644,8 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={LifeBuoy} label="Grievances (Admin)" page="adminGrievances" />
             <Item icon={LifeBuoy} label="Assistance Board (Admin)" page="adminAssistance" />
             <Item icon={Network} label="Local Connect (Admin)" page="adminLocalConnect" />
+            <Item icon={Settings} label="Handles & Links (Admin)" page="adminLinks" />
+            <Item icon={Users} label="Members (Admin)" page="adminMembers" />
             <Item icon={LifeBuoy} label="Grievances & Students" page="caseQueue" />
             <Item icon={Users} label="All Users" page="users" />
             <Item icon={CalendarDays} label="NRI Visits with Jagan Anna" page="visited" />
@@ -1444,6 +1448,8 @@ export default function AdminDashboard() {
       {currentPage === "adminGrievances" && <AdminGrievances />}
       {currentPage === "adminAssistance" && <AdminAssistance />}
       {currentPage === "adminLocalConnect" && <AdminLocalConnect />}
+      {currentPage === "adminLinks" && <AdminLinks />}
+      {currentPage === "adminMembers" && <AdminMembers />}
       {currentPage === "caseQueue" && <AssistanceQueue />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}

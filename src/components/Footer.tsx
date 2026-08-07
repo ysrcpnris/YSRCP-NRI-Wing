@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Globe,
@@ -13,6 +13,17 @@ import {
   YouTubeBrand,
 } from "./BrandIcons";
 import nriLogo from "./nrilogo.png";
+import { supabase } from "../lib/supabase";
+
+// Admin-editable (a-links). Defaults match what was hardcoded here
+// before — an empty/unset value falls back to these, not to a blank
+// link, so the footer never regresses to worse than it was.
+const DEFAULT_CONTACT = {
+  email: "info@ysrcpnriwing.org",
+  phone: "9515511111",
+  partyWebsite: "https://www.ysrcongress.com",
+  partyWebsiteLabel: "www.ysrcongress.com",
+};
 
 // Each Quick Link routes to one of:
 //   • '#anchor'  — smooth-scrolls to a home-page section (or navigates
@@ -54,6 +65,30 @@ const Footer: React.FC = () => {
   const [open, setOpen] = useState<string | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [contact, setContact] = useState(DEFAULT_CONTACT);
+  const [legal, setLegal] = useState({ terms: "", privacy: "" });
+
+  useEffect(() => {
+    void (async () => {
+      const [settingsRes, websiteRes] = await Promise.all([
+        supabase.from("app_settings").select("key, value")
+          .in("key", ["footer_terms_url", "footer_privacy_url", "footer_contact_email", "footer_contact_phone"]),
+        supabase.from("social_handles").select("url").eq("scope", "national").eq("platform", "website").ilike("label", "%Party%").maybeSingle(),
+      ]);
+      const s: Record<string, string> = {};
+      for (const row of settingsRes.data ?? []) {
+        s[row.key] = typeof row.value === "string" ? row.value : String(row.value ?? "");
+      }
+      setLegal({ terms: s.footer_terms_url || "", privacy: s.footer_privacy_url || "" });
+      const partyUrl = websiteRes.data?.url;
+      setContact({
+        email: s.footer_contact_email || DEFAULT_CONTACT.email,
+        phone: s.footer_contact_phone || DEFAULT_CONTACT.phone,
+        partyWebsite: partyUrl || DEFAULT_CONTACT.partyWebsite,
+        partyWebsiteLabel: partyUrl ? partyUrl.replace(/^https?:\/\//, "") : DEFAULT_CONTACT.partyWebsiteLabel,
+      });
+    })();
+  }, []);
 
   const sections: { title: string; items: LinkItem[] }[] = [
     { title: "NRI Services", items: NRI_SERVICES },
@@ -238,22 +273,22 @@ const Footer: React.FC = () => {
         {/* CONTACT */}
         <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm text-gray-300">
           <a
-            href="mailto:info@ysrcpnriwing.org"
+            href={`mailto:${contact.email}`}
             className="flex items-center gap-2 hover:text-white transition"
           >
             <div className="w-8 h-8 rounded-lg bg-primary-500/20 flex items-center justify-center">
               <Mail className="w-4 h-4 text-primary-300" />
             </div>
-            info@ysrcpnriwing.org
+            {contact.email}
           </a>
-          <a href="tel:9515511111" className="flex items-center gap-2 hover:text-white transition">
+          <a href={`tel:${contact.phone}`} className="flex items-center gap-2 hover:text-white transition">
             <div className="w-8 h-8 rounded-lg bg-primary-500/20 flex items-center justify-center">
               <Phone className="w-4 h-4 text-primary-300" />
             </div>
-            9515511111
+            {contact.phone}
           </a>
           <a
-            href="https://www.ysrcongress.com"
+            href={contact.partyWebsite}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 hover:text-white transition"
@@ -261,7 +296,7 @@ const Footer: React.FC = () => {
             <div className="w-8 h-8 rounded-lg bg-primary-500/20 flex items-center justify-center">
               <Globe className="w-4 h-4 text-primary-300" />
             </div>
-            www.ysrcongress.com
+            {contact.partyWebsiteLabel}
           </a>
         </div>
 
@@ -269,8 +304,16 @@ const Footer: React.FC = () => {
         <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
           <div>© 2026 YSR Congress Party · All rights reserved</div>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-white transition">Terms</a>
-            <a href="#" className="hover:text-white transition">Privacy</a>
+            {legal.terms ? (
+              <a href={legal.terms} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Terms</a>
+            ) : (
+              <span className="text-gray-600 cursor-not-allowed" title="Not published yet">Terms</span>
+            )}
+            {legal.privacy ? (
+              <a href={legal.privacy} target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Privacy</a>
+            ) : (
+              <span className="text-gray-600 cursor-not-allowed" title="Not published yet">Privacy</span>
+            )}
           </div>
         </div>
       </div>
