@@ -11,6 +11,7 @@ import * as XLSX from "xlsx";
 import Visited from "./Visited";
 import Intelligence from "./Intelligence";
 import WingManagement from "./WingManagement";
+import AdminRolesAccess from "./AdminRolesAccess";
 import AssistanceQueue from "../components/AssistanceQueue";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
@@ -47,6 +48,7 @@ import {
   X,
   User,
   Lock,
+  KeyRound,
   Save,
   Phone,
   Mail,
@@ -633,6 +635,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Home} label="Dashboard" page="dashboard" />
             <Item icon={BarChart3} label="Intelligence" page="intelligence" />
             <Item icon={Shield} label="Wing Management" page="wingManagement" />
+            <Item icon={KeyRound} label="Roles & Access" page="rolesAccess" />
             <Item icon={LifeBuoy} label="Grievances & Students" page="caseQueue" />
             <Item icon={Users} label="All Users" page="users" />
             <Item icon={CalendarDays} label="NRI Visits with Jagan Anna" page="visited" />
@@ -1431,6 +1434,7 @@ export default function AdminDashboard() {
       {currentPage === "users" && <UsersPage />}
       {currentPage === "intelligence" && <Intelligence />}
       {currentPage === "wingManagement" && <WingManagement />}
+      {currentPage === "rolesAccess" && <AdminRolesAccess />}
       {currentPage === "caseQueue" && <AssistanceQueue />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
