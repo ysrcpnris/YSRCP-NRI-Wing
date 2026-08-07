@@ -13,6 +13,7 @@ import Intelligence from "./Intelligence";
 import WingManagement from "./WingManagement";
 import AdminRolesAccess from "./AdminRolesAccess";
 import AdminGrievances from "./AdminGrievances";
+import AdminAssistance from "./AdminAssistance";
 import AssistanceQueue from "../components/AssistanceQueue";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
@@ -638,6 +639,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Shield} label="Wing Management" page="wingManagement" />
             <Item icon={KeyRound} label="Roles & Access" page="rolesAccess" />
             <Item icon={LifeBuoy} label="Grievances (Admin)" page="adminGrievances" />
+            <Item icon={LifeBuoy} label="Assistance Board (Admin)" page="adminAssistance" />
             <Item icon={LifeBuoy} label="Grievances & Students" page="caseQueue" />
             <Item icon={Users} label="All Users" page="users" />
             <Item icon={CalendarDays} label="NRI Visits with Jagan Anna" page="visited" />
@@ -1438,6 +1440,7 @@ export default function AdminDashboard() {
       {currentPage === "wingManagement" && <WingManagement />}
       {currentPage === "rolesAccess" && <AdminRolesAccess />}
       {currentPage === "adminGrievances" && <AdminGrievances />}
+      {currentPage === "adminAssistance" && <AdminAssistance />}
       {currentPage === "caseQueue" && <AssistanceQueue />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
