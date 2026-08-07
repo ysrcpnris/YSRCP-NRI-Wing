@@ -22,6 +22,7 @@ type LeaderAssignment = {
   role: string;
   district: string | null;
   constituency: string | null;
+  mandal: string | null;
   is_active: boolean;
 };
 
@@ -40,6 +41,7 @@ type AssignmentDraft = {
   state: string;
   district: string;
   constituency: string;
+  mandal: string;
 };
 
 const LEADER_PHOTO_BUCKET = "leader-photos";
@@ -50,18 +52,22 @@ const ROLES = [
   "Regional Coordinator",
   "District President",
   "Assembly Coordinator",
+  "Mandal President",
 ];
 
 // Top-of-tree role: visible to everyone, no district / constituency.
 // Treated the same as Global Coordinator for scoping purposes.
 const isGlobalRole = (r: string) =>
   r === "Global Coordinator" || r === "President";
-// Roles that take a (district, constituency) pair. Only Assembly
-// Coordinators are scoped to a constituency. District Presidents and
-// Regional Coordinators cover the whole district; Global Coordinator and
-// President have no scope at all (visible everywhere).
+// Roles that take a (district, constituency) pair. Assembly Coordinators
+// and Mandal Presidents are both scoped to a constituency (a mandal sits
+// below it). District Presidents and Regional Coordinators cover the
+// whole district; Global Coordinator and President have no scope at all
+// (visible everywhere).
 const needsConstituency = (r: string) =>
-  r === "Assembly Coordinator";
+  r === "Assembly Coordinator" || r === "Mandal President";
+// Only Mandal President goes one tier below constituency.
+const needsMandal = (r: string) => r === "Mandal President";
 
 // Canonicalize leader phone numbers to E.164 (+91…) before save so
 // `wa.me/<digits>` always opens the correct India contact regardless of
@@ -127,6 +133,18 @@ export default function MasterData() {
   const clearLE = (k: string) => setLeaderErrors(p => { const n = {...p}; delete n[k]; return n; });
   // Multi-district list. Each entry is one (state, district, constituency).
   const [formAssignments, setFormAssignments] = useState<AssignmentDraft[]>([]);
+  // Mandal options come from ap_mandals via the ap_mandal_names() RPC,
+  // not indianAddressData (which has no mandal-level granularity) —
+  // keyed by constituency name, fetched on demand and cached.
+  const [mandalOptionsByConstituency, setMandalOptionsByConstituency] = useState<Record<string, string[]>>({});
+  const loadMandalsFor = async (constituency: string) => {
+    if (!constituency || mandalOptionsByConstituency[constituency]) return;
+    const { data } = await supabase.rpc("ap_mandal_names", { p_constituency: constituency });
+    setMandalOptionsByConstituency((m) => ({
+      ...m,
+      [constituency]: ((data as { name: string }[]) ?? []).map((r) => r.name),
+    }));
+  };
 
   // Photo state
   const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null);
@@ -177,6 +195,7 @@ export default function MasterData() {
         role,
         district,
         constituency,
+        mandal,
         is_active,
         leader:leaders_master (
           id,
@@ -217,6 +236,7 @@ export default function MasterData() {
         role: a.role,
         district: a.district,
         constituency: a.constituency,
+        mandal: a.mandal,
         is_active: a.is_active,
       };
       if (existing) {
@@ -335,6 +355,7 @@ export default function MasterData() {
         state: state || "",
         district: district || "",
         constituency: constituency || "",
+        mandal: "",
       },
     ]);
     resetPhotoState();
@@ -357,7 +378,11 @@ export default function MasterData() {
           state: findStateForDistrict(a.district || ""),
           district: a.district || "",
           constituency: a.constituency || "",
+          mandal: a.mandal || "",
         }));
+    if (row.role === "Mandal President") {
+      drafts.forEach((d) => { if (d.constituency) void loadMandalsFor(d.constituency); });
+    }
     setFormAssignments(drafts);
 
     resetPhotoState();
@@ -376,7 +401,7 @@ export default function MasterData() {
   const addAssignmentRow = () => {
     setFormAssignments((arr) => [
       ...arr,
-      { state: "", district: "", constituency: "" },
+      { state: "", district: "", constituency: "", mandal: "" },
     ]);
   };
   const removeAssignmentRow = (idx: number) => {
@@ -397,13 +422,22 @@ export default function MasterData() {
     } else if (!needsConstituency(newRole)) {
       setFormAssignments((arr) =>
         arr.length === 0
-          ? [{ state: "", district: "", constituency: "" }]
-          : arr.map((a) => ({ ...a, constituency: "" }))
+          ? [{ state: "", district: "", constituency: "", mandal: "" }]
+          : arr.map((a) => ({ ...a, constituency: "", mandal: "" }))
+      );
+    } else if (!needsMandal(newRole)) {
+      // AC: keep what's there but make sure there's at least one row,
+      // and drop any mandal left over from a Mandal President edit.
+      setFormAssignments((arr) =>
+        arr.length === 0
+          ? [{ state: "", district: "", constituency: "", mandal: "" }]
+          : arr.map((a) => ({ ...a, mandal: "" }))
       );
     } else {
-      // AC: keep what's there but make sure there's at least one row.
+      // Mandal President: keep what's there but make sure there's at
+      // least one row.
       setFormAssignments((arr) =>
-        arr.length === 0 ? [{ state: "", district: "", constituency: "" }] : arr
+        arr.length === 0 ? [{ state: "", district: "", constituency: "", mandal: "" }] : arr
       );
     }
   };
@@ -414,6 +448,7 @@ export default function MasterData() {
   const saveLeader = async () => {
     const isGlobal      = isGlobalRole(formRole);
     const wantsCstcy    = needsConstituency(formRole);
+    const wantsMandal   = needsMandal(formRole);
 
     const formErrs: Record<string, string> = {};
     if (!name.trim()) formErrs.name = "Leader name is required.";
@@ -466,12 +501,15 @@ export default function MasterData() {
       const bad = formAssignments.find((a) => {
         if (!a.state || !a.district) return true;
         if (wantsCstcy && !a.constituency) return true;
+        if (wantsMandal && !a.mandal) return true;
         return false;
       });
       if (bad) {
         setLeaderErrors(p => ({
           ...p,
-          assignments: wantsCstcy
+          assignments: wantsMandal
+            ? "Each row needs state, district, constituency and mandal."
+            : wantsCstcy
             ? "Each row needs state, district and constituency."
             : "Each row needs state and district.",
         }));
@@ -479,9 +517,9 @@ export default function MasterData() {
       }
       const keys = new Set<string>();
       for (const a of formAssignments) {
-        const key = `${a.district}::${a.constituency || ""}`;
+        const key = `${a.district}::${a.constituency || ""}::${a.mandal || ""}`;
         if (keys.has(key)) {
-          setLeaderErrors(p => ({ ...p, assignments: `Duplicate entry: ${a.district}${a.constituency ? " / " + a.constituency : ""}.` }));
+          setLeaderErrors(p => ({ ...p, assignments: `Duplicate entry: ${a.district}${a.constituency ? " / " + a.constituency : ""}${a.mandal ? " / " + a.mandal : ""}.` }));
           return;
         }
         keys.add(key);
@@ -529,6 +567,33 @@ export default function MasterData() {
             alert(
               `${existing} is already the ${formRole} for ${where}. ` +
                 `Only one ${formRole} can hold that area at a time — remove the existing one first or pick a different area.`
+            );
+            return;
+          }
+        }
+      }
+
+      // Mandal President: one active holder per (district, constituency,
+      // mandal). No DB unique index backs this yet (unlike AC/DP/RC), so
+      // this check is the only thing preventing two leaders from both
+      // being "the" president of the same mandal.
+      if (formRole === "Mandal President") {
+        for (const a of formAssignments) {
+          const { data: clash } = await supabase
+            .from("leader_assignments")
+            .select("leader_id, leaders_master(name)")
+            .eq("role", formRole)
+            .eq("is_active", true)
+            .eq("district", a.district)
+            .eq("constituency", a.constituency)
+            .eq("mandal", a.mandal)
+            .returns<{ leader_id: string; leaders_master: { name: string } | null }[]>();
+          const conflict = (clash || []).find((r) => r.leader_id !== editLeaderId);
+          if (conflict) {
+            const existing = conflict.leaders_master?.name || "another leader";
+            alert(
+              `${existing} is already the Mandal President for ${a.mandal} (${a.constituency}). ` +
+                `Only one Mandal President can hold that seat at a time — remove the existing one first or pick a different mandal.`
             );
             return;
           }
@@ -643,6 +708,7 @@ export default function MasterData() {
         role: formRole,
         district: a.district || null,
         constituency: wantsCstcy ? a.constituency || null : null,
+        mandal: wantsMandal ? a.mandal || null : null,
         is_active: true,
       }));
       const { error } = await supabase.from("leader_assignments").insert(inserts);
@@ -1209,7 +1275,7 @@ export default function MasterData() {
                       >
                         <div
                           className={`grid grid-cols-1 sm:grid-cols-${
-                            needsConstituency(formRole) ? "3" : "2"
+                            needsMandal(formRole) ? "4" : needsConstituency(formRole) ? "3" : "2"
                           } gap-2`}
                         >
                           <select
@@ -1258,6 +1324,20 @@ export default function MasterData() {
                               <option value="">Constituency</option>
                               {constituenciesFor(a.state, a.district).map((c) => (
                                 <option key={c} value={c}>{c}</option>
+                              ))}
+                            </select>
+                          )}
+                          {needsMandal(formRole) && (
+                            <select
+                              className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white disabled:bg-gray-100"
+                              value={a.mandal}
+                              disabled={!a.constituency}
+                              onFocus={() => void loadMandalsFor(a.constituency)}
+                              onChange={(e) => updateAssignmentRow(idx, { mandal: e.target.value })}
+                            >
+                              <option value="">Mandal</option>
+                              {(mandalOptionsByConstituency[a.constituency] ?? []).map((m) => (
+                                <option key={m} value={m}>{m}</option>
                               ))}
                             </select>
                           )}
