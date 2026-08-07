@@ -27,6 +27,7 @@ type GrievanceRow = {
   reference_no: string | null;
   subject: string | null;
   category: string | null;
+  district: string | null;
   description: string | null;
   country: string | null;
   status: string;
@@ -73,14 +74,22 @@ export default function Grievances() {
   const [msg, setMsg] = useState<{ text: string; kind: "ok" | "err" } | null>(null);
   const [subject, setSubject] = useState("");
   const [category, setCategory] = useState("general");
+  const [district, setDistrict] = useState("");
+  const [districts, setDistricts] = useState<string[]>([]);
   const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    void supabase.rpc("ap_districts").then(({ data }) => {
+      setDistricts(((data as { district: string }[]) ?? []).map((d) => d.district));
+    });
+  }, []);
 
   const fetchAll = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     const { data, error } = await supabase
       .from("grievances")
-      .select("id, reference_no, subject, category, description, country, status, response, created_at, resolved_at")
+      .select("id, reference_no, subject, category, district, description, country, status, response, created_at, resolved_at")
       .eq("profile_id", user.id)
       .order("created_at", { ascending: false });
     if (!error && data) {
@@ -111,12 +120,13 @@ export default function Grievances() {
         profile_id: user.id,
         subject: subj,
         category,
+        district: district || null,
         description: desc,
         country: profile?.country_of_residence || null,
         status: "open",
       });
       if (error) throw error;
-      setSubject(""); setCategory("general"); setDescription("");
+      setSubject(""); setCategory("general"); setDistrict(""); setDescription("");
       setCreating(false);
       setMsg({ text: "Grievance raised. You'll see a reference number below.", kind: "ok" });
       await fetchAll();
@@ -171,6 +181,13 @@ export default function Grievances() {
                 <option value="other">Other</option>
               </select>
             </div>
+            <div className="pt-field">
+              <label>District (if it concerns a specific district)</label>
+              <select className="pt-inp" value={district} onChange={(e) => setDistrict(e.target.value)}>
+                <option value="">Not district-specific</option>
+                {districts.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
             <div className="pt-field" style={{ marginBottom: 0 }}>
               <label>What happened?</label>
               <textarea className="pt-inp" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} />
@@ -193,7 +210,9 @@ export default function Grievances() {
               <div className="pt-card-h">
                 <div style={{ flex: 1 }}>
                   <h3>Open · {open.reference_no ?? open.id.slice(0, 8)}</h3>
-                  <div className="sub">Raised {fmtDate(open.created_at)}{open.category ? ` · ${open.category}` : ""}</div>
+                  <div className="sub">
+                    Raised {fmtDate(open.created_at)}{open.category ? ` · ${open.category}` : ""}{open.district ? ` · ${open.district}` : ""}
+                  </div>
                 </div>
                 <span className={`pt-pill ${STATUS_PILL[open.status]?.cls ?? ""}`}>
                   {STATUS_PILL[open.status]?.label ?? open.status}
