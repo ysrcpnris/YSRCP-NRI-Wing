@@ -17,6 +17,7 @@ import AdminAssistance from "./AdminAssistance";
 import AdminLocalConnect from "./AdminLocalConnect";
 import AdminLinks from "./AdminLinks";
 import AdminMembers from "./AdminMembers";
+import AdminVoteCoverage from "./AdminVoteCoverage";
 import AssistanceQueue from "../components/AssistanceQueue";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
@@ -58,6 +59,7 @@ import {
   Phone,
   Mail,
   Loader2,
+  Vote,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -646,6 +648,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Network} label="Local Connect (Admin)" page="adminLocalConnect" />
             <Item icon={Settings} label="Handles & Links (Admin)" page="adminLinks" />
             <Item icon={Users} label="Members (Admin)" page="adminMembers" />
+            <Item icon={Vote} label="Voter Coverage (Admin)" page="adminVoteCoverage" />
             <Item icon={LifeBuoy} label="Grievances & Students" page="caseQueue" />
             <Item icon={Users} label="All Users" page="users" />
             <Item icon={CalendarDays} label="NRI Visits with Jagan Anna" page="visited" />
@@ -1450,6 +1453,7 @@ export default function AdminDashboard() {
       {currentPage === "adminLocalConnect" && <AdminLocalConnect />}
       {currentPage === "adminLinks" && <AdminLinks />}
       {currentPage === "adminMembers" && <AdminMembers />}
+      {currentPage === "adminVoteCoverage" && <AdminVoteCoverage />}
       {currentPage === "caseQueue" && <AssistanceQueue />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
