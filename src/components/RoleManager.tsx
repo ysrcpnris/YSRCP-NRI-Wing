@@ -110,6 +110,7 @@ export default function RoleManager() {
   const [pick, setPick] = useState<MemberHit | null>(null);
   const [role, setRole] = useState("");
   const [title, setTitle] = useState("");
+  const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
 
   /**
@@ -182,6 +183,7 @@ export default function RoleManager() {
       p_country: chosen.scope_kind === "global" ? null : chosen.country,
       p_chapter_id: chosen.scope_kind === "chapter" ? chosen.chapter_id : null,
       p_title: title || null,
+      p_reason: reason.trim() || null,
     });
     const res = Array.isArray(data) ? data[0] : data;
     if (error || !res?.ok) {
@@ -189,12 +191,16 @@ export default function RoleManager() {
       return;
     }
     setMsg({ t: res.message, ok: true });
-    setPick(null); setQ(""); setTitle("");
+    setPick(null); setQ(""); setTitle(""); setReason("");
     load();
   };
 
   const revoke = async (id: string) => {
-    const { data } = await supabase.rpc("revoke_wing_role", { p_role_id: id });
+    const reasonText = window.prompt("Reason for revoking this role (optional):") ?? undefined;
+    const { data } = await supabase.rpc("revoke_wing_role", {
+      p_role_id: id,
+      p_reason: reasonText?.trim() || null,
+    });
     const res = Array.isArray(data) ? data[0] : data;
     setMsg({ t: res?.message ?? "Could not revoke.", ok: Boolean(res?.ok) });
     load();
@@ -272,6 +278,12 @@ export default function RoleManager() {
               <input className={inputCls} value={title}
                      onChange={(e) => setTitle(e.target.value)}
                      placeholder="e.g. Student Assistance Lead" />
+            </Field>
+
+            <Field label="Reason (optional)">
+              <input className={inputCls} value={reason}
+                     onChange={(e) => setReason(e.target.value)}
+                     placeholder="e.g. filling a gap ahead of the summit" />
             </Field>
           </div>
 
