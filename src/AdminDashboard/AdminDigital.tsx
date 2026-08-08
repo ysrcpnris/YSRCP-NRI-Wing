@@ -48,6 +48,10 @@ type CampaignRow = {
 };
 type Amplifier = { profile_id: string; full_name: string; country: string | null; shares: number; clicks: number; twitter_id: string | null; x_verified: boolean; instagram_id: string | null };
 type XPost = { campaign_id: string; title: string; x_post_id: string; country: string | null; prompted: number; tapped_repost: number; tapped_like: number; took_the_link: number; created_at: string };
+type ContentPlatform = "youtube" | "instagram" | "x";
+type ContentPost = { id: string; platform: ContentPlatform; url: string; caption: string | null; created_at: string; is_active: boolean };
+
+const CONTENT_PLATFORM_LABEL: Record<ContentPlatform, string> = { youtube: "YouTube", instagram: "Instagram", x: "X" };
 
 const PLATFORM_LABEL: Record<string, string> = {
   x: "X", whatsapp: "WhatsApp", facebook: "Facebook", instagram: "Instagram", youtube: "YouTube", link: "Direct / copied",
@@ -92,14 +96,23 @@ export default function AdminDigital() {
   const [creating, setCreating] = useState(false);
   const [formMsg, setFormMsg] = useState<string | null>(null);
 
+  const [contentPosts, setContentPosts] = useState<ContentPost[]>([]);
+  const [cfPlatform, setCfPlatform] = useState<ContentPlatform>("youtube");
+  const [cfUrl, setCfUrl] = useState("");
+  const [cfCaption, setCfCaption] = useState("");
+  const [postingContent, setPostingContent] = useState(false);
+  const [contentMsg, setContentMsg] = useState<string | null>(null);
+  const [contentBusyIds, setContentBusyIds] = useState<Set<string>>(new Set());
+
   const fetchAll = useCallback(async () => {
-    const [s, c, h, cs, a, x] = await Promise.all([
+    const [s, c, h, cs, a, x, cf] = await Promise.all([
       supabase.rpc("admin_digital_stats"),
       supabase.rpc("admin_digital_channel_breakdown"),
       supabase.rpc("admin_digital_handle_coverage"),
       supabase.rpc("campaign_stats"),
       supabase.rpc("admin_digital_top_amplifiers", { p_limit: 20 }),
       supabase.rpc("admin_digital_x_amplification"),
+      supabase.from("digital_content_feed").select("*").order("created_at", { ascending: false }),
     ]);
     setStats((Array.isArray(s.data) ? s.data[0] : s.data) ?? null);
     setChannels((c.data as Channel[]) ?? []);
@@ -107,10 +120,39 @@ export default function AdminDigital() {
     setCampaigns((cs.data as CampaignRow[]) ?? []);
     setAmplifiers((a.data as Amplifier[]) ?? []);
     setXPosts((x.data as XPost[]) ?? []);
+    setContentPosts((cf.data as ContentPost[]) ?? []);
     setLoading(false);
   }, []);
 
   useEffect(() => { void fetchAll(); }, [fetchAll]);
+
+  const postContent = async () => {
+    if (!cfUrl.trim()) return;
+    setPostingContent(true);
+    const { error } = await supabase.from("digital_content_feed").insert({
+      platform: cfPlatform, url: cfUrl.trim(), caption: cfCaption.trim() || null,
+    });
+    setPostingContent(false);
+    setContentMsg(error ? "Could not post that link." : "Posted to the content feed.");
+    if (!error) {
+      setCfUrl(""); setCfCaption("");
+      void fetchAll();
+    }
+  };
+
+  const toggleContentActive = async (post: ContentPost) => {
+    setContentBusyIds((s) => new Set(s).add(post.id));
+    await supabase.from("digital_content_feed").update({ is_active: !post.is_active }).eq("id", post.id);
+    setContentBusyIds((s) => { const n = new Set(s); n.delete(post.id); return n; });
+    void fetchAll();
+  };
+
+  const removeContent = async (post: ContentPost) => {
+    setContentBusyIds((s) => new Set(s).add(post.id));
+    await supabase.from("digital_content_feed").delete().eq("id", post.id);
+    setContentBusyIds((s) => { const n = new Set(s); n.delete(post.id); return n; });
+    void fetchAll();
+  };
 
   const pullInX = async () => {
     const postId = xPostIdFromUrl(xUrl);
@@ -205,6 +247,67 @@ export default function AdminDigital() {
           <p><b className="text-gray-900">Auto-pull is optional.</b> Reading @YSRCParty's own timeline into a suggestions queue needs a paid X tier — this hasn't been provisioned.</p>
           <p><b className="text-gray-900">What you won't get.</b> X does not report who reposted or liked. You'll see how many members were prompted, not how many acted.</p>
         </div>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="p-5 border-b border-gray-100">
+          <h3 className="font-bold text-gray-900">Content feed</h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Post a YouTube, Instagram or X link for members to watch — a curated list, not a live pull from any platform.
+          </p>
+        </div>
+        <div className="p-5 border-b border-gray-100 flex flex-col sm:flex-row gap-2">
+          <select value={cfPlatform} onChange={(e) => setCfPlatform(e.target.value as ContentPlatform)} className="text-sm border border-gray-300 rounded-lg px-3 py-2">
+            <option value="youtube">YouTube</option>
+            <option value="instagram">Instagram</option>
+            <option value="x">X</option>
+          </select>
+          <input value={cfUrl} onChange={(e) => setCfUrl(e.target.value)} placeholder="Paste the link" className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2" />
+          <input value={cfCaption} onChange={(e) => setCfCaption(e.target.value)} placeholder="Caption (optional)" className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2" />
+          <button onClick={() => void postContent()} disabled={postingContent || !cfUrl.trim()} className="text-sm font-bold px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50">
+            {postingContent ? "Posting…" : "Post"}
+          </button>
+        </div>
+        {contentMsg && <p className="text-xs text-gray-600 px-5 pt-3">{contentMsg}</p>}
+        {contentPosts.length === 0 ? (
+          <div className="p-8 text-center text-gray-400 text-sm">Nothing posted yet.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200">
+                  <th className="py-2 px-4 font-bold">Platform</th>
+                  <th className="py-2 px-4 font-bold">Link</th>
+                  <th className="py-2 px-4 font-bold">Caption</th>
+                  <th className="py-2 px-4 font-bold">Posted</th>
+                  <th className="py-2 px-4 font-bold"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {contentPosts.map((post) => (
+                  <tr key={post.id} className={`border-b border-gray-100 ${post.is_active ? "" : "opacity-50"}`}>
+                    <td className="py-2.5 px-4 font-semibold text-gray-900">{CONTENT_PLATFORM_LABEL[post.platform]}</td>
+                    <td className="py-2.5 px-4 max-w-xs truncate">
+                      <a href={post.url} target="_blank" rel="noreferrer" className="text-primary-700 hover:underline">{post.url}</a>
+                    </td>
+                    <td className="py-2.5 px-4 text-gray-700 max-w-xs truncate" title={post.caption ?? ""}>{post.caption ?? "—"}</td>
+                    <td className="py-2.5 px-4 text-gray-500">{ageLabel(post.created_at)}</td>
+                    <td className="py-2.5 px-4">
+                      <div className="flex gap-1.5 justify-end">
+                        <button onClick={() => void toggleContentActive(post)} disabled={contentBusyIds.has(post.id)} className="text-xs font-bold px-2.5 py-1 rounded-lg border border-gray-300 text-gray-700 hover:border-primary-300 disabled:opacity-50">
+                          {post.is_active ? "Hide" : "Show"}
+                        </button>
+                        <button onClick={() => void removeContent(post)} disabled={contentBusyIds.has(post.id)} className="text-xs font-bold px-2.5 py-1 rounded-lg border border-gray-300 text-gray-700 hover:border-red-300 disabled:opacity-50">
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">

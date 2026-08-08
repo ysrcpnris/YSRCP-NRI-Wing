@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-import { Megaphone, Copy, Check, Eye, Share2, Trophy, Globe, MapPin, Link2, Unlink } from "lucide-react";
+import { useCallback, useEffect, useState, type FC } from "react";
+import { Megaphone, Copy, Check, Eye, Share2, Trophy, Globe, MapPin, Link2, Unlink, PlayCircle, ExternalLink } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { XBrand, InstagramBrand, YouTubeBrand } from "./BrandIcons";
 
 /**
  * Digital Army — campaigns members can amplify.
@@ -175,6 +176,88 @@ type Ranking = {
  * Members with no activity are omitted rather than ranked last.
  */
 const RANK_MINIMUM = 25;
+
+type ContentPlatform = "youtube" | "instagram" | "x";
+type ContentPost = { id: string; platform: ContentPlatform; url: string; caption: string | null; created_at: string };
+
+const CONTENT_PLATFORM_ICON: Record<ContentPlatform, FC<{ size?: number }>> = {
+  youtube: YouTubeBrand, instagram: InstagramBrand, x: XBrand,
+};
+const CONTENT_PLATFORM_LABEL: Record<ContentPlatform, string> = { youtube: "YouTube", instagram: "Instagram", x: "X" };
+
+function contentAge(iso: string) {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+}
+
+// Admin-curated links, not a live pull from any platform — see
+// 20260808220000_digital_content_feed.sql. Every card just opens the
+// real post on its own platform; nothing here is embedded or tracked.
+function ContentFeed() {
+  const [posts, setPosts] = useState<ContentPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("digital_content_feed")
+        .select("id, platform, url, caption, created_at")
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (!live) return;
+      if (error) console.error("digital_content_feed fetch failed:", error);
+      setPosts((data as ContentPost[]) ?? []);
+      setLoading(false);
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  if (loading) {
+    return <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />;
+  }
+  if (posts.length === 0) {
+    return null;
+  }
+
+  return (
+    <section>
+      <h3 className="font-bold text-gray-900 inline-flex items-center gap-2 mb-3">
+        <PlayCircle size={16} className="text-primary-600" />
+        Worth watching
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {posts.map((post) => {
+          const Icon = CONTENT_PLATFORM_ICON[post.platform];
+          return (
+            <a
+              key={post.id}
+              href={post.url}
+              target="_blank"
+              rel="noreferrer"
+              className="group p-4 bg-white border border-gray-200 rounded-xl hover:border-primary-300 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500">
+                  <Icon size={14} />
+                  {CONTENT_PLATFORM_LABEL[post.platform]}
+                </span>
+                <ExternalLink size={13} className="text-gray-300 group-hover:text-primary-500" />
+              </div>
+              <p className="text-sm text-gray-800 line-clamp-3">{post.caption ?? post.url}</p>
+              <p className="text-xs text-gray-400 mt-2">{contentAge(post.created_at)}</p>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 function Rankings() {
   const [scope, setScope] = useState<"country" | "global">("country");
@@ -639,6 +722,8 @@ export default function DigitalArmy() {
           ))}
         </div>
       )}
+
+      <ContentFeed />
 
       <Rankings />
 
