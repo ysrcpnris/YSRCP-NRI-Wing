@@ -1,5 +1,5 @@
 // src/pages/AdminDashboard.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Settings } from "lucide-react";
@@ -23,6 +23,7 @@ import AdminDigital from "./AdminDigital";
 import AdminAppt from "./AdminAppt";
 import AdminFeedback from "./AdminFeedback";
 import AdminTalent from "./AdminTalent";
+import AdminHome from "./AdminHome";
 import AssistanceQueue from "../components/AssistanceQueue";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
@@ -71,34 +72,8 @@ import {
   MessageSquare,
   Sparkles,
 } from "lucide-react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
-
 /* ---------- CONFIG ---------- */
 // Supabase table storing member profile data
-
-const CONTINENTS = [
-  "Asia",
-  "Africa",
-  "Europe",
-  "North America",
-  "South America",
-  "Australia",
-  // Catch-all for profiles whose country isn't recognised in the
-  // continent map below. Renamed from "Unknown" so the bucket reads
-  // less alarming to admins reviewing the dashboard.
-  "Others",
-] as const;
 
 type Row = {
   id: string;
@@ -137,9 +112,6 @@ type Row = {
   created_at?: string | null;
 };
 
-// Type for grouping geographic data with counts
-type Bucket = { name: string; count: number };
-
 /* ---------- Helpers ---------- */
 // Calculates age from DOB, returns "-" if invalid
 const calculateAge = (dob: string | null | undefined): number | string => {
@@ -168,7 +140,15 @@ const calculateAge = (dob: string | null | undefined): number | string => {
 // (e.g. "User" on a service request) resolve to a real name without
 // the admin having to look up UUIDs by hand.
 // =====================================================================
-const exportToExcel = async (
+// Exported rather than deleted: this is a general full-portal export
+// (profiles, referrals, service requests, suggestions, events,
+// testimonials, featured videos, leadership directory — see the
+// header above), not something specific to the old registrations
+// drill-down that used to call it. That drill-down is gone
+// (20260808200000 / a-home); this capability is currently not wired
+// to any button anywhere in the admin surface — rehoming it is a
+// distinct, explicit follow-up, not done here.
+export const exportToExcel = async (
   data: Row[],
   filename: string = "registrations.xlsx"
 ) => {
@@ -649,7 +629,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             )}
           </div>
           <nav className="space-y-2">
-            <Item icon={Home} label="Dashboard" page="dashboard" />
+            <Item icon={Home} label="Overview" page="dashboard" />
             <Item icon={BarChart3} label="Intelligence" page="intelligence" />
             <Item icon={Shield} label="Wing Management" page="wingManagement" />
             <Item icon={KeyRound} label="Roles & Access" page="rolesAccess" />
@@ -702,261 +682,12 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
 }
 
 
-/* ---------- Cards ---------- */
-// Card component displaying registration count with drill-down capability
-function StatCard({
-  title,
-  value,
-  onClick,
-}: {
-  title: string;
-  value: number;
-  onClick?: () => void;
-}) {
-  return (
-    <div className="rounded-xl bg-white border border-gray-200 hover:shadow-lg transition-all duration-200 p-6 flex flex-col justify-between max-w-xs w-full mx-auto">
-      <div>
-        <div className="text-gray-600 text-lg font-bold text-center">{title}</div>
-        <div className="text-3xl font-semibold text-green-600 mt-2 text-center">
-          {value.toLocaleString()}
-        </div>
-      </div>
-      <button
-        onClick={onClick}
-        className="mt-4 bg-primary-600 text-white px-3 py-2 rounded-md text-sm hover:bg-green-600 transition-all duration-200 w-fit self-center"
-      >
-        View More
-      </button>
-    </div>
-  );
-}
-/* ---------- Paginated Members Table ---------- */
-// Displays paginated list of members (8 per page) with drill-down navigation
-function MembersList({
-  title,
-  members,
-  onBack,
-}: {
-  title: string;
-  members: Row[];
-  onBack: () => void;
-}) {
-  // Pagination state: 8 members per page
-  const [page, setPage] = useState(1);
-  const pageSize = 8;
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize;
-  const paginated = members.slice(start, end);
-  const totalPages = Math.max(1, Math.ceil(members.length / pageSize));
-
-  // Family-member modal state — clicking the pill opens it with full details.
-  const [familyModalUser, setFamilyModalUser] = useState<Row | null>(null);
-
-  return (
-    <div className="mt-8 bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-      <div className="flex justify-between items-center mb-5">
-        <h2 className="text-xl font-semibold text-primary-600">{title}</h2>
-        <button
-          onClick={onBack}
-          className="px-4 py-2 text-sm rounded-md bg-primary-600 text-white hover:bg-green-600 transition"
-        >
-          ← Back
-        </button>
-      </div>
-
-      {members.length === 0 ? (
-        <div className="text-gray-600 p-6">No members found.</div>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-200 rounded-lg">
-              <thead className="bg-gradient-to-r from-primary-600 to-accent-600 text-white">
-                <tr>
-                  <th className="py-3 px-4 text-left text-sm font-semibold">User ID</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold">Name</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold">Gender</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold">Email</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold">Mobile</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold">WhatsApp</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold">Profession</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold">Family Member</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.map((m, i) => {
-                  const fam = m as any;
-                  const hasFamily =
-                    fam.family_relation || fam.family_name || fam.family_mobile;
-
-                  return (
-                    <tr
-                      key={m.id}
-                      className={`text-sm hover:bg-blue-50 ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
-                    >
-                      <td className="py-2 px-4 font-mono text-xs" title={`UUID: ${m.id}`}>
-                        {fam.public_user_code || "-"}
-                      </td>
-                      <td className="py-2 px-4">{[fam.first_name, fam.last_name].filter(Boolean).join(" ") || "-"}</td>
-                      <td className="py-2 px-4">{fam.gender || "-"}</td>
-                      <td className="py-2 px-4">{fam.email || "-"}</td>
-                      <td className="py-2 px-4">{fam.mobile_number || "-"}</td>
-                      <td className="py-2 px-4">{fam.whatsapp_number || "-"}</td>
-                      <td className="py-2 px-4">{fam.profession || "-"}</td>
-                      <td className="py-2 px-4">
-                        {hasFamily ? (
-                          <button
-                            type="button"
-                            onClick={() => setFamilyModalUser(m)}
-                            className="inline-flex items-center bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold px-2 py-0.5 rounded-full max-w-[180px] truncate hover:bg-emerald-100 transition"
-                            title="Click to view full family details"
-                          >
-                            👪 {fam.family_relation || "—"}
-                            {fam.family_name ? ` · ${fam.family_name}` : ""}
-                          </button>
-                        ) : (
-                          <span className="text-gray-300">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex justify-between items-center mt-5 text-sm text-gray-700">
-              <span>
-                Page {page} of {totalPages}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                  disabled={page === 1}
-                  className={`px-4 py-1.5 rounded-md border ${
-                    page === 1
-                      ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                      : "border-primary-600 text-primary-600 hover:bg-blue-50"
-                  }`}
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={page === totalPages}
-                  className={`px-4 py-1.5 rounded-md border ${
-                    page === totalPages
-                      ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                      : "border-green-600 text-green-600 hover:bg-green-50"
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Family member popup */}
-      {familyModalUser && (
-        <FamilyModal
-          user={familyModalUser}
-          onClose={() => setFamilyModalUser(null)}
-        />
-      )}
-    </div>
-  );
-}
-
-
-/* ---------- Family Member Modal ---------- */
-function FamilyModal({ user, onClose }: { user: any; onClose: () => void }) {
-  const fields: { label: string; value: string | null | undefined }[] = [
-    { label: "Relation", value: user.family_relation },
-    { label: "Name", value: user.family_name },
-    { label: "Mobile Number", value: user.family_mobile },
-    { label: "Village", value: user.family_village },
-    { label: "Designation", value: user.family_designation },
-  ];
-  const userLabel =
-    [user.first_name, user.last_name].filter(Boolean).join(" ") ||
-    user.email ||
-    "User";
-
-  return (
-    <div
-      className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-5 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white flex items-center justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider opacity-90">
-              Active Family Member
-            </p>
-            <p className="text-sm font-bold truncate">{userLabel}</p>
-            {user.public_user_code && (
-              <p className="text-[10px] font-mono opacity-90">
-                {user.public_user_code}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/20 transition"
-            aria-label="Close"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="p-5 space-y-3">
-          {fields.map(({ label, value }) => (
-            <div key={label} className="flex items-start justify-between gap-3 text-sm">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[110px] pt-0.5">
-                {label}
-              </span>
-              <span className="text-gray-900 font-semibold break-words text-right">
-                {value || <span className="text-gray-300 font-normal">—</span>}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 
 /* ---------- Main Dashboard ---------- */
 // Main admin dashboard with geographic drill-down, charts, and session timeout protection
 export default function AdminDashboard() {
   const { signOut } = useAuth();
-  // Dashboard state
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string>("");
-  // Excel export is async (multiple Supabase queries) — track its
-  // in-flight state separately so the button can disable itself and
-  // ignore re-clicks while the workbook is being generated.
-  const [exporting, setExporting] = useState(false);
-  const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   // Active sidebar page is mirrored to the URL hash (e.g. /admin#users) so
   // a page refresh keeps the admin where they were instead of bouncing back
   // to the Dashboard tab.
@@ -985,27 +716,13 @@ export default function AdminDashboard() {
     }
   }, [currentPage]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [countryContinentMap, setCountryContinentMap] = useState<Record<string, string>>({});
-  
+
   // Auto-logout after 1 hour inactivity (shows warning 5 min before).
   const idleTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const warningTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [showIdleWarning, setShowIdleWarning] = useState(false);
   const IDLE_TIME_LIMIT = 60 * 60 * 1000;       // 1 hour
   const WARNING_TIME    = 55 * 60 * 1000;       // Warn 5 minutes before logout
-
-  // String normalization helpers
-  const norm = (v: string | null | undefined) => (v || "").trim();
-  const toContinent = (country: string) =>
-    countryContinentMap[normalizeCountry(country)] || "Others";
-
-  // Normalize country names for consistent lookup
-  const normalizeCountry = (value: string) =>
-    value
-      .toLowerCase()
-      .replace(/_/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
 
   // Reset session timeout on user activity
   const resetIdleTimer = () => {
@@ -1051,134 +768,7 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  // Groups member records by continent/country/state with counts
-  function group(rows: Row[], key: "continent" | "country" | "state"): Bucket[] {
-    const map = new Map<string, number>();
-    for (const r of rows) {
-      const country = norm(r.country_of_residence);
-      const state = norm(r.state_abroad);
-      const k =
-        key === "continent"
-          ? toContinent(country)
-          : key === "country"
-          ? country
-          : state;
-      if (!k) continue;
-      map.set(k, (map.get(k) || 0) + 1);
-    }
-    return Array.from(map.entries())
-      .map(([name, count]) => ({ name, count }))
-      .filter((b) => b.count > 0)
-      .sort((a, b) => b.count - a.count);
-  }
-
   const navigate = useNavigate();
-  // Fetch country-to-continent mapping for geographic grouping
-  useEffect(() => {
-  let active = true;
-
-  (async () => {
-    const { data, error } = await supabase
-      .from("countries")
-      .select(`
-        name,
-        continents (
-          name
-        )
-      `);
-
-    if (!active) return;
-
-    if (error) {
-      console.error("Failed to fetch countries:", error.message);
-      return;
-    }
-
-    const map: Record<string, string> = {};
-    (data || []).forEach((c: any) => {
-      if (c.name && c.continents?.name) {
-        map[normalizeCountry(c.name)] = c.continents.name;
-
-      }
-    });
-
-    setCountryContinentMap(map);
-  })();
-
-  return () => {
-    active = false;
-  };
-}, []);
-
-
-  // Fetch all member profiles using pagination (1000 rows per batch)
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      setLoading(true);
-      setErr("");
-
-      // Batch fetch: Supabase caps requests at ~1000 rows, so paginate through dataset
-      const batchSize = 1000;
-      let offset = 0;
-      const allRows: Row[] = [];
-
-      try {
-        while (active) {
-          // Same reason as Users.tsx: dob and family_* are revoked from
-          // the authenticated role, which is the role an admin JWT uses,
-          // so a direct select failed the entire statement with 42501
-          // and every admin statistics screen showed zero members.
-          const { data, error } = await supabase.rpc("admin_member_list", {
-            p_limit: batchSize,
-            p_offset: offset,
-          });
-
-          if (!active) return;
-
-          if (error) {
-            setErr(error.message);
-            break;
-          }
-
-          const chunk = (data || []) as Row[];
-          allRows.push(...chunk);
-
-          // If we received fewer than a full batch, we're done
-          if (chunk.length < batchSize) break;
-
-          offset += batchSize;
-        }
-
-        if (active) setRows(allRows);
-      } catch (e: any) {
-        if (active) setErr(e?.message || String(e));
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // Memoized continent buckets for initial dashboard view
-  const continentBuckets = useMemo(() => {
-    const g = group(rows, "continent");
-    const map = new Map(g.map((b) => [b.name, b.count]));
-    return CONTINENTS.map((name) => ({ name, count: map.get(name) || 0 })).filter(
-      (b) => b.count > 0
-    );
-  }, [rows]);
-
-  // Memoized country buckets filtered by selected continent
-  const countryBuckets = useMemo(() => {
-    if (!selectedContinent) return [];
-    const filtered = rows.filter(
-      (r) => toContinent(norm(r.country_of_residence)) === selectedContinent
-    );
-    return group(filtered, "country");
-  }, [rows, selectedContinent]);
 
   // No more state-level grouping: we directly show members for a country
 
@@ -1198,49 +788,6 @@ export default function AdminDashboard() {
     localStorage.removeItem("adminLoginTime");
     navigate("/", { replace: true });
   };
-
-  // Determine chart data based on current drill-down level
-  const chartData = selectedContinent
-    ? selectedCountry
-      ? []
-      : countryBuckets
-    : continentBuckets;
-
-  // 40-color palette — enough for every country in any continent bucket
-  const COLORS = [
-    "#1368d6", "#16a34a", "#9333ea", "#eab308", "#ef4444",
-    "#0ea5e9", "#f97316", "#14b8a6", "#ec4899", "#6366f1",
-    "#84cc16", "#f43f5e", "#8b5cf6", "#06b6d4", "#d97706",
-    "#10b981", "#7c3aed", "#dc2626", "#0891b2", "#65a30d",
-    "#059669", "#7e22ce", "#be185d", "#b91c1c", "#0369a1",
-    "#ea580c", "#15803d", "#4c0519", "#4f46e5", "#db2777",
-    "#0c4a6e", "#7c2d12", "#1e3a8a", "#166534", "#5b21b6",
-    "#831843", "#7f1d1d", "#164e63", "#92400e", "#0f766e",
-  ];
-
-  const renderPieLabel = ({ cx, cy, midAngle, outerRadius, value, percent, name }: {
-    cx: number; cy: number; midAngle: number; outerRadius: number; value: number; percent: number; name?: string;
-  }) => {
-    if (percent < 0.04) return null;
-    const RADIAN = Math.PI / 180;
-    const r = outerRadius + 26;
-    const x = cx + r * Math.cos(-midAngle * RADIAN);
-    const y = cy + r * Math.sin(-midAngle * RADIAN);
-    return (
-      <text
-        x={x} y={y}
-        fill="#374151"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-        fontSize={11}
-        fontWeight={600}
-      >
-        {value.toLocaleString()}
-      </text>
-    );
-  };
-
-  const showCharts = !(selectedContinent && (selectedCountry || countryBuckets.length === 0));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex">
@@ -1283,182 +830,7 @@ export default function AdminDashboard() {
         >
           <Menu size={20} />
         </button>
-        {currentPage === "dashboard" && (
-    <>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-primary-600 mb-1 sm:mb-2">
-              Coordinator Dashboard
-            </h1>
-            <p className="text-sm sm:text-base text-gray-500">
-              Registrations overview by continent, country, and state
-            </p>
-          </div>
-          <button
-            onClick={async () => {
-              if (exporting) return; // re-click guard
-              setExporting(true);
-              try {
-                await exportToExcel(
-                  rows,
-                  `registrations_${new Date().toISOString().split("T")[0]}.xlsx`
-                );
-              } finally {
-                setExporting(false);
-              }
-            }}
-            disabled={loading || exporting || rows.length === 0}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 font-medium"
-          >
-            {exporting ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Generating Excel…
-              </>
-            ) : (
-              <>📥 Export Excel</>
-            )}
-          </button>
-        </div>
-
-     <p style={{ fontWeight: "bold" , fontSize: "22px", color:"green" }}>
-              Total Registrations: {rows.length.toLocaleString()}</p> 
-
-        {loading ? (
-          <div className="text-center text-gray-500 mt-8">Loading...</div>
-        ) : err ? (
-          <div className="p-4 rounded bg-red-50 border border-red-200 text-red-700">
-            {err}
-          </div>
-        ) : (
-          <>
-            {/* ------- CONTINENTS / COUNTRIES / STATES ------- */}
-            {!selectedContinent && (
-              <>
-                <h2 className="text-2xl font-bold text-primary-600 mb-3">
-                  <br />
-                  Continents
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-5xl">
-                  {continentBuckets.map((b) => (
-                    <StatCard
-                      key={b.name}
-                      title={b.name}
-                      value={b.count}
-                      onClick={() => setSelectedContinent(b.name)}
-                    />
-                  ))}
-                </div>
-              </>
-             
-            )}
-              </>
-        )}
-
-            {selectedContinent && !selectedCountry && (
-              <>
-                <div className="flex justify-between items-center mt-8 mb-3">
-                  <h2 className="text-xl font-bold text-primary-600">Countries in {selectedContinent}</h2>
-                  <button
-                    onClick={() => setSelectedContinent(null)}
-                    className="px-3 py-2 text-sm rounded border hover:bg-blue-50 text-primary-600"
-                  >
-                    ← Back
-                  </button>
-                </div>
-
-                {countryBuckets.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-5xl">
-                    {countryBuckets.map((b) => (
-                      <StatCard
-                        key={b.name}
-                        title={b.name}
-                        value={b.count}
-                        onClick={() => setSelectedCountry(b.name)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <MembersList
-                    title={`Members in ${selectedContinent}`}
-                    members={rows.filter((r) => toContinent(norm(r.country_of_residence)) === selectedContinent)}
-                    onBack={() => setSelectedContinent(null)}
-                  />
-                )}
-              </>
-            )}
-
-            {selectedContinent && selectedCountry && (
-              <>
-                <MembersList
-                  title={`Members Registered in ${selectedCountry}`}
-                  members={rows.filter((r) => norm(r.country_of_residence) === selectedCountry)}
-                  onBack={() => setSelectedCountry(null)}
-                />
-              </>
-            )}
-
-
-            {/* ---------- CHARTS ---------- */}
-            {showCharts && (
-              <div className="bg-white border rounded-xl p-6 shadow-sm mt-10">
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-primary-600">
-                  <BarChart3 size={18} /> Statistics Overview
-                </h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Bar Chart */}
-                  <div className="h-96">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 80 }}>
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 11 }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={100}
-                          interval={0}
-                        />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="#1368d6" radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  {/* Pie Chart - Full width and height */}
-                  <div className="h-96 flex items-center justify-center overflow-hidden">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart margin={{ top: 20, right: 100, bottom: 20, left: 100 }}>
-                        <Pie
-                          data={chartData}
-                          dataKey="count"
-                          nameKey="name"
-                          cx="35%"
-                          cy="45%"
-                          outerRadius={chartData.length > 15 ? 70 : 85}
-                          label={renderPieLabel}
-                          labelLine={false}
-                        >
-                          {chartData.map((_, i) => (
-                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value) => value.toLocaleString()} />
-                        <Legend
-                          verticalAlign="middle"
-                          align="right"
-                          layout="vertical"
-                          wrapperStyle={{ fontSize: "11px", paddingLeft: "10px", overflow: "auto", maxHeight: "300px" }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        
-        )}
+        {currentPage === "dashboard" && <AdminHome />}
       {currentPage === "users" && <UsersPage />}
       {currentPage === "intelligence" && <Intelligence />}
       {currentPage === "wingManagement" && <WingManagement />}
