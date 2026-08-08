@@ -55,6 +55,18 @@
 --   this exact version yet — so turning reshow on shows it once per
 --   member, not on every dashboard load, and never to someone who's
 --   about to see it via onboarding anyway.
+--
+-- BUG FIXED IN 20260808210001, SOURCE BELOW ALREADY CORRECTED FOR
+-- FRESH INSTALLS: every "find the draft" lookup below originally read
+-- `WHERE NOT is_published` alone. That's true of a genuine untouched
+-- draft AND of any version that was once live and has since been
+-- retired by a newer publish — is_published=false means both. Caught
+-- live after a second publish, when admin_welcome_ensure_draft()
+-- handed the editor a retired historical row instead of a fresh
+-- draft. Fixed by adding `AND published_at IS NULL`, which
+-- publish_welcome_message() sets exactly once and never touches
+-- again — the one column that's permanently true only for a row that
+-- has never been live.
 -- =====================================================================
 
 CREATE TABLE public.welcome_messages (
@@ -175,7 +187,8 @@ BEGIN
     RAISE EXCEPTION 'not authorized' USING ERRCODE = '42501';
   END IF;
 
-  SELECT id INTO v_draft_id FROM public.welcome_messages WHERE NOT is_published LIMIT 1;
+  SELECT id INTO v_draft_id FROM public.welcome_messages
+   WHERE NOT is_published AND published_at IS NULL LIMIT 1;
   IF v_draft_id IS NOT NULL THEN
     RETURN v_draft_id;
   END IF;
@@ -240,7 +253,7 @@ BEGIN
          show_at_onboarding = coalesce(p_show_at_onboarding, true),
          retrievable_from_profile = coalesce(p_retrievable_from_profile, true),
          reshow_to_existing = coalesce(p_reshow_to_existing, false)
-   WHERE id = p_id AND NOT is_published;
+   WHERE id = p_id AND NOT is_published AND published_at IS NULL;
 
   RETURN FOUND;
 END $$;
@@ -257,7 +270,10 @@ BEGIN
   IF NOT public.is_admin() THEN
     RETURN false;
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.welcome_messages WHERE id = p_id AND NOT is_published) THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.welcome_messages
+     WHERE id = p_id AND NOT is_published AND published_at IS NULL
+  ) THEN
     RETURN false;
   END IF;
 
@@ -289,7 +305,8 @@ BEGIN
   -- Restoring replaces whatever's currently being drafted, not stacks
   -- on top of it — one delete-then-insert, still never touching a
   -- published row.
-  SELECT id INTO v_existing_draft FROM public.welcome_messages WHERE NOT is_published LIMIT 1;
+  SELECT id INTO v_existing_draft FROM public.welcome_messages
+   WHERE NOT is_published AND published_at IS NULL LIMIT 1;
   IF v_existing_draft IS NOT NULL THEN
     DELETE FROM public.welcome_messages WHERE id = v_existing_draft;
   END IF;
