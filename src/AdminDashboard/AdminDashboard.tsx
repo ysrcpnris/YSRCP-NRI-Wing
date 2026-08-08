@@ -21,6 +21,7 @@ import AdminVoteCoverage from "./AdminVoteCoverage";
 import AdminAbroad from "./AdminAbroad";
 import AdminDigital from "./AdminDigital";
 import AdminAppt from "./AdminAppt";
+import AdminFeedback from "./AdminFeedback";
 import AssistanceQueue from "../components/AssistanceQueue";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
@@ -66,6 +67,7 @@ import {
   Plane,
   Megaphone,
   CalendarRange,
+  MessageSquare,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -658,6 +660,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Plane} label="Abroad Connect (Admin)" page="adminAbroad" />
             <Item icon={Megaphone} label="Digital Army (Admin)" page="adminDigital" />
             <Item icon={CalendarRange} label="Appointments (Admin)" page="adminAppt" />
+            <Item icon={MessageSquare} label="Feedback Analysis (Admin)" page="adminFeedback" />
             <Item icon={LifeBuoy} label="Grievances & Students" page="caseQueue" />
             <Item icon={Users} label="All Users" page="users" />
             <Item icon={CalendarDays} label="NRI Visits with Jagan Anna" page="visited" />
@@ -1466,6 +1469,7 @@ export default function AdminDashboard() {
       {currentPage === "adminAbroad" && <AdminAbroad />}
       {currentPage === "adminDigital" && <AdminDigital />}
       {currentPage === "adminAppt" && <AdminAppt />}
+      {currentPage === "adminFeedback" && <AdminFeedback />}
       {currentPage === "caseQueue" && <AssistanceQueue />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}
