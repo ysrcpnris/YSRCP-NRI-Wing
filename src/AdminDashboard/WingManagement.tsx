@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  Shield, MapPin, Link2, CalendarDays, Megaphone,
+  Shield, MapPin, Link2, CalendarDays,
   Trash2, Check, X, ExternalLink,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
@@ -11,24 +11,28 @@ import RoleManager from "../components/RoleManager";
  * 6 and 8 built.
  *
  * Those slices shipped member-facing displays and database tables with
- * nothing to work them: roles, chapters, handles, appointment slots and
- * campaigns could only be created with direct SQL. A table with no way
- * to operate it is a schema plus a promise, so this is the other half.
+ * nothing to work them: roles, chapters, handles and appointment slots
+ * could only be created with direct SQL. A table with no way to operate
+ * it is a schema plus a promise, so this is the other half.
  *
  * Every write goes through an RPC or a scoped policy — this screen holds
  * no authority of its own. An admin sees everything; a country
  * coordinator sees and edits only their own countries, because that is
  * what the functions return them.
+ *
+ * Campaigns moved out — AdminDigital.tsx (a-digital) is now the one
+ * place to create and read campaigns, checked with the user rather than
+ * leaving two paths to the same table the way AdminAbroad superseded
+ * pieces of this file's Chapters/Handles tabs earlier this batch.
  */
 
-type Tab = "roles" | "chapters" | "handles" | "appointments" | "campaigns";
+type Tab = "roles" | "chapters" | "handles" | "appointments";
 
 const TABS: { key: Tab; label: string; Icon: typeof Shield }[] = [
   { key: "roles", label: "Roles", Icon: Shield },
   { key: "chapters", label: "Chapters", Icon: MapPin },
   { key: "handles", label: "Handles & Groups", Icon: Link2 },
   { key: "appointments", label: "Appointments", Icon: CalendarDays },
-  { key: "campaigns", label: "Campaigns", Icon: Megaphone },
 ];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -520,124 +524,6 @@ function AppointmentsTab() {
   );
 }
 
-/* ── Campaigns ─────────────────────────────────────────────────────── */
-function CampaignsTab() {
-  const [stats, setStats] = useState<any[]>([]);
-  const [form, setForm] = useState({
-    title: "", brief: "", share_text: "", target_url: "",
-    hashtags: "", country: "",
-  });
-  const [msg, setMsg] = useState<{ t: string; ok: boolean } | null>(null);
-
-  const load = useCallback(async () => {
-    const { data } = await supabase.rpc("campaign_stats");
-    setStats(data ?? []);
-  }, []);
-  useEffect(() => { load(); }, [load]);
-
-  const create = async () => {
-    const { error } = await supabase.from("campaigns").insert({
-      title: form.title,
-      brief: form.brief || null,
-      share_text: form.share_text,
-      target_url: form.target_url,
-      hashtags: form.hashtags || null,
-      country: form.country || null,
-      is_published: true,
-    });
-    setMsg(error
-      ? { t: form.country
-            ? "Could not create — you may not cover that country."
-            : "A wing-wide campaign can only be created by an administrator.",
-          ok: false }
-      : { t: "Campaign published.", ok: true });
-    if (!error) { setForm({ ...form, title: "", share_text: "", target_url: "" }); load(); }
-  };
-
-  return (
-    <div>
-      {msg && <Banner msg={msg.t} ok={msg.ok} />}
-      <div className="p-5 bg-white border border-gray-200 rounded-xl mb-6">
-        <h4 className="font-bold text-gray-900 mb-3">New campaign</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Title">
-            <input className={inputCls} value={form.title}
-                   onChange={(e) => setForm({ ...form, title: e.target.value })} />
-          </Field>
-          <Field label="Country (blank = whole wing)">
-            <input className={inputCls} value={form.country}
-                   onChange={(e) => setForm({ ...form, country: e.target.value })} />
-          </Field>
-          <Field label="Link to share">
-            <input className={inputCls} value={form.target_url}
-                   onChange={(e) => setForm({ ...form, target_url: e.target.value })}
-                   placeholder="https://…" />
-          </Field>
-          <Field label="Hashtags">
-            <input className={inputCls} value={form.hashtags}
-                   onChange={(e) => setForm({ ...form, hashtags: e.target.value })}
-                   placeholder="#YSRCP #NRIWing" />
-          </Field>
-        </div>
-        <div className="mt-3">
-          <Field label="The post members will share">
-            <textarea rows={3} value={form.share_text}
-                      onChange={(e) => setForm({ ...form, share_text: e.target.value })}
-                      className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm
-                                 focus:bg-white focus:ring-2 focus:ring-primary-500 outline-none resize-none" />
-          </Field>
-        </div>
-        <button onClick={create}
-                disabled={!form.title || !form.share_text || !form.target_url}
-                className="mt-4 h-10 px-4 rounded-lg bg-primary-600 text-white text-sm font-bold
-                           disabled:opacity-50 hover:bg-primary-700">
-          Publish
-        </button>
-      </div>
-
-      <h4 className="font-bold text-gray-900 mb-3">Performance</h4>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200">
-              <th className="py-2 pr-4 font-bold">Campaign</th>
-              <th className="py-2 pr-4 font-bold">Scope</th>
-              <th className="py-2 pr-4 font-bold text-right">Sharers</th>
-              <th className="py-2 pr-4 font-bold text-right">Shares</th>
-              <th className="py-2 font-bold text-right">Clicks</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.length === 0 && (
-              <tr><td colSpan={5} className="py-6 text-center text-gray-500">
-                No campaigns yet.
-              </td></tr>
-            )}
-            {stats.map((c) => (
-              <tr key={c.campaign_id} className="border-b border-gray-100">
-                <td className="py-2.5 pr-4 font-semibold text-gray-900">{c.title}</td>
-                <td className="py-2.5 pr-4 text-gray-600">{c.country || "Whole wing"}</td>
-                <td className="py-2.5 pr-4 text-right tabular-nums">{c.sharers}</td>
-                <td className="py-2.5 pr-4 text-right tabular-nums">{c.shares}</td>
-                <td className="py-2.5 text-right tabular-nums">{c.clicks}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {/* Honesty about what the number is. */}
-      <p className="text-xs text-gray-400 mt-3">
-        Clicks are counted at most <strong>once per link per hour</strong>, so
-        several people following the same member’s link within an hour count
-        once. That is a deliberate floor against inflation, and it means these
-        numbers <strong>understate</strong> real reach rather than estimating
-        it. They are not unique visitors, and we cannot see what anyone liked
-        or reposted on a social platform.
-      </p>
-    </div>
-  );
-}
-
 export default function WingManagement() {
   const [tab, setTab] = useState<Tab>("roles");
   return (
@@ -667,7 +553,6 @@ export default function WingManagement() {
       {tab === "chapters" && <ChaptersTab />}
       {tab === "handles" && <HandlesTab />}
       {tab === "appointments" && <AppointmentsTab />}
-      {tab === "campaigns" && <CampaignsTab />}
     </div>
   );
 }
