@@ -24,6 +24,7 @@ import AdminAppt from "./AdminAppt";
 import AdminFeedback from "./AdminFeedback";
 import AdminTalent from "./AdminTalent";
 import AdminHome from "./AdminHome";
+import AdminWelcome from "./AdminWelcome";
 import AssistanceQueue from "../components/AssistanceQueue";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
@@ -71,6 +72,7 @@ import {
   CalendarRange,
   MessageSquare,
   Sparkles,
+  PenLine,
 } from "lucide-react";
 /* ---------- CONFIG ---------- */
 // Supabase table storing member profile data
@@ -636,6 +638,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={LifeBuoy} label="Grievances (Admin)" page="adminGrievances" />
             <Item icon={LifeBuoy} label="Assistance Board (Admin)" page="adminAssistance" />
             <Item icon={Network} label="Local Connect (Admin)" page="adminLocalConnect" />
+            <Item icon={PenLine} label="Welcome Message (Admin)" page="adminWelcome" />
             <Item icon={Settings} label="Handles & Links (Admin)" page="adminLinks" />
             <Item icon={Users} label="Members (Admin)" page="adminMembers" />
             <Item icon={Sparkles} label="Talent Pool (Admin)" page="adminTalent" />
@@ -846,6 +849,7 @@ export default function AdminDashboard() {
       {currentPage === "adminDigital" && <AdminDigital />}
       {currentPage === "adminAppt" && <AdminAppt />}
       {currentPage === "adminFeedback" && <AdminFeedback />}
+      {currentPage === "adminWelcome" && <AdminWelcome />}
       {currentPage === "caseQueue" && <AssistanceQueue />}
       {currentPage === "visited" && <Visited />}
       {currentPage === "assistance" && <Assistance />}

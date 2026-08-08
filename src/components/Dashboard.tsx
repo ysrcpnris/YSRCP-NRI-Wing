@@ -14,6 +14,7 @@ import Grievances from './Grievances';
 import MyLocalConnect from './MyLocalConnect';
 import DigitalArmy from './DigitalArmy';
 import ChapterDashboard from './ChapterDashboard';
+import WelcomeMessageCard, { type WelcomeMessageData } from './WelcomeMessageCard';
 import nriLogo from './nrilogo.png';
 import { useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
@@ -1423,6 +1424,26 @@ const Dashboard: React.FC = () => {
       window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${next}`);
     }
   }, [activeTab]);
+
+  // Welcome-message reshow: fires at most once per member per published
+  // version, only when an admin has switched "Re-show to existing
+  // members" on for the live message (welcome_message_needs_reshow()
+  // enforces both conditions server-side — this effect just displays
+  // whatever it returns, or nothing).
+  const [reshowMessage, setReshowMessage] = useState<WelcomeMessageData | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.rpc("welcome_message_needs_reshow");
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row) setReshowMessage(row as WelcomeMessageData);
+    })();
+  }, []);
+  const dismissReshow = async () => {
+    if (!reshowMessage) return;
+    const id = reshowMessage.id;
+    setReshowMessage(null);
+    await supabase.rpc("mark_welcome_message_seen", { p_id: id });
+  };
 
   /**
    * ═══════════════════════════════════════════════════════════════
@@ -4013,6 +4034,27 @@ const renderEventsContent = () => {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col md:flex-row font-sans bg-gray-50">
+
+      {/* ========================================================
+          WELCOME-MESSAGE RESHOW MODAL — shown once per member per
+          published version, only when the admin has switched it on.
+      ======================================================== */}
+      {reshowMessage && (
+        <div
+          className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => void dismissReshow()}
+        >
+          <div className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <WelcomeMessageCard message={reshowMessage} />
+            <button
+              onClick={() => void dismissReshow()}
+              className="btn-gradient w-full mt-4 py-3 text-base rounded-xl"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================
           CONFIRM-APPLY MODAL — opens when the user clicks "Apply to

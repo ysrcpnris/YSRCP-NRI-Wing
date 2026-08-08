@@ -6,6 +6,8 @@ import { useAuth } from "../contexts/useAuth";
 import { sanitizeTrim } from "../lib/sanitize";
 import ConstituencyPicker, { EMPTY_GEO, type GeoValue } from "../components/ConstituencyPicker";
 import { countriesData } from "../lib/countryCodes";
+import WelcomeMessageCard, { type WelcomeMessageData } from "../components/WelcomeMessageCard";
+import "../styles/prototype-tokens.css";
 
 /**
  * Post-verification profile wizard.
@@ -37,6 +39,8 @@ export default function CompleteProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingWelcome, setPendingWelcome] = useState<WelcomeMessageData | null>(null);
+  const [continuing, setContinuing] = useState(false);
 
   // section 1 — where you live
   const [country, setCountry] = useState("");
@@ -156,6 +160,23 @@ export default function CompleteProfilePage() {
     }
 
     await refreshProfile();
+
+    // Show the welcome message once, right here, if the admin has one
+    // live and switched on for onboarding — otherwise go straight in
+    // exactly as before, no empty step.
+    const { data: msg } = await supabase.rpc("current_welcome_message");
+    const row = Array.isArray(msg) ? msg[0] : msg;
+    if (row?.show_at_onboarding) {
+      setPendingWelcome(row as WelcomeMessageData);
+      return;
+    }
+    navigate("/dashboard", { replace: true });
+  };
+
+  const continueToDashboard = async () => {
+    if (!pendingWelcome) return;
+    setContinuing(true);
+    await supabase.rpc("mark_welcome_message_seen", { p_id: pendingWelcome.id });
     navigate("/dashboard", { replace: true });
   };
 
@@ -163,6 +184,29 @@ export default function CompleteProfilePage() {
     return (
       <div className="min-h-screen grid place-items-center">
         <Loader2 className="animate-spin text-primary-600" size={28} />
+      </div>
+    );
+  }
+
+  if (pendingWelcome) {
+    return (
+      <div className="min-h-screen py-10 px-4" style={{ background: "var(--ground)" }}>
+        <div className="max-w-xl mx-auto">
+          <WelcomeMessageCard message={pendingWelcome} />
+          <button
+            onClick={() => void continueToDashboard()}
+            disabled={continuing}
+            className="btn-gradient w-full mt-5 py-3 text-base rounded-xl disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {continuing ? (
+              <>
+                <Loader2 size={16} className="animate-spin" /> Opening your dashboard…
+              </>
+            ) : (
+              "Continue to my dashboard"
+            )}
+          </button>
+        </div>
       </div>
     );
   }

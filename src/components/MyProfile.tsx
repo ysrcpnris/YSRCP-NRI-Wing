@@ -31,6 +31,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/useAuth";
 import "../styles/prototype-tokens.css";
+import WelcomeMessageCard, { type WelcomeMessageData } from "./WelcomeMessageCard";
 
 /** The prototype's three contribution areas, in its order. */
 const CONTRIBUTION_AREAS = [
@@ -128,6 +129,18 @@ export default function MyProfile() {
   const [edit, setEdit] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ text: string; kind: "ok" | "err" } | null>(null);
+
+  // Welcome message, "read it again" — only shown when a published
+  // message exists and the admin left retrievable_from_profile on.
+  const [welcomeMsg, setWelcomeMsg] = useState<WelcomeMessageData | null>(null);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.rpc("current_welcome_message");
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row?.retrievable_from_profile) setWelcomeMsg(row as WelcomeMessageData);
+    })();
+  }, []);
 
   // ── restricted half ────────────────────────────────────────────────
   const [priv, setPriv] = useState<PrivateFields>(EMPTY_PRIVATE);
@@ -364,6 +377,35 @@ export default function MyProfile() {
         What you record here decides which requests reach you, which leaders you're
         connected to, and how the wing counts its strength in your constituency.
       </p>
+
+      {welcomeMsg && (
+        <button
+          className="pt-btn pt-btn-out pt-btn-sm"
+          style={{ marginBottom: 14 }}
+          onClick={() => setWelcomeOpen(true)}
+        >
+          Read the welcome message again
+        </button>
+      )}
+
+      {welcomeOpen && welcomeMsg && (
+        <div
+          className="fixed inset-0 z-[250] flex items-center justify-center p-4"
+          style={{ background: "rgba(16,21,28,.6)", backdropFilter: "blur(2px)" }}
+          onClick={() => setWelcomeOpen(false)}
+        >
+          <div className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <WelcomeMessageCard message={welcomeMsg} />
+            <button
+              className="pt-btn pt-btn-go"
+              style={{ width: "100%", marginTop: 14 }}
+              onClick={() => setWelcomeOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {msg && (
         <div className={`pt-note ${msg.kind === "ok" ? "go" : "warn"}`} style={{ marginBottom: 14 }}>
