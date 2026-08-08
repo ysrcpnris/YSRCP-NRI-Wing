@@ -22,6 +22,7 @@ import AdminAbroad from "./AdminAbroad";
 import AdminDigital from "./AdminDigital";
 import AdminAppt from "./AdminAppt";
 import AdminFeedback from "./AdminFeedback";
+import AdminTalent from "./AdminTalent";
 import AssistanceQueue from "../components/AssistanceQueue";
 import Assistance from "./Assistance";
 import ServiceCategories from "./ServiceCategories";
@@ -68,6 +69,7 @@ import {
   Megaphone,
   CalendarRange,
   MessageSquare,
+  Sparkles,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -656,6 +658,7 @@ function Sidebar({ onLogout, current, setCurrentPage, isOpen, onToggle }: { onLo
             <Item icon={Network} label="Local Connect (Admin)" page="adminLocalConnect" />
             <Item icon={Settings} label="Handles & Links (Admin)" page="adminLinks" />
             <Item icon={Users} label="Members (Admin)" page="adminMembers" />
+            <Item icon={Sparkles} label="Talent Pool (Admin)" page="adminTalent" />
             <Item icon={Vote} label="Voter Coverage (Admin)" page="adminVoteCoverage" />
             <Item icon={Plane} label="Abroad Connect (Admin)" page="adminAbroad" />
             <Item icon={Megaphone} label="Digital Army (Admin)" page="adminDigital" />
@@ -1465,6 +1468,7 @@ export default function AdminDashboard() {
       {currentPage === "adminLocalConnect" && <AdminLocalConnect />}
       {currentPage === "adminLinks" && <AdminLinks />}
       {currentPage === "adminMembers" && <AdminMembers />}
+      {currentPage === "adminTalent" && <AdminTalent />}
       {currentPage === "adminVoteCoverage" && <AdminVoteCoverage />}
       {currentPage === "adminAbroad" && <AdminAbroad />}
       {currentPage === "adminDigital" && <AdminDigital />}
