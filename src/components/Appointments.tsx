@@ -6,16 +6,19 @@
  *
  * WHY THIS ISN'T THE MOCK'S CALENDAR
  *   m-appt shows one specific thing: a monthly calendar of open dates
- *   for a delegation visit to party HQ, with a party-size field (1-4
- *   visitors) per request. The real schema (20260804280000) is
- *   deliberately more general — appointment_slots is host/venue/mode
- *   per slot, not one recurring "meet Jagananna" type, and
- *   appointment_bookings has no party-size column. Rebuilding this as
- *   a single-purpose calendar would either fabricate a field nothing
- *   stores, or throw away the host/venue/manual-vs-auto distinctions
- *   the real system already uses for chapter-lead and coordinator
- *   slots too. Kept as a list, grouped by day where the mock groups by
- *   day, restyled rather than reshaped.
+ *   for a delegation visit to party HQ. The real schema (20260804280000)
+ *   is deliberately more general — appointment_slots is host/venue/mode
+ *   per slot, not one recurring "meet Jagananna" type. Rebuilding this
+ *   as a single-purpose calendar would throw away the host/venue/
+ *   manual-vs-auto distinctions the real system already uses for
+ *   chapter-lead and coordinator slots too. Kept as a list, grouped by
+ *   day where the mock groups by day, restyled rather than reshaped.
+ *
+ *   The party-size gap this comment used to describe is closed —
+ *   appointment_bookings.visitors is real now (20260808160000, built
+ *   for a-appt's admin range screen, checked with the user since it
+ *   touches this live booking flow). book_slot() takes p_visitors; the
+ *   field below is what actually reaches it.
  *
  * TWO ADMISSION MODES, and the member is told which one applies before
  * they commit:
@@ -61,6 +64,7 @@ function timeRange(startsAt: string, endsAt: string) {
 
 function BookingForm({ slot, onClose, onBooked }: { slot: Slot; onClose: () => void; onBooked: () => void }) {
   const [note, setNote] = useState("");
+  const [visitors, setVisitors] = useState(1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,6 +74,7 @@ function BookingForm({ slot, onClose, onBooked }: { slot: Slot; onClose: () => v
     const { data, error: err } = await supabase.rpc("book_slot", {
       p_slot_id: slot.id,
       p_note: note.trim() || null,
+      p_visitors: visitors,
     });
     setSaving(false);
 
@@ -104,6 +109,14 @@ function BookingForm({ slot, onClose, onBooked }: { slot: Slot; onClose: () => v
               doesn't reserve a place.
             </div>
           )}
+          <div className="pt-field" style={{ marginBottom: 14 }}>
+            <label>How many people, including you?</label>
+            <input
+              type="number" min={1} max={10} className="pt-inp" style={{ maxWidth: 100 }}
+              value={visitors}
+              onChange={(e) => setVisitors(Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1)))}
+            />
+          </div>
           <div className="pt-field" style={{ marginBottom: error ? 14 : 0 }}>
             <label>
               {slot.notes_label || "Anything you'd like to add?"}
