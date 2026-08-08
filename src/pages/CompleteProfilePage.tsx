@@ -121,6 +121,14 @@ export default function CompleteProfilePage() {
     setSaving(true);
     setError(null);
 
+    // dob, has_vote and epic_number are column-privilege restricted —
+    // authenticated has no UPDATE grant on them (20260805090000 and
+    // later). Sending them through this ordinary PATCH 403s the WHOLE
+    // request regardless of value, including dob: null on a blank
+    // field, which silently broke onboarding completion for every
+    // member until this fix. They go through update_my_private_profile()
+    // instead, the same restricted-write channel MyProfile.tsx already
+    // uses for these exact columns.
     const updates: Record<string, unknown> = {
       country_of_residence: sanitizeTrim(country),
       state_abroad: sanitizeTrim(stateAbroad) || null,
@@ -131,28 +139,34 @@ export default function CompleteProfilePage() {
       mandal: sanitizeTrim(geo.mandal),
       village: sanitizeTrim(geo.village) || null,
       gender,
-      dob: dob || null,
       profession: sanitizeTrim(profession) || null,
       organization: sanitizeTrim(organization) || null,
       contribution: areas.length ? areas.join(", ") : null,
       updated_at: new Date().toISOString(),
     };
 
+    const { error: err } = await supabase.from("profiles").update(updates).eq("id", user.id);
+
     // Voter fields are only sent when answered. `has_vote` is
     // three-state — yes, no, and not-answered — and writing `false` for
     // someone who skipped the question would be a different claim.
-    if (hasVote !== null) {
-      updates.has_vote = hasVote;
-      if (hasVote && epic.trim()) updates.epic_number = sanitizeTrim(epic).toUpperCase();
+    let privateErr = null;
+    if (!err && (dob.trim() || hasVote !== null)) {
+      const { error: pErr } = await supabase.rpc("update_my_private_profile", {
+        p_dob: dob.trim() || null,
+        p_has_vote: hasVote,
+        p_epic_number: hasVote && epic.trim() ? sanitizeTrim(epic).toUpperCase() : null,
+      });
+      privateErr = pErr;
     }
 
-    const { error: err } = await supabase.from("profiles").update(updates).eq("id", user.id);
     setSaving(false);
 
-    if (err) {
-      console.error("complete-profile save failed:", err);
+    const finalErr = err || privateErr;
+    if (finalErr) {
+      console.error("complete-profile save failed:", finalErr);
       setError(
-        err.message.includes("profiles_epic_unique")
+        finalErr.message.includes("profiles_epic_unique")
           ? "That EPIC number is already recorded against another member. Check the digits, or leave it blank."
           : "Could not save your details. Please try again."
       );
