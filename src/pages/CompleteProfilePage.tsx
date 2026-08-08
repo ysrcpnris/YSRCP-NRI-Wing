@@ -173,17 +173,23 @@ export default function CompleteProfilePage() {
       return;
     }
 
-    await refreshProfile();
-
     // Show the welcome message once, right here, if the admin has one
-    // live and switched on for onboarding — otherwise go straight in
-    // exactly as before, no empty step.
+    // live and switched on for onboarding — checked BEFORE
+    // refreshProfile(). refreshProfile() flips profile.onboarding_
+    // completed_at truthy, and this component has its own effect above
+    // that redirects to /dashboard the instant that happens (for a
+    // member who lands back on this page after already finishing) —
+    // calling it first raced that effect, which fired and navigated
+    // away before this branch ever ran. Deferring it until continueTo
+    // Dashboard() means nothing here changes profile while the card is
+    // showing, so that effect has nothing to react to.
     const { data: msg } = await supabase.rpc("current_welcome_message");
     const row = Array.isArray(msg) ? msg[0] : msg;
     if (row?.show_at_onboarding) {
       setPendingWelcome(row as WelcomeMessageData);
       return;
     }
+    await refreshProfile();
     navigate("/dashboard", { replace: true });
   };
 
@@ -191,6 +197,7 @@ export default function CompleteProfilePage() {
     if (!pendingWelcome) return;
     setContinuing(true);
     await supabase.rpc("mark_welcome_message_seen", { p_id: pendingWelcome.id });
+    await refreshProfile();
     navigate("/dashboard", { replace: true });
   };
 
