@@ -10,12 +10,12 @@
  *   about what the coordinator's own RPC call returns, not UI dressing
  *   over data secretly available.
  *
- * "JOIN ORG" COLUMN FROM THE MOCK IS NOT HERE
- *   It shows Yes/Tell me more against a question ("would you like to
- *   join the organisation formally?") that MyProfile.tsx already
- *   established has no backing column at all — rendered there, answer
- *   never sent anywhere. Nothing to show here either; see
- *   20260806120000's migration comment for the full reasoning.
+ * "JOIN ORG" COLUMN — real since 20260808180000
+ *   profiles.join_org_interest is now a real, ordinary column
+ *   (MyProfile.tsx saves it for real; there's still no automatic
+ *   coordinator-contact behind it, same honesty note as there).
+ *   chapter_roster() carries it; rendered here as Yes/Not yet/Tell me
+ *   more/—, matching the mock's own labels.
  *
  * Export stays disabled — "secretariat only" per the mock, and there
  * is no export RPC for a coordinator to call regardless.
@@ -39,6 +39,7 @@ type RosterRow = {
   joined_at: string;
   contribution_areas: string[] | null;
   public_user_code: string | null;
+  join_org_interest: string | null;
   total_count: number;
 };
 
@@ -46,6 +47,12 @@ const CONTRIBUTION_LABEL: Record<string, string> = {
   social_media: "Social Media",
   technology: "Technology",
   political: "Political",
+};
+
+const JOIN_ORG_LABEL: Record<string, string> = {
+  yes: "Yes",
+  not_yet: "Not yet",
+  tell_me_more: "Tell me more",
 };
 
 const PAGE = 50;
@@ -138,7 +145,7 @@ export default function MyChapterMembers() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr>
-                  {["Member", "City", "Joined", "Contributes", "Voter", ""].map((h) => (
+                  {["Member", "City", "Joined", "Contributes", "Join org", "Voter", ""].map((h) => (
                     <th key={h} style={{
                       textAlign: "left", fontSize: 10, letterSpacing: ".11em", textTransform: "uppercase",
                       color: "var(--ink-4)", fontWeight: 600, padding: "9px 14px",
@@ -166,6 +173,11 @@ export default function MyChapterMembers() {
                           ))}
                         </div>
                       ) : <span style={{ color: "var(--ink-4)" }}>None given</span>}
+                    </td>
+                    <td style={{ padding: "11px 14px", borderBottom: "1px solid var(--line-2)" }}>
+                      {r.join_org_interest ? (
+                        <span className="pt-pill pt-p-green">{JOIN_ORG_LABEL[r.join_org_interest] ?? r.join_org_interest}</span>
+                      ) : <span style={{ color: "var(--ink-4)" }}>—</span>}
                     </td>
                     <td style={{ padding: "11px 14px", borderBottom: "1px solid var(--line-2)" }}>
                       <span className="pt-pill" style={{ background: "var(--line-2)", color: "var(--ink-3)" }} title="Secretariat only">Hidden</span>

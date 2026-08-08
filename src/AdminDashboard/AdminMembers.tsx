@@ -5,11 +5,11 @@
  * columns (20260808110000) — everything reused from real, already-
  * granted profile columns and member_roles, nothing invented.
  *
- * "Join org" is deliberately absent — no backing column exists (this
- * screen's own research pass re-confirmed the same conclusion already
- * reached twice this session for c-members and MyProfile.tsx's
- * render-only radio). "Import cohort" is dropped, not stubbed — no
- * bulk-import mechanism exists anywhere in this codebase.
+ * "Join org" is real now (20260808180000, profiles.join_org_interest) —
+ * added to admin_member_list() and rendered here, closing the gap this
+ * file's own research pass had confirmed at the time it was first
+ * built. "Import cohort" is dropped, not stubbed — no bulk-import
+ * mechanism exists anywhere in this codebase.
  *
  * Found and fixed while building this screen, unrelated to it: two
  * real bugs in the referral system (wrong code column in a c-home
@@ -29,6 +29,7 @@ type Member = {
   id: string; public_user_code: string | null; full_name: string | null; email: string | null;
   country_of_residence: string | null; city_abroad: string | null;
   has_vote: boolean | null; contribution_areas: string[] | null;
+  join_org_interest: string | null;
   wing_role: string | null; wing_role_country: string | null; wing_role_chapter: string | null;
   referred_count: number;
 };
@@ -38,6 +39,9 @@ const CONTRIBUTION_LABEL: Record<string, string> = {
 };
 const WING_ROLE_LABEL: Record<string, string> = {
   secretariat: "Secretariat", country_coordinator: "Coordinator", chapter_lead: "Chapter Lead", team_lead: "Team Lead",
+};
+const JOIN_ORG_LABEL: Record<string, string> = {
+  yes: "Yes", not_yet: "Not yet", tell_me_more: "Tell me more",
 };
 
 export default function AdminMembers() {
@@ -59,12 +63,13 @@ export default function AdminMembers() {
   useEffect(() => { void fetchMembers(""); }, [fetchMembers]);
 
   const exportCsv = () => {
-    const header = ["Code", "Name", "Email", "Country", "Role", "Vote", "Contributes", "Referred"];
+    const header = ["Code", "Name", "Email", "Country", "Role", "Vote", "Contributes", "Join org", "Referred"];
     const lines = members.map((m) => [
       m.public_user_code ?? "", m.full_name ?? "", m.email ?? "", m.country_of_residence ?? "",
       m.wing_role ? WING_ROLE_LABEL[m.wing_role] ?? m.wing_role : "Member",
       m.has_vote === true ? "Yes" : m.has_vote === false ? "No" : "Not answered",
       (m.contribution_areas ?? []).map((c) => CONTRIBUTION_LABEL[c] ?? c).join("; "),
+      m.join_org_interest ? JOIN_ORG_LABEL[m.join_org_interest] ?? m.join_org_interest : "",
       String(m.referred_count),
     ].map((v) => `"${v.replace(/"/g, '""')}"`).join(","));
     const blob = new Blob([[header.join(","), ...lines].join("\n")], { type: "text/csv" });
@@ -124,6 +129,7 @@ export default function AdminMembers() {
                   <th className="py-2 px-4 font-bold">Role</th>
                   <th className="py-2 px-4 font-bold">Vote</th>
                   <th className="py-2 px-4 font-bold">Contributes</th>
+                  <th className="py-2 px-4 font-bold">Join org</th>
                   <th className="py-2 px-4 font-bold text-right">Referred</th>
                   <th className="py-2 px-4 font-bold"></th>
                 </tr>
@@ -161,6 +167,13 @@ export default function AdminMembers() {
                           ))
                         )}
                       </div>
+                    </td>
+                    <td className="py-2.5 px-4">
+                      {m.join_org_interest ? (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                          {JOIN_ORG_LABEL[m.join_org_interest] ?? m.join_org_interest}
+                        </span>
+                      ) : <span className="text-gray-400">—</span>}
                     </td>
                     <td className="py-2.5 px-4 text-right tabular-nums">{m.referred_count}</td>
                     <td className="py-2.5 px-4">

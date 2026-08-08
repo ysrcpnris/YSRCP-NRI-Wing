@@ -54,6 +54,11 @@ export const PROFILE_COLUMNS_LIST = [
   // see 20260805231000 for why they must not be conflated.
   "contribution_note",
   "participate_campaign",
+  // "Would you like to join the organisation formally?" — added
+  // 20260808180000, granted explicitly for the same reason
+  // contribution_areas was above: a column added later isn't covered
+  // by the original column-privilege grants.
+  "join_org_interest",
   "suggestions",
   "facebook_id",
   "twitter_id",

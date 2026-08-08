@@ -53,13 +53,15 @@ const SECTION_ORDER = [
 type SectionKey = (typeof SECTION_ORDER)[number];
 
 /**
- * "Would you like to join the organisation formally?" — the mock's copy
- * promises a real consequence ("a coordinator will contact you"), but
- * there is no column for it yet (see the profile-mapping review: the
- * obvious candidate, participate_campaign, already means something
- * else — see CAMPAIGN_OPTIONS below). Rendered, but NOT sent anywhere,
- * and labelled as such, rather than accepting input that silently goes
- * nowhere.
+ * "Would you like to join the organisation formally?" — saved for real
+ * since 20260808180000 (profiles.join_org_interest, an ordinary
+ * member-editable column, the same class as contribution_areas — not
+ * participate_campaign, which already means something else, see
+ * CAMPAIGN_OPTIONS below). What's still NOT built: the mock's promised
+ * "a coordinator will contact you" — no notification/contact pipeline
+ * exists anywhere in this schema. The answer is real and visible to
+ * whoever manages this member (c-members, a-members); nobody gets
+ * auto-notified.
  */
 const JOIN_OPTIONS = [
   { key: "yes", label: "Yes" },
@@ -212,6 +214,7 @@ export default function MyProfile() {
       participate_campaign: s("participate_campaign"),
     });
     setAreas(Array.isArray(p.contribution_areas) ? (p.contribution_areas as string[]) : []);
+    setJoinFormally(s("join_org_interest"));
     setFormLoaded(true);
   }, [profile]);
 
@@ -296,6 +299,7 @@ export default function MyProfile() {
         .update({
           ...form,
           contribution_areas: areas.length ? areas : null,
+          join_org_interest: joinFormally || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -503,9 +507,9 @@ export default function MyProfile() {
                     </label>
                   ))}
                 </div>
-                <div className="hint" style={{ color: "var(--saffron)" }}>
-                  Not saved yet — there is no coordinator follow-up behind this
-                  answer today. Coming soon.
+                <div className="hint">
+                  Visible to your coordinator — there's no automatic follow-up yet, so don't
+                  expect a call just from selecting this.
                 </div>
               </div>
             </div>
