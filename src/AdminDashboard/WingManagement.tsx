@@ -531,7 +531,7 @@ export default function WingManagement() {
       <div>
         <h2 className="text-xl font-black text-gray-900">Wing management</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Roles, chapters, handles, appointments and campaigns.
+          Roles, chapters, handles and appointments.
         </p>
       </div>
 
