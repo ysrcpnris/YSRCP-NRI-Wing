@@ -32,7 +32,13 @@ type Member = {
   join_org_interest: string | null;
   wing_role: string | null; wing_role_country: string | null; wing_role_chapter: string | null;
   referred_count: number;
+  created_at: string; updated_at: string;
 };
+
+function fmtDate(iso: string | null | undefined) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
 
 const CONTRIBUTION_LABEL: Record<string, string> = {
   social_media: "Social Media", technology: "Technology", political: "Political",
@@ -63,7 +69,7 @@ export default function AdminMembers() {
   useEffect(() => { void fetchMembers(""); }, [fetchMembers]);
 
   const exportCsv = () => {
-    const header = ["Code", "Name", "Email", "Country", "Role", "Vote", "Contributes", "Join org", "Referred"];
+    const header = ["Code", "Name", "Email", "Country", "Role", "Vote", "Contributes", "Join org", "Referred", "Joining Date", "Last Edited Date"];
     const lines = members.map((m) => [
       m.public_user_code ?? "", m.full_name ?? "", m.email ?? "", m.country_of_residence ?? "",
       m.wing_role ? WING_ROLE_LABEL[m.wing_role] ?? m.wing_role : "Member",
@@ -71,6 +77,7 @@ export default function AdminMembers() {
       (m.contribution_areas ?? []).map((c) => CONTRIBUTION_LABEL[c] ?? c).join("; "),
       m.join_org_interest ? JOIN_ORG_LABEL[m.join_org_interest] ?? m.join_org_interest : "",
       String(m.referred_count),
+      fmtDate(m.created_at), fmtDate(m.updated_at),
     ].map((v) => `"${v.replace(/"/g, '""')}"`).join(","));
     const blob = new Blob([[header.join(","), ...lines].join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
