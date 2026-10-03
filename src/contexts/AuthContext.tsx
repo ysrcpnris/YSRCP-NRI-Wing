@@ -240,12 +240,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Never set it from user_metadata — that field holds the REFERRER's code,
           // not this user's own code, and storing it here would break their referral link.
           //
-          // Honour the support_team role from user_metadata so the fallback profile
-          // creation path stays consistent with the DB trigger.
-          role:
-            session.user.user_metadata?.role === "support_team"
-              ? "support_team"
-              : "user",
+          // role is not sent: members have no INSERT privilege on it
+          // (20260810094000) and the column defaults to 'user'. A support-team
+          // role comes only from claim_support_team() below.
           created_at: new Date().toISOString(),
         }, { onConflict: "id", ignoreDuplicates: true });
     }
@@ -268,20 +265,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setProfile(p);
-    setAdminFlag(p);
-
-    // After profile exists, try processing referral (idempotent).
-    // Pass session.user explicitly so metadata fallback works even on the
-    // first signup, when React's `user` state hasn't committed yet.
-    await processReferralIfNeeded(session.user.id, p, session.user);
-
-    // If the user is registering as a support-team member, claim the team
-    // they picked on the signup form. The team id is read from
-    // localStorage first (set on submit) then user_metadata (survives the
-    // email-verification round-trip across browsers). Idempotent — the RPC
-    // returns ok:true with reason:"already_claimed" if already done.
-    if (p.role === "support_team") {
+    // If the user registered at /support-teams, claim the team they picked.
+    // The team id is read from localStorage first (set on submit) then
+    // user_metadata (survives the email-verification round-trip across
+    // browsers). Signup always creates role 'user'; the RPC grants the seat
+    // and the support_team role only if an admin invited this confirmed
+    // email to that team (20260810090000). Idempotent — returns
+    // ok:true, reason:"already_claimed" once done.
+    if (p.role !== "admin") {
       let targetTeamId = "";
       try {
         targetTeamId = localStorage.getItem("support_team_id") || "";
@@ -301,10 +292,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error("claim_support_team error:", claimErr);
         } else if (claimData && claimData.ok === false) {
           console.warn("claim_support_team skipped:", claimData.reason);
+          try {
+            sessionStorage.setItem("support_team_claim_error", String(claimData.reason || "unknown"));
+          } catch { /* ignore */ }
+        } else if (p.role !== "support_team") {
+          // The claim just set the role server-side. Re-read before the
+          // profile is published, so the first role any route guard or
+          // redirect sees is the final one.
+          p = (await fetchProfile(session.user.id)) ?? p;
         }
         try { localStorage.removeItem("support_team_id"); } catch { /* ignore */ }
       }
     }
+
+    setProfile(p);
+    setAdminFlag(p);
+
+    // After profile exists, try processing referral (idempotent).
+    // Pass session.user explicitly so metadata fallback works even on the
+    // first signup, when React's `user` state hasn't committed yet.
+    await processReferralIfNeeded(session.user.id, p, session.user);
+
   };
 
   /**
@@ -457,9 +465,8 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
   const normalizedEmail = email.trim().toLowerCase();
 
   // Normalise mobile identically to the DB trigger (profiles_normalize_mobile):
-  // keep only digits, prepend a single '+' if the input had one. This ensures
-  // our pre-check via mobile_exists() matches what the UNIQUE index enforces,
-  // so "+91 98765 43210" and "+919876543210" correctly collide.
+  // keep only digits, prepend a single '+' if the input had one, so
+  // "+91 98765 43210" and "+919876543210" collide on the UNIQUE index.
   const rawMobile = (profileData.mobile_number || "").trim();
   const hadPlus = rawMobile.startsWith("+");
   const digitsOnly = rawMobile.replace(/[^0-9]/g, "");
@@ -472,50 +479,12 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
     profileData = { ...profileData, mobile_number: normalizedMobile };
   }
 
-  // 🔴 STEP 1a — check if email already exists in profiles.
-  //     Uses ilike with the lowercased value so a profile that was
-  //     created with "Foo@Bar.com" still matches when a new user
-  //     types "foo@bar.com". The DB also enforces this via a UNIQUE
-  //     index on lower(email) (migration new_43), but the early
-  //     check gives a friendly error before the auth.signUp call.
-  const { data: existingUsers, error: checkError } = await supabase
-    .from("profiles")
-    .select("id")
-    .ilike("email", normalizedEmail)
-    .limit(1);
-
-  if (checkError) {
-    console.error("Profile lookup error:", checkError);
-    throw new Error("Unable to register. Please try again.");
-  }
-
-  if (existingUsers && existingUsers.length > 0) {
-    // 🛑 BLOCK signup immediately
-    throw new Error("This email is already registered. Please log in instead.");
-  }
-
-  // 🔴 STEP 1b — check if mobile number already exists
-  //     Uses the mobile_exists() RPC (SECURITY DEFINER) because anon visitors
-  //     cannot SELECT other rows from profiles directly under RLS.
-  //     The DB also enforces this via a UNIQUE index, so this is just a
-  //     friendly pre-check before we hit auth.signUp.
-  if (normalizedMobile) {
-    const { data: mobileTaken, error: mobileCheckError } = await supabase.rpc(
-      "mobile_exists",
-      { p_mobile: normalizedMobile }
-    );
-
-    if (mobileCheckError) {
-      console.error("Mobile lookup error:", mobileCheckError);
-      throw new Error("Unable to register. Please try again.");
-    }
-
-    if (mobileTaken) {
-      throw new Error(
-        "This mobile number is already registered. Please login or use a different number."
-      );
-    }
-  }
+  // No pre-checks for an existing email or mobile. A signup runs as anon,
+  // and anon can neither SELECT profiles (revoked 20260804094500) nor call
+  // mobile_exists() (revoked 20260805190000, dropped 20260810093000), so
+  // both pre-checks errored and blocked every signup. Uniqueness is
+  // enforced by the UNIQUE indexes on email and mobile; a collision
+  // surfaces from auth.signUp below and is translated there.
 
   // 🔵 STEP 2 — build metadata for DB trigger
   const meta: Record<string, unknown> = {};
@@ -583,6 +552,13 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
     if (msg.includes("rate limit")) {
       throw new Error("Too many signup attempts. Please wait a few minutes.");
     }
+    // handle_new_user() hit a UNIQUE index — in practice an email or mobile
+    // that is already registered. Deliberately does not say which.
+    if (msg.includes("database error saving new user")) {
+      throw new Error(
+        "We couldn't create this account. If your email or mobile number is already registered, please log in or reset your password."
+      );
+    }
     if (msg.includes("password")) {
       throw new Error(`Password issue: ${error.message}`);
     }
@@ -596,6 +572,12 @@ const isPasswordResetRedirect = path === "/reset-password-confirm";
 
   if (!data.user) {
     throw new Error("Signup failed. Please try again.");
+  }
+
+  // With email confirmation on, Supabase answers a signup for an existing
+  // auth email with a user that has no identities instead of an error.
+  if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    throw new Error("This email is already registered. Please log in instead.");
   }
 
   // 🔴 force email verification flow

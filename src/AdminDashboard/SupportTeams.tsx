@@ -7,6 +7,7 @@ import {
   XCircle,
   RefreshCw,
   UserMinus,
+  UserPlus,
   Mail,
   Phone,
 } from "lucide-react";
@@ -31,6 +32,9 @@ type TeamRow = {
 
 export default function SupportTeams() {
   const [teams, setTeams] = useState<TeamRow[]>([]);
+  // team_id → invited email. support_team_invites is admin-only
+  // (20260810090000); a seat can be claimed only by the invited email.
+  const [invites, setInvites] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -41,9 +45,22 @@ export default function SupportTeams() {
 
   const fetchTeams = async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("admin_support_teams_overview");
-    if (error) setErr(error.message);
-    else setTeams((data || []) as TeamRow[]);
+    const [overview, inv] = await Promise.all([
+      supabase.rpc("admin_support_teams_overview"),
+      supabase.from("support_team_invites").select("team_id, email"),
+    ]);
+    if (overview.error) setErr(overview.error.message);
+    else setTeams((overview.data || []) as TeamRow[]);
+    if (inv.error) setErr(inv.error.message);
+    else
+      setInvites(
+        Object.fromEntries(
+          ((inv.data || []) as { team_id: string; email: string }[]).map((r) => [
+            r.team_id,
+            r.email,
+          ])
+        )
+      );
     setLoading(false);
   };
 
@@ -167,6 +184,38 @@ export default function SupportTeams() {
     }
   };
 
+  const editInvite = async (t: TeamRow) => {
+    setErr(null);
+    setInfo(null);
+    const current = invites[t.id] || "";
+    const input = prompt(
+      `Email allowed to claim "${t.name}". They register at /support-teams with this exact email. Leave empty to remove the invite.`,
+      current
+    );
+    if (input === null) return;
+    const email = input.trim().toLowerCase();
+    if (!email) {
+      if (!current) return;
+      const { error } = await supabase
+        .from("support_team_invites")
+        .delete()
+        .eq("team_id", t.id);
+      if (error) setErr(error.message);
+      else setInfo(`Invite removed for "${t.name}".`);
+    } else {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setErr("That does not look like an email address.");
+        return;
+      }
+      const { error } = await supabase
+        .from("support_team_invites")
+        .upsert({ team_id: t.id, email }, { onConflict: "team_id" });
+      if (error) setErr(error.message);
+      else setInfo(`"${t.name}" can now be claimed by ${email}.`);
+    }
+    fetchTeams();
+  };
+
   // ---------------- DERIVED ----------------
   const stats = useMemo(() => {
     const total = teams.length;
@@ -189,7 +238,8 @@ export default function SupportTeams() {
       </div>
       <p className="text-gray-500 mb-6">
         Add or remove teams. Each team can be claimed by one support-team member who registers
-        at <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">/support-teams</code>.
+        at <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">/support-teams</code> with
+        the email invited to that team.
       </p>
 
       {/* COUNTERS */}
@@ -300,9 +350,16 @@ export default function SupportTeams() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-[12px] italic text-gray-400">
-                            Open — no claim
-                          </span>
+                          <div className="text-[12px]">
+                            <p className="italic text-gray-400">Open — no claim</p>
+                            {invites[t.id] ? (
+                              <p className="text-gray-600 inline-flex items-center gap-1.5">
+                                <Mail size={11} /> Invited: {invites[t.id]}
+                              </p>
+                            ) : (
+                              <p className="text-gray-500">No invite — nobody can claim</p>
+                            )}
+                          </div>
                         )}
                       </td>
                       <td className="px-3 py-3 text-[12px]">
@@ -338,6 +395,15 @@ export default function SupportTeams() {
                           >
                             {t.is_active ? "Deactivate" : "Activate"}
                           </button>
+                          {!claimed && (
+                            <button
+                              onClick={() => editInvite(t)}
+                              className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-800 text-xs"
+                              title="Set the email allowed to claim this team"
+                            >
+                              <UserPlus size={14} /> {invites[t.id] ? "Change invite" : "Invite"}
+                            </button>
+                          )}
                           {claimed && (
                             <button
                               onClick={() => releaseSeat(t)}

@@ -219,7 +219,7 @@ work after Phase 3.** Roll forward, not back.
 ### 0.1 Run the gates. CI will not do it for you.
 
 ```bash
-npm run test:auth      # 98 checks
+npm run test:auth      # 121 checks
 npm run smoke          # 12 checks
 npm run typecheck:ci   # 117 errors, must be unchanged
 npm run lint:ci        # 287 problems, none new

@@ -11,15 +11,28 @@ type AvailableTeam = {
 };
 
 // Combined login + register page mounted at `/support-teams`. Two tabs.
-// Register: forces role='support_team' in user_metadata + persists the picked
-// team_id in metadata + localStorage so AuthContext can claim it server-side
-// once the email is verified. Login: standard signInWithPassword followed by
-// a role-based redirect.
+// Register: persists the picked team_id in user_metadata + localStorage so
+// AuthContext can claim it after the email is verified. The account is
+// created as an ordinary member; claim_support_team() grants the seat and
+// the support_team role only if an admin invited that email to that team
+// (20260810090000). Login: standard signInWithPassword followed by a
+// role-based redirect.
+const CLAIM_ERRORS: Record<string, string> = {
+  not_invited:
+    "This email has not been invited to that team. Ask an admin to add your email as the team's invite, then log in again.",
+  email_not_confirmed: "Please verify your email first, then log in again.",
+  team_unavailable:
+    "That team is no longer available. Ask an admin to invite you to another team.",
+  caller_owns_other_team: "You already hold a seat on another support team.",
+};
+
 export default function SupportTeamAuthPage() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
 
   // Once a support-team user is authenticated, get out of the auth page.
+  // A signed-in account whose seat claim was refused stays here and is told
+  // why, rather than landing on the member dashboard with no explanation.
   useEffect(() => {
     if (authLoading) return;
     if (!user || !profile) return;
@@ -28,6 +41,16 @@ export default function SupportTeamAuthPage() {
     } else if (profile.role === "admin") {
       navigate("/admin/dashboard", { replace: true });
     } else {
+      let reason: string | null = null;
+      try {
+        reason = sessionStorage.getItem("support_team_claim_error");
+        sessionStorage.removeItem("support_team_claim_error");
+      } catch { /* ignore */ }
+      if (reason) {
+        setInfo(null);
+        setErr(CLAIM_ERRORS[reason] || `Could not join the team (${reason}).`);
+        return;
+      }
       navigate("/dashboard", { replace: true });
     }
   }, [user, profile, authLoading, navigate]);
@@ -173,7 +196,6 @@ export default function SupportTeamAuthPage() {
       last_name: lastName.trim() || null,
       full_name: [firstName.trim(), lastName.trim()].filter(Boolean).join(" ") || null,
       mobile_number: mobile.trim() || null,
-      role: "support_team",
       support_team_id: teamId,
     };
 

@@ -880,11 +880,116 @@ except Exception: print('error')")
 fi
 
 echo
+echo "External security reports — fixes in 20260810090000..094000"
+# Every check below fails against the code before those migrations, and
+# each refusal is paired with a grant so a rule that refuses everyone
+# cannot pass.
+
+rest_rows() { # path token → rows | none | error
+  curl -s "$SB_URL/rest/v1/$1" -H "apikey: $SB_KEY" -H "Authorization: Bearer $2" \
+  | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print('rows' if isinstance(d,list) and d else ('none' if isinstance(d,list) else 'error'))
+except Exception: print('error')"
+}
+reason() { python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d.get('reason') or ('ok' if d.get('ok') else 'refused'))
+except Exception: print('error')"; }
+rpc_as() { # fn token body
+  curl -s -X POST "$SB_URL/rest/v1/rpc/$1" -H "apikey: $SB_KEY" \
+    -H "Authorization: Bearer $2" -H "Content-Type: application/json" -d "$3"
+}
+
+# Leader directory (report: leaders PII). Admin read first, so "none"
+# below cannot be an empty table.
+check "admin reads leaders_master"              rows "$(rest_rows 'leaders_master?select=id&limit=1' "$ADMIN")"
+check "member cannot read leaders_master"       none "$(rest_rows 'leaders_master?select=id&limit=1' "$MEMBER")"
+check "member cannot read leader_assignments"   none "$(rest_rows 'leader_assignments?select=id&limit=1' "$MEMBER")"
+check "member cannot read org_hierarchy_v"      none "$(rest_rows 'org_hierarchy_v?select=*&limit=1' "$MEMBER")"
+check "coordinator cannot read leaders_master"  none "$(rest_rows 'leaders_master?select=id&limit=1' "$COORD")"
+check "member still gets ap_districts()"        rows "$(rpc_rows ap_districts "$MEMBER")"
+
+# Phone enumeration (report: mobile_exists). Gone for everyone, not just anon.
+check "anon: mobile_exists no longer exists"    404 "$(anon_status mobile_exists '{"p_mobile":"+10000000000"}')"
+check "member: mobile_exists no longer exists"  404 \
+  "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$SB_URL/rest/v1/rpc/mobile_exists" \
+     -H "apikey: $SB_KEY" -H "Authorization: Bearer $MEMBER" \
+     -H "Content-Type: application/json" -d '{"p_mobile":"+10000000000"}')"
+
+# Self-insert of role. Before the fix this answers 409 (the row exists),
+# i.e. only the existing row stood between a member and role=admin.
+INS=$(status POST profiles "$MEMBER" "{\"id\":\"$MEMBER_ID\",\"role\":\"admin\"}")
+check "member cannot INSERT a profile carrying role" 403 "$INS"
+# delete_my_support_account() deletes the caller's profile when unguarded,
+# which would destroy this fixture. Run it only once the INSERT fix is
+# proven present; otherwise count both as failures.
+if [ "$INS" = "403" ]; then
+  check "member cannot use delete_my_support_account" not_support_team \
+    "$(rpc_as delete_my_support_account "$MEMBER" '{}' | reason)"
+  check "and the member's profile still exists" "$MEMBER_ID" \
+    "$(fieldval profiles "$MEMBER_ID" id "$ADMIN")"
+else
+  check "delete_my_support_account (skipped: INSERT fix absent)" ran skipped
+  check "member profile survives (skipped: INSERT fix absent)"   ran skipped
+fi
+
+# Support-team seat (report: claim_support_team). Build the condition:
+# a fresh open team, so "refused" cannot mean "no team to claim".
+curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/support_teams?name=eq.Authmatrix%20Seat" \
+  -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
+ST_ID=$(curl -s -X POST "$SB_URL/rest/v1/support_teams" -H "apikey: $SB_KEY" \
+  -H "Authorization: Bearer $ADMIN" -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" -d '{"name":"Authmatrix Seat","is_active":true}' \
+  | python3 -c "
+import sys,json
+try:
+  d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else '')
+except Exception: print('')")
+MEMBER_EMAIL=t.us.a@example.test
+if [ -n "$ST_ID" ]; then
+  check "uninvited member's claim is refused" not_invited \
+    "$(rpc_as claim_support_team "$MEMBER" "{\"p_team_id\":\"$ST_ID\"}" | reason)"
+  check "and the seat is still open" None \
+    "$(fieldval support_teams "$ST_ID" claimed_by_profile_id "$ADMIN")"
+  check "and the member's role is unchanged" user \
+    "$(fieldval profiles "$MEMBER_ID" role "$ADMIN")"
+  check "coordinator cannot create an invite" 403 \
+    "$(status POST support_team_invites "$COORD" "{\"team_id\":\"$ST_ID\",\"email\":\"$MEMBER_EMAIL\"}")"
+  check "admin CAN create an invite" 201 \
+    "$(status POST support_team_invites "$ADMIN" "{\"team_id\":\"$ST_ID\",\"email\":\"$MEMBER_EMAIL\"}")"
+  check "member cannot read invites" none \
+    "$(rest_rows "support_team_invites?select=email&team_id=eq.$ST_ID" "$MEMBER")"
+  check "admin reads the invite" rows \
+    "$(rest_rows "support_team_invites?select=email&team_id=eq.$ST_ID" "$ADMIN")"
+  check "invited member's claim succeeds" ok \
+    "$(rpc_as claim_support_team "$MEMBER" "{\"p_team_id\":\"$ST_ID\"}" | reason)"
+  check "the seat is genuinely held by the member" "$MEMBER_ID" \
+    "$(fieldval support_teams "$ST_ID" claimed_by_profile_id "$ADMIN")"
+  check "the claim set role=support_team" support_team \
+    "$(fieldval profiles "$MEMBER_ID" role "$ADMIN")"
+  check "the invite was consumed" none \
+    "$(rest_rows "support_team_invites?select=email&team_id=eq.$ST_ID" "$ADMIN")"
+
+  # Put the fixture back exactly as it was.
+  rpc_as admin_release_support_team "$ADMIN" "{\"p_team_id\":\"$ST_ID\"}" >/dev/null
+  rpc_as set_member_role "$ADMIN" "{\"p_profile_id\":\"$MEMBER_ID\",\"p_role\":\"user\"}" >/dev/null
+  curl -s -o /dev/null -X DELETE "$SB_URL/rest/v1/support_teams?id=eq.$ST_ID" \
+    -H "apikey: $SB_KEY" -H "Authorization: Bearer $ADMIN"
+  check "cleanup: member fixture is role=user again" user \
+    "$(fieldval profiles "$MEMBER_ID" role "$ADMIN")"
+else
+  for _ in $(seq 12); do check "support-team block (test team not created)" created missing; done
+fi
+
+echo
 printf 'passed %d, failed %d\n' "$PASS" "$FAIL"
 
 # A block that returns early or skips would otherwise leave the suite
 # green with fewer checks. Assert the count as well as the result.
-EXPECTED=${EXPECTED_CHECKS:-98}
+EXPECTED=${EXPECTED_CHECKS:-121}
 TOTAL=$((PASS + FAIL))
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   printf '\033[31mFAIL\033[0m ran %d checks, expected %d — a block was skipped.\n' \
